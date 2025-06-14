@@ -1,2 +1,19 @@
+# Byte-compiled / optimized / DLL files
+**/*.pyc
+__pycache__/
+*.so
+
+# Database
 db.sqlite3
-*.pyc
+
+# Env
+.env
+.venv
+venv/
+env/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*~
