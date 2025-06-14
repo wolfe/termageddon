@@ -2,18 +2,14 @@
 **/*.pyc
 __pycache__/
 *.so
+**/.*
 
 # Database
 db.sqlite3
 
 # Env
-.env
-.venv
 venv/
 env/
 
-# IDEs and editors
-.idea/
-.vscode/
 *.swp
 *~
