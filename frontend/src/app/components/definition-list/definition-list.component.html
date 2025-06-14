@@ -1,0 +1,37 @@
+<div class="container mx-auto mt-8">
+  <h2 class="text-2xl font-semibold mb-4">Definitions</h2>
+  <div *ngIf="definitions$ | async as definitions; else loading">
+    <table class="min-w-full bg-white border border-gray-200">
+      <thead>
+        <tr>
+          <th class="py-2 px-4 border-b text-left">Term</th>
+          <th class="py-2 px-4 border-b text-left">Domain</th>
+          <th class="py-2 px-4 border-b text-left">Definition</th>
+          <th class="py-2 px-4 border-b text-left">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let definition of definitions" class="hover:bg-gray-100">
+          <td class="py-2 px-4 border-b">{{ definition.term.text }}</td>
+          <td class="py-2 px-4 border-b">{{ definition.domain.name }}</td>
+          <td class="py-2 px-4 border-b">{{ definition.definition_text }}</td>
+          <td class="py-2 px-4 border-b">
+            <span [ngClass]="{
+              'bg-blue-200 text-blue-800': definition.status === 'proposed',
+              'bg-green-200 text-green-800': definition.status === 'approved',
+              'bg-red-200 text-red-800': definition.status === 'rejected'
+            }" class="px-2 py-1 rounded-full text-xs font-semibold">
+              {{ definition.status }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="definitions.length === 0" class="mt-4 text-center text-gray-500">
+      No definitions found.
+    </div>
+  </div>
+  <ng-template #loading>
+    <p class="text-center text-gray-500">Loading definitions...</p>
+  </ng-template>
+</div>

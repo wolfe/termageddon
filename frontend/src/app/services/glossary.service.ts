@@ -13,6 +13,30 @@ export interface Domain {
   updated_by: number;
 }
 
+export interface Term {
+  id: number;
+  text: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  created_by: number;
+  updated_by: number;
+}
+
+export interface Definition {
+  id: number;
+  definition_text: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  term: Term;
+  domain: Domain;
+  created_by: number;
+  updated_by: number;
+  approvers: number[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,5 +47,13 @@ export class GlossaryService {
 
   getDomains(): Observable<Domain[]> {
     return this.http.get<Domain[]>(`${this.apiUrl}domains/`);
+  }
+
+  getTerms(): Observable<Term[]> {
+    return this.http.get<Term[]>(`${this.apiUrl}terms/`);
+  }
+
+  getDefinitions(): Observable<Definition[]> {
+    return this.http.get<Definition[]>(`${this.apiUrl}definitions/`);
   }
 }
