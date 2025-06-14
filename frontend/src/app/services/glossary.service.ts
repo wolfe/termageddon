@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
 
 export interface Domain {
   id: number;
@@ -45,15 +52,23 @@ export class GlossaryService {
 
   constructor(private http: HttpClient) { }
 
-  getDomains(): Observable<Domain[]> {
-    return this.http.get<Domain[]>(`${this.apiUrl}domains/`);
+  getDomains(params: HttpParams = new HttpParams()): Observable<PaginatedResponse<Domain>> {
+    return this.http.get<PaginatedResponse<Domain>>(`${this.apiUrl}domains/`, { params });
   }
 
-  getTerms(): Observable<Term[]> {
-    return this.http.get<Term[]>(`${this.apiUrl}terms/`);
+  getTerms(params: HttpParams = new HttpParams()): Observable<PaginatedResponse<Term>> {
+    return this.http.get<PaginatedResponse<Term>>(`${this.apiUrl}terms/`, { params });
   }
 
-  getDefinitions(): Observable<Definition[]> {
-    return this.http.get<Definition[]>(`${this.apiUrl}definitions/`);
+  getDefinitions(params: HttpParams = new HttpParams()): Observable<PaginatedResponse<Definition>> {
+    return this.http.get<PaginatedResponse<Definition>>(`${this.apiUrl}definitions/`, { params });
+  }
+
+  createDefinition(data: { term: string; domain: string; definition_text: string }): Observable<Definition> {
+    return this.http.post<Definition>(`${this.apiUrl}definitions/`, data);
+  }
+
+  approveDefinition(id: number): Observable<Definition> {
+    return this.http.post<Definition>(`${this.apiUrl}definitions/${id}/approve/`, {});
   }
 }

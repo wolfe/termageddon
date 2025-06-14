@@ -47,10 +47,18 @@ class Command(BaseCommand):
 
                     # Get or create user
                     if author_name not in users:
-                        user, created = User.objects.get_or_create(username=author_name.replace(" ", "_").lower())
+                        username = author_name.replace(" ", "_").lower()
+                        user, created = User.objects.get_or_create(username=username)
                         if created:
-                            user.set_unusable_password()
-                            user.first_name = author_name
+                            # Extract first and last name
+                            name_parts = author_name.split()
+                            first_name = name_parts[0] if name_parts else ''
+                            last_name = name_parts[-1] if len(name_parts) > 1 else 'password'
+                            
+                            user.first_name = first_name
+                            user.last_name = last_name
+                            # Set password to be the last name, in lowercase
+                            user.set_password(last_name.lower())
                             user.save()
                         users[author_name] = user
                     user = users[author_name]
@@ -82,6 +90,12 @@ class Command(BaseCommand):
                         created_by=user,
                         updated_by=user
                     )
+            
+            # Ensure admin user exists and has a known password
+            if not User.objects.filter(username='admin').exists():
+                self.stdout.write("Creating default admin user...")
+                admin_user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
+                self.stdout.write(self.style.SUCCESS("Default admin user 'admin' with password 'admin' created."))
             
             self.stdout.write(self.style.SUCCESS(f'Successfully populated database from {csv_file_path}'))
 

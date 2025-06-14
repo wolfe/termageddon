@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 class ActiveManager(models.Manager):
@@ -73,7 +74,7 @@ class Definition(AuditedModel):
 
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='definitions')
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name='definitions')
-    definition_text = models.TextField()
+    definition_text = CKEditor5Field('Text', config_name='default')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='proposed')
     approvers = models.ManyToManyField(User, related_name='approved_definitions', blank=True)
 
