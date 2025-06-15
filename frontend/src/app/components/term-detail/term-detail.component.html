@@ -26,8 +26,8 @@
     </div>
 
     <div class="mt-12">
-      <h3 class="text-2xl font-bold mb-4">Propose a New Definition</h3>
-      <app-definition-form [termId]="term.id" (definitionSaved)="onDefinitionSaved($event)"></app-definition-form>
+      <h3 class="text-2xl font-bold mb-4">Propose a New Definition for "{{ term.text }}"</h3>
+      <app-definition-form [term]="term" [definitions]="definitions" (definitionSaved)="onDefinitionSaved($event)"></app-definition-form>
     </div>
 
   </div>

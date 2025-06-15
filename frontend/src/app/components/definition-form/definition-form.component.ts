@@ -2,7 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EditorModule, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
-import { GlossaryService, Domain, Definition } from '../../services/glossary.service';
+import { GlossaryService, Domain, Definition, Term } from '../../services/glossary.service';
 
 @Component({
   selector: 'app-definition-form',
@@ -15,7 +15,8 @@ import { GlossaryService, Domain, Definition } from '../../services/glossary.ser
   ]
 })
 export class DefinitionFormComponent implements OnInit {
-  @Input() termId!: number;
+  @Input() term!: Term;
+  @Input() definitions: Definition[] = [];
   @Output() definitionSaved = new EventEmitter<Definition>();
 
   public definitionText = '';
@@ -49,15 +50,24 @@ export class DefinitionFormComponent implements OnInit {
     });
   }
 
+  onDomainChange(): void {
+    const existingDef = this.definitions.find(def => def.domain.id === this.selectedDomainId);
+    if (existingDef) {
+      this.definitionText = existingDef.definition_text;
+    } else {
+      this.definitionText = '';
+    }
+  }
+
   onSubmit(): void {
-    if (!this.termId || !this.selectedDomainId || !this.definitionText) {
+    if (!this.term?.id || !this.selectedDomainId || !this.definitionText) {
       // Basic validation
       alert('Please select a domain and provide a definition.');
       return;
     }
 
     const newDefinition = {
-      term: this.termId,
+      term: this.term.id,
       domain: this.selectedDomainId,
       definition_text: this.definitionText,
       // Status will be 'proposed' by default on the backend
