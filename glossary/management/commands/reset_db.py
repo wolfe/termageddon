@@ -51,7 +51,7 @@ class Command(BaseCommand):
 
                     # Get or create user
                     if author_name not in users:
-                        username = author_name.replace(" ", "_").lower()
+                        username = f"test{len(users)}"
                         user, _ = User.objects.get_or_create(username=username)
 
                         # Set details, password, and group association
