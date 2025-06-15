@@ -33,7 +33,7 @@ class DefinitionViewSet(viewsets.ModelViewSet):
     """
     queryset = Definition.objects.all()
     serializer_class = DefinitionSerializer
-    filterset_fields = ['term__text', 'domain__name', 'status']
+    filterset_fields = ['term__id', 'term__text', 'domain__name', 'status']
     search_fields = ['term__text', 'definition_text']
 
     def get_serializer_class(self):
