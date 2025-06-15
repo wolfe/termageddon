@@ -59,6 +59,7 @@ class DefinitionAdmin(AuditedAdmin):
     list_display = ('term', 'domain', 'status', 'created_by', 'is_deleted')
     list_filter = ('status', 'domain', 'is_deleted')
     search_fields = ('term__text', 'definition_text')
+    ordering = ('term__text',)
     actions = AuditedAdmin.actions + ['approve_definitions']
 
     def approve_definitions(self, request, queryset):
