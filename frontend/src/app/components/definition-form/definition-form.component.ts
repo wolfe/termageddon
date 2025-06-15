@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EditorModule } from '@tinymce/tinymce-angular';
+import { EditorModule, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
 import { GlossaryService, Domain, Definition } from '../../services/glossary.service';
 
 @Component({
@@ -9,7 +9,10 @@ import { GlossaryService, Domain, Definition } from '../../services/glossary.ser
   standalone: true,
   imports: [CommonModule, FormsModule, EditorModule],
   templateUrl: './definition-form.component.html',
-  styleUrls: ['./definition-form.component.scss']
+  styleUrls: ['./definition-form.component.scss'],
+  providers: [
+    { provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js' }
+  ]
 })
 export class DefinitionFormComponent implements OnInit {
   @Input() termId!: number;
