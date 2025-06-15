@@ -11,7 +11,10 @@
             <a routerLink="/review" 
                routerLinkActive="bg-gray-700"
                class="px-4 py-2 hover:bg-gray-700 rounded-md">Review</a>
-            <a *ngIf="user.is_staff" href="/admin" target="_blank" class="px-4 py-2 hover:bg-gray-700 rounded-md">Admin</a>
+            <a [attr.href]="user.is_staff ? 'http://127.0.0.1:8000/admin' : null" 
+               target="_blank" 
+               class="px-4 py-2 rounded-md"
+               [ngClass]="user.is_staff ? 'hover:bg-gray-700' : 'opacity-50 cursor-not-allowed'">Admin</a>
             <span class="ml-4 mr-4">{{ user.first_name }} {{ user.last_name }}</span>
             <button (click)="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md">Logout</button>
         </ng-container>
