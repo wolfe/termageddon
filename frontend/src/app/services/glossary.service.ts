@@ -87,31 +87,6 @@ export class GlossaryService {
     return this.get<Term>('terms', params);
   }
 
-  getAllTerms(): Observable<Term[]> {
-    const allTerms: Term[] = [];
-    let currentPage = 1;
-
-    const fetchPage = (subscriber: any) => {
-      this.getTerms(currentPage, '').subscribe({
-        next: response => {
-          allTerms.push(...response.results);
-          if (response.next) {
-            currentPage++;
-            fetchPage(subscriber);
-          } else {
-            subscriber.next(allTerms);
-            subscriber.complete();
-          }
-        },
-        error: err => subscriber.error(err)
-      });
-    };
-    
-    return new Observable<Term[]>(subscriber => {
-      fetchPage(subscriber);
-    });
-  }
-
   getTerm(id: number): Observable<Term> {
     return this.http.get<Term>(`${this.apiUrl}/terms/${id}/`);
   }

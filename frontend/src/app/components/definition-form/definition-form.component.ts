@@ -22,7 +22,6 @@ export class DefinitionFormComponent implements OnInit {
   public definitionText = '';
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
-  public allTerms: Term[] = [];
 
   public editorConfig = {
     height: 300,
@@ -37,31 +36,19 @@ export class DefinitionFormComponent implements OnInit {
     'alignright alignjustify | bullist numlist outdent indent | ' +
     'link | removeformat | help',
     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-    link_list: (success: (items: { title: string; value: string; }[]) => void) => {
-        const termLinks = this.allTerms.map(term => ({
-            title: term.text,
-            value: `/term/${term.id}`
-        }));
-        success(termLinks);
-    }
+    default_target: '_blank',
+    target_list: false
   };
 
   constructor(private glossaryService: GlossaryService) { }
 
   ngOnInit(): void {
     this.loadDomains();
-    this.loadAllTerms();
   }
 
   loadDomains(): void {
     this.glossaryService.getDomains().subscribe(response => {
       this.domains = response.results;
-    });
-  }
-
-  loadAllTerms(): void {
-    this.glossaryService.getAllTerms().subscribe(terms => {
-      this.allTerms = terms;
     });
   }
 
