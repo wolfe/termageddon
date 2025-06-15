@@ -22,9 +22,9 @@ GLOSSARIES = {
 }
 
 AUTHORS = [
-    "Dr. Evelyn Reed", "Prof. Kenji Tanaka", "Dr. Aisha Khan", "Prof. Samuel Greene",
-    "Dr. Maria Flores", "Dr. Ben Carter", "Prof. Sofia Rossi", "Dr. Leo Schmidt",
-    "Dr. Chloe Dubois", "Prof. Ivan Petrov"
+    "Evelyn Reed", "Kenji Tanaka", "Aisha Khan", "Samuel Greene",
+    "Maria Flores", "Ben Carter", "Sofia Rossi", "Leo Schmidt",
+    "Chloe Dubois", "Ivan Petrov"
 ]
 
 def scrape_glossary(domain, url):
