@@ -58,6 +58,9 @@ class Domain(AuditedModel):
     def __str__(self):
         return self.name
 
+    class Meta(AuditedModel.Meta):
+        ordering = ['name']
+
 
 class Term(AuditedModel):
     text = models.CharField(max_length=255, unique=True)
