@@ -4,8 +4,13 @@
     <div class="flex items-center space-x-4">
       <div *ngIf="isLoggedIn$ | async; else showLogin">
         <ng-container *ngIf="currentUser$ | async as user">
-            <a routerLink="/" class="px-4 py-2 hover:bg-gray-700 rounded-md">Glossary</a>
-            <a routerLink="/review" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md">Review</a>
+            <a routerLink="/" 
+               routerLinkActive="bg-gray-700" 
+               [routerLinkActiveOptions]="{exact: true}"
+               class="px-4 py-2 hover:bg-gray-700 rounded-md">Glossary</a>
+            <a routerLink="/review" 
+               routerLinkActive="bg-gray-700"
+               class="px-4 py-2 hover:bg-gray-700 rounded-md">Review</a>
             <a *ngIf="user.is_staff" href="/admin" target="_blank" class="px-4 py-2 hover:bg-gray-700 rounded-md">Admin</a>
             <span class="ml-4 mr-4">{{ user.first_name }} {{ user.last_name }}</span>
             <button (click)="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md">Logout</button>

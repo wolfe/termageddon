@@ -47,7 +47,11 @@ def scrape_glossary(domain, url):
             # The definition is in the immediately following <dd> tag
             dd = dt.find_next_sibling('dd')
             if term and dd:
-                definition = dd.get_text(strip=True)
+                # Use a separator to handle word breaks across different tags,
+                # then normalize whitespace to clean up any extra spaces.
+                raw_definition = dd.get_text(separator=' ', strip=True)
+                definition = ' '.join(raw_definition.split())
+                
                 # Ensure the definition is not empty before adding
                 if definition:
                     data.append({"term": term, "definition": definition})
