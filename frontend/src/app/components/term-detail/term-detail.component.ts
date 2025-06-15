@@ -35,7 +35,7 @@ export class TermDetailComponent implements OnInit {
   }
 
   loadDefinitions(termId: number): void {
-    this.glossaryService.getDefinitions(1, { term__id: termId.toString() }).subscribe(response => {
+    this.glossaryService.getDefinitions(1, { term__id: termId.toString(), page_size: '100' }).subscribe(response => {
       this.definitions = response.results;
     });
   }
