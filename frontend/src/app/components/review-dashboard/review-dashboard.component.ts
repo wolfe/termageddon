@@ -1,22 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { GlossaryService, Definition, User } from '../../services/glossary.service';
 import { AuthService } from '../../services/auth.service';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 @Component({
   selector: 'app-review-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, InfiniteScrollModule],
   templateUrl: './review-dashboard.component.html',
   styleUrls: ['./review-dashboard.component.scss']
 })
-export class ReviewDashboardComponent implements OnInit {
+export class ReviewDashboardComponent implements OnInit, OnDestroy {
   proposedDefinitions: Definition[] = [];
-  isLoading = true;
+  isLoading = false;
   currentUser: User | null = null;
+  
+  page = 1;
+  hasMore = true;
+  searchQuery = '';
+  
   private userSubscription!: Subscription;
+  private searchSubject = new Subject<string>();
+  private searchSubscription!: Subscription;
+
 
   constructor(
     private glossaryService: GlossaryService,
@@ -28,23 +39,63 @@ export class ReviewDashboardComponent implements OnInit {
       this.currentUser = user;
     });
     this.loadProposedDefinitions();
+
+    this.searchSubscription = this.searchSubject
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged()
+      )
+      .subscribe(() => {
+        this.loadProposedDefinitions(true);
+      });
   }
 
   ngOnDestroy(): void {
     if (this.userSubscription) {
       this.userSubscription.unsubscribe();
     }
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
   }
 
-  loadProposedDefinitions(): void {
+  loadProposedDefinitions(fromSearch: boolean = false): void {
+    if (this.isLoading && !fromSearch) return;
+    if (!this.hasMore && !fromSearch) return;
+
+    if (fromSearch) {
+      this.page = 1;
+      this.hasMore = true;
+      this.proposedDefinitions = [];
+    }
+
     this.isLoading = true;
-    this.glossaryService.getDefinitions(1, { status: 'proposed', page_size: '100' }).subscribe(response => {
-      this.proposedDefinitions = response.results;
+    const filters = { 
+      status: 'proposed', 
+      search: this.searchQuery 
+    };
+
+    this.glossaryService.getDefinitions(this.page, filters).subscribe(response => {
+      if (fromSearch) {
+        this.proposedDefinitions = response.results;
+      } else {
+        this.proposedDefinitions.push(...response.results);
+      }
+      this.page++;
+      this.hasMore = response.next !== null;
       this.isLoading = false;
     }, error => {
       console.error('Error loading proposed definitions:', error);
       this.isLoading = false;
     });
+  }
+
+  onScroll(): void {
+    this.loadProposedDefinitions();
+  }
+  
+  onSearch(): void {
+    this.searchSubject.next(this.searchQuery);
   }
 
   approve(definitionId: number): void {
@@ -62,7 +113,7 @@ export class ReviewDashboardComponent implements OnInit {
 
   reject(definitionId: number): void {
     this.glossaryService.rejectDefinition(definitionId).subscribe(() => {
-      this.loadProposedDefinitions();
+      this.loadProposedDefinitions(true); // reload to get fresh results
     });
   }
 
