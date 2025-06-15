@@ -22,6 +22,7 @@ export class DefinitionFormComponent implements OnInit {
   public definitionText = '';
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
+  public allTerms: Term[] = [];
 
   public editorConfig = {
     height: 300,
@@ -34,19 +35,33 @@ export class DefinitionFormComponent implements OnInit {
     toolbar: 'undo redo | blocks | ' +
     'bold italic forecolor | alignleft aligncenter ' +
     'alignright alignjustify | bullist numlist outdent indent | ' +
-    'removeformat | help',
-    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+    'link | removeformat | help',
+    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+    link_list: (success: (items: { title: string; value: string; }[]) => void) => {
+        const termLinks = this.allTerms.map(term => ({
+            title: term.text,
+            value: `/term/${term.id}`
+        }));
+        success(termLinks);
+    }
   };
 
   constructor(private glossaryService: GlossaryService) { }
 
   ngOnInit(): void {
     this.loadDomains();
+    this.loadAllTerms();
   }
 
   loadDomains(): void {
     this.glossaryService.getDomains().subscribe(response => {
       this.domains = response.results;
+    });
+  }
+
+  loadAllTerms(): void {
+    this.glossaryService.getAllTerms().subscribe(terms => {
+      this.allTerms = terms;
     });
   }
 
@@ -74,16 +89,26 @@ export class DefinitionFormComponent implements OnInit {
       // Status will be 'proposed' by default on the backend
     };
 
-    this.glossaryService.createDefinition(newDefinition as unknown as Partial<Definition>).subscribe(savedDefinition => {
-      this.definitionSaved.emit(savedDefinition);
-      // Reset form
-      setTimeout(() => {
-        this.definitionText = '';
-        this.selectedDomainId = null;
-      });
-    }, error => {
-      console.error('Error saving definition:', error);
-      alert('There was an error saving the definition.');
+    this.glossaryService.createDefinition(newDefinition as unknown as Partial<Definition>).subscribe({
+      next: (savedDefinition) => {
+        this.definitionSaved.emit(savedDefinition);
+        // Reset form
+        setTimeout(() => {
+          this.definitionText = '';
+          this.selectedDomainId = null;
+        });
+      },
+      error: (error) => {
+        console.error('Error saving definition:', error);
+        let errorMessage = 'There was an error saving the definition.';
+        // Extract a more specific error message from the backend if available
+        if (error.error && error.error.definition_text && Array.isArray(error.error.definition_text)) {
+            errorMessage = error.error.definition_text[0];
+        } else if (typeof error.error === 'string') {
+            errorMessage = error.error;
+        }
+        alert(errorMessage);
+      }
     });
   }
 } 
