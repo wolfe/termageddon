@@ -113,4 +113,8 @@ export class GlossaryService {
   approveDefinition(id: number): Observable<Definition> {
     return this.http.post<Definition>(`${this.apiUrl}/definitions/${id}/approve/`, {});
   }
+
+  rejectDefinition(id: number): Observable<Definition> {
+    return this.http.post<Definition>(`${this.apiUrl}/definitions/${id}/reject/`, {});
+  }
 } 

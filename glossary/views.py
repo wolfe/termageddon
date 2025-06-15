@@ -90,3 +90,21 @@ class DefinitionViewSet(viewsets.ModelViewSet):
             return Response(self.get_serializer(definition).data)
         except Definition.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        """
+        Reject a definition.
+        """
+        try:
+            definition = self.get_object()
+            if definition.status == 'rejected':
+                return Response({'status': 'already rejected'}, status=status.HTTP_400_BAD_REQUEST)
+
+            definition.status = 'rejected'
+            if request.user.is_authenticated:
+                definition.updated_by = request.user
+            definition.save()
+            return Response(self.get_serializer(definition).data)
+        except Definition.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)

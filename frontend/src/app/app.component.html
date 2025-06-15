@@ -3,7 +3,8 @@
     <a routerLink="/" class="text-2xl font-bold hover:text-gray-300">Termageddon</a>
     <div class="flex items-center space-x-4">
       <div *ngIf="isLoggedIn$ | async as isLoggedIn; else showLogin">
-        <span *ngIf="currentUser$ | async as user" class="mr-4">Welcome, {{ user.first_name || user.username }}</span>
+        <a routerLink="/review" class="px-4 py-2 hover:bg-gray-700 rounded-md">Review</a>
+        <span *ngIf="currentUser$ | async as user" class="ml-4 mr-4">Welcome, {{ user.first_name || user.username }}</span>
         <button (click)="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md">Logout</button>
       </div>
       <ng-template #showLogin>
