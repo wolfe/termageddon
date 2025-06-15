@@ -99,22 +99,66 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   approve(definitionId: number): void {
+    const defIndex = this.proposedDefinitions.findIndex(d => d.id === definitionId);
+    if (defIndex === -1 || !this.currentUser) {
+      return;
+    }
+
+    const definition = this.proposedDefinitions[defIndex];
+
+    // Prevent re-clicking if user can no longer approve.
+    if (!this.canApprove(definition)) {
+      return;
+    }
+
+    // Optimistically update the UI by adding the current user to the approvers list.
+    // This will immediately disable the button via the canApprove() binding.
+    const originalApprovers = [...definition.approvers];
+    definition.approvers = [...originalApprovers, this.currentUser];
+
     this.glossaryService.approveDefinition(definitionId).subscribe({
-      next: () => {
-        // Refresh the entire list to get the latest status for all items
-        this.loadProposedDefinitions();
+      next: (updatedDefinition) => {
+        if (updatedDefinition.status === 'approved') {
+          // The definition is fully approved. Animate its removal.
+          this.removeDefinitionFromList(definitionId);
+        } else {
+          // Not fully approved yet; update the local data with the server response.
+          this.proposedDefinitions[defIndex] = updatedDefinition;
+        }
       },
       error: (err) => {
         console.error('Failed to approve:', err);
         alert(err.error.detail || 'An unknown error occurred.');
+        // Rollback the optimistic update on error.
+        this.proposedDefinitions[defIndex].approvers = originalApprovers;
       }
     });
   }
 
   reject(definitionId: number): void {
-    this.glossaryService.rejectDefinition(definitionId).subscribe(() => {
-      this.loadProposedDefinitions(true); // reload to get fresh results
+    this.glossaryService.rejectDefinition(definitionId).subscribe({
+      next: () => {
+        this.removeDefinitionFromList(definitionId);
+      },
+      error: (err) => {
+        console.error('Failed to reject:', err);
+        alert(err.error.detail || 'An unknown error occurred.');
+      }
     });
+  }
+
+  private removeDefinitionFromList(id: number): void {
+    const element = document.getElementById(`def-item-${id}`);
+    if (element) {
+      element.classList.add('fade-out');
+      // Remove the item from the array after the animation completes.
+      setTimeout(() => {
+        this.proposedDefinitions = this.proposedDefinitions.filter(d => d.id !== id);
+      }, 500); // This duration must match the CSS transition duration.
+    } else {
+      // Fallback if the element isn't found.
+      this.proposedDefinitions = this.proposedDefinitions.filter(d => d.id !== id);
+    }
   }
 
   canApprove(def: Definition): boolean {
