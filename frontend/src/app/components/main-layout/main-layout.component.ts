@@ -16,7 +16,7 @@ export class MainLayoutComponent {
   isLoggedIn$: Observable<boolean>;
   currentUser$: Observable<User | null>;
 
-  constructor(private authService: AuthService) {
+  constructor(public authService: AuthService) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.currentUser$ = this.authService.currentUser$;
   }

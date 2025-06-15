@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
 
 // Define the interfaces for the data models.
 // These should match the Django serializers.
@@ -57,9 +58,11 @@ export interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class GlossaryService {
-  private apiUrl = 'http://127.0.0.1:8000/api';
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) {
+    this.apiUrl = `${this.authService.baseUrl}/api`;
+  }
 
   // Generic fetch function for all models
   private get<T>(endpoint: string, params: HttpParams = new HttpParams()): Observable<PaginatedResponse<T>> {

@@ -8,7 +8,7 @@ import { User } from './glossary.service'; // Assuming User interface is in glos
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://127.0.0.1:8000';
+  public baseUrl = 'http://127.0.0.1:8000';
   private tokenKey = 'auth_token';
 
   private _isLoggedIn = new BehaviorSubject<boolean>(false);
@@ -35,7 +35,7 @@ export class AuthService {
   }
 
   login(credentials: {username: string, password: string}): Observable<{token: string, user: User}> {
-    return this.http.post<{token: string, user: User}>(`${this.apiUrl}/api-token-auth/`, credentials).pipe(
+    return this.http.post<{token: string, user: User}>(`${this.baseUrl}/api-token-auth/`, credentials).pipe(
       tap(response => {
         this.setToken(response.token);
         this.setUserInStorage(response.user);
