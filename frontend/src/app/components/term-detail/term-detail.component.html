@@ -1,0 +1,38 @@
+<div class="container mx-auto p-4">
+  <div *ngIf="term">
+    <h1 class="text-4xl font-bold mb-6 border-b pb-2">{{ term.text }}</h1>
+    
+    <div class="space-y-6">
+      <div *ngFor="let def of definitions" class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-2xl font-semibold text-gray-800">{{ def.domain.name }}</h2>
+          <span 
+            class="px-3 py-1 text-sm font-semibold rounded-full"
+            [ngClass]="{
+              'bg-green-100 text-green-800': def.status === 'approved',
+              'bg-yellow-100 text-yellow-800': def.status === 'proposed',
+              'bg-red-100 text-red-800': def.status === 'rejected'
+            }"
+          >
+            {{ def.status | titlecase }}
+          </span>
+        </div>
+        <div class="prose max-w-none" [innerHTML]="def.definition_text"></div>
+        <div class="text-right text-sm text-gray-500 mt-4">
+          <p>Proposed by: {{ def.created_by.first_name }} {{ def.created_by.last_name }}</p>
+          <p>Last updated: {{ def.updated_at | date:'medium' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12">
+      <h3 class="text-2xl font-bold mb-4">Propose a New Definition</h3>
+      <app-definition-form [termId]="term.id" (definitionSaved)="onDefinitionSaved($event)"></app-definition-form>
+    </div>
+
+  </div>
+
+  <div *ngIf="!term" class="text-center py-10">
+    <p>Loading term details...</p>
+  </div>
+</div> 

@@ -64,6 +64,9 @@ class Term(AuditedModel):
     def __str__(self):
         return self.text
 
+    class Meta(AuditedModel.Meta):
+        ordering = ['text']
+
 
 class Definition(AuditedModel):
     STATUS_CHOICES = [

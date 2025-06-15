@@ -27,6 +27,12 @@ class TermSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class DefinitionWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Definition
+        fields = ['term', 'domain', 'definition_text']
+
+
 class DefinitionSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
     updated_by = UserSerializer(read_only=True)

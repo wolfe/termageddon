@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Domain, Term, Definition
-from .serializers import DomainSerializer, TermSerializer, DefinitionSerializer
+from .serializers import DomainSerializer, TermSerializer, DefinitionSerializer, DefinitionWriteSerializer
 
 # Create your views here.
 
@@ -35,6 +35,11 @@ class DefinitionViewSet(viewsets.ModelViewSet):
     serializer_class = DefinitionSerializer
     filterset_fields = ['term__text', 'domain__name', 'status']
     search_fields = ['term__text', 'definition_text']
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return DefinitionWriteSerializer
+        return DefinitionSerializer
 
     @action(detail=True, methods=['post'], url_path='approve')
     def approve(self, request, pk=None):
