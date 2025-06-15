@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.functions import Lower
 from django_ckeditor_5.fields import CKEditor5Field
 
 
@@ -65,7 +66,7 @@ class Term(AuditedModel):
         return self.text
 
     class Meta(AuditedModel.Meta):
-        ordering = ['text']
+        ordering = [Lower('text')]
 
 
 class Definition(AuditedModel):
