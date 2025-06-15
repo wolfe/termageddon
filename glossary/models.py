@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.functions import Lower
+from unidecode import unidecode
 
 
 class ActiveManager(models.Manager):
@@ -60,12 +61,19 @@ class Domain(AuditedModel):
 
 class Term(AuditedModel):
     text = models.CharField(max_length=255, unique=True)
+    text_normalized = models.CharField(
+        max_length=255, editable=False, db_index=True
+    )
+
+    def save(self, *args, **kwargs):
+        self.text_normalized = unidecode(self.text).lower()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.text
 
     class Meta(AuditedModel.Meta):
-        ordering = [Lower('text')]
+        ordering = ['text_normalized']
         db_table = 'glossary_term'
 
 
