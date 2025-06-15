@@ -21,10 +21,14 @@ class DomainSerializer(serializers.ModelSerializer):
 class TermSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
     updated_by = UserSerializer(read_only=True)
+    domains = serializers.SerializerMethodField()
 
     class Meta:
         model = Term
         fields = '__all__'
+
+    def get_domains(self, obj):
+        return [d.name for d in Domain.objects.filter(definitions__term=obj).distinct()]
 
 
 class DefinitionWriteSerializer(serializers.ModelSerializer):

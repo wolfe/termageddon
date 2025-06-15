@@ -10,7 +10,6 @@
   </div>
 
   <div 
-    class="overflow-auto h-screen"
     infiniteScroll
     [infiniteScrollDistance]="2"
     [infiniteScrollThrottle]="500"
@@ -21,6 +20,11 @@
         <a [routerLink]="['/term', term.id]" class="text-xl font-semibold text-indigo-600 hover:underline">
           {{ term.text }}
         </a>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <span *ngFor="let domain of term.domains" class="bg-gray-200 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">
+            {{ domain }}
+          </span>
+        </div>
       </li>
     </ul>
 

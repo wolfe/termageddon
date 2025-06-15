@@ -28,6 +28,7 @@ export interface Term {
   updated_at: string;
   created_by: User;
   updated_by: User;
+  domains: string[];
 }
 
 export interface Definition {

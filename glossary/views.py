@@ -3,7 +3,23 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Domain, Term, Definition
-from .serializers import DomainSerializer, TermSerializer, DefinitionSerializer, DefinitionWriteSerializer
+from .serializers import DomainSerializer, TermSerializer, DefinitionSerializer, DefinitionWriteSerializer, UserSerializer
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        user_serializer = UserSerializer(user)
+        return Response({
+            'token': token.key,
+            'user': user_serializer.data
+        })
 
 # Create your views here.
 

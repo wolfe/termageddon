@@ -16,11 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.authtoken import views
+from glossary.views import CustomAuthToken
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('glossary.urls')),
-    path('api-token-auth/', views.obtain_auth_token),
+    path('api-token-auth/', CustomAuthToken.as_view()),
     path('tinymce/', include('tinymce.urls')),
 ]
