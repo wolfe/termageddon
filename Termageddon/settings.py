@@ -141,3 +141,6 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
     ],
 }
+
+# The minimum number of approvals a definition needs to be marked as "approved".
+MIN_APPROVALS = 2

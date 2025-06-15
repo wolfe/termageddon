@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -78,14 +79,26 @@ class DefinitionViewSet(viewsets.ModelViewSet):
         """
         try:
             definition = self.get_object()
+            user = request.user
+
+            if not user.is_authenticated:
+                return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            if definition.created_by == user:
+                return Response({'detail': 'You cannot approve your own definition.'}, status=status.HTTP_403_FORBIDDEN)
+
+            if definition.approvers.filter(pk=user.pk).exists():
+                return Response({'detail': 'You have already approved this definition.'}, status=status.HTTP_400_BAD_REQUEST)
+
             if definition.status == 'approved':
                 return Response({'status': 'already approved'}, status=status.HTTP_400_BAD_REQUEST)
 
-            definition.status = 'approved'
-            # Assuming the approver is the logged-in user
-            if request.user.is_authenticated:
-                definition.approvers.add(request.user)
-                definition.updated_by = request.user
+            definition.approvers.add(user)
+            definition.updated_by = user
+            
+            if definition.approvers.count() >= settings.MIN_APPROVALS:
+                definition.status = 'approved'
+
             definition.save()
             return Response(self.get_serializer(definition).data)
         except Definition.DoesNotExist:
