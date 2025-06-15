@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.functions import Lower
-from django_ckeditor_5.fields import CKEditor5Field
 
 
 class ActiveManager(models.Manager):
@@ -67,6 +66,7 @@ class Term(AuditedModel):
 
     class Meta(AuditedModel.Meta):
         ordering = [Lower('text')]
+        db_table = 'glossary_term'
 
 
 class Definition(AuditedModel):
@@ -78,7 +78,7 @@ class Definition(AuditedModel):
 
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='definitions')
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name='definitions')
-    definition_text = CKEditor5Field('Text', config_name='default')
+    definition_text = models.TextField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='proposed')
     approvers = models.ManyToManyField(User, related_name='approved_definitions', blank=True)
 
