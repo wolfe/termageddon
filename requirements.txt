@@ -5,6 +5,7 @@ charset-normalizer==3.4.2
 Django==5.2.3
 django-cors-headers==4.7.0
 django-filter==25.1
+django-tinymce==4.1.0
 djangorestframework==3.16.0
 idna==3.10
 pillow==11.2.1

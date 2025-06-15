@@ -1,5 +1,8 @@
 from django.contrib import admin
+from django.db import models
 from django.db.models.functions import Lower
+from django import forms
+from tinymce.widgets import TinyMCE
 from .models import Domain, Term, Definition
 
 class AuditedAdmin(admin.ModelAdmin):
@@ -55,8 +58,17 @@ class TermAdmin(AuditedAdmin):
     list_display = ('text', 'is_deleted')
     search_fields = ('text',)
 
+class DefinitionAdminForm(forms.ModelForm):
+    definition_text = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}))
+
+    class Meta:
+        model = Definition
+        fields = '__all__'
+
+
 @admin.register(Definition)
 class DefinitionAdmin(AuditedAdmin):
+    form = DefinitionAdminForm
     list_display = ('term', 'domain', 'status', 'created_by', 'is_deleted')
     list_filter = ('status', 'domain', 'is_deleted')
     search_fields = ('term__text', 'definition_text')
