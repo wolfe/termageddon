@@ -7,7 +7,7 @@
       (ngModelChange)="onDomainChange()"
       name="domain"
       required
-      class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+      class="mt-1 block w-80 pl-3 pr-10 py-2 text-base border-2 border-indigo-200 bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
     >
       <option [ngValue]="null" disabled>Select a domain</option>
       <option *ngFor="let domain of domains" [ngValue]="domain.id">{{ domain.name }}</option>
