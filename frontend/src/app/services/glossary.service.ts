@@ -82,6 +82,10 @@ export class GlossaryService {
     return this.get<Term>('terms', params);
   }
 
+  getTerm(id: number): Observable<Term> {
+    return this.http.get<Term>(`${this.apiUrl}/terms/${id}/`);
+  }
+
   // --- Definition Methods ---
   getDefinitions(page: number = 1, filters: { [key: string]: string } = {}): Observable<PaginatedResponse<Definition>> {
     let params = new HttpParams().set('page', page.toString());

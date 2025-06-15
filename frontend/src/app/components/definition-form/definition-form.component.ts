@@ -52,6 +52,7 @@ export class DefinitionFormComponent implements OnInit {
 
   onDomainChange(): void {
     const existingDef = this.definitions.find(def => def.domain.id === this.selectedDomainId);
+
     if (existingDef) {
       this.definitionText = existingDef.definition_text;
     } else {
@@ -76,8 +77,10 @@ export class DefinitionFormComponent implements OnInit {
     this.glossaryService.createDefinition(newDefinition as unknown as Partial<Definition>).subscribe(savedDefinition => {
       this.definitionSaved.emit(savedDefinition);
       // Reset form
-      this.definitionText = '';
-      this.selectedDomainId = null;
+      setTimeout(() => {
+        this.definitionText = '';
+        this.selectedDomainId = null;
+      });
     }, error => {
       console.error('Error saving definition:', error);
       alert('There was an error saving the definition.');

@@ -41,6 +41,20 @@ class DefinitionViewSet(viewsets.ModelViewSet):
             return DefinitionWriteSerializer
         return DefinitionSerializer
 
+    def perform_create(self, serializer):
+        """Sets the creator of the definition to the current user if authenticated."""
+        if self.request.user.is_authenticated:
+            serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        else:
+            serializer.save()
+
+    def perform_update(self, serializer):
+        """Sets the updater of the definition to the current user if authenticated."""
+        if self.request.user.is_authenticated:
+            serializer.save(updated_by=self.request.user)
+        else:
+            serializer.save()
+
     @action(detail=True, methods=['post'], url_path='approve')
     def approve(self, request, pk=None):
         """

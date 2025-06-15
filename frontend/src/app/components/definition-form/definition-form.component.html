@@ -10,7 +10,7 @@
       class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
     >
       <option [ngValue]="null" disabled>Select a domain</option>
-      <option *ngFor="let domain of domains" [value]="domain.id">{{ domain.name }}</option>
+      <option *ngFor="let domain of domains" [ngValue]="domain.id">{{ domain.name }}</option>
     </select>
   </div>
 
@@ -22,10 +22,6 @@
       name="definitionText"
       required
     ></editor>
-    <div class="mt-2 p-2 border bg-gray-100 rounded">
-      <p class="text-xs font-mono font-bold">Debug Panel</p>
-      <pre class="text-xs font-mono whitespace-pre-wrap">{{ definitionText }}</pre>
-    </div>
   </div>
 
   <div>

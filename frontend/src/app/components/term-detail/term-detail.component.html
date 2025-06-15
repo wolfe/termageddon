@@ -19,7 +19,8 @@
         </div>
         <div class="prose max-w-none" [innerHTML]="def.definition_text"></div>
         <div class="text-right text-sm text-gray-500 mt-4">
-          <p>Proposed by: {{ def.created_by.first_name }} {{ def.created_by.last_name }}</p>
+          <p *ngIf="def.created_by">Proposed by: {{ def.created_by.first_name }} {{ def.created_by.last_name }}</p>
+          <p *ngIf="!def.created_by">Proposed by: Anonymous</p>
           <p>Last updated: {{ def.updated_at | date:'medium' }}</p>
         </div>
       </div>

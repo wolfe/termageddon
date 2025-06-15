@@ -29,8 +29,8 @@ export class TermDetailComponent implements OnInit {
   }
 
   loadTerm(id: number): void {
-    this.glossaryService.getTerms().subscribe(response => {
-      this.term = response.results.find(t => t.id === id);
+    this.glossaryService.getTerm(id).subscribe(term => {
+      this.term = term;
     });
   }
 
