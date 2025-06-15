@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'glossary',
     # 3rd party
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'django_filters',
     'tinymce',
