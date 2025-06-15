@@ -52,21 +52,18 @@ class Command(BaseCommand):
                     # Get or create user
                     if author_name not in users:
                         username = author_name.replace(" ", "_").lower()
-                        user, created = User.objects.get_or_create(username=username)
-                        if created:
-                            # Extract first and last name
-                            name_parts = author_name.split()
-                            first_name = name_parts[0] if name_parts else ''
-                            last_name = name_parts[-1] if len(name_parts) > 1 else ''
-                            
-                            user.first_name = first_name
-                            user.last_name = last_name
-                            # Set password to be "test"
-                            user.set_password('test')
-                            user.save()
-                            # Add user to the 'Test Users' group
-                            user.groups.add(test_user_group)
+                        user, _ = User.objects.get_or_create(username=username)
+
+                        # Set details, password, and group association
+                        name_parts = author_name.split()
+                        user.first_name = name_parts[0] if name_parts else ''
+                        user.last_name = name_parts[-1] if len(name_parts) > 1 else ''
+                        user.set_password('test')
+                        user.save()
+                        user.groups.add(test_user_group)
+                        
                         users[author_name] = user
+                    
                     user = users[author_name]
 
                     # Get or create domain
