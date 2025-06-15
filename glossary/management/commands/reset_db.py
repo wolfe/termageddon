@@ -1,6 +1,6 @@
 import csv
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from glossary.models import Domain, Term, Definition
 
 class Command(BaseCommand):
@@ -17,11 +17,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING('Resetting database...'))
 
+        # Get or create the 'Test Users' group
+        test_user_group, _ = Group.objects.get_or_create(name='Test Users')
+
         # Clear existing data
-        self.stdout.write('Deleting all Definitions, Terms, and Domains...')
+        self.stdout.write('Deleting all Definitions, Terms, Domains, and Test Users...')
         Definition.all_objects.all().delete()
         Term.all_objects.all().delete()
         Domain.all_objects.all().delete()
+        User.objects.filter(groups=test_user_group).delete()
         self.stdout.write(self.style.SUCCESS('Database cleared.'))
 
         csv_file_path = options['csv_file']
@@ -53,13 +57,15 @@ class Command(BaseCommand):
                             # Extract first and last name
                             name_parts = author_name.split()
                             first_name = name_parts[0] if name_parts else ''
-                            last_name = name_parts[-1] if len(name_parts) > 1 else 'password'
+                            last_name = name_parts[-1] if len(name_parts) > 1 else ''
                             
                             user.first_name = first_name
                             user.last_name = last_name
-                            # Set password to be the last name, in lowercase
-                            user.set_password(last_name.lower())
+                            # Set password to be "test"
+                            user.set_password('test')
                             user.save()
+                            # Add user to the 'Test Users' group
+                            user.groups.add(test_user_group)
                         users[author_name] = user
                     user = users[author_name]
 
