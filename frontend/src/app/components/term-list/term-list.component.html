@@ -1,5 +1,5 @@
-<div class="container mx-auto p-4">
-  <div class="mb-4">
+<div class="container mx-auto px-4">
+  <div class="sticky top-[56px] z-40 bg-gray-50 py-4">
     <input 
       type="text" 
       [(ngModel)]="searchQuery" 
@@ -10,6 +10,7 @@
   </div>
 
   <div 
+    class="pt-4"
     infiniteScroll
     [infiniteScrollDistance]="2"
     [infiniteScrollThrottle]="500"
