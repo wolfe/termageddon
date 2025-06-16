@@ -23,7 +23,6 @@ export class DefinitionFormComponent implements OnInit {
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
   private searchDebounce: any;
-  private dialogTermItems: any[] = [];
 
   public editorConfig = {
     height: 300,
@@ -116,9 +115,12 @@ export class DefinitionFormComponent implements OnInit {
       onAction: () => {
         const selection = editor.selection;
         const text = selection.getContent({ format: 'text' });
-        this.dialogTermItems = []; // Reset on open
+        
+        // Caches for the dialog instance to avoid re-fetching
+        let termCache: any[] = [{ text: 'Type to search for terms', value: '' }];
+        let domainCache: any[] = [];
 
-        const getDialogConfig = (termItems: any[], domainItems: any[]) => ({
+        const getDialogConfig = (terms: any[], domains: any[]) => ({
           title: 'Link to Definition',
           size: 'large',
           body: {
@@ -134,13 +136,13 @@ export class DefinitionFormComponent implements OnInit {
                 type: 'listbox',
                 name: 'term_id',
                 label: 'Select Term',
-                items: termItems
+                items: terms
               },
               {
                 type: 'listbox',
                 name: 'domain_id',
                 label: 'Select Domain',
-                items: domainItems,
+                items: domains,
                 disabled: true
               }
             ]
@@ -152,53 +154,63 @@ export class DefinitionFormComponent implements OnInit {
           initialData: {
             text: text,
             term_query: '',
-            term_id: null,
-            domain_id: null
+            term_id: '',
+            domain_id: ''
           },
           onChange: (api: any, details: any) => {
             const data = api.getData();
+
             if (details.name === 'term_query') {
               clearTimeout(this.searchDebounce);
               this.searchDebounce = setTimeout(() => {
                 this.glossaryService.getTerms(1, data.term_query).subscribe(response => {
-                  this.dialogTermItems = response.results.map(term => ({
+                  termCache = response.results.map(term => ({
                     text: term.text,
                     value: term.id.toString()
                   }));
-                  if (this.dialogTermItems.length === 0) {
-                    this.dialogTermItems.push({ text: 'No terms found', value: '' });
+                  if (termCache.length === 0) {
+                    termCache = [{ text: 'No terms found', value: '' }];
                   }
                   
+                  // Redraw the dialog with the new term list
                   const currentData = api.getData();
-                  api.redial(getDialogConfig(this.dialogTermItems, []));
+                  api.redial(getDialogConfig(termCache, []));
                   api.setData(currentData);
                 });
               }, 500);
 
             } else if (details.name === 'term_id') {
               const termId = data.term_id;
-              api.setEnabled('domain_id', false);
-              api.setEnabled('submit', false);
+              api.setEnabled('submit', false); // Disable submit when term changes
 
               if (termId) {
-                this.glossaryService.getDefinitions(1, { term__id: termId, status: 'approved', page_size: '100' }).subscribe(response => {
-                  let domains = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
-                  if (domains.length === 0) {
-                    domains.push({ text: 'No approved definitions found', value: '' });
-                  }
+                // Fetch domains for the selected term
+                api.setEnabled('domain_id', false); // Disable while loading
+                api.block('Loading domains...');
 
+                this.glossaryService.getDefinitions(1, { term__id: termId, status: 'approved', page_size: '100' }).subscribe(response => {
+                  domainCache = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
+                  if (domainCache.length === 0) {
+                    domainCache = [{ text: 'No approved definitions found', value: '' }];
+                  }
+                  
+                  // Redraw with the new domain list
                   const currentData = api.getData();
-                  api.redial(getDialogConfig(this.dialogTermItems, domains));
+                  api.unblock();
+                  api.redial(getDialogConfig(termCache, domainCache));
                   api.setData(currentData);
                   api.setEnabled('domain_id', true);
-                  // api.getForm().getFieldByName('domain_id').focus(); - Can't focus easily after redial
                 });
               } else {
-                 const currentData = api.getData();
-                 api.redial(getDialogConfig(this.dialogTermItems, []));
-                 api.setData(currentData);
+                // If term is de-selected, clear domains
+                domainCache = [];
+                const currentData = api.getData();
+                api.redial(getDialogConfig(termCache, domainCache));
+                api.setData(currentData);
               }
+
             } else if (details.name === 'domain_id') {
+               // Enable submit only if a valid domain is selected
                api.setEnabled('submit', !!data.domain_id);
             }
           },
@@ -217,7 +229,8 @@ export class DefinitionFormComponent implements OnInit {
           }
         });
         
-        editor.windowManager.open(getDialogConfig([], []));
+        // Open the dialog with the initial placeholder configuration
+        editor.windowManager.open(getDialogConfig(termCache, []));
       }
     });
   }
