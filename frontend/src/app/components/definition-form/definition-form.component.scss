@@ -1,7 +1,19 @@
 /* No content needed, file just needs to exist */ 
 
+:host ::ng-deep .tox-form__group {
+    /* This can help in some flexbox scenarios within TinyMCE's dialogs */
+    display: flex;
+    flex-direction: column;
+}
+
+:host ::ng-deep .tox-html-panel {
+    /* This makes the panel flexible and allows the child to scroll */
+    flex-grow: 1;
+    min-height: 150px; /* Ensure it has a minimum height */
+}
+
 .term-results-panel {
-    height: 150px; /* Approximately 10 items */
+    height: 100%; /* Fill its parent container */
     overflow-y: auto;
     border: 1px solid #ccc;
     padding: 5px;
