@@ -3,3 +3,58 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Styles for the custom TinyMCE "Link to Definition" dialog.
+ * These are global because TinyMCE dialogs are rendered outside
+ * of the Angular component's view, so component-scoped styles
+ * do not apply reliably.
+ */
+.tox .tox-form__group {
+    /* This can help in some flexbox scenarios within TinyMCE's dialogs */
+    display: flex;
+    flex-direction: column;
+}
+
+.tox .tox-html-panel {
+    /* This makes the panel flexible and allows the child to scroll */
+    flex-grow: 1;
+    min-height: 150px; /* Ensure it has a minimum height */
+}
+
+.term-results-panel {
+    height: 200px; /* Give the panel a fixed height to force a scrollbar */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 5px;
+    background-color: white;
+    width: 100%; /* Take full width of dialog panel */
+}
+
+.term-item {
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    /* Add a transition for smoother hover effects */
+    transition: background-color 0.2s ease-in-out;
+}
+
+.term-item:hover {
+    background-color: #f0f0f0; /* Light gray hover */
+}
+
+.term-item.selected {
+    background-color: #e0e7ff; /* A light indigo to match theme */
+    font-weight: bold;
+    color: #3730a3; /* A darker indigo for text */
+}
+
+.definition-preview-panel {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #fafafa;
+    min-height: 50px;
+    max-height: 200px;
+    overflow-y: auto;
+}
