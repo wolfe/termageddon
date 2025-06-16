@@ -23,6 +23,7 @@ export class DefinitionFormComponent implements OnInit {
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
   private searchDebounce: any;
+  private dialogTermItems: any[] = [];
 
   public editorConfig = {
     height: 300,
@@ -115,8 +116,9 @@ export class DefinitionFormComponent implements OnInit {
       onAction: () => {
         const selection = editor.selection;
         const text = selection.getContent({ format: 'text' });
+        this.dialogTermItems = []; // Reset on open
 
-        const dialog = editor.windowManager.open({
+        const getDialogConfig = (termItems: any[], domainItems: any[]) => ({
           title: 'Link to Definition',
           size: 'large',
           body: {
@@ -132,23 +134,26 @@ export class DefinitionFormComponent implements OnInit {
                 type: 'listbox',
                 name: 'term_id',
                 label: 'Select Term',
-                items: []
+                items: termItems
               },
               {
                 type: 'listbox',
                 name: 'domain_id',
                 label: 'Select Domain',
-                items: [],
+                items: domainItems,
                 disabled: true
               }
             ]
           },
           buttons: [
             { type: 'cancel', text: 'Cancel' },
-            { type: 'submit', text: 'Insert Link', primary: true, disabled: true }
+            { type: 'submit', name: 'submit', text: 'Insert Link', primary: true, disabled: true }
           ],
           initialData: {
             text: text,
+            term_query: '',
+            term_id: null,
+            domain_id: null
           },
           onChange: (api: any, details: any) => {
             const data = api.getData();
@@ -156,44 +161,45 @@ export class DefinitionFormComponent implements OnInit {
               clearTimeout(this.searchDebounce);
               this.searchDebounce = setTimeout(() => {
                 this.glossaryService.getTerms(1, data.term_query).subscribe(response => {
-                  const termListCtrl = api.getForm().getFieldByName('term_id');
-                  if (response.results.length > 0) {
-                    const terms = response.results.map(term => ({
-                      text: term.text,
-                      value: term.id.toString()
-                    }));
-                    termListCtrl.setItems(terms);
-                  } else {
-                    termListCtrl.setItems([{ text: 'No terms found', value: '' }]);
+                  this.dialogTermItems = response.results.map(term => ({
+                    text: term.text,
+                    value: term.id.toString()
+                  }));
+                  if (this.dialogTermItems.length === 0) {
+                    this.dialogTermItems.push({ text: 'No terms found', value: '' });
                   }
+                  
+                  const currentData = api.getData();
+                  api.redial(getDialogConfig(this.dialogTermItems, []));
+                  api.setData(currentData);
                 });
               }, 500);
+
             } else if (details.name === 'term_id') {
               const termId = data.term_id;
-              
-              const domainListCtrl = api.getForm().getFieldByName('domain_id');
-              const submitButton = api.getForm().getButtonsByName('submit')[0];
-
-              domainListCtrl.setDisabled(true);
-              submitButton.setDisabled(true);
-              api.setData({ domain_id: null });
+              api.setEnabled('domain_id', false);
+              api.setEnabled('submit', false);
 
               if (termId) {
                 this.glossaryService.getDefinitions(1, { term__id: termId, status: 'approved', page_size: '100' }).subscribe(response => {
-                  if (response.results.length > 0) {
-                    const domains = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
-                    domainListCtrl.setItems(domains);
-                    domainListCtrl.setDisabled(false);
-                    api.getForm().getFieldByName('domain_id').focus();
-                  } else {
-                    domainListCtrl.setItems([{ text: 'No approved definitions found', value: '' }]);
-                    domainListCtrl.setDisabled(true);
+                  let domains = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
+                  if (domains.length === 0) {
+                    domains.push({ text: 'No approved definitions found', value: '' });
                   }
+
+                  const currentData = api.getData();
+                  api.redial(getDialogConfig(this.dialogTermItems, domains));
+                  api.setData(currentData);
+                  api.setEnabled('domain_id', true);
+                  // api.getForm().getFieldByName('domain_id').focus(); - Can't focus easily after redial
                 });
+              } else {
+                 const currentData = api.getData();
+                 api.redial(getDialogConfig(this.dialogTermItems, []));
+                 api.setData(currentData);
               }
             } else if (details.name === 'domain_id') {
-               const domainId = api.getData().domain_id;
-               api.getForm().getButtonsByName('submit')[0].setDisabled(!domainId);
+               api.setEnabled('submit', !!data.domain_id);
             }
           },
           onSubmit: (api: any) => {
@@ -210,6 +216,8 @@ export class DefinitionFormComponent implements OnInit {
             }
           }
         });
+        
+        editor.windowManager.open(getDialogConfig([], []));
       }
     });
   }
