@@ -123,24 +123,16 @@ export class DefinitionFormComponent implements OnInit {
             type: 'panel',
             items: [
               {
-                type: 'autocompleter',
-                name: 'term_id',
+                type: 'input',
+                name: 'term_query',
                 label: 'Search for a term',
-                placeholder: 'Start typing to search...',
-                fetch: (pattern: string, _maxResults: number) => {
-                  return new Promise((resolve) => {
-                    clearTimeout(this.searchDebounce);
-                    this.searchDebounce = setTimeout(() => {
-                      this.glossaryService.getTerms(1, pattern).subscribe(response => {
-                        const terms = response.results.map(term => ({
-                          value: term.id.toString(),
-                          text: term.text
-                        }));
-                        resolve(terms);
-                      });
-                    }, 500); // 500ms debounce
-                  });
-                }
+                placeholder: 'Start typing to search...'
+              },
+              {
+                type: 'listbox',
+                name: 'term_id',
+                label: 'Select Term',
+                items: []
               },
               {
                 type: 'listbox',
@@ -159,8 +151,25 @@ export class DefinitionFormComponent implements OnInit {
             text: text,
           },
           onChange: (api: any, details: any) => {
-            if (details.name === 'term_id') {
-              const termId = api.getData().term_id;
+            const data = api.getData();
+            if (details.name === 'term_query') {
+              clearTimeout(this.searchDebounce);
+              this.searchDebounce = setTimeout(() => {
+                this.glossaryService.getTerms(1, data.term_query).subscribe(response => {
+                  const termListCtrl = api.getForm().getFieldByName('term_id');
+                  if (response.results.length > 0) {
+                    const terms = response.results.map(term => ({
+                      text: term.text,
+                      value: term.id.toString()
+                    }));
+                    termListCtrl.setItems(terms);
+                  } else {
+                    termListCtrl.setItems([{ text: 'No terms found', value: '' }]);
+                  }
+                });
+              }, 500);
+            } else if (details.name === 'term_id') {
+              const termId = data.term_id;
               
               const domainListCtrl = api.getForm().getFieldByName('domain_id');
               const submitButton = api.getForm().getButtonsByName('submit')[0];
