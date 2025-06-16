@@ -23,6 +23,7 @@ export class DefinitionFormComponent implements OnInit {
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
   public allTerms: Term[] = [];
+  private searchDebounce: any;
 
   public editorConfig = {
     height: 300,
@@ -130,16 +131,24 @@ export class DefinitionFormComponent implements OnInit {
             type: 'panel',
             items: [
               {
-                type: 'input',
-                name: 'term_query',
-                label: 'Search for a term',
-                placeholder: 'Start typing to search...'
-              },
-              {
-                type: 'listbox',
+                type: 'autocompleter',
                 name: 'term_id',
-                label: 'Select Term',
-                items: []
+                label: 'Search for a term',
+                placeholder: 'Start typing to search...',
+                fetch: (pattern: string, _maxResults: number) => {
+                  return new Promise((resolve) => {
+                    clearTimeout(this.searchDebounce);
+                    this.searchDebounce = setTimeout(() => {
+                      this.glossaryService.getTerms(1, pattern).subscribe(response => {
+                        const terms = response.results.map(term => ({
+                          value: term.id.toString(),
+                          text: term.text
+                        }));
+                        resolve(terms);
+                      });
+                    }, 500); // 500ms debounce
+                  });
+                }
               },
               {
                 type: 'listbox',
@@ -158,22 +167,18 @@ export class DefinitionFormComponent implements OnInit {
             text: text,
           },
           onChange: (api: any, details: any) => {
-            if (details.name === 'term_query') {
-              const query = api.getData().term_query;
-              if (query.length < 2) {
-                // api.setData({ term_id: null }); // Doesn't work as expected
-                return;
-              }
-              this.glossaryService.getTerms(1, query).subscribe(response => {
-                const termListCtrl = api.getForm().getFieldByName('term_id');
-                const terms = response.results.map(term => ({ text: term.text, value: term.id.toString() }));
-                termListCtrl.setItems(terms);
-              });
-            } else if (details.name === 'term_id') {
+            if (details.name === 'term_id') {
               const termId = api.getData().term_id;
+              
+              const domainListCtrl = api.getForm().getFieldByName('domain_id');
+              const submitButton = api.getForm().getButtonsByName('submit')[0];
+
+              domainListCtrl.setDisabled(true);
+              submitButton.setDisabled(true);
+              api.setData({ domain_id: null });
+
               if (termId) {
                 this.glossaryService.getDefinitions(1, { term__id: termId, status: 'approved', page_size: '100' }).subscribe(response => {
-                  const domainListCtrl = api.getForm().getFieldByName('domain_id');
                   if (response.results.length > 0) {
                     const domains = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
                     domainListCtrl.setItems(domains);
@@ -183,8 +188,6 @@ export class DefinitionFormComponent implements OnInit {
                     domainListCtrl.setItems([{ text: 'No approved definitions found', value: '' }]);
                     domainListCtrl.setDisabled(true);
                   }
-                  // Reset submit button state
-                  api.getForm().getButtonsByName('submit')[0].setDisabled(true);
                 });
               }
             } else if (details.name === 'domain_id') {
@@ -194,14 +197,16 @@ export class DefinitionFormComponent implements OnInit {
           },
           onSubmit: (api: any) => {
             const data = api.getData();
-            const selectedTerm = this.allTerms.find(t => t.id === parseInt(data.term_id, 10));
-
-            if (selectedTerm) {
-                const linkText = text || selectedTerm.text;
-                const link = `<a href="/term/${data.term_id}" data-domain-id="${data.domain_id}">${linkText}</a>`;
-                editor.execCommand('mceInsertContent', false, link);
+            if (data.term_id && data.domain_id) {
+                this.glossaryService.getTerm(parseInt(data.term_id, 10)).subscribe(selectedTerm => {
+                    const linkText = data.text || selectedTerm.text;
+                    const link = `<a href="/term/${data.term_id}" data-domain-id="${data.domain_id}">${linkText}</a>`;
+                    editor.execCommand('mceInsertContent', false, link);
+                    api.close();
+                });
+            } else {
+              api.close();
             }
-            api.close();
           }
         });
       }
