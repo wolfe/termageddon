@@ -106,7 +106,7 @@ export class DefinitionFormComponent implements OnInit {
   }
 
   setupTermLinkDialog(editor: any): void {
-    const vocabularyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 19h-6a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1z" /><path d="M10 5h-4" /><path d="M10 7h-4" /><path d="M14 11h6" /><path d="M14 15h6" /><path d="M20 11v8" /></svg>`;
+    const vocabularyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 19h-6a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1z" /><path d="M10 5h-4" /><path d="M10 7h-4" /><path d="M14 11h6" /><path d="M14 15h6" /><path d="M20 11v8" /></svg>`;
     editor.ui.registry.addIcon('vocabulary', vocabularyIcon);
 
     editor.ui.registry.addButton('customTermLink', {
@@ -122,16 +122,40 @@ export class DefinitionFormComponent implements OnInit {
         let definitionCache: Definition[] = [];
         let domainItems: { text: string, value: string }[] = [{ text: 'Select a term first', value: '' }];
         let definitionPreviewHtml = '';
+        let termPage = 1;
+        let hasMoreTerms = true;
+        let isTermLoading = false;
         // --- End State ---
 
         const attachClickHandlers = (api: any) => {
           const panel = api.getEl()?.querySelector('.term-results-panel');
           if (panel) {
+            // Infinite scroll for terms
+            panel.addEventListener('scroll', () => {
+              if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 10 && hasMoreTerms && !isTermLoading) {
+                isTermLoading = true;
+                termPage++;
+                const currentQuery = api.getData().term_query;
+                this.glossaryService.getTerms(termPage, currentQuery).subscribe(response => {
+                  termCache.push(...response.results);
+                  hasMoreTerms = response.next !== null;
+                  
+                  const currentData = api.getData();
+                  api.redial(getDialogConfig(currentData));
+                  setTimeout(() => attachClickHandlers(api), 0);
+                  isTermLoading = false;
+                });
+              }
+            });
+
             panel.querySelectorAll('.term-item').forEach((item: HTMLElement) => {
               item.addEventListener('click', () => {
                 const termId = parseInt(item.dataset['id']!, 10);
                 this.selectedTermForDialog = termCache.find(t => t.id === termId) || null;
                 
+                // Get current form data to preserve it
+                const currentData = api.getData();
+
                 api.block('Loading domains...');
                 this.glossaryService.getDefinitions(1, { term__id: termId.toString(), status: 'approved', page_size: '100' }).subscribe(response => {
                   definitionCache = response.results;
@@ -145,8 +169,7 @@ export class DefinitionFormComponent implements OnInit {
 
                   definitionPreviewHtml = '';
                   api.unblock();
-                  api.redial(getDialogConfig());
-                  api.setData({ domain_id: '' });
+                  api.redial(getDialogConfig(currentData)); // Pass current data
                   // Re-attach handlers after the dialog is redrawn
                   setTimeout(() => attachClickHandlers(api), 0);
                 });
@@ -155,7 +178,7 @@ export class DefinitionFormComponent implements OnInit {
           }
         };
 
-        const getDialogConfig = () => {
+        const getDialogConfig = (data: any = { term_query: '', domain_id: '' }) => {
           const termHtml = termCache.map(term => 
             `<div 
               class="term-item ${this.selectedTermForDialog?.id === term.id ? 'selected' : ''}" 
@@ -179,28 +202,33 @@ export class DefinitionFormComponent implements OnInit {
               { type: 'cancel', text: 'Cancel' },
               { type: 'submit', name: 'submit', text: 'Insert Link', primary: true, disabled: true }
             ],
-            initialData: { term_query: '', domain_id: '' },
+            initialData: data,
             onPostRender: (api: any) => attachClickHandlers(api),
             onChange: (api: any, details: any) => {
               const data = api.getData();
               if (details.name === 'term_query') {
                 clearTimeout(this.searchDebounce);
                 this.searchDebounce = setTimeout(() => {
-                  this.glossaryService.getTerms(1, data.term_query).subscribe(response => {
+                  termPage = 1; // Reset pagination
+                  hasMoreTerms = true;
+                  isTermLoading = true;
+                  this.glossaryService.getTerms(termPage, data.term_query).subscribe(response => {
                     termCache = response.results;
+                    hasMoreTerms = response.next !== null;
                     this.selectedTermForDialog = null;
                     domainItems = [{ text: 'Select a term first', value: '' }];
                     definitionPreviewHtml = '';
-                    api.redial(getDialogConfig());
+                    api.redial(getDialogConfig(data));
                     // Re-attach handlers after the dialog is redrawn
                     setTimeout(() => attachClickHandlers(api), 0);
+                    isTermLoading = false;
                   });
                 }, 500);
               } else if (details.name === 'domain_id') {
                 const domainId = data.domain_id;
                 const definition = definitionCache.find(d => d.domain.id.toString() === domainId);
                 definitionPreviewHtml = definition ? definition.definition_text : '';
-                api.redial(getDialogConfig());
+                api.redial(getDialogConfig(data));
                 api.setEnabled('submit', !!domainId);
                 // Re-attach since redialing for preview also redraws the term list
                 setTimeout(() => attachClickHandlers(api), 0);
@@ -219,8 +247,11 @@ export class DefinitionFormComponent implements OnInit {
         };
 
         // First, load the initial set of terms
-        this.glossaryService.getTerms(1, '').subscribe(response => {
+        isTermLoading = true;
+        this.glossaryService.getTerms(termPage, '').subscribe(response => {
           termCache = response.results;
+          hasMoreTerms = response.next !== null;
+          isTermLoading = false;
           // Then, open the dialog with the populated term list
           editor.windowManager.open(getDialogConfig());
         });
