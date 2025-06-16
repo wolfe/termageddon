@@ -125,55 +125,8 @@ export class DefinitionFormComponent implements OnInit {
         let termPage = 1;
         let hasMoreTerms = true;
         let isTermLoading = false;
+        let dialogApi: any = null;
         // --- End State ---
-
-        const attachClickHandlers = (api: any) => {
-          const panel = api.getEl()?.querySelector('.term-results-panel');
-          if (panel) {
-            // Infinite scroll for terms
-            panel.addEventListener('scroll', () => {
-              if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 10 && hasMoreTerms && !isTermLoading) {
-                isTermLoading = true;
-                termPage++;
-                const currentQuery = api.getData().term_query;
-                this.glossaryService.getTerms(termPage, currentQuery).subscribe(response => {
-                  termCache.push(...response.results);
-                  hasMoreTerms = response.next !== null;
-                  
-                  const currentData = api.getData();
-                  api.redial(getDialogConfig(currentData));
-                  isTermLoading = false;
-                });
-              }
-            });
-
-            panel.querySelectorAll('.term-item').forEach((item: HTMLElement) => {
-              item.addEventListener('click', () => {
-                const termId = parseInt(item.dataset['id']!, 10);
-                this.selectedTermForDialog = termCache.find(t => t.id === termId) || null;
-                
-                // Get current form data to preserve it
-                const currentData = api.getData();
-
-                api.block('Loading domains...');
-                this.glossaryService.getDefinitions(1, { term__id: termId.toString(), status: 'approved', page_size: '100' }).subscribe(response => {
-                  definitionCache = response.results;
-                  domainItems = definitionCache.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
-                  
-                  if (domainItems.length > 0) {
-                    domainItems.unshift({ text: 'Select a domain', value: '' });
-                  } else {
-                    domainItems = [{ text: 'No approved definitions', value: '' }];
-                  }
-
-                  definitionPreviewHtml = '';
-                  api.unblock();
-                  api.redial(getDialogConfig(currentData)); // Pass current data
-                });
-              });
-            });
-          }
-        };
 
         const getDialogConfig = (data: any = { term_query: '', domain_id: '' }) => {
           const termHtml = termCache.map(term => 
@@ -200,8 +153,62 @@ export class DefinitionFormComponent implements OnInit {
               { type: 'submit', name: 'submit', text: 'Insert Link', primary: true, disabled: true }
             ],
             initialData: data,
-            onPostRender: (api: any) => attachClickHandlers(api),
+            onPostRender: (api: any) => {
+              dialogApi = api;
+              const dialogEl = api.getEl();
+              if (!dialogEl) return;
+
+              // Event Delegation for term selection
+              dialogEl.addEventListener('click', (e: MouseEvent) => {
+                const target = e.target as HTMLElement;
+                const termItem = target.closest('.term-item');
+
+                if (termItem instanceof HTMLElement && termItem.dataset['id']) {
+                  const termId = parseInt(termItem.dataset['id'], 10);
+                  this.selectedTermForDialog = termCache.find(t => t.id === termId) || null;
+                  
+                  const currentData = dialogApi.getData();
+
+                  dialogApi.block('Loading domains...');
+                  this.glossaryService.getDefinitions(1, { term__id: termId.toString(), status: 'approved', page_size: '100' }).subscribe(response => {
+                    definitionCache = response.results;
+                    domainItems = definitionCache.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
+                    
+                    if (domainItems.length > 0) {
+                      domainItems.unshift({ text: 'Select a domain', value: '' });
+                    } else {
+                      domainItems = [{ text: 'No approved definitions', value: '' }];
+                    }
+
+                    definitionPreviewHtml = '';
+                    dialogApi.unblock();
+                    dialogApi.redial(getDialogConfig(currentData));
+                  });
+                }
+              });
+
+              // Event Delegation for infinite scroll using event capturing
+              dialogEl.addEventListener('scroll', (e: Event) => {
+                const panel = e.target as HTMLElement;
+                if (panel.classList.contains('term-results-panel')) {
+                  if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 10 && hasMoreTerms && !isTermLoading) {
+                    isTermLoading = true;
+                    termPage++;
+                    const currentQuery = dialogApi.getData().term_query;
+                    this.glossaryService.getTerms(termPage, currentQuery).subscribe(response => {
+                      termCache.push(...response.results);
+                      hasMoreTerms = response.next !== null;
+                      
+                      const currentData = dialogApi.getData();
+                      dialogApi.redial(getDialogConfig(currentData));
+                      isTermLoading = false;
+                    });
+                  }
+                }
+              }, true); 
+            },
             onChange: (api: any, details: any) => {
+              dialogApi = api; // Keep the API reference fresh
               const data = api.getData();
               if (details.name === 'term_query') {
                 clearTimeout(this.searchDebounce);
