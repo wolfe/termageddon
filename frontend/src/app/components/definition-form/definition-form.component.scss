@@ -1,1 +1,36 @@
 /* No content needed, file just needs to exist */ 
+
+.term-results-panel {
+    height: 150px; /* Approximately 10 items */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 5px;
+    background-color: white;
+    width: 100%; /* Take full width of dialog panel */
+}
+
+.term-item {
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.term-item:hover {
+    background-color: #f0f0f0; /* Light gray hover */
+}
+
+.term-item.selected {
+    background-color: #e0e7ff; /* A light indigo to match theme */
+    font-weight: bold;
+    color: #3730a3; /* A darker indigo for text */
+}
+
+.definition-preview-panel {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #fafafa;
+    min-height: 50px;
+    max-height: 200px;
+    overflow-y: auto;
+} 

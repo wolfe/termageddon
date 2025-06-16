@@ -23,6 +23,7 @@ export class DefinitionFormComponent implements OnInit {
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
   private searchDebounce: any;
+  private selectedTermForDialog: Term | null = null;
 
   public editorConfig = {
     height: 300,
@@ -106,7 +107,6 @@ export class DefinitionFormComponent implements OnInit {
 
   setupTermLinkDialog(editor: any): void {
     const vocabularyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 19h-6a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1z" /><path d="M10 5h-4" /><path d="M10 7h-4" /><path d="M14 11h6" /><path d="M14 15h6" /><path d="M20 11v8" /></svg>`;
-
     editor.ui.registry.addIcon('vocabulary', vocabularyIcon);
 
     editor.ui.registry.addButton('customTermLink', {
@@ -115,122 +115,108 @@ export class DefinitionFormComponent implements OnInit {
       onAction: () => {
         const selection = editor.selection;
         const text = selection.getContent({ format: 'text' });
-        
-        // Caches for the dialog instance to avoid re-fetching
-        let termCache: any[] = [{ text: 'Type to search for terms', value: '' }];
-        let domainCache: any[] = [];
 
-        const getDialogConfig = (terms: any[], domains: any[]) => ({
-          title: 'Link to Definition',
-          size: 'large',
-          body: {
-            type: 'panel',
-            items: [
-              {
-                type: 'input',
-                name: 'term_query',
-                label: 'Search for a term',
-                placeholder: 'Start typing to search...'
-              },
-              {
-                type: 'listbox',
-                name: 'term_id',
-                label: 'Select Term',
-                items: terms
-              },
-              {
-                type: 'listbox',
-                name: 'domain_id',
-                label: 'Select Domain',
-                items: domains,
-                disabled: true
-              }
-            ]
-          },
-          buttons: [
-            { type: 'cancel', text: 'Cancel' },
-            { type: 'submit', name: 'submit', text: 'Insert Link', primary: true, disabled: true }
-          ],
-          initialData: {
-            text: text,
-            term_query: '',
-            term_id: '',
-            domain_id: ''
-          },
-          onChange: (api: any, details: any) => {
-            const data = api.getData();
+        // --- State Management for the Dialog ---
+        this.selectedTermForDialog = null;
+        let termCache: Term[] = [];
+        let definitionCache: Definition[] = [];
+        let domainItems: { text: string, value: string }[] = [{ text: 'Select a term first', value: '' }];
+        let definitionPreviewHtml = '';
+        // --- End State Management ---
 
-            if (details.name === 'term_query') {
-              clearTimeout(this.searchDebounce);
-              this.searchDebounce = setTimeout(() => {
-                this.glossaryService.getTerms(1, data.term_query).subscribe(response => {
-                  termCache = response.results.map(term => ({
-                    text: term.text,
-                    value: term.id.toString()
-                  }));
-                  if (termCache.length === 0) {
-                    termCache = [{ text: 'No terms found', value: '' }];
-                  }
-                  
-                  // Redraw the dialog with the new term list
-                  const currentData = api.getData();
-                  api.redial(getDialogConfig(termCache, []));
-                  api.setData(currentData);
-                });
-              }, 500);
-
-            } else if (details.name === 'term_id') {
-              const termId = data.term_id;
-              api.setEnabled('submit', false); // Disable submit when term changes
-
-              if (termId) {
-                // Fetch domains for the selected term
-                api.setEnabled('domain_id', false); // Disable while loading
+        const attachClickHandlers = (api: any) => {
+          const panel = api.getEl().querySelector('.term-results-panel');
+          if (panel) {
+            const termItems = panel.querySelectorAll('.term-item');
+            termItems.forEach((item: HTMLElement) => {
+              item.addEventListener('click', () => {
+                const termId = parseInt(item.dataset['id']!, 10);
+                this.selectedTermForDialog = termCache.find(t => t.id === termId) || null;
+                
                 api.block('Loading domains...');
-
-                this.glossaryService.getDefinitions(1, { term__id: termId, status: 'approved', page_size: '100' }).subscribe(response => {
-                  domainCache = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
-                  if (domainCache.length === 0) {
-                    domainCache = [{ text: 'No approved definitions found', value: '' }];
-                  }
+                this.glossaryService.getDefinitions(1, { term__id: termId.toString(), status: 'approved', page_size: '100' }).subscribe(response => {
+                  definitionCache = response.results;
+                  domainItems = definitionCache.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
                   
-                  // Redraw with the new domain list
-                  const currentData = api.getData();
-                  api.unblock();
-                  api.redial(getDialogConfig(termCache, domainCache));
-                  api.setData(currentData);
-                  api.setEnabled('domain_id', true);
-                });
-              } else {
-                // If term is de-selected, clear domains
-                domainCache = [];
-                const currentData = api.getData();
-                api.redial(getDialogConfig(termCache, domainCache));
-                api.setData(currentData);
-              }
+                  if (domainItems.length > 0) {
+                    domainItems.unshift({ text: 'Select a domain', value: '' });
+                  } else {
+                    domainItems = [{ text: 'No approved definitions', value: '' }];
+                  }
 
-            } else if (details.name === 'domain_id') {
-               // Enable submit only if a valid domain is selected
-               api.setEnabled('submit', !!data.domain_id);
-            }
-          },
-          onSubmit: (api: any) => {
-            const data = api.getData();
-            if (data.term_id && data.domain_id) {
-                this.glossaryService.getTerm(parseInt(data.term_id, 10)).subscribe(selectedTerm => {
-                    const linkText = text || selectedTerm.text;
-                    const link = `<a href="/term/${data.term_id}" data-domain-id="${data.domain_id}">${linkText}</a>`;
-                    editor.execCommand('mceInsertContent', false, link);
-                    api.close();
+                  definitionPreviewHtml = '';
+                  api.unblock();
+                  api.redial(getDialogConfig());
+                  api.setData({ domain_id: '' }); // Reset domain selection
                 });
-            } else {
+              });
+            });
+          }
+        };
+
+        const getDialogConfig = () => {
+          const termHtml = termCache.map(term => 
+            `<div 
+              class="term-item ${this.selectedTermForDialog?.id === term.id ? 'selected' : ''}" 
+              data-id="${term.id}"
+            >${term.text}</div>`
+          ).join('');
+
+          return {
+            title: 'Link to Definition',
+            size: 'large',
+            body: {
+              type: 'panel',
+              items: [
+                { type: 'input', name: 'term_query', label: 'Search for a term', placeholder: 'Start typing to search...' },
+                { type: 'htmlpanel', html: `<div class="term-results-panel">${termHtml}</div>` },
+                { type: 'listbox', name: 'domain_id', label: 'Select Domain', items: domainItems, disabled: !this.selectedTermForDialog },
+                { type: 'htmlpanel', html: `<div class="definition-preview-panel">${definitionPreviewHtml}</div>` }
+              ]
+            },
+            buttons: [
+              { type: 'cancel', text: 'Cancel' },
+              { type: 'submit', name: 'submit', text: 'Insert Link', primary: true, disabled: true }
+            ],
+            initialData: {
+              term_query: '',
+              domain_id: '',
+            },
+            onPostRender: (api: any) => attachClickHandlers(api),
+            onChange: (api: any, details: any) => {
+              const data = api.getData();
+              if (details.name === 'term_query') {
+                clearTimeout(this.searchDebounce);
+                this.searchDebounce = setTimeout(() => {
+                  this.glossaryService.getTerms(1, data.term_query).subscribe(response => {
+                    termCache = response.results;
+                    this.selectedTermForDialog = null;
+                    domainItems = [{ text: 'Select a term first', value: '' }];
+                    definitionPreviewHtml = '';
+                    api.redial(getDialogConfig());
+                  });
+                }, 500);
+              } else if (details.name === 'domain_id') {
+                const domainId = data.domain_id;
+                const definition = definitionCache.find(d => d.domain.id.toString() === domainId);
+                definitionPreviewHtml = definition ? definition.definition_text : '';
+                api.redial(getDialogConfig());
+                api.setEnabled('submit', !!domainId);
+              }
+            },
+            onSubmit: (api: any) => {
+              const data = api.getData();
+              if (this.selectedTermForDialog && data.domain_id) {
+                const linkText = text || this.selectedTermForDialog.text;
+                const link = `<a href="/term/${this.selectedTermForDialog.id}" data-domain-id="${data.domain_id}">${linkText}</a>`;
+                editor.execCommand('mceInsertContent', false, link);
+              }
               api.close();
             }
-          }
-        });
-        
-        // Open the dialog with the initial placeholder configuration
-        editor.windowManager.open(getDialogConfig(termCache, []));
+          };
+        };
+
+        editor.windowManager.open(getDialogConfig());
       }
     });
   }
