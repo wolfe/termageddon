@@ -158,8 +158,15 @@ export class DefinitionFormComponent implements OnInit {
               const dialogEl = api.getEl();
               if (!dialogEl) return;
 
-              // Event Delegation for term selection
-              dialogEl.addEventListener('click', (e: MouseEvent) => {
+              const dialogBody = dialogEl.querySelector('.tox-dialog__body');
+              if (!dialogBody) {
+                // Fallback or error for safety, though this should always be found.
+                console.error("Could not find the TinyMCE dialog body to attach events.");
+                return;
+              }
+
+              // Event Delegation for term selection, now on the dialog body
+              dialogBody.addEventListener('click', (e: MouseEvent) => {
                 const target = e.target as HTMLElement;
                 const termItem = target.closest('.term-item');
 
@@ -187,8 +194,8 @@ export class DefinitionFormComponent implements OnInit {
                 }
               });
 
-              // Event Delegation for infinite scroll using event capturing
-              dialogEl.addEventListener('scroll', (e: Event) => {
+              // Event Delegation for infinite scroll, now on the dialog body
+              dialogBody.addEventListener('scroll', (e: Event) => {
                 const panel = e.target as HTMLElement;
                 if (panel.classList.contains('term-results-panel')) {
                   if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 10 && hasMoreTerms && !isTermLoading) {

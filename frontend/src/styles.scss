@@ -22,7 +22,7 @@
     min-height: 150px; /* Ensure it has a minimum height */
 }
 
-.term-results-panel {
+.tox .term-results-panel {
     height: 200px; /* Give the panel a fixed height to force a scrollbar */
     overflow-y: auto;
     border: 1px solid #ccc;
@@ -31,7 +31,7 @@
     width: 100%; /* Take full width of dialog panel */
 }
 
-.term-item {
+.tox .term-item {
     padding: 4px 8px;
     cursor: pointer;
     border-radius: 3px;
@@ -39,17 +39,17 @@
     transition: background-color 0.2s ease-in-out;
 }
 
-.term-item:hover {
+.tox .term-item:hover {
     background-color: #f0f0f0; /* Light gray hover */
 }
 
-.term-item.selected {
+.tox .term-item.selected {
     background-color: #e0e7ff; /* A light indigo to match theme */
     font-weight: bold;
     color: #3730a3; /* A darker indigo for text */
 }
 
-.definition-preview-panel {
+.tox .definition-preview-panel {
     margin-top: 10px;
     padding: 10px;
     border: 1px solid #ddd;
