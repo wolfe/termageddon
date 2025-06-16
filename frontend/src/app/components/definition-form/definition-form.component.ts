@@ -142,7 +142,6 @@ export class DefinitionFormComponent implements OnInit {
                   
                   const currentData = api.getData();
                   api.redial(getDialogConfig(currentData));
-                  setTimeout(() => attachClickHandlers(api), 0);
                   isTermLoading = false;
                 });
               }
@@ -170,8 +169,6 @@ export class DefinitionFormComponent implements OnInit {
                   definitionPreviewHtml = '';
                   api.unblock();
                   api.redial(getDialogConfig(currentData)); // Pass current data
-                  // Re-attach handlers after the dialog is redrawn
-                  setTimeout(() => attachClickHandlers(api), 0);
                 });
               });
             });
@@ -219,8 +216,6 @@ export class DefinitionFormComponent implements OnInit {
                     domainItems = [{ text: 'Select a term first', value: '' }];
                     definitionPreviewHtml = '';
                     api.redial(getDialogConfig(data));
-                    // Re-attach handlers after the dialog is redrawn
-                    setTimeout(() => attachClickHandlers(api), 0);
                     isTermLoading = false;
                   });
                 }, 500);
@@ -230,8 +225,6 @@ export class DefinitionFormComponent implements OnInit {
                 definitionPreviewHtml = definition ? definition.definition_text : '';
                 api.redial(getDialogConfig(data));
                 api.setEnabled('submit', !!domainId);
-                // Re-attach since redialing for preview also redraws the term list
-                setTimeout(() => attachClickHandlers(api), 0);
               }
             },
             onSubmit: (api: any) => {
