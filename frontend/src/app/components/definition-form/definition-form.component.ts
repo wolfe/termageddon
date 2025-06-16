@@ -22,6 +22,7 @@ export class DefinitionFormComponent implements OnInit {
   public definitionText = '';
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
+  public allTerms: Term[] = [];
 
   public editorConfig = {
     height: 300,
@@ -34,12 +35,13 @@ export class DefinitionFormComponent implements OnInit {
     toolbar: 'undo redo | blocks | ' +
     'bold italic forecolor | alignleft aligncenter ' +
     'alignright alignjustify | bullist numlist outdent indent | ' +
-    'customLink | removeformat | help',
+    'customLink customTermLink | removeformat | help',
     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
     default_target: '_blank',
     target_list: false,
     setup: (editor: any) => {
       this.setupLinkDialog(editor);
+      this.setupTermLinkDialog(editor);
     }
   };
 
@@ -47,6 +49,13 @@ export class DefinitionFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDomains();
+    this.loadAllTerms();
+  }
+
+  loadAllTerms(): void {
+    this.glossaryService.getAllTerms().subscribe((terms: Term[]) => {
+      this.allTerms = terms;
+    });
   }
 
   loadDomains(): void {
@@ -98,6 +107,103 @@ export class DefinitionFormComponent implements OnInit {
             errorMessage = error.error;
         }
         alert(errorMessage);
+      }
+    });
+  }
+
+  setupTermLinkDialog(editor: any): void {
+    const vocabularyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 19h-6a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1z" /><path d="M10 5h-4" /><path d="M10 7h-4" /><path d="M14 11h6" /><path d="M14 15h6" /><path d="M20 11v8" /></svg>`;
+
+    editor.ui.registry.addIcon('vocabulary', vocabularyIcon);
+
+    editor.ui.registry.addButton('customTermLink', {
+      icon: 'vocabulary',
+      tooltip: 'Link to a term definition',
+      onAction: () => {
+        const selection = editor.selection;
+        const text = selection.getContent({ format: 'text' });
+
+        const dialog = editor.windowManager.open({
+          title: 'Link to Definition',
+          size: 'large',
+          body: {
+            type: 'panel',
+            items: [
+              {
+                type: 'input',
+                name: 'term_query',
+                label: 'Search for a term',
+                placeholder: 'Start typing to search...'
+              },
+              {
+                type: 'listbox',
+                name: 'term_id',
+                label: 'Select Term',
+                items: []
+              },
+              {
+                type: 'listbox',
+                name: 'domain_id',
+                label: 'Select Domain',
+                items: [],
+                disabled: true
+              }
+            ]
+          },
+          buttons: [
+            { type: 'cancel', text: 'Cancel' },
+            { type: 'submit', text: 'Insert Link', primary: true, disabled: true }
+          ],
+          initialData: {
+            text: text,
+          },
+          onChange: (api: any, details: any) => {
+            if (details.name === 'term_query') {
+              const query = api.getData().term_query;
+              if (query.length < 2) {
+                // api.setData({ term_id: null }); // Doesn't work as expected
+                return;
+              }
+              this.glossaryService.getTerms(1, query).subscribe(response => {
+                const termListCtrl = api.getForm().getFieldByName('term_id');
+                const terms = response.results.map(term => ({ text: term.text, value: term.id.toString() }));
+                termListCtrl.setItems(terms);
+              });
+            } else if (details.name === 'term_id') {
+              const termId = api.getData().term_id;
+              if (termId) {
+                this.glossaryService.getDefinitions(1, { term__id: termId, status: 'approved', page_size: '100' }).subscribe(response => {
+                  const domainListCtrl = api.getForm().getFieldByName('domain_id');
+                  if (response.results.length > 0) {
+                    const domains = response.results.map(def => ({ text: def.domain.name, value: def.domain.id.toString() }));
+                    domainListCtrl.setItems(domains);
+                    domainListCtrl.setDisabled(false);
+                    api.getForm().getFieldByName('domain_id').focus();
+                  } else {
+                    domainListCtrl.setItems([{ text: 'No approved definitions found', value: '' }]);
+                    domainListCtrl.setDisabled(true);
+                  }
+                  // Reset submit button state
+                  api.getForm().getButtonsByName('submit')[0].setDisabled(true);
+                });
+              }
+            } else if (details.name === 'domain_id') {
+               const domainId = api.getData().domain_id;
+               api.getForm().getButtonsByName('submit')[0].setDisabled(!domainId);
+            }
+          },
+          onSubmit: (api: any) => {
+            const data = api.getData();
+            const selectedTerm = this.allTerms.find(t => t.id === parseInt(data.term_id, 10));
+
+            if (selectedTerm) {
+                const linkText = text || selectedTerm.text;
+                const link = `<a href="/term/${data.term_id}" data-domain-id="${data.domain_id}">${linkText}</a>`;
+                editor.execCommand('mceInsertContent', false, link);
+            }
+            api.close();
+          }
+        });
       }
     });
   }
