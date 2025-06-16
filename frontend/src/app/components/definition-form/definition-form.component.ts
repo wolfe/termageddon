@@ -22,7 +22,6 @@ export class DefinitionFormComponent implements OnInit {
   public definitionText = '';
   public selectedDomainId: number | null = null;
   public domains: Domain[] = [];
-  public allTerms: Term[] = [];
   private searchDebounce: any;
 
   public editorConfig = {
@@ -50,13 +49,6 @@ export class DefinitionFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDomains();
-    this.loadAllTerms();
-  }
-
-  loadAllTerms(): void {
-    this.glossaryService.getAllTerms().subscribe((terms: Term[]) => {
-      this.allTerms = terms;
-    });
   }
 
   loadDomains(): void {
@@ -199,7 +191,7 @@ export class DefinitionFormComponent implements OnInit {
             const data = api.getData();
             if (data.term_id && data.domain_id) {
                 this.glossaryService.getTerm(parseInt(data.term_id, 10)).subscribe(selectedTerm => {
-                    const linkText = data.text || selectedTerm.text;
+                    const linkText = text || selectedTerm.text;
                     const link = `<a href="/term/${data.term_id}" data-domain-id="${data.domain_id}">${linkText}</a>`;
                     editor.execCommand('mceInsertContent', false, link);
                     api.close();
