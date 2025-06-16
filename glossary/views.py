@@ -7,6 +7,8 @@ from .models import Domain, Term, Definition
 from .serializers import DomainSerializer, TermSerializer, DefinitionSerializer, DefinitionWriteSerializer, UserSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+import requests
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -21,6 +23,40 @@ class CustomAuthToken(ObtainAuthToken):
             'token': token.key,
             'user': user_serializer.data
         })
+
+class ValidateUrlView(APIView):
+    """
+    An API endpoint to validate a URL.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        url = request.data.get('url')
+        if not url:
+            return Response({'detail': 'URL not provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Internal links are considered valid without checking
+        if not url.startswith('http://') and not url.startswith('https://'):
+            return Response({'status': 'valid'}, status=status.HTTP_200_OK)
+
+        try:
+            # Use a timeout and allow redirects. A HEAD request is more efficient.
+            response = requests.head(url, timeout=5, allow_redirects=True)
+            
+            if not (200 <= response.status_code < 400):
+                return Response(
+                    {'detail': f"The link returned a status of {response.status_code}."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except requests.RequestException:
+            # This catches connection errors, timeouts, etc.
+            return Response(
+                {'detail': "The link could not be reached. Please check your connection and the URL."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({'status': 'valid'}, status=status.HTTP_200_OK)
 
 # Create your views here.
 

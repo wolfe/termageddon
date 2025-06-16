@@ -121,4 +121,8 @@ export class GlossaryService {
   rejectDefinition(id: number): Observable<Definition> {
     return this.http.post<Definition>(`${this.apiUrl}/definitions/${id}/reject/`, {});
   }
+
+  validateUrl(url: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/validate-url/`, { url });
+  }
 } 
