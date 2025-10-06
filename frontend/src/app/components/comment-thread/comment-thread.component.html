@@ -1,0 +1,137 @@
+<div class="comment-thread">
+  <!-- New Comment Form -->
+  <div class="new-comment-form">
+    <div class="form-header">
+      <h4>Add a Comment</h4>
+    </div>
+    <div class="form-body">
+      <textarea
+        [(ngModel)]="newCommentText"
+        placeholder="Write your comment here..."
+        class="comment-textarea"
+        rows="3"
+      ></textarea>
+      <div class="form-actions">
+        <button
+          (click)="submitNewComment()"
+          [disabled]="!newCommentText.trim() || loading"
+          class="btn btn-primary"
+        >
+          {{ loading ? "Posting..." : "Post Comment" }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Comments List -->
+  <div class="comments-list">
+    <div *ngFor="let comment of getTopLevelComments()" class="comment-item">
+      <div class="comment-main" [class.resolved]="comment.is_resolved">
+        <div class="comment-header">
+          <div class="comment-author">
+            <div class="author-avatar approver-avatar" [title]="comment.author.first_name + ' ' + comment.author.last_name">
+              {{ getInitials(comment.author) }}
+            </div>
+            <div class="author-info">
+              <span class="author-name">{{ comment.author.first_name }} {{ comment.author.last_name }}</span>
+              <span class="comment-date">{{ comment.created_at | relativeTime }}</span>
+            </div>
+            <div class="reply-count" *ngIf="getReplyCount(comment) > 0">
+              <button 
+                (click)="toggleCommentCollapse(comment)"
+                class="collapse-btn"
+                [title]="isCommentCollapsed(comment) ? 'Show replies' : 'Hide replies'"
+              >
+                <span class="reply-count-text">{{ getReplyCount(comment) }} {{ getReplyCount(comment) === 1 ? 'reply' : 'replies' }}</span>
+                <span class="collapse-icon" [class.collapsed]="isCommentCollapsed(comment)">▼</span>
+              </button>
+            </div>
+          </div>
+          <div class="comment-actions">
+            <button
+              *ngIf="canResolve(comment)"
+              (click)="
+                comment.is_resolved
+                  ? unresolveComment(comment)
+                  : resolveComment(comment)
+              "
+              [disabled]="loading"
+              class="btn btn-sm"
+              [ngClass]="comment.is_resolved ? 'btn-warning' : 'btn-success'"
+            >
+              {{ comment.is_resolved ? "Unresolve" : "Resolve" }}
+            </button>
+            <button
+              *ngIf="canReply(comment)"
+              (click)="startReply(comment)"
+              class="btn btn-sm btn-secondary"
+            >
+              Reply
+            </button>
+          </div>
+        </div>
+
+        <div class="comment-content">
+          {{ comment.text }}
+        </div>
+
+        <div *ngIf="comment.is_resolved" class="resolved-badge">✓ Resolved</div>
+      </div>
+
+      <!-- Reply Form -->
+      <div *ngIf="replyingTo?.id === comment.id" class="reply-form">
+        <textarea
+          [(ngModel)]="replyText"
+          placeholder="Write your reply..."
+          class="reply-textarea"
+          rows="2"
+        ></textarea>
+        <div class="reply-actions">
+          <button
+            (click)="submitReply()"
+            [disabled]="!replyText.trim() || loading"
+            class="btn btn-primary btn-sm"
+          >
+            {{ loading ? "Posting..." : "Post Reply" }}
+          </button>
+          <button (click)="cancelReply()" class="btn btn-secondary btn-sm">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Replies -->
+      <div class="replies" *ngIf="getReplies(comment).length > 0 && !isCommentCollapsed(comment)">
+        <div *ngFor="let reply of getReplies(comment)" class="reply-item">
+          <div class="reply-main">
+            <div class="reply-header">
+              <div class="reply-author">
+                <div class="author-avatar approver-avatar small" [title]="reply.author.first_name + ' ' + reply.author.last_name">
+                  {{ getInitials(reply.author) }}
+                </div>
+                <div class="author-info">
+                  <span class="author-name">{{ reply.author.first_name }} {{ reply.author.last_name }}</span>
+                  <span class="reply-date">{{ reply.created_at | relativeTime }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply-content">
+              {{ reply.text }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Comments -->
+    <div *ngIf="getTopLevelComments().length === 0" class="no-comments">
+      <p>No comments yet. Be the first to comment!</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,415 @@
+<div class="h-full flex">
+  <!-- Left Sidebar: Pending Versions List (50%) -->
+  <div class="w-[50%] border-r border-gray-300 overflow-hidden">
+    <div class="h-full flex flex-col bg-white">
+      <!-- Header -->
+      <div class="p-3 border-b border-gray-300">
+        <h2 class="text-lg font-bold text-termageddon-gray-dark">Pending Reviews</h2>
+        <p class="text-sm text-gray-600">Definitions waiting for approval</p>
+        <div class="flex items-center space-x-4 mt-2 text-xs">
+          <span class="flex items-center">
+            <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+            {{ getEligibleCount() }} ready to approve
+          </span>
+          <span class="flex items-center">
+            <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+            {{ getAlreadyApprovedCount() }} already approved
+          </span>
+          <span class="flex items-center">
+            <span class="w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+            {{ getOwnVersionsCount() }} your versions
+          </span>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="p-3 border-b border-gray-300">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+          placeholder="Search terms, domains, authors..."
+          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm mb-3"
+        />
+        <div class="flex items-center">
+          <input
+            type="checkbox"
+            id="showAll"
+            [(ngModel)]="showAll"
+            (change)="onShowAllChange()"
+            class="mr-2"
+          />
+          <label for="showAll" class="text-sm text-gray-600">
+            Show all versions (not just relevant to you)
+          </label>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="flex-1 flex items-center justify-center">
+        <div class="text-center">
+          <div
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-termageddon-accent mx-auto"
+          ></div>
+          <p class="text-gray-600 mt-2 text-sm">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div
+        *ngIf="error && !loading"
+        class="flex-1 flex items-center justify-center"
+      >
+        <div class="text-center text-orange-600">
+          <p class="text-sm">{{ error }}</p>
+          <button
+            (click)="loadPendingVersions()"
+            class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+
+      <!-- Versions List -->
+      <div *ngIf="!loading && !error" class="flex-1 overflow-y-auto">
+        @if (filteredVersions.length === 0) {
+          <div class="p-4 text-center text-gray-500">
+            <p class="text-sm">
+              @if (pendingVersions.length === 0) {
+                No pending reviews found.
+              } @else {
+                No matches found for "{{ searchTerm }}".
+              }
+            </p>
+          </div>
+        } @else {
+          @for (version of filteredVersions; track version.id) {
+            <div
+              (click)="selectVersion(version)"
+              [class.bg-termageddon-gray-light]="selectedVersion?.id === version.id"
+              [class.opacity-60]="
+                getVersionEligibilityStatus(version) === 'ownVersion'
+              "
+              class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
+            >
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <h3 class="font-semibold text-sm text-termageddon-gray-dark">
+                    {{ version.entry.term.text }}
+                  </h3>
+                  <div class="flex items-center space-x-2 mt-1">
+                    <span
+                      class="inline-block px-2 py-0.5 bg-termageddon-blue text-white text-xs rounded"
+                    >
+                      {{ version.entry.domain.name }}
+                    </span>
+                    @if (version.entry.is_official) {
+                      <span
+                        class="px-2 py-0.5 bg-yellow-400 text-black text-xs rounded"
+                      >
+                        Official
+                      </span>
+                    }
+                    <!-- Eligibility indicator -->
+                    <span
+                      class="px-2 py-0.5 text-xs rounded font-medium"
+                      [class]="getEligibilityClass(version)"
+                    >
+                      {{ getEligibilityText(version) }}
+                    </span>
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    {{ version.author.first_name }}
+                    {{ version.author.last_name }} •
+                    {{ version.timestamp | date: "short" }}
+                  </div>
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-orange-600 text-xs"
+                    >{{ version.approval_count }}/2 Approvals</span
+                  >
+                  @if (
+                    getVersionEligibilityStatus(version) === "alreadyApproved"
+                  ) {
+                    <span class="mt-1 text-xs text-green-600 font-medium"
+                      >✓ Approved by you</span
+                    >
+                  } @else if (
+                    getVersionEligibilityStatus(version) === "ownVersion"
+                  ) {
+                    <span class="mt-1 text-xs text-gray-500"
+                      >Cannot approve own</span
+                    >
+                  } @else {
+                    <span class="mt-1 text-xs text-blue-600 font-medium"
+                      >Click to review</span
+                    >
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Version Detail (50%) -->
+  <div class="flex-1 overflow-hidden">
+    @if (selectedVersion) {
+      <div class="h-full flex flex-col bg-white">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-300">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h1 class="text-xl font-bold text-termageddon-gray-dark">
+                {{ selectedVersion.entry.term.text }}
+              </h1>
+              <div class="flex items-center space-x-2 mt-2">
+                <span
+                  class="px-2 py-1 bg-termageddon-blue text-white text-sm rounded"
+                >
+                  {{ selectedVersion.entry.domain.name }}
+                </span>
+                @if (selectedVersion.entry.is_official) {
+                  <span
+                    class="px-2 py-1 bg-yellow-400 text-black text-sm rounded font-semibold"
+                  >
+                    OFFICIAL
+                  </span>
+                }
+                <span
+                  class="px-3 py-1 bg-orange-100 text-orange-700 text-sm rounded font-medium"
+                >
+                  {{ selectedVersion.approval_count }}/2 Approvals
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Definition Content -->
+        <div class="flex-1 overflow-y-auto p-4">
+          <div class="mb-6">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Definition:</h3>
+            <div
+              class="prose prose-sm max-w-none bg-gray-50 p-4 rounded border"
+              [innerHTML]="selectedVersion.content"
+            ></div>
+          </div>
+
+          <!-- Replaces Section -->
+          @if (selectedVersion.replaces_version) {
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-700 mb-2">
+                Replaces Current Version:
+              </h3>
+              <div class="bg-yellow-50 border border-yellow-200 rounded p-4">
+                <div class="flex items-start justify-between mb-2">
+                  <div class="text-sm text-gray-600">
+                    <span class="font-medium">Author:</span>
+                    {{ selectedVersion.replaces_version.author.first_name }}
+                    {{ selectedVersion.replaces_version.author.last_name }}
+                    <span class="mx-2">•</span>
+                    <span class="font-medium">Created:</span>
+                    {{
+                      selectedVersion.replaces_version.timestamp | date: "short"
+                    }}
+                  </div>
+                  <span
+                    class="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded font-medium"
+                  >
+                    Current Active
+                  </span>
+                </div>
+                <div
+                  class="prose prose-sm max-w-none text-gray-700"
+                  [innerHTML]="selectedVersion.replaces_version.content"
+                ></div>
+              </div>
+            </div>
+          }
+
+          <!-- Author Info -->
+          <div class="mb-6 pb-4 border-b border-gray-200">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">
+              Author Information:
+            </h3>
+            <div class="flex items-center space-x-3">
+              <div class="flex items-center space-x-2">
+                <span
+                  >{{ selectedVersion.author.first_name }}
+                  {{ selectedVersion.author.last_name }}</span
+                >
+                @if (selectedVersion.author.is_staff) {
+                  <span
+                    class="px-2 py-1 bg-yellow-500 text-black text-xs rounded"
+                    >ADMIN</span
+                  >
+                }
+              </div>
+              <span class="text-gray-500 text-sm">•</span>
+              <span class="text-sm text-gray-600"
+                >Created {{ selectedVersion.timestamp | date: "medium" }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Current Approvals -->
+          @if (selectedVersion.approvers.length > 0) {
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-700 mb-2">
+                Current Approvals:
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                @for (
+                  approver of selectedVersion.approvers;
+                  track approver.id
+                ) {
+                  <div
+                    class="flex items-center space-x-2 bg-green-50 px-3 py-2 rounded border"
+                  >
+                    <div
+                      class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold"
+                    >
+                      {{ approver.first_name | slice: 0 : 1
+                      }}{{ approver.last_name | slice: 0 : 1 }}
+                    </div>
+                    <span class="text-sm"
+                      >{{ approver.first_name }} {{ approver.last_name }}</span
+                    >
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Approval Status -->
+          <div class="bg-white border rounded-lg p-4">
+            <ng-container [ngSwitch]="getApprovalAccessLevel()">
+              <div *ngSwitchCase="'canApprove'" class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-medium text-gray-900">
+                      Ready for Approval
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                      This definition needs {{ getRemainingApprovals() }} more
+                      approval(s).
+                    </p>
+                  </div>
+                  <button
+                    (click)="approveVersion()"
+                    [disabled]="loading"
+                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium"
+                  >
+                    Approve
+                  </button>
+                </div>
+                @if (selectedVersion.is_approved) {
+                  <div class="pt-3 border-t">
+                    <button
+                      (click)="publishVersion(selectedVersion)"
+                      [disabled]="loading"
+                      class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm font-medium"
+                    >
+                      Publish Version
+                    </button>
+                  </div>
+                }
+              </div>
+              <div *ngSwitchCase="'ownVersion'" class="space-y-3">
+                <div class="text-center">
+                  <h3 class="font-medium text-gray-900">Your Definition</h3>
+                  <p class="text-sm text-gray-600">
+                    You cannot approve your own definition.
+                  </p>
+                </div>
+                <div class="flex space-x-2">
+                  <button
+                    (click)="requestReview(selectedVersion)"
+                    [disabled]="requestingReview"
+                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm font-medium"
+                  >
+                    {{ requestingReview ? 'Requesting...' : 'Request Review' }}
+                  </button>
+                  @if (selectedVersion.is_approved) {
+                    <button
+                      (click)="publishVersion(selectedVersion)"
+                      [disabled]="loading"
+                      class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium"
+                    >
+                      Publish
+                    </button>
+                  }
+                </div>
+              </div>
+              <div *ngSwitchCase="'alreadyApproved'" class="text-center">
+                <h3 class="font-medium text-green-600">
+                  Already Approved by You
+                </h3>
+                <p class="text-sm text-gray-600">
+                  You have already approved this definition.
+                </p>
+                @if (selectedVersion.is_approved) {
+                  <div class="pt-3">
+                    <button
+                      (click)="publishVersion(selectedVersion)"
+                      [disabled]="loading"
+                      class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm font-medium"
+                    >
+                      Publish Version
+                    </button>
+                  </div>
+                }
+              </div>
+              <div
+                *ngSwitchCase="'alreadyApprovedByOthers'"
+                class="text-center"
+              >
+                <h3 class="font-medium text-blue-600">Already Approved</h3>
+                <p class="text-sm text-gray-600">
+                  This definition has already been approved by others and is
+                  ready to publish.
+                </p>
+                <div class="pt-3">
+                  <button
+                    (click)="publishVersion(selectedVersion)"
+                    [disabled]="loading"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm font-medium"
+                  >
+                    Publish Version
+                  </button>
+                </div>
+              </div>
+              <div *ngSwitchDefault class="text-center">
+                <h3 class="font-medium text-gray-600">Cannot Approve</h3>
+                <p class="text-sm text-gray-600">{{ getApprovalReason() }}</p>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="h-full flex items-center justify-center text-gray-500">
+        <div class="text-center">
+          <p class="text-lg">Select a definition to review</p>
+          <p class="text-sm mt-2">
+            Choose from the pending review list on the left
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Reviewer Selector Dialog -->
+<app-reviewer-selector-dialog
+  [isOpen]="showReviewerSelector"
+  [users]="allUsers"
+  [selectedReviewerIds]="selectedReviewerIds"
+  (close)="onReviewerSelectionCancelled()"
+  (confirm)="onReviewerSelectionConfirmed($event)"
+>
+</app-reviewer-selector-dialog>

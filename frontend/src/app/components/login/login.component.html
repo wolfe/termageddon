@@ -1,0 +1,102 @@
+<div class="min-h-screen flex items-center justify-center bg-termageddon-gray-light">
+  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <!-- Termageddon Logo/Header -->
+    <div class="mb-6 text-center">
+      <h1 class="text-2xl font-bold text-termageddon-primary">Termageddon</h1>
+      <p class="text-termageddon-gray-dark mt-2">Glossary Management System</p>
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Username Field -->
+      <div class="mb-4">
+        <label
+          for="username"
+          class="block text-sm font-medium text-termageddon-gray-dark mb-1"
+        >
+          Username
+        </label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-termageddon-accent"
+          [class.border-orange-500]="
+            loginForm.get('username')?.invalid &&
+            loginForm.get('username')?.touched
+          "
+          placeholder="Enter your username"
+        />
+        @if (
+          loginForm.get("username")?.invalid &&
+          loginForm.get("username")?.touched
+        ) {
+          <p class="text-orange-500 text-xs mt-1">Username is required</p>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="mb-6">
+        <label
+          for="password"
+          class="block text-sm font-medium text-termageddon-gray-dark mb-1"
+        >
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-termageddon-accent"
+          [class.border-orange-500]="
+            loginForm.get('password')?.invalid &&
+            loginForm.get('password')?.touched
+          "
+          placeholder="Enter your password"
+        />
+        @if (
+          loginForm.get("password")?.invalid &&
+          loginForm.get("password")?.touched
+        ) {
+          <p class="text-orange-500 text-xs mt-1">Password is required</p>
+        }
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div
+          class="mb-4 p-3 bg-orange-100 border border-orange-400 text-orange-700 rounded"
+        >
+          {{ errorMessage }}
+        </div>
+      }
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        [disabled]="loginForm.invalid || isLoading"
+        class="w-full bg-termageddon-accent text-white py-2 px-4 rounded-md hover:bg-termageddon-primary focus:outline-none focus:ring-2 focus:ring-termageddon-accent disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        @if (isLoading) {
+          <span>Logging in...</span>
+        } @else {
+          <span>Login</span>
+        }
+      </button>
+    </form>
+
+    <!-- Test Credentials -->
+    <div
+      class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-termageddon-blue"
+    >
+      <p class="font-semibold mb-2">Test Credentials:</p>
+      <p class="mb-1"><strong>Admin:</strong> admin / admin</p>
+      <p class="mb-1"><strong>Domain Experts:</strong></p>
+      <p class="ml-2 mb-1">• mariacarter / mariacarter (Physics, Chemistry)</p>
+      <p class="ml-2 mb-1">• bencarter / bencarter (Chemistry, Biology)</p>
+      <p class="ml-2 mb-1">• sofiarossi / sofiarossi (Computer Science, Graph Theory)</p>
+      <p class="ml-2 mb-1">• leoschmidt / leoschmidt (Biology, Geology)</p>
+      <p class="ml-2 mb-1">• kenjitanaka / kenjitanaka (Physics, Geology)</p>
+    </div>
+  </div>
+</div>

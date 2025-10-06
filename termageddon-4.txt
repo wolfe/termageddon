@@ -1,0 +1,10 @@
+Let's work on a collection of improvements to Termageddon:
+(1)  On the review page, when an entry is opened and there is a version that would be replaced upon approval, have a section "Replaces" showing the currenetly active entry.
+(2)  Change the approval workflow in the following ways; sort of like github change approvals:
+  (a)  You can request approvals on your version by selecting users who should review it.
+  (b)  You can continue to edit the version (w/o retaining history or creating a new version) during the approval process, but if it's changed approvals are cleared.
+  (c)  In the review section, by default, you only see those versions you've been requested to review or which you have authored or which are edits to a term for which you have been listed as an author in another version.
+  (d)  There is a checkbox in the search section of Pending Reviews, "show all"
+  (e)  There is a separate action to "Publish" the version once the approvals have been completed. Anyone can click "publish" once approvals have been obtained.
+
+Make changes to the backend, frontend, and tests as needed to support the above improvements.

@@ -1,0 +1,82 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Select Entry to Link</h3>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onCancel()"
+        aria-label="Close"
+      >
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="search-container">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search entries..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+      </div>
+
+      <div class="entries-list" *ngIf="!loading && !error">
+        <div
+          *ngFor="let entry of filteredEntries"
+          class="entry-item"
+          (click)="selectEntry(entry)"
+        >
+          <div class="entry-info">
+            <div class="entry-term">
+              {{ entry.term.text }}
+            </div>
+            <div class="entry-domain">
+              {{ entry.domain.name }}
+            </div>
+            <div class="entry-preview" *ngIf="entry.active_version">
+              {{ entry.active_version.content | slice: 0 : 100
+              }}{{ entry.active_version.content.length > 100 ? "..." : "" }}
+            </div>
+          </div>
+          <div class="entry-status">
+            <span *ngIf="entry.is_official" class="status-badge official"
+              >Official</span
+            >
+            <span
+              *ngIf="entry.active_version?.is_approved"
+              class="status-badge approved"
+              >Approved</span
+            >
+            <span
+              *ngIf="entry.active_version && !entry.active_version.is_approved"
+              class="status-badge pending"
+              >Pending</span
+            >
+          </div>
+        </div>
+
+        <div
+          *ngIf="filteredEntries.length === 0 && !loading"
+          class="no-results"
+        >
+          No entries found matching "{{ searchTerm }}"
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="loading">Loading entries...</div>
+
+      <div *ngIf="error" class="error">
+        {{ error }}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>

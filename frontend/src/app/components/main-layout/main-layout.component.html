@@ -1,0 +1,56 @@
+<div class="h-screen flex flex-col">
+  <!-- Top Navigation Bar -->
+  <nav
+    class="bg-termageddon-primary text-white px-4 py-3 flex items-center justify-between shadow-md"
+  >
+    <!-- Left: Logo and Title -->
+    <div class="flex items-center space-x-4">
+      <img src="images/logo.png" alt="Termageddon Logo" class="h-8 w-auto" />
+      <h1 class="text-xl font-bold">Termageddon</h1>
+      <div class="hidden md:flex space-x-4 ml-6">
+        <a
+          routerLink="/glossary"
+          routerLinkActive="font-bold underline"
+          class="hover:text-gray-200 cursor-pointer"
+        >
+          Glossary
+        </a>
+        <a
+          routerLink="/review"
+          routerLinkActive="font-bold underline"
+          class="hover:text-gray-200 cursor-pointer"
+        >
+          Review
+        </a>
+      </div>
+    </div>
+
+    <!-- Right: User Menu -->
+    <div class="flex items-center space-x-4">
+      @if (currentUser) {
+        <div class="flex items-center space-x-2">
+          <span class="text-sm">
+            {{ currentUser.first_name }} {{ currentUser.last_name }}
+            @if (currentUser.is_staff) {
+              <span
+                class="ml-2 px-2 py-1 bg-yellow-500 text-black text-xs rounded"
+                >ADMIN</span
+              >
+            }
+          </span>
+          <button
+            (click)="logout()"
+            class="px-3 py-1 bg-white text-termageddon-primary rounded hover:bg-gray-100 text-sm font-medium"
+          >
+            Logout
+          </button>
+        </div>
+      }
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 overflow-hidden">
+    <router-outlet></router-outlet>
+  </div>
+</div>

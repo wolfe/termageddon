@@ -1,0 +1,33 @@
+<div class="h-full flex">
+  <!-- Left Sidebar: Term List (30%) -->
+  <div class="w-[30%] border-r border-gray-300 overflow-hidden">
+    <app-term-list 
+      (entrySelected)="onEntrySelected($event)"
+      (termSelected)="onTermSelected($event)"
+      (termCreated)="onTermCreated($event)"
+    ></app-term-list>
+  </div>
+
+  <!-- Right Panel: Term Detail (70%) -->
+  <div class="flex-1 overflow-hidden">
+    @if (selectedEntry) {
+      <app-term-detail
+        [entry]="selectedEntry"
+        [termEntries]="selectedTermEntries"
+        [isEditMode]="isEditMode"
+        (editRequested)="onEditRequested()"
+        (editCancelled)="onEditCancelled()"
+        (editSaved)="onEditSaved($event)"
+      ></app-term-detail>
+    } @else {
+      <div class="h-full flex items-center justify-center text-gray-500">
+        <div class="text-center">
+          <p class="text-lg">Select a term to view its definition</p>
+          <p class="text-sm mt-2">
+            Use the search bar on the left to find terms
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+</div>

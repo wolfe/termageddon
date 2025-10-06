@@ -1,0 +1,19 @@
+<div class="definition-form">
+  <quill-editor
+    [modules]="editorConfig.modules"
+    [placeholder]="placeholder"
+    [readOnly]="disabled"
+    [ngModel]="content"
+    (ngModelChange)="onContentChanged($event)"
+    (onEditorCreated)="onEditorCreated($event)"
+  >
+  </quill-editor>
+
+  <!-- Entry Picker Modal -->
+  <app-entry-picker
+    [isOpen]="showEntryPicker"
+    (close)="onEntryPickerClosed()"
+    (entrySelected)="onEntrySelected($event)"
+  >
+  </app-entry-picker>
+</div>

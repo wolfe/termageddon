@@ -1,0 +1,100 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Version History</h3>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onClose()"
+        aria-label="Close"
+      >
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="loading" class="loading">Loading version history...</div>
+
+      <div *ngIf="error" class="error">
+        {{ error }}
+      </div>
+
+      <div *ngIf="!loading && !error" class="version-timeline">
+        <div
+          *ngFor="let version of versions; let i = index"
+          class="version-item"
+          [class.selected]="selectedVersion?.id === version.id"
+          [class.active]="isActiveVersion(version)"
+          (click)="selectVersion(version)"
+        >
+          <div class="version-indicator">
+            <div class="version-number">{{ versions.length - i }}</div>
+            <div class="timeline-line" *ngIf="i < versions.length - 1"></div>
+          </div>
+
+          <div class="version-content">
+            <div class="version-header">
+              <div class="version-meta">
+                <div class="author-info">
+                  <div class="author-avatar">
+                    {{ getInitials(version.author) }}
+                  </div>
+                  <div class="author-details">
+                    <div class="author-name">
+                      {{ version.author.first_name }}
+                      {{ version.author.last_name }}
+                    </div>
+                    <div class="version-date">
+                      {{ version.timestamp | date: "medium" }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="version-status">
+                  <span
+                    class="status-badge"
+                    [ngClass]="getVersionStatusClass(version)"
+                  >
+                    {{ getVersionStatus(version) }}
+                  </span>
+                  <span *ngIf="isActiveVersion(version)" class="active-badge">
+                    Current
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="version-preview">
+              <div
+                class="preview-content"
+                [innerHTML]="version.content | slice: 0 : 200"
+              ></div>
+              <div *ngIf="version.content.length > 200" class="preview-more">
+                ...
+              </div>
+            </div>
+
+            <div class="version-approvals" *ngIf="version.approvers.length > 0">
+              <div class="approvals-label">Approved by:</div>
+              <div class="approvers-list">
+                <div
+                  *ngFor="let approver of version.approvers"
+                  class="approver-avatar"
+                  [title]="approver.first_name + ' ' + approver.last_name"
+                >
+                  {{ getInitials(approver) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="onClose()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

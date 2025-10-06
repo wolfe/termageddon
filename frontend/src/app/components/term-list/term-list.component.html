@@ -1,0 +1,149 @@
+<div class="h-full flex flex-col bg-white">
+  <!-- Search and Filters -->
+  <div class="p-3 border-b border-gray-300 space-y-3">
+    <!-- Search Input -->
+    <div class="relative">
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Search terms..."
+        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+      />
+      @if (searchControl.value) {
+        <button
+          (click)="searchControl.setValue('')"
+          class="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+      }
+    </div>
+
+    <!-- Filter Row 1 -->
+    <div class="grid grid-cols-2 gap-2">
+      <!-- Domain Filter -->
+      <select
+        [formControl]="domainControl"
+        class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+      >
+        <option value="">All Domains</option>
+        @for (domain of domains; track domain.id) {
+          <option [value]="domain.id">{{ domain.name }}</option>
+        }
+      </select>
+
+    </div>
+
+    <!-- Filter Row 2 -->
+    <div class="grid grid-cols-2 gap-2">
+      <!-- Author Filter -->
+      <select
+        [formControl]="authorControl"
+        class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+      >
+        <option value="">All Authors</option>
+        @for (user of users; track user.id) {
+          <option [value]="user.id">{{ user.first_name }} {{ user.last_name }}</option>
+        }
+      </select>
+
+    </div>
+
+    <!-- Sort and Clear -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <label class="text-sm text-gray-600">Sort by:</label>
+        <select
+          [formControl]="sortControl"
+          class="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+        >
+          <option value="term__text_normalized">Term Name (A-Z)</option>
+          <option value="-term__text_normalized">Term Name (Z-A)</option>
+          <option value="-created_at">Newest First</option>
+          <option value="created_at">Oldest First</option>
+          <option value="-updated_at">Recently Updated</option>
+        </select>
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        @if (getFilterCount() > 0) {
+          <button
+            (click)="clearFilters()"
+            class="px-3 py-1 text-sm text-termageddon-accent hover:text-termageddon-primary border border-termageddon-accent rounded hover:bg-termageddon-accent hover:text-white transition-colors"
+          >
+            Clear Filters ({{ getFilterCount() }})
+          </button>
+        }
+        <button
+          (click)="openCreateDialog()"
+          class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
+        >
+          + Create Term
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry List -->
+  <div class="flex-1 overflow-y-auto">
+    @if (isLoading) {
+      <div class="p-4 text-center text-gray-500">
+        <p>Loading...</p>
+      </div>
+    } @else if (getGroupedTermsArray().length === 0) {
+      <div class="p-4 text-center text-gray-500">
+        <p>No entries found</p>
+      </div>
+    } @else {
+      @for (termEntries of getGroupedTermsArray(); track termEntries[0].term.id) {
+        <div
+          class="p-3 border-b border-gray-200 hover:bg-gray-50"
+        >
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <!-- Term Name (clickable to select first domain) -->
+              <h3 
+                (click)="selectTerm(termEntries)"
+                [class.bg-termageddon-gray-light]="selectedEntry?.term?.id === termEntries[0].term.id"
+                class="font-semibold text-sm text-termageddon-gray-dark cursor-pointer hover:text-termageddon-primary"
+              >
+                {{ termEntries[0].term.text }}
+              </h3>
+              
+              <!-- Domain Bubbles -->
+              <div class="flex flex-wrap gap-1 mt-2">
+                @for (entry of termEntries; track entry.id) {
+                  <span
+                    (click)="selectEntryByDomain(entry)"
+                    [class.bg-termageddon-blue]="selectedEntry?.id === entry.id"
+                    [class.bg-gray-300]="selectedEntry?.id !== entry.id"
+                    class="inline-block px-2 py-0.5 text-white text-xs rounded cursor-pointer hover:opacity-80 transition-opacity"
+                    [title]="entry.domain.description || entry.domain.name"
+                  >
+                    {{ entry.domain.name.length > 10 ? entry.domain.name.substring(0, 10) + '...' : entry.domain.name }}
+                  </span>
+                }
+              </div>
+            </div>
+            <div class="flex flex-col items-end">
+              @if (hasAnyEndorsedEntry(termEntries)) {
+                <span
+                  class="px-2 py-0.5 bg-green-400 text-black text-xs rounded font-semibold"
+                >
+                  Endorsed
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Term Creation Dialog -->
+  <app-term-dialog
+    [isOpen]="showCreateDialog"
+    (close)="onDialogClosed()"
+    (termCreated)="onTermCreated($event)"
+  ></app-term-dialog>
+</div>

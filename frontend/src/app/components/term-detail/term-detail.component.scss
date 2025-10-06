@@ -1,0 +1,21 @@
+// Style for the content HTML
+.prose {
+  line-height: 1.6;
+
+  p {
+    margin-bottom: 1em;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  a {
+    color: #e31937;
+    text-decoration: underline;
+
+    &:hover {
+      color: #003a70;
+    }
+  }
+}

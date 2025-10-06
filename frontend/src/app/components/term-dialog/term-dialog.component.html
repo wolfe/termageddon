@@ -1,0 +1,81 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create New Term</h2>
+      <button class="close-button" (click)="onClose()" type="button">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="onSave()" #termForm="ngForm">
+        <div class="form-group">
+          <label for="termText">Term *</label>
+          <input
+            id="termText"
+            type="text"
+            [(ngModel)]="termText"
+            name="termText"
+            class="form-control"
+            placeholder="Enter the term"
+            required
+            [disabled]="isLoading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="domain">Domain *</label>
+          <select
+            id="domain"
+            [(ngModel)]="selectedDomainId"
+            name="selectedDomainId"
+            class="form-control"
+            required
+            [disabled]="isLoading"
+          >
+            <option value="">Select a domain</option>
+            <option *ngFor="let domain of domains" [value]="domain.id">
+              {{ domain.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="isOfficial"
+              name="isOfficial"
+              [disabled]="isLoading"
+            />
+            <span class="checkmark"></span>
+            Mark as official term
+          </label>
+        </div>
+
+        <div class="error-message" *ngIf="error">
+          {{ error }}
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onClose()"
+            [disabled]="isLoading"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!termForm.form.valid || isLoading"
+          >
+            <span *ngIf="isLoading" class="spinner"></span>
+            {{ isLoading ? "Creating..." : "Create Term" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
