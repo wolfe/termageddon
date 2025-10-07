@@ -6,6 +6,7 @@
       <input
         type="text"
         [formControl]="searchControl"
+        data-testid="term-search-input"
         placeholder="Search terms..."
         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
       />
@@ -24,6 +25,7 @@
       <!-- Domain Filter -->
       <select
         [formControl]="domainControl"
+        data-testid="domain-filter-select"
         class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
       >
         <option value="">All Domains</option>
@@ -104,6 +106,7 @@
               <!-- Term Name (clickable to select first domain) -->
               <h3 
                 (click)="selectTerm(termEntries)"
+                data-testid="term-name"
                 [class.bg-termageddon-gray-light]="selectedEntry?.term?.id === termEntries[0].term.id"
                 class="font-semibold text-sm text-termageddon-gray-dark cursor-pointer hover:text-termageddon-primary"
               >
@@ -115,6 +118,7 @@
                 @for (entry of termEntries; track entry.id) {
                   <span
                     (click)="selectEntryByDomain(entry)"
+                    data-testid="domain-bubble"
                     [class.bg-termageddon-blue]="selectedEntry?.id === entry.id"
                     [class.bg-gray-300]="selectedEntry?.id !== entry.id"
                     class="inline-block px-2 py-0.5 text-white text-xs rounded cursor-pointer hover:opacity-80 transition-opacity"

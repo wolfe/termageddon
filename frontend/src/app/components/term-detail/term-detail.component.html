@@ -35,6 +35,7 @@
         @if (!isEditMode) {
           <button
             (click)="onEditClick()"
+            data-testid="term-edit-button"
             class="px-4 py-2 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm font-medium"
           >
             Edit Definition
@@ -42,6 +43,7 @@
           @if (canEndorse()) {
             <button
               (click)="onEndorseClick()"
+              data-testid="term-endorse-button"
               [disabled]="!canEndorse() || entry.active_version?.is_endorsed"
               class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
               [title]="getEndorseTooltip()"
@@ -133,12 +135,14 @@
         <div class="flex space-x-3">
           <button
             (click)="onSaveEdit()"
+            data-testid="term-save-button"
             class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
           >
             Save Changes
           </button>
           <button
             (click)="onCancelEdit()"
+            data-testid="term-cancel-button"
             class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
           >
             Cancel
@@ -148,7 +152,7 @@
     } @else {
       <!-- View Mode -->
       @if (entry.active_version) {
-        <div class="prose max-w-none" [innerHTML]="sanitizedContent"></div>
+        <div class="prose max-w-none" data-testid="term-content" [innerHTML]="sanitizedContent"></div>
       } @else {
         <div class="text-center text-gray-500 py-8">
           <p>No approved definition available for this term.</p>

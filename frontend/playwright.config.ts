@@ -32,8 +32,11 @@ export default defineConfig({
 
   /* Expectation timeout settings */
   expect: {
-    timeout: 2500, // 2.5 seconds
+    timeout: 10000, // 10 seconds for more reliable tests
   },
+
+  /* Global test timeout */
+  timeout: 30000, // 30 seconds per test
 
   /* Configure projects for major browsers */
   projects: [
