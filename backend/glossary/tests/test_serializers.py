@@ -94,6 +94,42 @@ class TestEntrySerializers:
         assert "active_version" in data
         assert data["active_version"]["id"] == version.id
 
+    def test_entry_list_serializer_permission_flags(self):
+        """EntryListSerializer should include can_user_endorse/edit based on user"""
+        entry = EntryFactory()
+        factory = APIRequestFactory()
+
+        # Anonymous user -> no permissions
+        from django.contrib.auth.models import AnonymousUser
+
+        anon_request = factory.get("/")
+        anon_request.user = AnonymousUser()
+        serializer = EntryListSerializer(entry, context={"request": anon_request})
+        data = serializer.data
+        assert data.get("can_user_endorse") is False
+        assert data.get("can_user_edit") is False
+
+        # Staff user -> both true
+        staff_user = UserFactory(is_staff=True)
+        staff_request = factory.get("/")
+        staff_request.user = staff_user
+        serializer = EntryListSerializer(entry, context={"request": staff_request})
+        data = serializer.data
+        assert data.get("can_user_endorse") is True
+        assert data.get("can_user_edit") is True
+
+        # Domain expert (non-staff) -> both true for matching domain
+        expert_user = UserFactory()
+        from glossary.tests.conftest import DomainExpertFactory
+
+        DomainExpertFactory(user=expert_user, domain=entry.domain)
+        expert_request = factory.get("/")
+        expert_request.user = expert_user
+        serializer = EntryListSerializer(entry, context={"request": expert_request})
+        data = serializer.data
+        assert data.get("can_user_endorse") is True
+        assert data.get("can_user_edit") is True
+
 
 @pytest.mark.django_db
 class TestEntryVersionSerializers:
@@ -113,6 +149,44 @@ class TestEntryVersionSerializers:
         assert data["approval_count"] == 1
         assert "approvers" in data
         assert len(data["approvers"]) == 1
+
+    def test_entry_version_list_serializer_user_flags(self):
+        """User-centric fields reflect approval/ownership state"""
+        factory = APIRequestFactory()
+
+        # Setup version authored by other user so current can approve
+        author = UserFactory()
+        current_user = UserFactory()
+        version = EntryVersionFactory(author=author)
+
+        request = factory.get("/")
+        request.user = current_user
+        serializer = EntryVersionListSerializer(version, context={"request": request})
+        data = serializer.data
+        assert data["can_approve_by_current_user"] is True
+        assert data["approval_status_for_user"] == "can_approve"
+        assert data["user_has_approved"] is False
+        assert data["remaining_approvals"] >= 0
+        assert 0 <= data["approval_percentage"] <= 100
+
+        # When user is the author -> cannot approve
+        own_request = factory.get("/")
+        own_request.user = author
+        serializer = EntryVersionListSerializer(version, context={"request": own_request})
+        data = serializer.data
+        assert data["can_approve_by_current_user"] is False
+        assert data["approval_status_for_user"] == "own_version"
+
+        # After user approves -> flags update
+        approver = current_user
+        version.approvers.add(approver)
+        request2 = factory.get("/")
+        request2.user = approver
+        serializer = EntryVersionListSerializer(version, context={"request": request2})
+        data = serializer.data
+        assert data["can_approve_by_current_user"] is False
+        assert data["approval_status_for_user"] in {"already_approved", "already_approved_by_others"}
+        assert data["user_has_approved"] is True
 
     def test_entry_version_create_serializer(self):
         """Test EntryVersionCreateSerializer"""

@@ -19,9 +19,10 @@ export class ReviewService {
   /**
    * Get all entry versions (approved and unapproved)
    */
-  getEntryVersions(): Observable<PaginatedResponse<EntryVersion>> {
+  getEntryVersions(params?: any): Observable<PaginatedResponse<EntryVersion>> {
+    const queryParams = params ? this.buildQueryString(params) : '';
     return this.http.get<PaginatedResponse<EntryVersion>>(
-      `${this.API_URL}/entry-versions/`,
+      `${this.API_URL}/entry-versions/${queryParams}`,
     );
   }
 
@@ -109,5 +110,61 @@ export class ReviewService {
    */
   getAllUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.API_URL}/users/`);
+  }
+
+  /**
+   * Get versions that the current user can approve
+   */
+  getVersionsCanApprove(): Observable<PaginatedResponse<ReviewVersion>> {
+    return this.http.get<PaginatedResponse<ReviewVersion>>(
+      `${this.API_URL}/entry-versions/?eligibility=can_approve&expand=entry,entry.term,entry.domain`,
+    );
+  }
+
+  /**
+   * Get user's own versions
+   */
+  getOwnVersions(): Observable<PaginatedResponse<ReviewVersion>> {
+    return this.http.get<PaginatedResponse<ReviewVersion>>(
+      `${this.API_URL}/entry-versions/?eligibility=own&expand=entry,entry.term,entry.domain`,
+    );
+  }
+
+  /**
+   * Get versions already approved by current user
+   */
+  getApprovedVersions(): Observable<PaginatedResponse<ReviewVersion>> {
+    return this.http.get<PaginatedResponse<ReviewVersion>>(
+      `${this.API_URL}/entry-versions/?eligibility=already_approved&expand=entry,entry.term,entry.domain`,
+    );
+  }
+
+  /**
+   * Search versions with full-text search
+   */
+  searchVersions(searchTerm: string, showAll: boolean = false): Observable<PaginatedResponse<ReviewVersion>> {
+    const params = new URLSearchParams();
+    params.set('search', searchTerm);
+    params.set('expand', 'entry,entry.term,entry.domain');
+    if (showAll) {
+      params.set('show_all', 'true');
+    }
+    return this.http.get<PaginatedResponse<ReviewVersion>>(
+      `${this.API_URL}/entry-versions/?${params.toString()}`,
+    );
+  }
+
+  /**
+   * Helper method to build query string from params object
+   */
+  private buildQueryString(params: any): string {
+    const searchParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        searchParams.set(key, params[key].toString());
+      }
+    });
+    const queryString = searchParams.toString();
+    return queryString ? `?${queryString}` : '';
   }
 }

@@ -38,6 +38,12 @@ export interface EntryVersion {
   approval_count: number;
   is_published: boolean;
   is_endorsed: boolean;
+  // New user-centric fields from backend
+  can_approve_by_current_user?: boolean;
+  approval_status_for_user?: 'unknown' | 'own_version' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
+  user_has_approved?: boolean;
+  remaining_approvals?: number;
+  approval_percentage?: number;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +54,9 @@ export interface Entry {
   domain: Domain;
   active_version?: EntryVersion;
   is_official: boolean;
+  // New permission fields from backend
+  can_user_endorse?: boolean;
+  can_user_edit?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -119,6 +128,29 @@ export interface ReviewVersion {
   approval_count: number;
   is_published: boolean;
   replaces_version?: EntryVersion;
+  // New user-centric fields from backend
+  can_approve_by_current_user?: boolean;
+  approval_status_for_user?: 'unknown' | 'own_version' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
+  user_has_approved?: boolean;
+  remaining_approvals?: number;
+  approval_percentage?: number;
   created_at: string;
   updated_at: string;
+}
+
+// New interfaces for backend enhancements
+export interface GroupedEntry {
+  term: Term;
+  entries: Entry[];
+}
+
+export interface SystemConfig {
+  MIN_APPROVALS: number;
+  DEBUG: boolean;
+}
+
+export interface CreateTermAndEntryRequest {
+  term_text: string;
+  domain_id: number;
+  is_official?: boolean;
 }

@@ -1,99 +1,59 @@
 import { test, expect } from '@playwright/test';
+import { AuthHelper } from './helpers/auth';
+import { ReviewPage } from './pages/ReviewPage';
 
 test.describe('Reviewer Selection Workflow', () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto('/login');
-    await page.fill('[formControlName="username"]', 'admin');
-    await page.fill('[formControlName="password"]', 'admin');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('**/glossary');
+    const auth = new AuthHelper(page);
+    await auth.loginAsAdmin();
   });
 
   test('should open reviewer selector dialog', async ({ page }) => {
-    // Navigate to review tab
-    await page.click('a[routerLink="/review"]');
-    await page.waitForURL('**/review');
-    await page.waitForTimeout(2000);
-
-    // Look for any pending versions
-    const pendingVersionList = page.locator('.space-y-4 > div');
-    const listCount = await pendingVersionList.count();
-
-    if (listCount > 0) {
-      // Click on first pending version
-      await pendingVersionList.first().click();
-      await page.waitForTimeout(500);
-      
-      // Look for "Request Review" button
-      const requestReviewButton = page.locator('button:has-text("Request Review")');
-      const hasRequestReviewButton = await requestReviewButton.isVisible();
-
-      if (hasRequestReviewButton) {
-        // Click the request review button
-        await requestReviewButton.click();
-        await page.waitForTimeout(500);
-        
-        // Should open reviewer selector dialog
-        await expect(page.locator('h2:has-text("Select Reviewers")')).toBeVisible();
-        await expect(page.locator('text=Choose users to review this version')).toBeVisible();
-      }
+    const review = new ReviewPage(page);
+    await review.goto();
+    await review.waitForVersionsToLoad();
+    
+    const count = await review.getVersionCount();
+    if (count > 0) {
+      await review.selectVersion(0);
+      await review.expectRequestReviewButtonVisible();
+      await review.requestReview();
     }
   });
 
   test('should display user list in reviewer selector', async ({ page }) => {
-    await page.click('a[routerLink="/review"]');
-    await page.waitForURL('**/review');
-    await page.waitForTimeout(2000);
-
-    const pendingVersionList = page.locator('.space-y-4 > div');
-    const listCount = await pendingVersionList.count();
-
-    if (listCount > 0) {
-      await pendingVersionList.first().click();
-      await page.waitForTimeout(500);
-      
-      const requestReviewButton = page.locator('button:has-text("Request Review")');
-      const hasRequestReviewButton = await requestReviewButton.isVisible();
-
-      if (hasRequestReviewButton) {
-        await requestReviewButton.click();
-        await page.waitForTimeout(500);
-        
+    const review = new ReviewPage(page);
+    await review.goto();
+    await review.waitForVersionsToLoad();
+    
+    const count = await review.getVersionCount();
+    if (count > 0) {
+      await review.selectVersion(0);
+      if (await review.requestReviewButton.isVisible()) {
+        await review.requestReview();
         // Should show user list with checkboxes
         await expect(page.locator('input[type="checkbox"]')).toBeVisible();
-        await expect(page.locator('text=admin')).toBeVisible(); // Should show at least the admin user
+        await expect(page.locator('text=admin')).toBeVisible();
       }
     }
   });
 
   test('should allow selecting multiple reviewers', async ({ page }) => {
-    await page.click('a[routerLink="/review"]');
-    await page.waitForURL('**/review');
-    await page.waitForTimeout(2000);
-
-    const pendingVersionList = page.locator('.space-y-4 > div');
-    const listCount = await pendingVersionList.count();
-
-    if (listCount > 0) {
-      await pendingVersionList.first().click();
-      await page.waitForTimeout(500);
-      
-      const requestReviewButton = page.locator('button:has-text("Request Review")');
-      const hasRequestReviewButton = await requestReviewButton.isVisible();
-
-      if (hasRequestReviewButton) {
-        await requestReviewButton.click();
-        await page.waitForTimeout(500);
+    const review = new ReviewPage(page);
+    await review.goto();
+    await review.waitForVersionsToLoad();
+    
+    const count = await review.getVersionCount();
+    if (count > 0) {
+      await review.selectVersion(0);
+      if (await review.requestReviewButton.isVisible()) {
+        await review.requestReview();
         
-        // Select a reviewer
         const checkboxes = page.locator('input[type="checkbox"]');
         const checkboxCount = await checkboxes.count();
         
         if (checkboxCount > 0) {
           await checkboxes.first().check();
-          
-          // Should show confirm button
           await expect(page.locator('button:has-text("Confirm Selection")')).toBeVisible();
         }
       }
@@ -101,62 +61,36 @@ test.describe('Reviewer Selection Workflow', () => {
   });
 
   test('should close dialog on cancel', async ({ page }) => {
-    await page.click('a[routerLink="/review"]');
-    await page.waitForURL('**/review');
-    await page.waitForTimeout(2000);
-
-    const pendingVersionList = page.locator('.space-y-4 > div');
-    const listCount = await pendingVersionList.count();
-
-    if (listCount > 0) {
-      await pendingVersionList.first().click();
-      await page.waitForTimeout(500);
-      
-      const requestReviewButton = page.locator('button:has-text("Request Review")');
-      const hasRequestReviewButton = await requestReviewButton.isVisible();
-
-      if (hasRequestReviewButton) {
-        await requestReviewButton.click();
-        await page.waitForTimeout(500);
+    const review = new ReviewPage(page);
+    await review.goto();
+    await review.waitForVersionsToLoad();
+    
+    const count = await review.getVersionCount();
+    if (count > 0) {
+      await review.selectVersion(0);
+      if (await review.requestReviewButton.isVisible()) {
+        await review.requestReview();
         
-        // Click cancel button
         await page.click('button:has-text("Cancel")');
-        await page.waitForTimeout(500);
-        
-        // Dialog should be closed
         await expect(page.locator('h2:has-text("Select Reviewers")')).not.toBeVisible();
       }
     }
   });
 
   test('should search users in reviewer selector', async ({ page }) => {
-    await page.click('a[routerLink="/review"]');
-    await page.waitForURL('**/review');
-    await page.waitForTimeout(2000);
-
-    const pendingVersionList = page.locator('.space-y-4 > div');
-    const listCount = await pendingVersionList.count();
-
-    if (listCount > 0) {
-      await pendingVersionList.first().click();
-      await page.waitForTimeout(500);
-      
-      const requestReviewButton = page.locator('button:has-text("Request Review")');
-      const hasRequestReviewButton = await requestReviewButton.isVisible();
-
-      if (hasRequestReviewButton) {
-        await requestReviewButton.click();
-        await page.waitForTimeout(500);
+    const review = new ReviewPage(page);
+    await review.goto();
+    await review.waitForVersionsToLoad();
+    
+    const count = await review.getVersionCount();
+    if (count > 0) {
+      await review.selectVersion(0);
+      if (await review.requestReviewButton.isVisible()) {
+        await review.requestReview();
         
-        // Look for search input
         const searchInput = page.locator('input[placeholder*="Search users"]');
-        const hasSearchInput = await searchInput.isVisible();
-        
-        if (hasSearchInput) {
+        if (await searchInput.isVisible()) {
           await searchInput.fill('admin');
-          await page.waitForTimeout(500);
-          
-          // Should filter results
           await expect(page.locator('text=admin')).toBeVisible();
         }
       }

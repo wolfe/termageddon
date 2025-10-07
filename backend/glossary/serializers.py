@@ -85,6 +85,11 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
     is_endorsed = serializers.BooleanField(read_only=True)
+    can_approve_by_current_user = serializers.SerializerMethodField()
+    approval_status_for_user = serializers.SerializerMethodField()
+    user_has_approved = serializers.SerializerMethodField()
+    remaining_approvals = serializers.SerializerMethodField()
+    approval_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = EntryVersion
@@ -102,10 +107,68 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
             "approval_count",
             "is_published",
             "is_endorsed",
+            "can_approve_by_current_user",
+            "approval_status_for_user",
+            "user_has_approved",
+            "remaining_approvals",
+            "approval_percentage",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
+
+    def get_can_approve_by_current_user(self, obj):
+        """Check if current user can approve this version"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Cannot approve own versions
+        if obj.author.id == request.user.id:
+            return False
+        
+        # Cannot approve if already approved this version
+        if obj.approvers.filter(pk=request.user.pk).exists():
+            return False
+        
+        # Can approve if status is pending
+        return not obj.is_approved
+
+    def get_approval_status_for_user(self, obj):
+        """Get approval status from current user's perspective"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return 'unknown'
+        
+        if obj.author.id == request.user.id:
+            return 'own_version'
+        
+        if obj.approvers.filter(pk=request.user.pk).exists():
+            return 'already_approved'
+        
+        if obj.is_approved:
+            return 'already_approved_by_others'
+        
+        return 'can_approve'
+
+    def get_user_has_approved(self, obj):
+        """Check if current user has already approved this version"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.approvers.filter(pk=request.user.pk).exists()
+
+    def get_remaining_approvals(self, obj):
+        """Calculate remaining approvals needed"""
+        from django.conf import settings
+        return max(0, settings.MIN_APPROVALS - obj.approval_count)
+
+    def get_approval_percentage(self, obj):
+        """Calculate approval percentage for progress indicators"""
+        from django.conf import settings
+        if settings.MIN_APPROVALS == 0:
+            return 100
+        return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
 
 
 class EntryVersionCreateSerializer(serializers.Serializer):
@@ -175,6 +238,8 @@ class EntryListSerializer(serializers.ModelSerializer):
     term = TermSerializer(read_only=True)
     domain = DomainSerializer(read_only=True)
     active_version = EntryVersionListSerializer(read_only=True)
+    can_user_endorse = serializers.SerializerMethodField()
+    can_user_edit = serializers.SerializerMethodField()
 
     class Meta:
         model = Entry
@@ -184,10 +249,38 @@ class EntryListSerializer(serializers.ModelSerializer):
             "domain",
             "active_version",
             "is_official",
+            "can_user_endorse",
+            "can_user_edit",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+    def get_can_user_endorse(self, obj):
+        """Check if current user can endorse this entry"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Staff can always endorse
+        if request.user.is_staff:
+            return True
+        
+        # Domain experts can endorse entries in their domain
+        return request.user.is_domain_expert_for(obj.domain.id)
+
+    def get_can_user_edit(self, obj):
+        """Check if current user can edit this entry"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Staff can always edit
+        if request.user.is_staff:
+            return True
+        
+        # Domain experts can edit entries in their domain
+        return request.user.is_domain_expert_for(obj.domain.id)
 
 
 class EntryCreateSerializer(serializers.ModelSerializer):
@@ -215,6 +308,11 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
     replaces_version = serializers.SerializerMethodField()
+    can_approve_by_current_user = serializers.SerializerMethodField()
+    approval_status_for_user = serializers.SerializerMethodField()
+    user_has_approved = serializers.SerializerMethodField()
+    remaining_approvals = serializers.SerializerMethodField()
+    approval_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = EntryVersion
@@ -230,6 +328,11 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
             "approval_count",
             "is_published",
             "replaces_version",
+            "can_approve_by_current_user",
+            "approval_status_for_user",
+            "user_has_approved",
+            "remaining_approvals",
+            "approval_percentage",
             "created_at",
             "updated_at",
         ]
@@ -240,6 +343,59 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
         if obj.entry.active_version and obj.entry.active_version.id != obj.id:
             return EntryVersionListSerializer(obj.entry.active_version).data
         return None
+
+    def get_can_approve_by_current_user(self, obj):
+        """Check if current user can approve this version"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Cannot approve own versions
+        if obj.author.id == request.user.id:
+            return False
+        
+        # Cannot approve if already approved this version
+        if obj.approvers.filter(pk=request.user.pk).exists():
+            return False
+        
+        # Can approve if status is pending
+        return not obj.is_approved
+
+    def get_approval_status_for_user(self, obj):
+        """Get approval status from current user's perspective"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return 'unknown'
+        
+        if obj.author.id == request.user.id:
+            return 'own_version'
+        
+        if obj.approvers.filter(pk=request.user.pk).exists():
+            return 'already_approved'
+        
+        if obj.is_approved:
+            return 'already_approved_by_others'
+        
+        return 'can_approve'
+
+    def get_user_has_approved(self, obj):
+        """Check if current user has already approved this version"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.approvers.filter(pk=request.user.pk).exists()
+
+    def get_remaining_approvals(self, obj):
+        """Calculate remaining approvals needed"""
+        from django.conf import settings
+        return max(0, settings.MIN_APPROVALS - obj.approval_count)
+
+    def get_approval_percentage(self, obj):
+        """Calculate approval percentage for progress indicators"""
+        from django.conf import settings
+        if settings.MIN_APPROVALS == 0:
+            return 100
+        return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
 
 
 class EntryUpdateSerializer(serializers.ModelSerializer):

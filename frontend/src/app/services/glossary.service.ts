@@ -11,6 +11,9 @@ import {
   User,
   Comment,
   CreateCommentRequest,
+  GroupedEntry,
+  SystemConfig,
+  CreateTermAndEntryRequest,
 } from '../models';
 import { BaseService } from './base.service';
 
@@ -148,5 +151,28 @@ export class GlossaryService extends BaseService {
 
   endorseEntry(entryId: number): Observable<Entry> {
     return this.postAction<Entry>(`/entries/${entryId}/endorse/`);
+  }
+
+  // New backend enhancement methods
+
+  /**
+   * Get entries grouped by term for simplified glossary display
+   */
+  getEntriesGroupedByTerm(filters?: any): Observable<GroupedEntry[]> {
+    return this.get<GroupedEntry[]>('/entries/grouped_by_term/', filters);
+  }
+
+  /**
+   * Create a term and entry atomically in a single request
+   */
+  createTermAndEntry(request: CreateTermAndEntryRequest): Observable<Entry> {
+    return this.post<Entry>('/entries/create_with_term/', request);
+  }
+
+  /**
+   * Get system configuration values
+   */
+  getSystemConfig(): Observable<SystemConfig> {
+    return this.get<SystemConfig>('/system-config/');
   }
 }

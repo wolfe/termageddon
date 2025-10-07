@@ -2,7 +2,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Domain, Entry, User } from '../../models';
+import { Domain, Entry, User, GroupedEntry } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
 import { TermDialogComponent } from '../term-dialog/term-dialog.component';
 
@@ -19,7 +19,7 @@ export class TermListComponent implements OnInit {
   @Output() termCreated = new EventEmitter<Entry>();
 
   entries: Entry[] = [];
-  groupedTerms: { [termId: number]: Entry[] } = {};
+  groupedEntries: GroupedEntry[] = [];
   domains: Domain[] = [];
   users: User[] = [];
   isLoading: boolean = false;
@@ -91,10 +91,12 @@ export class TermListComponent implements OnInit {
       filters.ordering = this.sortControl.value;
     }
 
-    this.glossaryService.getEntries(filters).subscribe({
-      next: (response) => {
-        this.entries = response.results;
-        this.groupEntriesByTerm();
+    // Use new grouped_by_term endpoint instead of client-side grouping
+    this.glossaryService.getEntriesGroupedByTerm(filters).subscribe({
+      next: (groupedEntries) => {
+        this.groupedEntries = groupedEntries;
+        // Flatten for backward compatibility
+        this.entries = groupedEntries.flatMap(group => group.entries);
         this.isLoading = false;
       },
       error: (error) => {
@@ -109,7 +111,8 @@ export class TermListComponent implements OnInit {
     this.entrySelected.emit(entry);
     // Also emit termSelected with all entries for this term to populate termEntries
     const termId = entry.term.id;
-    const allEntriesForTerm = this.groupedTerms[termId] || [];
+    const groupedEntry = this.groupedEntries.find(group => group.term.id === termId);
+    const allEntriesForTerm = groupedEntry?.entries || [];
     this.termSelected.emit(allEntriesForTerm);
   }
 
@@ -147,19 +150,8 @@ export class TermListComponent implements OnInit {
     this.showCreateDialog = false;
   }
 
-  groupEntriesByTerm(): void {
-    this.groupedTerms = {};
-    this.entries.forEach(entry => {
-      const termId = entry.term.id;
-      if (!this.groupedTerms[termId]) {
-        this.groupedTerms[termId] = [];
-      }
-      this.groupedTerms[termId].push(entry);
-    });
-  }
-
   getGroupedTermsArray(): Entry[][] {
-    return Object.values(this.groupedTerms);
+    return this.groupedEntries.map(group => group.entries);
   }
 
   getFirstEntryForTerm(termEntries: Entry[]): Entry {
@@ -171,7 +163,8 @@ export class TermListComponent implements OnInit {
     this.selectEntry(entry);
     // Also emit termSelected with all entries for this term to populate termEntries
     const termId = entry.term.id;
-    const allEntriesForTerm = this.groupedTerms[termId] || [];
+    const groupedEntry = this.groupedEntries.find(group => group.term.id === termId);
+    const allEntriesForTerm = groupedEntry?.entries || [];
     this.termSelected.emit(allEntriesForTerm);
   }
 

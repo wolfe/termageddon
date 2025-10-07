@@ -193,6 +193,88 @@ class EntryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
 
+    @action(detail=False, methods=["get"])
+    def grouped_by_term(self, request):
+        """Get entries grouped by term for simplified frontend display"""
+        queryset = self.get_queryset()
+        
+        # Apply same filtering as list view
+        queryset = self.filter_queryset(queryset)
+        
+        # Group entries by term
+        grouped_entries = {}
+        for entry in queryset:
+            term_id = entry.term.id
+            if term_id not in grouped_entries:
+                grouped_entries[term_id] = {
+                    'term': {
+                        'id': entry.term.id,
+                        'text': entry.term.text,
+                        'text_normalized': entry.term.text_normalized,
+                        'is_official': entry.term.is_official,
+                    },
+                    'entries': []
+                }
+            grouped_entries[term_id]['entries'].append(entry)
+        
+        # Convert to list format for easier frontend consumption
+        result = []
+        for term_data in grouped_entries.values():
+            serializer = self.get_serializer(term_data['entries'], many=True)
+            result.append({
+                'term': term_data['term'],
+                'entries': serializer.data
+            })
+        
+        return Response(result)
+
+    @action(detail=False, methods=["post"])
+    def create_with_term(self, request):
+        """Create a term and entry atomically in a single request"""
+        from django.db import transaction
+        
+        term_text = request.data.get('term_text')
+        domain_id = request.data.get('domain_id')
+        is_official = request.data.get('is_official', False)
+        
+        if not term_text or not domain_id:
+            return Response(
+                {"detail": "term_text and domain_id are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        try:
+            with transaction.atomic():
+                # Create the term
+                term = Term.objects.create(
+                    text=term_text,
+                    is_official=is_official,
+                    created_by=request.user
+                )
+                
+                # Create the entry
+                entry = Entry.objects.create(
+                    term=term,
+                    domain_id=domain_id,
+                    is_official=is_official,
+                    created_by=request.user
+                )
+                
+                # Return the created entry with full serialization
+                serializer = self.get_serializer(entry)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                
+        except ValidationError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Failed to create term and entry: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class EntryVersionViewSet(viewsets.ModelViewSet):
     """ViewSet for EntryVersion model"""
@@ -236,6 +318,42 @@ class EntryVersionViewSet(viewsets.ModelViewSet):
                     approval_count_annotated=Count("approvers")
                 ).filter(approval_count_annotated__lt=settings.MIN_APPROVALS)
 
+        # Handle search parameter for full-text search
+        search = self.request.query_params.get("search")
+        if search:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(entry__term__text__icontains=search) |
+                Q(entry__term__text_normalized__icontains=search) |
+                Q(entry__domain__name__icontains=search) |
+                Q(entry__domain__name_normalized__icontains=search) |
+                Q(author__username__icontains=search) |
+                Q(author__first_name__icontains=search) |
+                Q(author__last_name__icontains=search) |
+                Q(content__icontains=search)
+            )
+
+        # Handle eligibility filtering for current user
+        eligibility = self.request.query_params.get("eligibility")
+        if eligibility and self.request.user.is_authenticated:
+            from django.db.models import Q, Count
+            
+            if eligibility == "can_approve":
+                # Versions the user can approve (not own, not already approved, not approved)
+                queryset = queryset.annotate(
+                    approval_count_annotated=Count("approvers")
+                ).filter(
+                    ~Q(author=self.request.user),  # Not own versions
+                    ~Q(approvers=self.request.user),  # Not already approved by user
+                    approval_count_annotated__lt=settings.MIN_APPROVALS  # Not approved yet
+                )
+            elif eligibility == "own":
+                # User's own versions
+                queryset = queryset.filter(author=self.request.user)
+            elif eligibility == "already_approved":
+                # Versions already approved by user
+                queryset = queryset.filter(approvers=self.request.user)
+
         # Handle show_all parameter for review filtering
         # Only apply filtering for list actions, not detail actions (like approve)
         show_all = self.request.query_params.get("show_all", "false").lower() == "true"
@@ -248,6 +366,7 @@ class EntryVersionViewSet(viewsets.ModelViewSet):
             not show_all
             and self.request.user.is_authenticated
             and self.action in ["list", "retrieve"]
+            and not eligibility  # Don't apply relevance filtering if eligibility is specified
         ):
             # Show only versions the user should see:
             # 1. Versions they authored
@@ -518,3 +637,13 @@ def users_list_view(request):
     users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def system_config_view(request):
+    """Get system configuration values"""
+    return Response({
+        "MIN_APPROVALS": settings.MIN_APPROVALS,
+        "DEBUG": settings.DEBUG,
+    })

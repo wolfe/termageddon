@@ -241,6 +241,112 @@ export const TEST_TERMS = {
 - `/frontend/e2e/edit-during-approval.spec.ts` (merged into term-management)
 - `/frontend/e2e/auth-protection.spec.ts` (consolidated into auth.spec.ts)
 
+## Backend Enhancements (implemented)
+
+These are already staged/added in the backend and should be leveraged by the frontend and tests:
+
+- [x] Serializer fields to drive review UI state in `EntryVersion` serializers
+  - `can_approve_by_current_user`, `approval_status_for_user`, `user_has_approved`, `remaining_approvals`, `approval_percentage`
+- [x] Serializer fields to drive entry-level permissions in `EntryListSerializer`
+  - `can_user_endorse`, `can_user_edit`
+- [x] `EntryViewSet` actions
+  - `grouped_by_term` (GET): list entries grouped by term with the same filtering as list
+  - `create_with_term` (POST): atomically create a `Term` and `Entry`
+- [x] `EntryVersionViewSet` filtering/query enhancements
+  - Query param `search`: full-text style filtering across term/domain/author/content
+  - Query param `eligibility`: `can_approve` | `own` | `already_approved`
+  - Respect `show_all=true` to bypass relevance filter; otherwise show authored/approved/needs-approval
+- [x] `system-config` endpoint (GET) to expose settings needed by frontend
+  - returns `MIN_APPROVALS`, `DEBUG`
+
+### API contracts for new/updated endpoints
+
+- Review/version list with user-centric fields
+
+```http
+GET /api/entry-versions/?eligibility=can_approve&search=absorb&show_all=false
+```
+
+Example shape (fields relevant to UI):
+
+```json
+{
+  "id": 123,
+  "approval_count": 1,
+  "is_published": false,
+  "can_approve_by_current_user": true,
+  "approval_status_for_user": "can_approve",
+  "user_has_approved": false,
+  "remaining_approvals": 1,
+  "approval_percentage": 50
+}
+```
+
+- Entries grouped by term (for glossary screens)
+
+```http
+GET /api/entries/grouped_by_term/?domain=1&search=cache
+```
+
+Example shape:
+
+```json
+[
+  {
+    "term": {
+      "id": 10,
+      "text": "Cache",
+      "text_normalized": "cache",
+      "is_official": true
+    },
+    "entries": [
+      {
+        "id": 201,
+        "domain": { "id": 1, "name": "General" },
+        "active_version": { "id": 999, "approval_count": 2 },
+        "can_user_endorse": true,
+        "can_user_edit": true
+      }
+    ]
+  }
+]
+```
+
+- Atomic create term + entry
+
+```http
+POST /api/entries/create_with_term/
+Content-Type: application/json
+
+{
+  "term_text": "New Term",
+  "domain_id": 1,
+  "is_official": false
+}
+```
+
+Returns the created `Entry` via the standard serializer.
+
+- System configuration for UI logic
+
+```http
+GET /api/system-config/
+```
+
+Example:
+
+```json
+{ "MIN_APPROVALS": 2, "DEBUG": true }
+```
+
+### Frontend consumption plan
+
+- Use `system-config` to show required approvals and progress bars (via `approval_percentage`).
+- Replace ad-hoc logic with `approval_status_for_user` and `can_approve_by_current_user` to enable/disable Approve buttons.
+- Use `can_user_endorse` and `can_user_edit` to conditionally render Endorse/Edit controls.
+- Glossary list should call `grouped_by_term` to simplify rendering and reduce client-side grouping.
+- Review screens should use `eligibility` and `search` query params for focused queues.
+
 ## Recommendation
 
 **I recommend Option A: Clean Rewrite**. The current tests have fundamental architectural issues that make refactoring more time-consuming than starting fresh with proper patterns. This approach will result in a more maintainable, reliable test suite that actually validates user workflows rather than DOM structure.
@@ -257,3 +363,5 @@ export const TEST_TERMS = {
 - [ ] Delete obsolete test files after verifying new tests provide equivalent or better coverage
 - [ ] Update playwright.config.ts to optimize timeout settings and remove unnecessary configs
 - [ ] Run full test suite and verify all critical user journeys are covered
+- [ ] Wire frontend to new backend filters/endpoints (`eligibility`, `search`, `grouped_by_term`, `create_with_term`, `system-config`)
+- [ ] Add unit tests for new serializer fields and view actions (Django)

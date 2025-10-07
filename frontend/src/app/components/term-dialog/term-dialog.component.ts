@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../services/glossary.service';
-import { Domain, Term, Entry } from '../../models';
+import { Domain, Term, Entry, CreateTermAndEntryRequest } from '../../models';
 
 @Component({
   selector: 'app-term-dialog',
@@ -55,42 +55,27 @@ export class TermDialogComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    // First create the term
-    this.glossaryService
-      .createTerm({
-        text: this.termText.trim(),
-        is_official: this.isOfficial,
-      })
-      .subscribe({
-        next: (term) => {
-          // Then create the entry
-          this.glossaryService
-            .createEntry({
-              term: term.id,
-              domain: this.selectedDomainId!,
-              is_official: this.isOfficial,
-            })
-            .subscribe({
-              next: (entry) => {
-                this.isLoading = false;
-                this.termCreated.emit(entry);
-                this.resetForm();
-                this.close.emit();
-              },
-              error: (error) => {
-                this.isLoading = false;
-                this.error =
-                  'Failed to create entry: ' +
-                  (error.error?.detail || error.message);
-              },
-            });
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.error =
-            'Failed to create term: ' + (error.error?.detail || error.message);
-        },
-      });
+    // Use new atomic create_with_term endpoint instead of separate calls
+    const request: CreateTermAndEntryRequest = {
+      term_text: this.termText.trim(),
+      domain_id: this.selectedDomainId,
+      is_official: this.isOfficial,
+    };
+
+    this.glossaryService.createTermAndEntry(request).subscribe({
+      next: (entry) => {
+        this.isLoading = false;
+        this.termCreated.emit(entry);
+        this.resetForm();
+        this.close.emit();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.error =
+          'Failed to create term and entry: ' +
+          (error.error?.detail || error.message);
+      },
+    });
   }
 
   private resetForm() {

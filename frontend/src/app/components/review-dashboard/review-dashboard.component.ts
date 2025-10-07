@@ -62,11 +62,8 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    const params = this.showAll
-      ? '?show_all=true&expand=entry,entry.term,entry.domain'
-      : '?expand=entry,entry.term,entry.domain';
-
-    this.reviewService.getReviewVersions(params).subscribe({
+    // Use new backend eligibility filtering instead of client-side logic
+    this.reviewService.getVersionsCanApprove().subscribe({
       next: (response: PaginatedResponse<ReviewVersion>) => {
         this.pendingVersions = response.results;
         this.filteredVersions = [...this.pendingVersions];
@@ -101,14 +98,19 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const term = this.searchTerm.toLowerCase();
-    this.filteredVersions = this.pendingVersions.filter(
-      (version) =>
-        version.entry.term.text.toLowerCase().includes(term) ||
-        version.entry.domain.name.toLowerCase().includes(term) ||
-        version.author.username.toLowerCase().includes(term) ||
-        version.content.toLowerCase().includes(term),
-    );
+    // Use backend search instead of client-side filtering
+    this.loading = true;
+    this.reviewService.searchVersions(this.searchTerm, this.showAll).subscribe({
+      next: (response: PaginatedResponse<ReviewVersion>) => {
+        this.filteredVersions = response.results;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error searching versions:', error);
+        this.error = 'Failed to search versions';
+        this.loading = false;
+      },
+    });
   }
 
   selectVersion(version: ReviewVersion): void {
@@ -116,19 +118,8 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   canApprove(version: ReviewVersion): boolean {
-    if (!this.currentUser) return false;
-
-    // Cannot approve own versions
-    if (version.author.id === this.currentUser.id) return false;
-
-    // Cannot approve if already approved this version
-    if (
-      version.approvers.some((approver) => approver.id === this.currentUser!.id)
-    )
-      return false;
-
-    // Can approve if status is pending
-    return !version.is_approved;
+    // Use backend field instead of client-side logic
+    return version.can_approve_by_current_user ?? false;
   }
 
   approveVersion(): void {
@@ -171,10 +162,9 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   hasAlreadyApproved(): boolean {
-    if (!this.selectedVersion || !this.currentUser) return false;
-    return this.selectedVersion.approvers.some(
-      (a) => a.id === this.currentUser!.id,
-    );
+    if (!this.selectedVersion) return false;
+    // Use backend field instead of client-side logic
+    return this.selectedVersion.user_has_approved ?? false;
   }
 
   getApprovalStatus(): string {
@@ -188,29 +178,14 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   getRemainingApprovals(): number {
     if (!this.selectedVersion) return 0;
-    return Math.max(0, 2 - this.selectedVersion.approval_count);
+    // Use backend field instead of hardcoded calculation
+    return this.selectedVersion.remaining_approvals ?? 0;
   }
 
   getApprovalAccessLevel(): string {
-    if (!this.selectedVersion || !this.currentUser) return 'cannotApprove';
-
-    if (this.selectedVersion.author.id === this.currentUser.id) {
-      return 'ownVersion';
-    }
-
-    if (this.hasAlreadyApproved()) {
-      return 'alreadyApproved';
-    }
-
-    if (this.selectedVersion.is_approved) {
-      return 'alreadyApprovedByOthers';
-    }
-
-    if (this.canApprove(this.selectedVersion)) {
-      return 'canApprove';
-    }
-
-    return 'cannotApprove';
+    if (!this.selectedVersion) return 'cannotApprove';
+    // Use backend field instead of client-side logic
+    return this.selectedVersion.approval_status_for_user ?? 'unknown';
   }
 
   getApprovalReason(): string {
@@ -222,30 +197,21 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   getVersionEligibilityStatus(version: ReviewVersion): string {
-    if (!this.currentUser) return 'unknown';
-
-    if (version.author.id === this.currentUser.id) {
-      return 'ownVersion';
-    }
-
-    if (
-      version.approvers.some((approver) => approver.id === this.currentUser!.id)
-    ) {
-      return 'alreadyApproved';
-    }
-
-    return 'canApprove';
+    // Use backend field instead of client-side logic
+    return version.approval_status_for_user ?? 'unknown';
   }
 
   getEligibilityText(version: ReviewVersion): string {
     const status = this.getVersionEligibilityStatus(version);
     switch (status) {
-      case 'ownVersion':
+      case 'own_version':
         return 'Your version';
-      case 'alreadyApproved':
+      case 'already_approved':
         return 'Already approved';
-      case 'canApprove':
+      case 'can_approve':
         return 'Ready to approve';
+      case 'already_approved_by_others':
+        return 'Approved by others';
       default:
         return 'Unknown';
     }
@@ -254,12 +220,14 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   getEligibilityClass(version: ReviewVersion): string {
     const status = this.getVersionEligibilityStatus(version);
     switch (status) {
-      case 'ownVersion':
+      case 'own_version':
         return 'text-gray-500 bg-gray-100';
-      case 'alreadyApproved':
+      case 'already_approved':
         return 'text-green-600 bg-green-50';
-      case 'canApprove':
+      case 'can_approve':
         return 'text-blue-600 bg-blue-50';
+      case 'already_approved_by_others':
+        return 'text-green-600 bg-green-50';
       default:
         return 'text-gray-500 bg-gray-100';
     }
@@ -267,19 +235,19 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   getEligibleCount(): number {
     return this.filteredVersions.filter(
-      (v) => this.getVersionEligibilityStatus(v) === 'canApprove',
+      (v) => this.getVersionEligibilityStatus(v) === 'can_approve',
     ).length;
   }
 
   getAlreadyApprovedCount(): number {
     return this.filteredVersions.filter(
-      (v) => this.getVersionEligibilityStatus(v) === 'alreadyApproved',
+      (v) => this.getVersionEligibilityStatus(v) === 'already_approved',
     ).length;
   }
 
   getOwnVersionsCount(): number {
     return this.filteredVersions.filter(
-      (v) => this.getVersionEligibilityStatus(v) === 'ownVersion',
+      (v) => this.getVersionEligibilityStatus(v) === 'own_version',
     ).length;
   }
 

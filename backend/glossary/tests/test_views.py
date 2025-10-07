@@ -202,6 +202,38 @@ class TestEntryViewSet:
         assert len(response.data["results"]) == 1
         assert response.data["results"][0]["domain"]["id"] == domain1.id
 
+    def test_grouped_by_term(self, authenticated_client):
+        """Test grouped_by_term aggregates entries by term"""
+        term = TermFactory(text="Cache")
+        domain1 = DomainFactory()
+        domain2 = DomainFactory()
+        e1 = EntryFactory(term=term, domain=domain1)
+        e2 = EntryFactory(term=term, domain=domain2)
+        v1 = EntryVersionFactory(entry=e1, is_published=True)
+        v2 = EntryVersionFactory(entry=e2, is_published=True)
+        e1.active_version = v1
+        e2.active_version = v2
+        e1.save()
+        e2.save()
+
+        url = reverse("entry-grouped-by-term")
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list)
+        assert response.data[0]["term"]["text"] == "Cache"
+        assert len(response.data[0]["entries"]) == 2
+
+    def test_create_with_term(self, authenticated_client):
+        """Test atomic creation of term + entry"""
+        domain = DomainFactory()
+        url = reverse("entry-create-with-term")
+        payload = {"term_text": "New Term", "domain_id": domain.id, "is_official": False}
+        response = authenticated_client.post(url, payload, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Entry.objects.filter(term__text="New Term", domain=domain).exists()
+
     def test_endorse_as_domain_expert(self, authenticated_client):
         """Test endorsing entry as domain expert"""
         domain = DomainFactory()
@@ -251,6 +283,28 @@ class TestEntryVersionViewSet:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert EntryVersion.objects.filter(entry=entry).exists()
+
+    def test_list_with_eligibility_and_search(self, authenticated_client):
+        """Test eligibility and search filters"""
+        other_user = UserFactory()
+        # Create versions: one by other user with specific content, one by current user
+        version1 = EntryVersionFactory(author=other_user, content="absorption of energy")
+        version2 = EntryVersionFactory(author=authenticated_client.user, content="other term")
+
+        url = reverse("entryversion-list")
+        # eligibility=can_approve should exclude own versions
+        resp1 = authenticated_client.get(url, {"eligibility": "can_approve"})
+        assert resp1.status_code == status.HTTP_200_OK
+        ids = [v["id"] for v in resp1.data["results"]]
+        assert version1.id in ids
+        assert version2.id not in ids
+
+        # search should find by content substring
+        # include show_all=true so relevance filter does not hide results
+        resp2 = authenticated_client.get(url, {"search": "absorption", "show_all": "true"})
+        assert resp2.status_code == status.HTTP_200_OK
+        ids2 = [v["id"] for v in resp2.data["results"]]
+        assert version1.id in ids2
 
     def test_approve_version(self, authenticated_client):
         """Test approving a version"""
@@ -354,6 +408,18 @@ class TestDomainExpertViewSet:
         response = authenticated_client.post(url, data)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+class TestSystemConfig:
+    """Test system-config endpoint"""
+
+    def test_system_config_returns_min_approvals(self, authenticated_client):
+        url = reverse("system-config")
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "MIN_APPROVALS" in response.data
 
 
 @pytest.mark.django_db
