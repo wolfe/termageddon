@@ -43,10 +43,13 @@ export abstract class BaseService {
   }
 
   /**
-   * Generic GET request for single item
+   * Generic GET request for single item or array
    */
-  protected get<T>(endpoint: string): Observable<T> {
-    return this.http.get<T>(`${this.API_URL}${endpoint}`);
+  protected get<T>(endpoint: string, filters?: any): Observable<T> {
+    const params = this.buildParams(filters);
+    return this.http.get<T>(`${this.API_URL}${endpoint}`, {
+      params,
+    });
   }
 
   /**

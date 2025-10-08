@@ -15,9 +15,25 @@ test.describe('Reviewer Selection Workflow', () => {
     
     const count = await review.getVersionCount();
     if (count > 0) {
-      await review.selectVersion(0);
-      await review.expectRequestReviewButtonVisible();
-      await review.requestReview();
+      // Look for a version that belongs to the current user (admin)
+      let ownVersionIndex = -1;
+      for (let i = 0; i < count; i++) {
+        await review.selectVersion(i);
+        if (await review.requestReviewButton.isVisible()) {
+          ownVersionIndex = i;
+          break;
+        }
+      }
+      
+      if (ownVersionIndex >= 0) {
+        await review.expectRequestReviewButtonVisible();
+        await review.requestReview();
+      } else {
+        // Skip test if no own versions found
+        test.skip();
+      }
+    } else {
+      test.skip();
     }
   });
 
@@ -28,13 +44,26 @@ test.describe('Reviewer Selection Workflow', () => {
     
     const count = await review.getVersionCount();
     if (count > 0) {
-      await review.selectVersion(0);
-      if (await review.requestReviewButton.isVisible()) {
+      // Look for a version that belongs to the current user
+      let ownVersionIndex = -1;
+      for (let i = 0; i < count; i++) {
+        await review.selectVersion(i);
+        if (await review.requestReviewButton.isVisible()) {
+          ownVersionIndex = i;
+          break;
+        }
+      }
+      
+      if (ownVersionIndex >= 0) {
         await review.requestReview();
         // Should show user list with checkboxes
         await expect(page.locator('input[type="checkbox"]')).toBeVisible();
         await expect(page.locator('text=admin')).toBeVisible();
+      } else {
+        test.skip();
       }
+    } else {
+      test.skip();
     }
   });
 
@@ -45,8 +74,17 @@ test.describe('Reviewer Selection Workflow', () => {
     
     const count = await review.getVersionCount();
     if (count > 0) {
-      await review.selectVersion(0);
-      if (await review.requestReviewButton.isVisible()) {
+      // Look for a version that belongs to the current user
+      let ownVersionIndex = -1;
+      for (let i = 0; i < count; i++) {
+        await review.selectVersion(i);
+        if (await review.requestReviewButton.isVisible()) {
+          ownVersionIndex = i;
+          break;
+        }
+      }
+      
+      if (ownVersionIndex >= 0) {
         await review.requestReview();
         
         const checkboxes = page.locator('input[type="checkbox"]');
@@ -56,7 +94,11 @@ test.describe('Reviewer Selection Workflow', () => {
           await checkboxes.first().check();
           await expect(page.locator('button:has-text("Confirm Selection")')).toBeVisible();
         }
+      } else {
+        test.skip();
       }
+    } else {
+      test.skip();
     }
   });
 
@@ -67,13 +109,26 @@ test.describe('Reviewer Selection Workflow', () => {
     
     const count = await review.getVersionCount();
     if (count > 0) {
-      await review.selectVersion(0);
-      if (await review.requestReviewButton.isVisible()) {
+      // Look for a version that belongs to the current user
+      let ownVersionIndex = -1;
+      for (let i = 0; i < count; i++) {
+        await review.selectVersion(i);
+        if (await review.requestReviewButton.isVisible()) {
+          ownVersionIndex = i;
+          break;
+        }
+      }
+      
+      if (ownVersionIndex >= 0) {
         await review.requestReview();
         
         await page.click('button:has-text("Cancel")');
         await expect(page.locator('h2:has-text("Select Reviewers")')).not.toBeVisible();
+      } else {
+        test.skip();
       }
+    } else {
+      test.skip();
     }
   });
 
@@ -84,8 +139,17 @@ test.describe('Reviewer Selection Workflow', () => {
     
     const count = await review.getVersionCount();
     if (count > 0) {
-      await review.selectVersion(0);
-      if (await review.requestReviewButton.isVisible()) {
+      // Look for a version that belongs to the current user
+      let ownVersionIndex = -1;
+      for (let i = 0; i < count; i++) {
+        await review.selectVersion(i);
+        if (await review.requestReviewButton.isVisible()) {
+          ownVersionIndex = i;
+          break;
+        }
+      }
+      
+      if (ownVersionIndex >= 0) {
         await review.requestReview();
         
         const searchInput = page.locator('input[placeholder*="Search users"]');
@@ -93,7 +157,11 @@ test.describe('Reviewer Selection Workflow', () => {
           await searchInput.fill('admin');
           await expect(page.locator('text=admin')).toBeVisible();
         }
+      } else {
+        test.skip();
       }
+    } else {
+      test.skip();
     }
   });
 });

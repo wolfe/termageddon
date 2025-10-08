@@ -202,7 +202,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   getEligibilityText(version: ReviewVersion): string {
-    const status = this.getVersionEligibilityStatus(version);
+    const status = version.approval_status_for_user ?? 'unknown';
     switch (status) {
       case 'own_version':
         return 'Your version';
@@ -218,7 +218,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   getEligibilityClass(version: ReviewVersion): string {
-    const status = this.getVersionEligibilityStatus(version);
+    const status = version.approval_status_for_user ?? 'unknown';
     switch (status) {
       case 'own_version':
         return 'text-gray-500 bg-gray-100';
@@ -235,19 +235,19 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   getEligibleCount(): number {
     return this.filteredVersions.filter(
-      (v) => this.getVersionEligibilityStatus(v) === 'can_approve',
+      (v) => v.approval_status_for_user === 'can_approve',
     ).length;
   }
 
   getAlreadyApprovedCount(): number {
     return this.filteredVersions.filter(
-      (v) => this.getVersionEligibilityStatus(v) === 'already_approved',
+      (v) => v.approval_status_for_user === 'already_approved',
     ).length;
   }
 
   getOwnVersionsCount(): number {
     return this.filteredVersions.filter(
-      (v) => this.getVersionEligibilityStatus(v) === 'own_version',
+      (v) => v.approval_status_for_user === 'own_version',
     ).length;
   }
 

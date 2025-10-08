@@ -91,7 +91,7 @@
               data-testid="version-item"
               [class.bg-termageddon-gray-light]="selectedVersion?.id === version.id"
               [class.opacity-60]="
-                getVersionEligibilityStatus(version) === 'ownVersion'
+                version.approval_status_for_user === 'own_version'
               "
               class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
             >
@@ -132,13 +132,13 @@
                     >{{ version.approval_count }}/2 Approvals</span
                   >
                   @if (
-                    getVersionEligibilityStatus(version) === "alreadyApproved"
+                    version.approval_status_for_user === "already_approved"
                   ) {
                     <span class="mt-1 text-xs text-green-600 font-medium"
                       >✓ Approved by you</span
                     >
                   } @else if (
-                    getVersionEligibilityStatus(version) === "ownVersion"
+                    version.approval_status_for_user === "own_version"
                   ) {
                     <span class="mt-1 text-xs text-gray-500"
                       >Cannot approve own</span

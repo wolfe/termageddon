@@ -92,11 +92,12 @@ export class ReviewPage extends BasePage {
   }
 
   get eligibilityIndicators() {
-    return this.page.locator('.px-2\\.py-0\\.5\\.text-xs\\.rounded\\.font-medium');
+    // Look for the eligibility text spans in version items
+    return this.page.locator('[data-testid="version-item"] .px-2.py-0\\.5.text-xs.rounded.font-medium');
   }
 
   get approvalCounts() {
-    return this.page.locator('.text-orange-600.text-xs');
+    return this.page.locator('[data-testid="version-item"] .text-orange-600.text-xs');
   }
 
   get alreadyApprovedText() {
