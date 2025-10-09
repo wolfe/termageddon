@@ -41,6 +41,12 @@ export class LoginPage extends BasePage {
     // Wait for navigation away from login page or for error message
     try {
       await this.page.waitForURL(url => !url.toString().includes('/login'), { timeout: 10000 });
+      
+      // Wait for authentication token to be stored
+      await this.page.waitForFunction(() => {
+        return localStorage.getItem('auth_token') !== null;
+      }, { timeout: 5000 });
+      
     } catch (error) {
       // If navigation doesn't happen, check for error message
       const errorVisible = await this.errorMessage.isVisible();

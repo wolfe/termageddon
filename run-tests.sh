@@ -203,6 +203,28 @@ run_e2e_tests() {
         BACKEND_PID=""
     fi
     
+    # Start frontend server in background if not running
+    if ! curl -s http://localhost:4200/ >/dev/null 2>&1; then
+        print_status "Starting frontend server..."
+        npm start > ../frontend.log 2>&1 &
+        FRONTEND_PID=$!
+        
+        # Wait for frontend to start
+        print_status "Waiting for frontend server to start..."
+        sleep 10
+        
+        # Check if frontend is running
+        if ! curl -s http://localhost:4200/ >/dev/null 2>&1; then
+            print_error "Failed to start frontend server"
+            kill $BACKEND_PID 2>/dev/null || true
+            kill $FRONTEND_PID 2>/dev/null || true
+            return 1
+        fi
+    else
+        print_status "Frontend server already running"
+        FRONTEND_PID=""
+    fi
+    
     # Verify E2E test isolation setup
     print_status "Verifying E2E test isolation setup..."
     
@@ -227,17 +249,24 @@ run_e2e_tests() {
     else
         print_error "E2E tests failed"
         print_status "Check the test isolation setup and ensure database reset command works"
-        # Clean up backend if we started it
+        # Clean up servers if we started them
         if [ ! -z "$BACKEND_PID" ]; then
             kill $BACKEND_PID 2>/dev/null || true
+        fi
+        if [ ! -z "$FRONTEND_PID" ]; then
+            kill $FRONTEND_PID 2>/dev/null || true
         fi
         return 1
     fi
     
-    # Clean up backend if we started it
+    # Clean up servers if we started them
     if [ ! -z "$BACKEND_PID" ]; then
         print_status "Stopping backend server..."
         kill $BACKEND_PID 2>/dev/null || true
+    fi
+    if [ ! -z "$FRONTEND_PID" ]; then
+        print_status "Stopping frontend server..."
+        kill $FRONTEND_PID 2>/dev/null || true
     fi
     
     cd ..

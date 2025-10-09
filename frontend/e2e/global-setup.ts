@@ -10,11 +10,12 @@ async function globalSetup(config: FullConfig) {
     console.log('📊 Resetting database and loading test data...');
     const backendPath = join(__dirname, '../../backend');
     
-    // Run database reset command
-    execSync('python manage.py reset_test_db', {
-      cwd: backendPath,
-      stdio: 'inherit'
-    });
+        // Run database reset command with virtual environment activated
+        execSync('source venv/bin/activate && python manage.py reset_test_db', {
+          cwd: backendPath,
+          stdio: 'inherit',
+          shell: '/bin/bash'
+        });
     
     console.log('✅ Database reset complete');
     

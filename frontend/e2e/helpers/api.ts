@@ -13,6 +13,19 @@ export class ApiHelper {
   constructor(private page: Page) {}
 
   /**
+   * Get authentication token from localStorage
+   */
+  private async getAuthToken(): Promise<string> {
+    const token = await this.page.evaluate(() => {
+      return localStorage.getItem('auth_token');
+    });
+    if (!token) {
+      throw new Error('No authentication token found in localStorage');
+    }
+    return token;
+  }
+
+  /**
    * Track a created resource for cleanup
    */
   private trackResource(resource: CreatedResource) {
@@ -96,7 +109,12 @@ export class ApiHelper {
    */
   async createTerm(termName: string, domain: string, definition?: string) {
     // Ensure we're authenticated by checking if we can access a protected endpoint
-    const authCheck = await this.page.request.get('/api/auth/me/');
+    const authToken = await this.getAuthToken();
+    const authCheck = await this.page.request.get('/api/auth/me/', {
+      headers: {
+        'Authorization': `Token ${authToken}`
+      }
+    });
     if (!authCheck.ok()) {
       console.log(`Auth check failed: ${authCheck.status()} - ${await authCheck.text()}`);
       throw new Error('Not authenticated - cannot create entries via API');
@@ -104,8 +122,12 @@ export class ApiHelper {
     
     console.log(`Creating entry with term: ${termName} in domain: ${domain}`);
     
-    // First, get the domain ID
-    const domainResponse = await this.page.request.get('/api/domains/');
+    // First, get the domain ID using the authenticated page context
+    const domainResponse = await this.page.request.get('/api/domains/', {
+      headers: {
+        'Authorization': `Token ${await this.getAuthToken()}`
+      }
+    });
     if (!domainResponse.ok()) {
       throw new Error(`Failed to get domains: ${domainResponse.status()}`);
     }
@@ -120,6 +142,9 @@ export class ApiHelper {
         term_text: termName,
         domain_id: domainObj.id,
         is_official: false
+      },
+      headers: {
+        'Authorization': `Token ${authToken}`
       }
     });
     
