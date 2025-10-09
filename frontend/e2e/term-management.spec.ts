@@ -3,6 +3,8 @@ import { LoginPage } from './pages/LoginPage';
 import { GlossaryPage } from './pages/GlossaryPage';
 import { TermDetailPage } from './pages/TermDetailPage';
 import { AuthHelper } from './helpers/auth';
+import { ApiHelper } from './helpers/api';
+import { TestFixtures } from './helpers/fixtures';
 import { TEST_TERMS, TEST_DEFINITIONS, TEST_DOMAINS, TEST_CONTENT } from './fixtures/testData';
 
 test.describe('Term Management', () => {
@@ -10,15 +12,31 @@ test.describe('Term Management', () => {
   let glossaryPage: GlossaryPage;
   let termDetailPage: TermDetailPage;
   let authHelper: AuthHelper;
+  let apiHelper: ApiHelper;
+  let fixtures: TestFixtures;
+  let createdResources: string[] = [];
 
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     glossaryPage = new GlossaryPage(page);
     termDetailPage = new TermDetailPage(page);
     authHelper = new AuthHelper(page);
+    apiHelper = new ApiHelper(page);
+    fixtures = new TestFixtures(page);
     
     // Login as admin for most tests
     await authHelper.loginAsAdmin();
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Clean up resources created in this test
+    if (createdResources.length > 0) {
+      await apiHelper.cleanupResources(createdResources);
+      createdResources = [];
+    }
+    
+    // Clean up any fixtures
+    await fixtures.cleanup();
   });
 
   test.describe('Term Navigation', () => {
@@ -152,39 +170,40 @@ test.describe('Term Management', () => {
     });
 
     test('should save definition changes', async () => {
+      // Create a test term with fixtures to ensure we have editable content
+      const testTerm = await fixtures.createTestTerm({
+        domain: 'Physics',
+        definition: 'Original test definition for automated testing.',
+        approvalState: 'no_approvals'
+      });
+      
+      createdResources.push(testTerm.id);
+      
       await glossaryPage.goto();
       await glossaryPage.waitForTermsToLoad();
       
-      const termNames = await glossaryPage.getTermNames();
-      if (termNames.length > 0) {
-        await glossaryPage.clickTerm(termNames[0]);
-        
-        // Try to enter edit mode
-        if (await termDetailPage.editButton.isVisible()) {
-          await termDetailPage.clickEdit();
-          
-          // Check if we can edit the content
-          if (await termDetailPage.contentArea.isVisible()) {
-            const testContent = 'This is a test definition for automated testing.';
-            await termDetailPage.editDefinition(testContent);
-            await termDetailPage.clickSave();
-            
-            // Wait for save to complete and check if content changed
-            await termDetailPage.waitForSaveComplete();
-            
-            // The content might not change immediately, so just verify save completed
-            await expect(termDetailPage.editButton).toBeVisible();
-          } else {
-            // Skip if content area is not editable
-            test.skip();
-          }
-        } else {
-          // Skip if edit button is not visible
-          test.skip();
-        }
-      } else {
-        test.skip();
-      }
+      // Search for our test term
+      await glossaryPage.search(testTerm.name);
+      await glossaryPage.expectTermVisible(testTerm.name);
+      
+      await glossaryPage.clickTerm(testTerm.name);
+      
+      // Should be able to enter edit mode for our test term
+      await expect(termDetailPage.editButton).toBeVisible();
+      await termDetailPage.clickEdit();
+      
+      // Should be able to edit the content
+      await expect(termDetailPage.contentArea).toBeVisible();
+      
+      const testContent = 'This is an updated test definition for automated testing.';
+      await termDetailPage.editDefinition(testContent);
+      await termDetailPage.clickSave();
+      
+      // Wait for save to complete
+      await termDetailPage.waitForSaveComplete();
+      
+      // Verify save completed successfully
+      await expect(termDetailPage.editButton).toBeVisible();
     });
 
     test('should cancel definition changes', async () => {
@@ -208,60 +227,70 @@ test.describe('Term Management', () => {
     });
 
     test('should handle empty definition', async () => {
+      // Create a test term with fixtures to ensure we have editable content
+      const testTerm = await fixtures.createTestTerm({
+        domain: 'Physics',
+        definition: 'Original test definition for empty test.',
+        approvalState: 'no_approvals'
+      });
+      
+      createdResources.push(testTerm.id);
+      
       await glossaryPage.goto();
       await glossaryPage.waitForTermsToLoad();
       
-      const termNames = await glossaryPage.getTermNames();
-      if (termNames.length > 0) {
-        await glossaryPage.clickTerm(termNames[0]);
-        
-        if (await termDetailPage.editButton.isVisible()) {
-          await termDetailPage.clickEdit();
-          
-          if (await termDetailPage.contentArea.isVisible()) {
-            await termDetailPage.fillDefinition('');
-            await termDetailPage.clickSave();
-            
-            // Should handle empty definition gracefully - just check that we're back to normal state
-            await expect(termDetailPage.page.locator('body')).toBeVisible();
-          } else {
-            test.skip();
-          }
-        } else {
-          test.skip();
-        }
-      } else {
-        test.skip();
-      }
+      // Search for our test term
+      await glossaryPage.search(testTerm.name);
+      await glossaryPage.expectTermVisible(testTerm.name);
+      
+      await glossaryPage.clickTerm(testTerm.name);
+      
+      // Should be able to enter edit mode for our test term
+      await expect(termDetailPage.editButton).toBeVisible();
+      await termDetailPage.clickEdit();
+      
+      // Should be able to edit the content
+      await expect(termDetailPage.contentArea).toBeVisible();
+      
+      await termDetailPage.fillDefinition('');
+      await termDetailPage.clickSave();
+      
+      // Should handle empty definition gracefully - just check that we're back to normal state
+      await expect(termDetailPage.page.locator('body')).toBeVisible();
     });
 
     test('should handle long definition content', async () => {
+      // Create a test term with fixtures to ensure we have editable content
+      const testTerm = await fixtures.createTestTerm({
+        domain: 'Physics',
+        definition: 'Original test definition for long content test.',
+        approvalState: 'no_approvals'
+      });
+      
+      createdResources.push(testTerm.id);
+      
       await glossaryPage.goto();
       await glossaryPage.waitForTermsToLoad();
       
-      const termNames = await glossaryPage.getTermNames();
-      if (termNames.length > 0) {
-        await glossaryPage.clickTerm(termNames[0]);
-        
-        if (await termDetailPage.editButton.isVisible()) {
-          await termDetailPage.clickEdit();
-          
-          if (await termDetailPage.contentArea.isVisible()) {
-            const longContent = 'This is a very long definition that spans multiple lines and contains a lot of text to test how the system handles extensive content. It should be able to display all of this without any issues, wrapping text as necessary and maintaining readability.';
-            await termDetailPage.editDefinition(longContent);
-            await termDetailPage.clickSave();
-            
-            // Should handle long content gracefully
-            await expect(termDetailPage.page.locator('body')).toBeVisible();
-          } else {
-            test.skip();
-          }
-        } else {
-          test.skip();
-        }
-      } else {
-        test.skip();
-      }
+      // Search for our test term
+      await glossaryPage.search(testTerm.name);
+      await glossaryPage.expectTermVisible(testTerm.name);
+      
+      await glossaryPage.clickTerm(testTerm.name);
+      
+      // Should be able to enter edit mode for our test term
+      await expect(termDetailPage.editButton).toBeVisible();
+      await termDetailPage.clickEdit();
+      
+      // Should be able to edit the content
+      await expect(termDetailPage.contentArea).toBeVisible();
+      
+      const longContent = 'This is a very long definition that spans multiple lines and contains a lot of text to test how the system handles extensive content. It should be able to display all of this without any issues, wrapping text as necessary and maintaining readability.';
+      await termDetailPage.editDefinition(longContent);
+      await termDetailPage.clickSave();
+      
+      // Should handle long content gracefully
+      await expect(termDetailPage.page.locator('body')).toBeVisible();
     });
 
     test('should handle HTML content in definition', async () => {
@@ -362,7 +391,28 @@ test.describe('Term Management', () => {
       if (foundTermWithStatus) {
         expect(foundTermWithStatus).toBe(true);
       } else {
-        test.skip();
+        // Create test terms with different approval states instead of skipping
+        const pendingTerm = await fixtures.createPendingApprovalTerm('Physics', 'A term waiting for approval');
+        const approvedTerm = await fixtures.createFullyApprovedTerm('Chemistry', 'A fully approved term');
+        
+        createdResources.push(pendingTerm.id, approvedTerm.id);
+        
+        // Test pending approval status
+        await glossaryPage.search(pendingTerm.name);
+        await glossaryPage.expectTermVisible(pendingTerm.name);
+        await glossaryPage.clickTerm(pendingTerm.name);
+        
+        // Should show pending approval status
+        await expect(termDetailPage.pendingApprovalBadge).toBeVisible();
+        
+        // Test approved status
+        await glossaryPage.goto();
+        await glossaryPage.search(approvedTerm.name);
+        await glossaryPage.expectTermVisible(approvedTerm.name);
+        await glossaryPage.clickTerm(approvedTerm.name);
+        
+        // Should show approved status
+        await expect(termDetailPage.approvedBadge).toBeVisible();
       }
     });
 
@@ -460,13 +510,56 @@ test.describe('Term Management', () => {
 
   test.describe('User Permissions', () => {
     test('should respect user domain permissions', async () => {
-      // Skip this test as it's having login issues
-      test.skip();
+      // Create a test term in a specific domain
+      const testTerm = await fixtures.createTestTerm({
+        domain: 'Physics',
+        definition: 'A physics term for permission testing.',
+        approvalState: 'no_approvals'
+      });
+      
+      createdResources.push(testTerm.id);
+      
+      // Login as a user with Physics domain access
+      await authHelper.loginAsMariaCarter(); // Maria has Physics access
+      
+      await glossaryPage.goto();
+      await glossaryPage.waitForTermsToLoad();
+      
+      // Should be able to see and interact with the term
+      await glossaryPage.search(testTerm.name);
+      await glossaryPage.expectTermVisible(testTerm.name);
+      await glossaryPage.clickTerm(testTerm.name);
+      
+      // Should be able to edit the term
+      await expect(termDetailPage.editButton).toBeVisible();
     });
 
     test('should show appropriate edit permissions', async () => {
-      // Skip this test as it's having login issues
-      test.skip();
+      // Create a test term in a specific domain
+      const testTerm = await fixtures.createTestTerm({
+        domain: 'Biology',
+        definition: 'A biology term for permission testing.',
+        approvalState: 'no_approvals'
+      });
+      
+      createdResources.push(testTerm.id);
+      
+      // Login as a user without Biology domain access
+      await authHelper.loginAsMariaCarter(); // Maria doesn't have Biology access
+      
+      await glossaryPage.goto();
+      await glossaryPage.waitForTermsToLoad();
+      
+      // Search for the term
+      await glossaryPage.search(testTerm.name);
+      
+      // Should either not see the term or see it without edit permissions
+      const termVisible = await glossaryPage.isTermVisible(testTerm.name);
+      if (termVisible) {
+        await glossaryPage.clickTerm(testTerm.name);
+        // Should not have edit permissions
+        await expect(termDetailPage.editButton).not.toBeVisible();
+      }
     });
   });
 

@@ -1,12 +1,91 @@
 import { Page } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { TEST_USERS } from '../fixtures/testData';
+import { join } from 'path';
 
 export class AuthHelper {
   constructor(private page: Page) {}
 
   private get loginPage() {
     return new LoginPage(this.page);
+  }
+
+  /**
+   * Get the path to auth state file for a user
+   */
+  private getAuthStatePath(user: keyof typeof TEST_USERS): string {
+    return join(__dirname, '../.auth', `${user.toLowerCase()}.json`);
+  }
+
+  /**
+   * Check if auth state file exists for a user
+   */
+  async hasAuthState(user: keyof typeof TEST_USERS): Promise<boolean> {
+    try {
+      const fs = await import('fs');
+      const path = this.getAuthStatePath(user);
+      return fs.existsSync(path);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Load auth state for a user
+   */
+  async loadAuthState(user: keyof typeof TEST_USERS): Promise<void> {
+    const authStatePath = this.getAuthStatePath(user);
+    
+    try {
+      // Check if auth state file exists
+      const fs = await import('fs');
+      if (!fs.existsSync(authStatePath)) {
+        console.log(`⚠️  Auth state file not found for ${user}, performing login...`);
+        await this.loginAs(user);
+        return;
+      }
+      
+      await this.page.context().addInitScript(() => {
+        // This will be executed before the page loads
+      });
+      
+      // Load the storage state
+      await this.page.context().storageState({ path: authStatePath });
+    } catch (error) {
+      console.warn(`Failed to load auth state for ${user}:`, error);
+      // Fallback to regular login
+      await this.loginAs(user);
+    }
+  }
+
+  /**
+   * Setup auth state for all test users (called in global setup)
+   */
+  async setupAuthStates(): Promise<void> {
+    const users = Object.keys(TEST_USERS) as (keyof typeof TEST_USERS)[];
+    
+    for (const user of users) {
+      try {
+        await this.loginAs(user);
+        await this.waitForLoginComplete();
+        
+        // Save storage state
+        const authStatePath = this.getAuthStatePath(user);
+        await this.page.context().storageState({ path: authStatePath });
+        
+        console.log(`✅ Auth state saved for ${user}`);
+        
+        // Clear storage for next user
+        await this.page.evaluate(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+        });
+        
+      } catch (error) {
+        console.error(`❌ Failed to setup auth state for ${user}:`, error);
+        throw error;
+      }
+    }
   }
 
   /**

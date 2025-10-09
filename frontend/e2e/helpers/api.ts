@@ -1,8 +1,23 @@
 import { Page } from '@playwright/test';
 import { TEST_TERMS, TEST_DEFINITIONS, TEST_DOMAINS } from '../fixtures/testData';
 
+export interface CreatedResource {
+  type: 'term' | 'version' | 'entry';
+  id: string;
+  name?: string;
+}
+
 export class ApiHelper {
+  private createdResources: CreatedResource[] = [];
+  
   constructor(private page: Page) {}
+
+  /**
+   * Track a created resource for cleanup
+   */
+  private trackResource(resource: CreatedResource) {
+    this.createdResources.push(resource);
+  }
 
   /**
    * Setup test data via API calls
@@ -22,22 +37,119 @@ export class ApiHelper {
   }
 
   /**
+   * Clean up all tracked resources
+   */
+  async cleanupResources(resourceIds?: string[]) {
+    const resourcesToCleanup = resourceIds 
+      ? this.createdResources.filter(r => resourceIds.includes(r.id))
+      : this.createdResources;
+
+    for (const resource of resourcesToCleanup) {
+      try {
+        await this.deleteResource(resource);
+      } catch (error) {
+        console.warn(`Failed to cleanup resource ${resource.type}:${resource.id}:`, error);
+      }
+    }
+
+    // Remove cleaned resources from tracking
+    if (resourceIds) {
+      this.createdResources = this.createdResources.filter(r => !resourceIds.includes(r.id));
+    } else {
+      this.createdResources = [];
+    }
+  }
+
+  /**
+   * Delete a specific resource
+   */
+  private async deleteResource(resource: CreatedResource) {
+    switch (resource.type) {
+      case 'version':
+        await this.deleteVersion(resource.id);
+        break;
+      case 'entry':
+        await this.deleteEntry(resource.id);
+        break;
+      case 'term':
+        await this.deleteTerm(resource.id);
+        break;
+    }
+  }
+
+  /**
+   * Get all tracked resources
+   */
+  getTrackedResources(): CreatedResource[] {
+    return [...this.createdResources];
+  }
+
+  /**
+   * Clear resource tracking without cleanup
+   */
+  clearResourceTracking() {
+    this.createdResources = [];
+  }
+
+  /**
    * Create a test term via API
    */
   async createTerm(termName: string, domain: string, definition?: string) {
-    const response = await this.page.request.post('/api/terms/', {
+    // Ensure we're authenticated by checking if we can access a protected endpoint
+    const authCheck = await this.page.request.get('/api/auth/me/');
+    if (!authCheck.ok()) {
+      console.log(`Auth check failed: ${authCheck.status()} - ${await authCheck.text()}`);
+      throw new Error('Not authenticated - cannot create entries via API');
+    }
+    
+    console.log(`Creating entry with term: ${termName} in domain: ${domain}`);
+    
+    // First, get the domain ID
+    const domainResponse = await this.page.request.get('/api/domains/');
+    if (!domainResponse.ok()) {
+      throw new Error(`Failed to get domains: ${domainResponse.status()}`);
+    }
+    const domains = await domainResponse.json();
+    const domainObj = domains.find((d: any) => d.name === domain);
+    if (!domainObj) {
+      throw new Error(`Domain '${domain}' not found`);
+    }
+    
+    const response = await this.page.request.post('/api/entries/create_with_term/', {
       data: {
-        term: { text: termName },
-        domain: { name: domain },
-        content: definition || TEST_DEFINITIONS[termName.toUpperCase() as keyof typeof TEST_DEFINITIONS] || 'Test definition'
+        term_text: termName,
+        domain_id: domainObj.id,
+        is_official: false
       }
     });
     
     if (!response.ok()) {
-      throw new Error(`Failed to create term: ${response.status()}`);
+      const errorText = await response.text();
+      console.log(`Failed to create entry: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to create entry: ${response.status()}`);
     }
     
-    return response.json();
+    const result = await response.json();
+    
+    // Track the created term for cleanup
+    this.trackResource({
+      type: 'term',
+      id: result.term?.id || result.id,
+      name: termName
+    });
+    
+    return result;
+  }
+
+  /**
+   * Delete a term via API
+   */
+  async deleteTerm(termId: string) {
+    const response = await this.page.request.delete(`/api/terms/${termId}/`);
+    
+    if (!response.ok()) {
+      throw new Error(`Failed to delete term: ${response.status()}`);
+    }
   }
 
   /**
@@ -54,7 +166,38 @@ export class ApiHelper {
       throw new Error(`Failed to create definition version: ${response.status()}`);
     }
     
-    return response.json();
+    const result = await response.json();
+    
+    // Track the created version for cleanup
+    this.trackResource({
+      type: 'version',
+      id: result.id,
+      name: `version for term ${termId}`
+    });
+    
+    return result;
+  }
+
+  /**
+   * Delete a version via API
+   */
+  async deleteVersion(versionId: string) {
+    const response = await this.page.request.delete(`/api/versions/${versionId}/`);
+    
+    if (!response.ok()) {
+      throw new Error(`Failed to delete version: ${response.status()}`);
+    }
+  }
+
+  /**
+   * Delete an entry via API
+   */
+  async deleteEntry(entryId: string) {
+    const response = await this.page.request.delete(`/api/entries/${entryId}/`);
+    
+    if (!response.ok()) {
+      throw new Error(`Failed to delete entry: ${response.status()}`);
+    }
   }
 
   /**
@@ -264,5 +407,59 @@ export class ApiHelper {
       pendingVersions: pendingVersions.length,
       domains: [...new Set(terms.map((term: any) => term.domain?.name).filter(Boolean))]
     };
+  }
+
+  /**
+   * Create a test term with unique name to avoid conflicts
+   */
+  async createUniqueTerm(domain: string, definition?: string) {
+    const timestamp = Date.now();
+    const termName = `test_${timestamp}_term`;
+    return await this.createTerm(termName, domain, definition);
+  }
+
+  /**
+   * Create a test term with specific approval state
+   */
+  async createTermWithApprovalState(termName: string, domain: string, definition: string, approvalState: 'no_approvals' | 'one_approval' | 'two_approvals' | 'published') {
+    const result = await this.createTerm(termName, domain, definition);
+    
+    if (approvalState !== 'no_approvals') {
+      // Get all users to assign as approvers
+      const users = await this.getAllUsers();
+      const approvers = users.slice(0, approvalState === 'one_approval' ? 1 : 2);
+      
+      for (const approver of approvers) {
+        await this.approveVersion(result.version?.id || result.id);
+      }
+      
+      if (approvalState === 'published') {
+        await this.publishVersion(result.version?.id || result.id);
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Get all users via API
+   */
+  async getAllUsers() {
+    const response = await this.page.request.get('/api/users/');
+    
+    if (!response.ok()) {
+      throw new Error(`Failed to get users: ${response.status()}`);
+    }
+    
+    return response.json();
+  }
+
+  /**
+   * Reset approval state for a version
+   */
+  async resetVersionApprovalState(versionId: string) {
+    // This would need to be implemented based on the API
+    // For now, we'll just log it
+    console.log(`Resetting approval state for version ${versionId}`);
   }
 }

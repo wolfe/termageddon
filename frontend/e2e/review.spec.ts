@@ -1,11 +1,31 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from './helpers/auth';
+import { ApiHelper } from './helpers/api';
+import { TestFixtures } from './helpers/fixtures';
 import { ReviewPage } from './pages/ReviewPage';
 
 test.describe('Review Dashboard', () => {
+  let authHelper: AuthHelper;
+  let apiHelper: ApiHelper;
+  let fixtures: TestFixtures;
+  let createdResources: string[] = [];
+
   test.beforeEach(async ({ page }) => {
-    const auth = new AuthHelper(page);
-    await auth.loginAsAdmin();
+    authHelper = new AuthHelper(page);
+    apiHelper = new ApiHelper(page);
+    fixtures = new TestFixtures(page);
+    await authHelper.loginAsAdmin();
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Clean up resources created in this test
+    if (createdResources.length > 0) {
+      await apiHelper.cleanupResources(createdResources);
+      createdResources = [];
+    }
+    
+    // Clean up any fixtures
+    await fixtures.cleanup();
   });
 
   test('should display review dashboard', async ({ page }) => {
@@ -83,41 +103,40 @@ test.describe('Review Dashboard', () => {
 });
 
 test.describe('Review Approval Flow', () => {
+  let authHelper: AuthHelper;
+  let apiHelper: ApiHelper;
+  let fixtures: TestFixtures;
+  let createdResources: string[] = [];
+
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto('/login');
-    await page.fill('[formControlName="username"]', 'admin');
-    await page.fill('[formControlName="password"]', 'admin');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('**/glossary');
+    authHelper = new AuthHelper(page);
+    apiHelper = new ApiHelper(page);
+    fixtures = new TestFixtures(page);
+    await authHelper.loginAsAdmin();
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Clean up resources created in this test
+    if (createdResources.length > 0) {
+      await apiHelper.cleanupResources(createdResources);
+      createdResources = [];
+    }
+    
+    // Clean up any fixtures
+    await fixtures.cleanup();
   });
 
   test('should create a version and show it in review', async ({ page }) => {
-    // First, create a version by editing a term
-    await page.waitForSelector('h3.cursor-pointer', { timeout: 10000 });
-    
-    // Click on first available term
-    await page.locator('h3.cursor-pointer').first().click();
-    await page.waitForSelector('app-term-detail');
-    
-    // Click edit button
-    await page.click('button:has-text("Edit Definition")');
-    await page.waitForSelector('quill-editor .ql-editor');
-    
-    // Add new content
-    await page.click('quill-editor .ql-editor');
-    await page.type('quill-editor .ql-editor', 'This is a test definition for review flow testing.');
-    
-    // Save the version
-    await page.click('button:has-text("Save Changes")');
-    await page.waitForTimeout(2000); // Wait for save to complete
+    // Create a test term with a pending version using fixtures
+    const testTerm = await fixtures.createPendingApprovalTerm('Physics', 'This is a test definition for review flow testing.');
+    createdResources.push(testTerm.id);
 
     // Navigate to review tab
     await page.click('a[routerLink="/review"]');
     await page.waitForURL('**/review');
     
-    // Wait for review data to load
-    await page.waitForTimeout(2000);
+    // Wait for review data to load using proper wait
+    await page.waitForSelector('[data-testid="review-content"]', { timeout: 10000 });
 
     // Look for the test content in review
     const hasTestContent = await page.locator('text=This is a test definition for review flow testing.').isVisible();
@@ -131,9 +150,15 @@ test.describe('Review Approval Flow', () => {
   });
 
   test('should show approval options when selecting a version', async ({ page }) => {
+    // Create a test term with pending approval
+    const testTerm = await fixtures.createPendingApprovalTerm('Physics', 'Test definition for approval options.');
+    createdResources.push(testTerm.id);
+
     await page.click('a[routerLink="/review"]');
     await page.waitForURL('**/review');
-    await page.waitForTimeout(2000);
+    
+    // Wait for review data to load using proper wait
+    await page.waitForSelector('[data-testid="review-content"]', { timeout: 10000 });
 
     // Look for any pending versions in the list
     const pendingVersionList = page.locator('.space-y-4 > div');
@@ -142,7 +167,9 @@ test.describe('Review Approval Flow', () => {
     if (listCount > 0) {
       // Click on first pending version
       await pendingVersionList.first().click();
-      await page.waitForTimeout(500);
+      
+      // Wait for the version details to load
+      await page.waitForSelector('[data-testid="version-details"]', { timeout: 5000 });
       
       // Should show approval interface
       const hasApprovalSection = await page.locator('text=/Ready for Approval/').isVisible();
