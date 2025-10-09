@@ -191,9 +191,24 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   getApprovalReason(): string {
     if (!this.selectedVersion) return 'No version selected';
     if (!this.currentUser) return 'Please log in to approve definitions';
-    if (this.selectedVersion.is_approved)
-      return 'This definition has already been approved by others';
-    return 'This definition cannot be approved at this time';
+    
+    // Use the backend-provided approval status for more specific messaging
+    const status = this.selectedVersion.approval_status_for_user ?? 'unknown';
+    
+    switch (status) {
+      case 'own_version':
+        return 'You cannot approve your own definition';
+      case 'already_approved':
+        return 'You have already approved this definition';
+      case 'already_approved_by_others':
+        return 'This definition has already been approved by others';
+      case 'can_approve':
+        return 'This definition is ready for your approval';
+      case 'unknown':
+        return 'Unable to determine approval status';
+      default:
+        return 'This definition cannot be approved at this time';
+    }
   }
 
   getVersionEligibilityStatus(version: ReviewVersion): string {

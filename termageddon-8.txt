@@ -1,0 +1,2 @@
+Domain => Perspective
+Expert => Curator
