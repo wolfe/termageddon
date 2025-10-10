@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Termageddon API is a Django REST Framework-based service that provides endpoints for managing a corporate glossary system. It supports authentication, term management, version control, approval workflows, and commenting.
+The Termageddon API is a Django REST Framework-based service that provides endpoints for managing a corporate glossary system. It supports authentication, term management, draft control, approval workflows, and commenting with perspective-based organization.
 
 ## Base URL
 
@@ -40,7 +40,7 @@ Content-Type: application/json
     "first_name": "string",
     "last_name": "string",
     "is_staff": false,
-    "is_domain_expert": false
+    "is_perspective_curator": false
   }
 }
 ```
@@ -75,11 +75,11 @@ Authorization: Token <your-token>
 }
 ```
 
-## Domains
+## Perspectives
 
-### List Domains
+### List Perspectives
 ```http
-GET /domains/
+GET /perspectives/
 Authorization: Token <your-token>
 ```
 
@@ -91,7 +91,7 @@ Authorization: Token <your-token>
 ```json
 {
   "count": 10,
-  "next": "http://localhost:8000/api/domains/?page=2",
+  "next": "http://localhost:8000/api/perspectives/?page=2",
   "previous": null,
   "results": [
     {
@@ -105,15 +105,15 @@ Authorization: Token <your-token>
 }
 ```
 
-### Get Domain
+### Get Perspective
 ```http
-GET /domains/{id}/
+GET /perspectives/{id}/
 Authorization: Token <your-token>
 ```
 
-### Create Domain
+### Create Perspective
 ```http
-POST /domains/
+POST /perspectives/
 Authorization: Token <your-token>
 Content-Type: application/json
 
@@ -123,9 +123,9 @@ Content-Type: application/json
 }
 ```
 
-### Update Domain
+### Update Perspective
 ```http
-PATCH /domains/{id}/
+PATCH /perspectives/{id}/
 Authorization: Token <your-token>
 Content-Type: application/json
 
@@ -145,7 +145,7 @@ Authorization: Token <your-token>
 
 **Query Parameters:**
 - `search` (string): Search by term text
-- `domain` (integer): Filter by domain ID
+- `perspective` (integer): Filter by perspective ID
 - `ordering` (string): Order by field (e.g., `text`, `-text`, `updated_at`)
 
 **Response:**
@@ -193,9 +193,9 @@ Authorization: Token <your-token>
 
 **Query Parameters:**
 - `search` (string): Search by term text
-- `domain` (integer): Filter by domain ID
+- `perspective` (integer): Filter by perspective ID
 - `is_official` (boolean): Filter by official status
-- `approval_status` (string): Filter by approval status (`approved`, `pending`, `no_version`)
+- `approval_status` (string): Filter by approval status (`approved`, `pending`, `no_draft`)
 - `author` (integer): Filter by author ID
 - `created_after` (date): Filter entries created after date (YYYY-MM-DD)
 - `created_before` (date): Filter entries created before date (YYYY-MM-DD)
@@ -215,13 +215,13 @@ Authorization: Token <your-token>
         "text": "string",
         "text_normalized": "string"
       },
-      "domain": {
+      "perspective": {
         "id": 1,
         "name": "string",
         "description": "string"
       },
       "is_official": true,
-      "active_version": {
+      "active_draft": {
         "id": 1,
         "content": "string",
         "approval_count": 2,
@@ -264,7 +264,7 @@ Content-Type: application/json
 
 {
   "term": 1,
-  "domain": 1,
+  "perspective": 1,
   "is_official": false
 }
 ```
@@ -275,11 +275,11 @@ POST /entries/{id}/mark-official/
 Authorization: Token <your-token>
 ```
 
-## Entry Versions
+## Entry Drafts
 
-### List Entry Versions
+### List Entry Drafts
 ```http
-GET /entry-versions/
+GET /entry-drafts/
 Authorization: Token <your-token>
 ```
 
@@ -293,7 +293,7 @@ Authorization: Token <your-token>
 ```json
 {
   "count": 10,
-  "next": "http://localhost:8000/api/entry-versions/?page=2",
+  "next": "http://localhost:8000/api/entry-drafts/?page=2",
   "previous": null,
   "results": [
     {
@@ -323,15 +323,15 @@ Authorization: Token <your-token>
 }
 ```
 
-### Get Entry Version
+### Get Entry Draft
 ```http
-GET /entry-versions/{id}/
+GET /entry-drafts/{id}/
 Authorization: Token <your-token>
 ```
 
-### Create Entry Version
+### Create Entry Draft
 ```http
-POST /entry-versions/
+POST /entry-drafts/
 Authorization: Token <your-token>
 Content-Type: application/json
 
@@ -341,9 +341,9 @@ Content-Type: application/json
 }
 ```
 
-### Update Entry Version
+### Update Entry Draft
 ```http
-PATCH /entry-versions/{id}/
+PATCH /entry-drafts/{id}/
 Authorization: Token <your-token>
 Content-Type: application/json
 
@@ -352,24 +352,24 @@ Content-Type: application/json
 }
 ```
 
-### Approve Entry Version
+### Approve Entry Draft
 ```http
-POST /entry-versions/{id}/approve/
+POST /entry-drafts/{id}/approve/
 Authorization: Token <your-token>
 ```
 
 **Response:**
 ```json
 {
-  "message": "Version approved successfully",
+  "message": "Draft approved successfully",
   "approval_count": 2,
   "is_published": true
 }
 ```
 
-### Get Unpublished Version for Entry
+### Get Unpublished Draft for Entry
 ```http
-GET /entry-versions/unpublished/{entry_id}/
+GET /entry-drafts/unpublished/{entry_id}/
 Authorization: Token <your-token>
 ```
 
@@ -463,7 +463,7 @@ Authorization: Token <your-token>
 
 **Query Parameters:**
 - `search` (string): Search by username, first name, or last name
-- `is_domain_expert` (boolean): Filter by domain expert status
+- `is_perspective_curator` (boolean): Filter by perspective curator status
 - `ordering` (string): Order by field (e.g., `username`, `first_name`, `last_name`)
 
 **Response:**
@@ -480,7 +480,7 @@ Authorization: Token <your-token>
       "first_name": "string",
       "last_name": "string",
       "is_staff": false,
-      "is_domain_expert": false,
+      "is_perspective_curator": false,
       "date_joined": "2024-01-01T00:00:00Z"
     }
   ]

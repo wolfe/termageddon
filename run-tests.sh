@@ -6,8 +6,14 @@
 #   -f, --frontend    Run only frontend unit tests
 #   -b, --backend     Run only backend tests
 #   -e, --e2e         Run only e2e tests
+#   -i, --isolation   Test E2E isolation (run same tests 3 times)
 #   -h, --help        Show this help message
 #   (no args)         Run all tests
+#
+# E2E Test Isolation:
+# This script supports E2E test isolation with global setup/teardown.
+# Tests run sequentially to ensure proper database isolation.
+# Use --isolation flag to verify isolation is working correctly.
 
 set -e  # Exit on any error
 

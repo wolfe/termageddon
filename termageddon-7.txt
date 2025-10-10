@@ -1,4 +1,0 @@
-When I run ./demo.sh, I'd like to be in a state where it's quicker to test manually.  This means the following:
-(0)  Some of the users are domain experts for 1 or more domains
-(1)  The database is a bit more realistic in that there are terms at different levels progress through the approval flow.  Some have no approvals, some 1, some 2 but not yet published, most are published.
-(3)  If possible, I'm hoping that demo.txt launches two frontend windows, not just one, in the browser, and finds a way to pre-authorize them to two of the user accounts, one of which is a domain expert in a couple domains.  Is this last requirement reasonable to expect or does it require making the application itself more complicated (and therefore less secure)?

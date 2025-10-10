@@ -2,7 +2,7 @@
 
 ## Overview
 
-Termageddon is a corporate glossary management system designed to help organizations maintain consistent terminology across teams and projects. It features an approval workflow, commenting system, and rich text editing capabilities.
+Termageddon is a corporate glossary management system designed to help organizations maintain consistent terminology across teams and projects, organized by perspectives. It features an approval workflow, commenting system, and rich text editing capabilities.
 
 ## Getting Started
 
@@ -29,11 +29,13 @@ The application features a clean, professional interface with:
 - **Header:** Termageddon-branded navigation with user info and logout
 - **Sidebar (30%):** Term list with search and filtering options
 - **Main Content (70%):** Term details and editing interface
+- **Navigation Tabs:** Glossary, Review Dashboard, My Drafts
 
 ### Navigation
 
 - **Glossary:** Main term browsing and management
-- **Review Dashboard:** Approve pending definitions (domain experts and staff only)
+- **Review Dashboard:** Approve pending drafts (perspective curators and staff only)
+- **My Drafts:** Personal draft management and review progress tracking
 - **Logout:** Sign out of the system
 
 ## Managing Terms
@@ -48,12 +50,12 @@ The sidebar provides several ways to find terms:
 - Results update as you type
 
 #### Filters
-- **Domain:** Filter by business domain (e.g., Technology, Finance)
+- **Perspective:** Filter by business perspective (e.g., Technology, Finance)
 - **Approval Status:** 
   - All: Show all terms
   - Approved: Show only approved definitions
   - Pending: Show terms awaiting approval
-  - No Version: Show terms without definitions
+  - No Draft: Show terms without definitions
 - **Author:** Filter by who created the definition
 - **Official:** Filter by official status
 - **Sort:** Order by term name, creation date, or last updated
@@ -67,7 +69,7 @@ The sidebar provides several ways to find terms:
 When you select a term, the main panel shows:
 
 - **Term Name:** The term being defined
-- **Domain:** Business domain classification
+- **Perspective:** Business perspective classification
 - **Status Badges:**
   - Official: Green badge for approved terms
   - Pending: Yellow badge for terms awaiting approval
@@ -80,7 +82,7 @@ When you select a term, the main panel shows:
 
 ### Rich Text Editor
 
-The system uses Quill.js for rich text editing with:
+The system uses TinyMCE for rich text editing with:
 
 #### Toolbar Options
 - **Formatting:** Bold, italic, underline
@@ -112,16 +114,16 @@ The system uses Quill.js for rich text editing with:
 3. **Modify content** in the rich text editor
 4. **Save** your changes
 
-### Version Control
+### Draft Control
 
-- Each edit creates a new version
-- Previous versions are preserved
-- Only one version can be active at a time
-- Unpublished versions are drafts
+- Each edit updates your unpublished draft
+- Previous drafts are preserved in history
+- Only one draft can be active at a time
+- Unpublished drafts can be edited without creating new versions
 
 ## Approval Workflow
 
-### For Domain Experts and Staff
+### For Perspective Curators and Staff
 
 #### Review Dashboard
 - Access via the "Review Dashboard" link in navigation
@@ -136,21 +138,54 @@ The system uses Quill.js for rich text editing with:
 
 #### Approval Requirements
 - Minimum 2 approvals required for publication
-- Domain experts can approve definitions in their domain
+- Perspective curators can approve definitions in their perspective
 - Staff members can approve any definition
-- Once approved, definitions become official
+- Once approved, drafts can be published
 
 ### For Regular Users
 
 #### Submitting for Review
 - All new definitions start as drafts
-- Definitions automatically enter approval queue
-- Users receive notifications when definitions are approved/rejected
+- Request specific reviewers for your draft
+- Users can track draft progress in My Drafts tab
+- Edit drafts during approval process (clears approvals)
 
 #### Viewing Status
-- Check approval status in term details
-- Pending definitions show "Pending" badge
-- Approved definitions show "Official" badge
+- Check approval status in term details and My Drafts
+- Pending drafts show "Pending" badge
+- Approved and published drafts show "Published" badge
+- Endorsed definitions show "Endorsed" badge
+
+## My Drafts
+
+The My Drafts tab provides a personal workspace to manage and track your draft submissions.
+
+### Viewing Your Drafts
+
+Access My Drafts from the main navigation to see:
+
+- **All Your Drafts:** Every draft you've authored
+- **Approval Status:** Current number of approvals vs required
+- **Requested Reviewers:** Who you've asked to review
+- **Approved By:** List of users who have already approved
+- **Progress Indicators:** Visual feedback on draft status
+
+### Managing Drafts
+
+From My Drafts, you can:
+
+- **Edit Drafts:** Click on any draft to edit it (clears existing approvals)
+- **Request Reviewers:** Add or change requested reviewers
+- **Track Progress:** Monitor approval status and reviewer activity
+- **Publish:** Publish drafts once they have sufficient approvals
+- **View History:** See all previous versions of your draft
+
+### Draft States
+
+- **In Progress:** Draft not yet submitted for review
+- **Pending Review:** Awaiting approvals from requested reviewers
+- **Approved:** Has sufficient approvals, ready to publish
+- **Published:** Active version visible in the glossary
 
 ## Comment System
 
@@ -176,19 +211,20 @@ The system uses Quill.js for rich text editing with:
 
 ### Regular Users
 - View all terms and definitions
-- Create and edit definitions
+- Create and edit drafts
 - Add comments
-- Submit definitions for approval
+- Request reviewers for drafts
+- Track draft progress in My Drafts
 
-### Domain Experts
+### Perspective Curators
 - All regular user permissions
-- Approve definitions in their domain
+- Approve drafts in their perspective
 - Access review dashboard
-- Mark definitions as official
+- Endorse definitions as official
 
 ### Staff Members
-- All domain expert permissions
-- Approve definitions in any domain
+- All perspective curator permissions
+- Approve drafts in any perspective
 - Manage user roles
 - Access admin functions
 
@@ -305,11 +341,12 @@ For additional support:
 ## Glossary of Terms
 
 - **Definition:** The explanation of a term
-- **Domain:** Business area classification (e.g., Technology, Finance)
+- **Perspective:** Business area classification (e.g., Technology, Finance)
 - **Entry:** A term with its associated definition and metadata
-- **Official:** A definition that has been approved and published
-- **Pending:** A definition awaiting approval
-- **Version:** A specific iteration of a definition
-- **Approver:** User who can approve definitions
-- **Domain Expert:** User with approval rights for specific domains
+- **Endorsed:** A definition that has been endorsed by a perspective curator
+- **Published:** A draft that has been approved and made active
+- **Pending:** A draft awaiting approval
+- **Draft:** An unpublished version of a definition
+- **Approver:** User who can approve drafts
+- **Perspective Curator:** User with approval and endorsement rights for specific perspectives
 - **Staff:** User with full system access and approval rights
