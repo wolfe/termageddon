@@ -4,18 +4,18 @@ from django.core.exceptions import ValidationError
 
 from glossary.models import (
     Comment,
-    Domain,
-    DomainExpert,
+    Perspective,
+    PerspectiveCurator,
     Entry,
-    EntryVersion,
+    EntryDraft,
     Term,
 )
 from glossary.tests.conftest import (
     CommentFactory,
-    DomainExpertFactory,
-    DomainFactory,
+    PerspectiveCuratorFactory,
+    PerspectiveFactory,
     EntryFactory,
-    EntryVersionFactory,
+    EntryDraftFactory,
     TermFactory,
     UserFactory,
 )
@@ -27,56 +27,56 @@ class TestAuditedModelAndSoftDelete:
 
     def test_soft_delete_excludes_from_default_manager(self):
         """Test that soft deleted objects are excluded from default manager"""
-        domain = DomainFactory()
-        assert Domain.objects.count() == 1
+        perspective = PerspectiveFactory()
+        assert Perspective.objects.count() == 1
 
-        domain.delete()  # Soft delete
-        assert Domain.objects.count() == 0
-        assert Domain.all_objects.count() == 1
-        assert domain.is_deleted is True
+        perspective.delete()  # Soft delete
+        assert Perspective.objects.count() == 0
+        assert Perspective.all_objects.count() == 1
+        assert perspective.is_deleted is True
 
     def test_hard_delete_actually_deletes(self):
         """Test that hard_delete removes object from database"""
-        domain = DomainFactory()
-        assert Domain.all_objects.count() == 1
+        perspective = PerspectiveFactory()
+        assert Perspective.all_objects.count() == 1
 
-        domain.hard_delete()
-        assert Domain.all_objects.count() == 0
+        perspective.hard_delete()
+        assert Perspective.all_objects.count() == 0
 
     def test_audit_fields_are_set(self):
         """Test that audit fields are automatically populated"""
         user = UserFactory()
-        domain = DomainFactory(created_by=user)
+        perspective = PerspectiveFactory(created_by=user)
 
-        assert domain.created_at is not None
-        assert domain.updated_at is not None
-        assert domain.created_by == user
+        assert perspective.created_at is not None
+        assert perspective.updated_at is not None
+        assert perspective.created_by == user
 
 
 @pytest.mark.django_db
-class TestDomainModel:
-    """Test the Domain model"""
+class TestPerspectiveModel:
+    """Test the Perspective model"""
 
-    def test_domain_str_representation(self):
+    def test_perspective_str_representation(self):
         """Test __str__ method"""
-        domain = DomainFactory(name="Finance")
-        assert str(domain) == "Finance"
+        perspective = PerspectiveFactory(name="Finance")
+        assert str(perspective) == "Finance"
 
-    def test_domain_uniqueness_validation(self):
-        """Test that domain names must be unique among non-deleted records"""
-        DomainFactory(name="Finance")
+    def test_perspective_uniqueness_validation(self):
+        """Test that perspective names must be unique among non-deleted records"""
+        PerspectiveFactory(name="Finance")
 
         with pytest.raises(ValidationError):
-            DomainFactory(name="Finance")
+            PerspectiveFactory(name="Finance")
 
-    def test_domain_can_reuse_deleted_name(self):
-        """Test that we can create a domain with same name as soft-deleted one"""
-        domain1 = DomainFactory(name="Finance")
-        domain1.delete()  # Soft delete
+    def test_perspective_can_reuse_deleted_name(self):
+        """Test that we can create a perspective with same name as soft-deleted one"""
+        perspective1 = PerspectiveFactory(name="Finance")
+        perspective1.delete()  # Soft delete
 
         # This should work now
-        domain2 = DomainFactory(name="Finance")
-        assert domain2.name == "Finance"
+        perspective2 = PerspectiveFactory(name="Finance")
+        assert perspective2.name == "Finance"
 
 
 @pytest.mark.django_db
@@ -113,46 +113,46 @@ class TestEntryModel:
     def test_entry_str_representation(self):
         """Test __str__ method"""
         term = TermFactory(text="API")
-        domain = DomainFactory(name="Technology")
-        entry = EntryFactory(term=term, domain=domain)
+        perspective = PerspectiveFactory(name="Technology")
+        entry = EntryFactory(term=term, perspective=perspective)
         assert str(entry) == "API (Technology)"
 
-    def test_entry_term_domain_uniqueness(self):
-        """Test that term+domain combination must be unique"""
+    def test_entry_term_perspective_uniqueness(self):
+        """Test that term+perspective combination must be unique"""
         term = TermFactory()
-        domain = DomainFactory()
-        EntryFactory(term=term, domain=domain)
+        perspective = PerspectiveFactory()
+        EntryFactory(term=term, perspective=perspective)
 
         with pytest.raises(ValidationError):
-            EntryFactory(term=term, domain=domain)
+            EntryFactory(term=term, perspective=perspective)
 
-    def test_entry_same_term_different_domains(self):
-        """Test that same term can exist in different domains"""
+    def test_entry_same_term_different_perspectives(self):
+        """Test that same term can exist in different perspectives"""
         term = TermFactory()
-        domain1 = DomainFactory()
-        domain2 = DomainFactory()
+        perspective1 = PerspectiveFactory()
+        perspective2 = PerspectiveFactory()
 
-        entry1 = EntryFactory(term=term, domain=domain1)
-        entry2 = EntryFactory(term=term, domain=domain2)
+        entry1 = EntryFactory(term=term, perspective=perspective1)
+        entry2 = EntryFactory(term=term, perspective=perspective2)
 
         assert entry1.term == entry2.term
-        assert entry1.domain != entry2.domain
+        assert entry1.perspective != entry2.perspective
 
 
 @pytest.mark.django_db
-class TestEntryVersionModel:
-    """Test the EntryVersion model"""
+class TestEntryDraftModel:
+    """Test the EntryDraft model"""
 
     def test_entry_version_str_representation(self):
         """Test __str__ method"""
         user = UserFactory(username="john")
         entry = EntryFactory()
-        version = EntryVersionFactory(entry=entry, author=user)
+        version = EntryDraftFactory(entry=entry, author=user)
         assert "john" in str(version)
 
     def test_approval_count_property(self):
         """Test the approval_count property"""
-        version = EntryVersionFactory()
+        version = EntryDraftFactory()
         assert version.approval_count == 0
 
         user1 = UserFactory()
@@ -161,7 +161,7 @@ class TestEntryVersionModel:
 
     def test_is_approved_property(self):
         """Test the is_approved property (requires MIN_APPROVALS=2)"""
-        version = EntryVersionFactory()
+        version = EntryDraftFactory()
         assert version.is_approved is False
 
         user1 = UserFactory()
@@ -175,7 +175,7 @@ class TestEntryVersionModel:
     def test_approve_method_adds_approver(self):
         """Test the approve() method"""
         author = UserFactory()
-        version = EntryVersionFactory(author=author)
+        version = EntryDraftFactory(author=author)
         approver = UserFactory()
 
         version.approve(approver)
@@ -184,14 +184,14 @@ class TestEntryVersionModel:
     def test_approve_method_rejects_author(self):
         """Test that authors cannot approve their own versions"""
         author = UserFactory()
-        version = EntryVersionFactory(author=author)
+        version = EntryDraftFactory(author=author)
 
         with pytest.raises(ValidationError, match="cannot approve their own"):
             version.approve(author)
 
     def test_approve_method_rejects_duplicate(self):
         """Test that users can't approve twice"""
-        version = EntryVersionFactory()
+        version = EntryDraftFactory()
         approver = UserFactory()
 
         version.approve(approver)
@@ -203,23 +203,23 @@ class TestEntryVersionModel:
         """Test validation that prevents multiple unapproved versions"""
         author = UserFactory()
         entry = EntryFactory()
-        version1 = EntryVersionFactory(entry=entry, author=author)
+        version1 = EntryDraftFactory(entry=entry, author=author)
 
         # Should not be able to create second unapproved version
         with pytest.raises(
-            ValidationError, match="already have an unpublished version"
+            ValidationError, match="already have an unpublished draft"
         ):
-            EntryVersionFactory(entry=entry, author=author)
+            EntryDraftFactory(entry=entry, author=author)
 
 
 @pytest.mark.django_db
-class TestEntryVersionSignal:
-    """Test the auto-activation signal for EntryVersion"""
+class TestEntryDraftSignal:
+    """Test the auto-activation signal for EntryDraft"""
 
     def test_approved_version_becomes_active(self):
         """Test that approved versions automatically become active"""
         entry = EntryFactory()
-        version = EntryVersionFactory(entry=entry)
+        version = EntryDraftFactory(entry=entry)
 
         # Add 2 approvers to meet MIN_APPROVALS=2
         user1 = UserFactory()
@@ -228,29 +228,29 @@ class TestEntryVersionSignal:
 
         # Refresh entry from DB
         entry.refresh_from_db()
-        assert entry.active_version == version
+        assert entry.active_draft == version
 
     def test_newer_approved_version_replaces_older(self):
         """Test that newer approved versions replace older ones"""
         entry = EntryFactory()
-        version1 = EntryVersionFactory(entry=entry)
+        version1 = EntryDraftFactory(entry=entry)
 
         # Approve version1
         user1 = UserFactory()
         user2 = UserFactory()
         version1.approvers.add(user1, user2)
         entry.refresh_from_db()
-        assert entry.active_version == version1
+        assert entry.active_draft == version1
 
         # Create and approve version2
         # Need different author since only 1 unapproved version per author
         different_author = UserFactory()
-        version2 = EntryVersionFactory(entry=entry, author=different_author)
+        version2 = EntryDraftFactory(entry=entry, author=different_author)
         user3 = UserFactory()
         version2.approvers.add(user1, user3)
 
         entry.refresh_from_db()
-        assert entry.active_version == version2
+        assert entry.active_draft == version2
 
 
 @pytest.mark.django_db
@@ -289,32 +289,32 @@ class TestCommentModel:
 
 
 @pytest.mark.django_db
-class TestDomainExpertModel:
-    """Test the DomainExpert model"""
+class TestPerspectiveCuratorModel:
+    """Test the PerspectiveCurator model"""
 
-    def test_domain_expert_str_representation(self):
+    def test_perspective_curator_str_representation(self):
         """Test __str__ method"""
         user = UserFactory(username="expert")
-        domain = DomainFactory(name="Finance")
-        expert = DomainExpertFactory(user=user, domain=domain)
+        perspective = PerspectiveFactory(name="Finance")
+        expert = PerspectiveCuratorFactory(user=user, perspective=perspective)
         assert str(expert) == "expert - Finance"
 
-    def test_domain_expert_user_domain_uniqueness(self):
-        """Test that user+domain must be unique"""
+    def test_perspective_curator_user_perspective_uniqueness(self):
+        """Test that user+perspective must be unique"""
         user = UserFactory()
-        domain = DomainFactory()
-        DomainExpertFactory(user=user, domain=domain)
+        perspective = PerspectiveFactory()
+        PerspectiveCuratorFactory(user=user, perspective=perspective)
 
-        with pytest.raises(ValidationError, match="already a domain expert"):
-            DomainExpertFactory(user=user, domain=domain)
+        with pytest.raises(ValidationError, match="already a perspective curator"):
+            PerspectiveCuratorFactory(user=user, perspective=perspective)
 
-    def test_user_helper_method_is_domain_expert_for(self):
-        """Test the monkey-patched User.is_domain_expert_for method"""
+    def test_user_helper_method_is_perspective_curator_for(self):
+        """Test the monkey-patched User.is_perspective_curator_for method"""
         user = UserFactory()
-        domain = DomainFactory()
-        DomainExpertFactory(user=user, domain=domain)
+        perspective = PerspectiveFactory()
+        PerspectiveCuratorFactory(user=user, perspective=perspective)
 
-        assert user.is_domain_expert_for(domain.id) is True
+        assert user.is_perspective_curator_for(perspective.id) is True
 
-        other_domain = DomainFactory()
-        assert user.is_domain_expert_for(other_domain.id) is False
+        other_perspective = PerspectiveFactory()
+        assert user.is_perspective_curator_for(other_perspective.id) is False

@@ -3,21 +3,22 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ReviewService } from '../../services/review.service';
-import { ReviewVersion, User, PaginatedResponse } from '../../models';
+import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
+import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
 
 @Component({
   selector: 'app-review-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReviewerSelectorDialogComponent],
+  imports: [CommonModule, FormsModule, ReviewerSelectorDialogComponent, CommentThreadComponent],
   templateUrl: './review-dashboard.component.html',
   styleUrl: './review-dashboard.component.scss',
 })
 export class ReviewDashboardComponent implements OnInit, OnDestroy {
-  pendingVersions: ReviewVersion[] = [];
-  filteredVersions: ReviewVersion[] = [];
+  pendingDrafts: ReviewDraft[] = [];
+  filteredDrafts: ReviewDraft[] = [];
 
   searchTerm: string = '';
   showAll: boolean = false;
@@ -25,13 +26,17 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   requestingReview = false; // Separate loading state for request review
   error: string | null = null;
   currentUser: User | null = null;
-  selectedVersion: ReviewVersion | null = null;
+  selectedDraft: ReviewDraft | null = null;
   allUsers: User[] = [];
 
   // Reviewer selector dialog state
   showReviewerSelector = false;
   selectedReviewerIds: number[] = [];
-  versionToRequestReview: ReviewVersion | null = null;
+  draftToRequestReview: ReviewDraft | null = null;
+
+  // Comment state
+  comments: Comment[] = [];
+  isLoadingComments = false;
 
   // Subscription management
   private userSubscription?: Subscription;
@@ -48,7 +53,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       this.currentUser = user;
     });
     
-    this.loadPendingVersions();
+    this.loadPendingDrafts();
     this.loadUsers();
   }
 
@@ -58,15 +63,15 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadPendingVersions(callback?: () => void): void {
+  loadPendingDrafts(callback?: () => void): void {
     this.loading = true;
     this.error = null;
 
     // Use new backend eligibility filtering instead of client-side logic
-    this.reviewService.getVersionsCanApprove().subscribe({
-      next: (response: PaginatedResponse<ReviewVersion>) => {
-        this.pendingVersions = response.results;
-        this.filteredVersions = [...this.pendingVersions];
+    this.reviewService.getDraftsCanApprove(this.showAll).subscribe({
+      next: (response: PaginatedResponse<ReviewDraft>) => {
+        this.pendingDrafts = response.results;
+        this.filteredDrafts = [...this.pendingDrafts];
         this.loading = false;
         // Execute callback after data is loaded
         if (callback) {
@@ -74,7 +79,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error loading pending versions:', error);
+        console.error('Error loading pending drafts:', error);
         this.error = 'Failed to load review data';
         this.loading = false;
       },
@@ -94,109 +99,110 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   onSearch(): void {
     if (!this.searchTerm.trim()) {
-      this.filteredVersions = [...this.pendingVersions];
+      this.filteredDrafts = [...this.pendingDrafts];
       return;
     }
 
     // Use backend search instead of client-side filtering
     this.loading = true;
-    this.reviewService.searchVersions(this.searchTerm, this.showAll).subscribe({
-      next: (response: PaginatedResponse<ReviewVersion>) => {
-        this.filteredVersions = response.results;
+    this.reviewService.searchDrafts(this.searchTerm, this.showAll).subscribe({
+      next: (response: PaginatedResponse<ReviewDraft>) => {
+        this.filteredDrafts = response.results;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error searching versions:', error);
-        this.error = 'Failed to search versions';
+        console.error('Error searching drafts:', error);
+        this.error = 'Failed to search drafts';
         this.loading = false;
       },
     });
   }
 
-  selectVersion(version: ReviewVersion): void {
-    this.selectedVersion = version;
+  selectDraft(draft: ReviewDraft): void {
+    this.selectedDraft = draft;
+    this.loadComments();
   }
 
-  canApprove(version: ReviewVersion): boolean {
+  canApprove(draft: ReviewDraft): boolean {
     // Use backend field instead of client-side logic
-    return version.can_approve_by_current_user ?? false;
+    return draft.can_approve_by_current_user ?? false;
   }
 
-  approveVersion(): void {
-    if (!this.selectedVersion) return;
+  approveDraft(): void {
+    if (!this.selectedDraft) return;
 
     this.loading = true;
 
-    this.reviewService.approveVersion(this.selectedVersion.id).subscribe({
-      next: (updatedVersion) => {
+    this.reviewService.approveDraft(this.selectedDraft.id).subscribe({
+      next: (updatedDraft) => {
         alert(
-          `Successfully approved "${this.selectedVersion!.entry.term.text}"`,
+          `Successfully approved "${this.selectedDraft!.entry.term.text}"`,
         );
 
-        // Remove the approved version from our list
-        this.pendingVersions = this.pendingVersions.filter(
-          (v) => v.id !== this.selectedVersion!.id,
+        // Remove the approved draft from our list
+        this.pendingDrafts = this.pendingDrafts.filter(
+          (d) => d.id !== this.selectedDraft!.id,
         );
-        this.filteredVersions = this.filteredVersions.filter(
-          (v) => v.id !== this.selectedVersion!.id,
+        this.filteredDrafts = this.filteredDrafts.filter(
+          (d) => d.id !== this.selectedDraft!.id,
         );
 
-        // Deselect the version
-        this.selectedVersion = null;
+        // Deselect the draft
+        this.selectedDraft = null;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error approving version:', error);
-        alert('Failed to approve version. Please try again.');
+        console.error('Error approving draft:', error);
+        alert('Failed to approve draft. Please try again.');
         this.loading = false;
       },
     });
   }
 
-  trackByVersionId(index: number, version: ReviewVersion): number {
-    return version.id;
+  trackByDraftId(index: number, draft: ReviewDraft): number {
+    return draft.id;
   }
 
-  isOwnVersion(): boolean {
-    return this.selectedVersion?.author.id === this.currentUser?.id;
+  isOwnDraft(): boolean {
+    return this.selectedDraft?.author.id === this.currentUser?.id;
   }
 
   hasAlreadyApproved(): boolean {
-    if (!this.selectedVersion) return false;
+    if (!this.selectedDraft) return false;
     // Use backend field instead of client-side logic
-    return this.selectedVersion.user_has_approved ?? false;
+    return this.selectedDraft.user_has_approved ?? false;
   }
 
   getApprovalStatus(): string {
-    if (!this.selectedVersion) return '';
+    if (!this.selectedDraft) return '';
 
-    if (this.selectedVersion.is_approved) {
+    if (this.selectedDraft.is_approved) {
       return 'Approved';
     }
-    return `${this.selectedVersion.approval_count}/2 Approvals`;
+    return `${this.selectedDraft.approval_count}/2 Approvals`;
   }
 
   getRemainingApprovals(): number {
-    if (!this.selectedVersion) return 0;
+    if (!this.selectedDraft) return 0;
     // Use backend field instead of hardcoded calculation
-    return this.selectedVersion.remaining_approvals ?? 0;
+    return this.selectedDraft.remaining_approvals ?? 0;
   }
 
   getApprovalAccessLevel(): string {
-    if (!this.selectedVersion) return 'cannotApprove';
+    if (!this.selectedDraft) return 'cannotApprove';
     // Use backend field instead of client-side logic
-    return this.selectedVersion.approval_status_for_user ?? 'unknown';
+    return this.selectedDraft.approval_status_for_user ?? 'unknown';
   }
 
   getApprovalReason(): string {
-    if (!this.selectedVersion) return 'No version selected';
+    if (!this.selectedDraft) return 'No draft selected';
     if (!this.currentUser) return 'Please log in to approve definitions';
     
     // Use the backend-provided approval status for more specific messaging
-    const status = this.selectedVersion.approval_status_for_user ?? 'unknown';
+    const status = this.selectedDraft.approval_status_for_user ?? 'unknown';
     
     switch (status) {
-      case 'own_version':
+      case 'own_draft':
         return 'You cannot approve your own definition';
       case 'already_approved':
         return 'You have already approved this definition';
@@ -211,16 +217,16 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getVersionEligibilityStatus(version: ReviewVersion): string {
+  getDraftEligibilityStatus(draft: ReviewDraft): string {
     // Use backend field instead of client-side logic
-    return version.approval_status_for_user ?? 'unknown';
+    return draft.approval_status_for_user ?? 'unknown';
   }
 
-  getEligibilityText(version: ReviewVersion): string {
-    const status = version.approval_status_for_user ?? 'unknown';
+  getEligibilityText(draft: ReviewDraft): string {
+    const status = draft.approval_status_for_user ?? 'unknown';
     switch (status) {
-      case 'own_version':
-        return 'Your version';
+      case 'own_draft':
+        return 'Your draft';
       case 'already_approved':
         return 'Already approved';
       case 'can_approve':
@@ -232,10 +238,10 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getEligibilityClass(version: ReviewVersion): string {
-    const status = version.approval_status_for_user ?? 'unknown';
+  getEligibilityClass(draft: ReviewDraft): string {
+    const status = draft.approval_status_for_user ?? 'unknown';
     switch (status) {
-      case 'own_version':
+      case 'own_draft':
         return 'text-gray-500 bg-gray-100';
       case 'already_approved':
         return 'text-green-600 bg-green-50';
@@ -249,58 +255,58 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   getEligibleCount(): number {
-    return this.filteredVersions.filter(
-      (v) => v.approval_status_for_user === 'can_approve',
+    return this.filteredDrafts.filter(
+      (d) => d.approval_status_for_user === 'can_approve',
     ).length;
   }
 
   getAlreadyApprovedCount(): number {
-    return this.filteredVersions.filter(
-      (v) => v.approval_status_for_user === 'already_approved',
+    return this.filteredDrafts.filter(
+      (d) => d.approval_status_for_user === 'already_approved',
     ).length;
   }
 
-  getOwnVersionsCount(): number {
-    return this.filteredVersions.filter(
-      (v) => v.approval_status_for_user === 'own_version',
+  getOwnDraftsCount(): number {
+    return this.filteredDrafts.filter(
+      (d) => d.approval_status_for_user === 'own_draft',
     ).length;
   }
 
   onShowAllChange(): void {
     // Store the current search term before reloading
     const currentSearchTerm = this.searchTerm;
-    this.loadPendingVersions(() => {
+    this.loadPendingDrafts(() => {
       // Restore the search term and reapply the filter after data is loaded
       this.searchTerm = currentSearchTerm;
       this.onSearch();
     });
   }
 
-  requestReview(version: ReviewVersion): void {
-    this.versionToRequestReview = version;
-    this.selectedReviewerIds = version.requested_reviewers.map((r) => r.id);
+  requestReview(draft: ReviewDraft): void {
+    this.draftToRequestReview = draft;
+    this.selectedReviewerIds = draft.requested_reviewers.map((r) => r.id);
     this.showReviewerSelector = true;
   }
 
   onReviewerSelectionConfirmed(reviewerIds: number[]): void {
-    if (!this.versionToRequestReview) return;
+    if (!this.draftToRequestReview) return;
 
     this.requestingReview = true;
     this.reviewService
-      .requestReview(this.versionToRequestReview.id, reviewerIds)
+      .requestReview(this.draftToRequestReview.id, reviewerIds)
       .subscribe({
-        next: (updatedVersion) => {
+        next: (updatedDraft) => {
           // Refresh the data from server to get updated state
-          this.loadPendingVersions();
+          this.loadPendingDrafts();
           
-          // Update selected version if it's the same
-          if (this.selectedVersion?.id === this.versionToRequestReview?.id) {
-            this.selectedVersion = updatedVersion as unknown as ReviewVersion;
+          // Update selected draft if it's the same
+          if (this.selectedDraft?.id === this.draftToRequestReview?.id) {
+            this.selectedDraft = updatedDraft as unknown as ReviewDraft;
           }
 
           this.requestingReview = false;
           this.showReviewerSelector = false;
-          this.versionToRequestReview = null;
+          this.draftToRequestReview = null;
           this.selectedReviewerIds = [];
         },
         error: (error) => {
@@ -316,42 +322,72 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   onReviewerSelectionCancelled(): void {
     this.showReviewerSelector = false;
-    this.versionToRequestReview = null;
+    this.draftToRequestReview = null;
     this.selectedReviewerIds = [];
   }
 
-  publishVersion(version: ReviewVersion): void {
-    if (!version.is_approved) {
-      alert('Version must be approved before publishing');
+  publishDraft(draft: ReviewDraft): void {
+    if (!draft.is_approved) {
+      alert('Draft must be approved before publishing');
       return;
     }
 
     if (
       confirm(
-        'Are you sure you want to publish this version? This will make it the active version.',
+        'Are you sure you want to publish this draft? This will make it the active draft.',
       )
     ) {
-      this.reviewService.publishVersion(version.id).subscribe({
-        next: (updatedVersion) => {
-          // Update the version in the list
-          const index = this.pendingVersions.findIndex(
-            (v) => v.id === version.id,
-          );
-          if (index !== -1) {
-            this.pendingVersions[index] =
-              updatedVersion as unknown as ReviewVersion;
-            this.filteredVersions = [...this.pendingVersions];
-          }
-          alert('Version published successfully!');
+      this.reviewService.publishDraft(draft.id).subscribe({
+        next: (updatedDraft) => {
+          alert('Draft published successfully!');
+          // Clear the selected draft since it's no longer in the review list
+          this.selectedDraft = null;
+          // Reload the drafts to get the updated list (published draft will be excluded)
+          this.loadPendingDrafts();
         },
         error: (error) => {
-          console.error('Error publishing version:', error);
+          console.error('Error publishing draft:', error);
           alert(
-            'Failed to publish version: ' +
+            'Failed to publish draft: ' +
               (error.error?.detail || 'Unknown error'),
           );
         },
       });
+    }
+  }
+
+  loadComments(): void {
+    if (!this.selectedDraft?.entry?.id) return;
+    
+    this.isLoadingComments = true;
+    this.glossaryService.getComments(1, this.selectedDraft.entry.id)
+      .subscribe({
+        next: (response: PaginatedResponse<Comment>) => {
+          this.comments = response.results;
+          this.isLoadingComments = false;
+        },
+        error: (error) => {
+          console.error('Error loading comments:', error);
+          this.isLoadingComments = false;
+        }
+      });
+  }
+
+  onCommentAdded(comment: Comment): void {
+    this.comments.push(comment);
+  }
+
+  onCommentResolved(comment: Comment): void {
+    const index = this.comments.findIndex(c => c.id === comment.id);
+    if (index !== -1) {
+      this.comments[index] = comment;
+    }
+  }
+
+  onCommentUnresolved(comment: Comment): void {
+    const index = this.comments.findIndex(c => c.id === comment.id);
+    if (index !== -1) {
+      this.comments[index] = comment;
     }
   }
 }

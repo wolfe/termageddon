@@ -7,25 +7,25 @@
           {{ entry.term.text }}
         </h1>
         <div class="flex items-center space-x-2 mt-2">
-          @if (entry.active_version?.is_endorsed) {
+          @if (entry.active_draft?.is_endorsed) {
             <span
               class="px-3 py-1 bg-green-400 text-black text-sm rounded font-semibold"
             >
               ENDORSED
             </span>
           }
-          @if (entry.active_version) {
-            @if (entry.active_version.is_approved) {
+          @if (entry.active_draft) {
+            @if (entry.active_draft.is_approved) {
               <span
                 class="px-3 py-1 bg-green-100 text-green-700 text-sm rounded"
               >
-                ✓ Approved ({{ entry.active_version.approval_count }})
+                ✓ Approved ({{ entry.active_draft.approval_count }})
               </span>
             } @else {
               <span
                 class="px-3 py-1 bg-orange-100 text-orange-700 text-sm rounded"
               >
-                Pending Approval ({{ entry.active_version.approval_count }}/2)
+                Pending Approval ({{ entry.active_draft.approval_count }}/2)
               </span>
             }
           }
@@ -44,7 +44,7 @@
             <button
               (click)="onEndorseClick()"
               data-testid="term-endorse-button"
-              [disabled]="!canEndorse() || entry.active_version?.is_endorsed"
+              [disabled]="!canEndorse() || entry.active_draft?.is_endorsed"
               class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
               [title]="getEndorseTooltip()"
             >
@@ -56,11 +56,11 @@
     </div>
 
     <!-- Approvers -->
-    @if (entry.active_version && entry.active_version.approvers.length > 0) {
+    @if (entry.active_draft && entry.active_draft.approvers.length > 0) {
       <div class="mt-3 flex items-center space-x-2">
         <span class="text-sm text-gray-600">Approved by:</span>
         <div class="flex space-x-1">
-          @for (approver of entry.active_version.approvers; track approver.id) {
+          @for (approver of entry.active_draft.approvers; track approver.id) {
             <div
               class="w-8 h-8 rounded-full bg-termageddon-blue text-white flex items-center justify-center text-xs font-semibold"
               [title]="approver.first_name + ' ' + approver.last_name"
@@ -73,39 +73,39 @@
     }
 
     <!-- Endorsement -->
-    @if (entry.active_version?.is_endorsed && entry.active_version?.endorsed_by) {
+    @if (entry.active_draft?.is_endorsed && entry.active_draft?.endorsed_by) {
       <div class="mt-3 flex items-center space-x-2">
         <span class="text-sm text-gray-600">Endorsed by:</span>
         <div class="flex items-center space-x-2">
           <div
             class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-semibold"
-            [title]="entry.active_version?.endorsed_by?.first_name + ' ' + entry.active_version?.endorsed_by?.last_name"
+            [title]="entry.active_draft?.endorsed_by?.first_name + ' ' + entry.active_draft?.endorsed_by?.last_name"
           >
-            {{ getInitials(entry.active_version?.endorsed_by?.first_name + " " + entry.active_version?.endorsed_by?.last_name) }}
+            {{ getInitials(entry.active_draft?.endorsed_by?.first_name + " " + entry.active_draft?.endorsed_by?.last_name) }}
           </div>
           <span class="text-sm text-gray-600">
-            {{ entry.active_version?.endorsed_at | date: "medium" }}
+            {{ entry.active_draft?.endorsed_at | date: "medium" }}
           </span>
         </div>
       </div>
     }
   </div>
 
-  <!-- Domain Tabs -->
+  <!-- Perspective Tabs -->
   @if (termEntries.length > 0) {
     <div class="px-4 py-2 border-b border-gray-200 bg-gray-50">
       <div class="flex space-x-1">
         @for (termEntry of termEntries; track termEntry.id) {
           <button
-            (click)="switchToDomain(termEntry)"
+            (click)="switchToPerspective(termEntry)"
             [class.bg-green-100]="entry.id === termEntry.id"
             [class.bg-gray-200]="entry.id !== termEntry.id"
             [class.text-green-700]="entry.id === termEntry.id"
             [class.text-gray-600]="entry.id !== termEntry.id"
             class="px-3 py-1 text-sm rounded-t border border-b-0 hover:bg-gray-100 transition-colors"
-            [title]="termEntry.domain.description || termEntry.domain.name"
+            [title]="termEntry.perspective.description || termEntry.perspective.name"
           >
-            {{ termEntry.domain.name.length > 10 ? termEntry.domain.name.substring(0, 10) + '...' : termEntry.domain.name }}
+            {{ termEntry.perspective.name.length > 10 ? termEntry.perspective.name.substring(0, 10) + '...' : termEntry.perspective.name }}
           </button>
         }
       </div>
@@ -151,7 +151,7 @@
       </div>
     } @else {
       <!-- View Mode -->
-      @if (entry.active_version) {
+      @if (entry.active_draft) {
         <div class="prose max-w-none" data-testid="term-content" [innerHTML]="sanitizedContent"></div>
       } @else {
         <div class="text-center text-gray-500 py-8">
@@ -161,16 +161,16 @@
       }
 
       <!-- Author and metadata -->
-      @if (entry.active_version) {
+      @if (entry.active_draft) {
         <div class="mt-6 pt-4 border-t border-gray-300 text-sm text-gray-600">
           <p>
             <strong>Author:</strong>
-            {{ entry.active_version.author.first_name }}
-            {{ entry.active_version.author.last_name }}
+            {{ entry.active_draft.author.first_name }}
+            {{ entry.active_draft.author.last_name }}
           </p>
           <p class="mt-1">
             <strong>Last Updated:</strong>
-            {{ entry.active_version.timestamp | date: "medium" }}
+            {{ entry.active_draft.timestamp | date: "medium" }}
           </p>
         </div>
       }

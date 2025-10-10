@@ -72,9 +72,9 @@ export class EntryPickerComponent implements OnInit, OnChanges {
     this.filteredEntries = this.entries.filter(
       (entry) =>
         entry.term.text.toLowerCase().includes(term) ||
-        entry.domain.name.toLowerCase().includes(term) ||
-        (entry.active_version?.content &&
-          entry.active_version.content.toLowerCase().includes(term)),
+        entry.perspective.name.toLowerCase().includes(term) ||
+        (entry.active_draft?.content &&
+          entry.active_draft.content.toLowerCase().includes(term)),
     );
   }
 

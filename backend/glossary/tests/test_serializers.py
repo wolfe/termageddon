@@ -1,19 +1,19 @@
 import pytest
 from rest_framework.test import APIRequestFactory
 
-from glossary.models import EntryVersion
+from glossary.models import EntryDraft
 from glossary.serializers import (
-    DomainSerializer,
+    PerspectiveSerializer,
     EntryListSerializer,
-    EntryVersionListSerializer,
+    EntryDraftListSerializer,
     TermSerializer,
     UserDetailSerializer,
 )
 from glossary.tests.conftest import (
-    DomainExpertFactory,
-    DomainFactory,
+    PerspectiveCuratorFactory,
+    PerspectiveFactory,
     EntryFactory,
-    EntryVersionFactory,
+    EntryDraftFactory,
     TermFactory,
     UserFactory,
 )
@@ -23,27 +23,27 @@ from glossary.tests.conftest import (
 class TestUserSerializers:
     """Test User serializers"""
 
-    def test_user_detail_serializer_includes_domain_expert_for(self):
-        """Test that UserDetailSerializer includes domain_expert_for field"""
+    def test_user_detail_serializer_includes_perspective_expert_for(self):
+        """Test that UserDetailSerializer includes perspective_expert_for field"""
         user = UserFactory()
-        domain = DomainFactory()
-        DomainExpertFactory(user=user, domain=domain)
+        perspective = PerspectiveFactory()
+        PerspectiveCuratorFactory(user=user, perspective=perspective)
 
         serializer = UserDetailSerializer(user)
         data = serializer.data
 
-        assert "domain_expert_for" in data
-        assert domain.id in data["domain_expert_for"]
+        assert "perspective_curator_for" in data
+        assert perspective.id in data["perspective_curator_for"]
 
 
 @pytest.mark.django_db
-class TestDomainSerializer:
-    """Test Domain serializer"""
+class TestPerspectiveSerializer:
+    """Test Perspective serializer"""
 
-    def test_domain_serialization(self):
-        """Test basic domain serialization"""
-        domain = DomainFactory(name="Finance", description="Financial terms")
-        serializer = DomainSerializer(domain)
+    def test_perspective_serialization(self):
+        """Test basic perspective serialization"""
+        perspective = PerspectiveFactory(name="Finance", description="Financial terms")
+        serializer = PerspectiveSerializer(perspective)
         data = serializer.data
 
         assert data["name"] == "Finance"
@@ -71,28 +71,28 @@ class TestEntrySerializers:
     """Test Entry serializers"""
 
     def test_entry_list_serializer_nested_data(self):
-        """Test that EntryListSerializer includes nested term and domain"""
+        """Test that EntryListSerializer includes nested term and perspective"""
         entry = EntryFactory()
         serializer = EntryListSerializer(entry)
         data = serializer.data
 
         assert "term" in data
-        assert "domain" in data
+        assert "perspective" in data
         assert data["term"]["id"] == entry.term.id
-        assert data["domain"]["id"] == entry.domain.id
+        assert data["perspective"]["id"] == entry.perspective.id
 
     def test_entry_list_serializer_includes_active_version(self):
         """Test that EntryListSerializer includes active_version"""
         entry = EntryFactory()
-        version = EntryVersionFactory(entry=entry)
-        entry.active_version = version
+        version = EntryDraftFactory(entry=entry)
+        entry.active_draft = version
         entry.save()
 
         serializer = EntryListSerializer(entry)
         data = serializer.data
 
-        assert "active_version" in data
-        assert data["active_version"]["id"] == version.id
+        assert "active_draft" in data
+        assert data["active_draft"]["id"] == version.id
 
     def test_entry_list_serializer_permission_flags(self):
         """EntryListSerializer should include can_user_endorse/edit based on user"""
@@ -118,11 +118,11 @@ class TestEntrySerializers:
         assert data.get("can_user_endorse") is True
         assert data.get("can_user_edit") is True
 
-        # Domain expert (non-staff) -> both true for matching domain
+        # Perspective expert (non-staff) -> both true for matching perspective
         expert_user = UserFactory()
-        from glossary.tests.conftest import DomainExpertFactory
+        from glossary.tests.conftest import PerspectiveCuratorFactory
 
-        DomainExpertFactory(user=expert_user, domain=entry.domain)
+        PerspectiveCuratorFactory(user=expert_user, perspective=entry.perspective)
         expert_request = factory.get("/")
         expert_request.user = expert_user
         serializer = EntryListSerializer(entry, context={"request": expert_request})
@@ -132,16 +132,16 @@ class TestEntrySerializers:
 
 
 @pytest.mark.django_db
-class TestEntryVersionSerializers:
-    """Test EntryVersion serializers"""
+class TestEntryDraftSerializers:
+    """Test EntryDraft serializers"""
 
     def test_entry_version_list_serializer_includes_approvals(self):
-        """Test that EntryVersionListSerializer includes approval info"""
-        version = EntryVersionFactory()
+        """Test that EntryDraftListSerializer includes approval info"""
+        version = EntryDraftFactory()
         user1 = UserFactory()
         version.approvers.add(user1)
 
-        serializer = EntryVersionListSerializer(version)
+        serializer = EntryDraftListSerializer(version)
         data = serializer.data
 
         assert "is_approved" in data
@@ -157,11 +157,11 @@ class TestEntryVersionSerializers:
         # Setup version authored by other user so current can approve
         author = UserFactory()
         current_user = UserFactory()
-        version = EntryVersionFactory(author=author)
+        version = EntryDraftFactory(author=author)
 
         request = factory.get("/")
         request.user = current_user
-        serializer = EntryVersionListSerializer(version, context={"request": request})
+        serializer = EntryDraftListSerializer(version, context={"request": request})
         data = serializer.data
         assert data["can_approve_by_current_user"] is True
         assert data["approval_status_for_user"] == "can_approve"
@@ -172,25 +172,25 @@ class TestEntryVersionSerializers:
         # When user is the author -> cannot approve
         own_request = factory.get("/")
         own_request.user = author
-        serializer = EntryVersionListSerializer(version, context={"request": own_request})
+        serializer = EntryDraftListSerializer(version, context={"request": own_request})
         data = serializer.data
         assert data["can_approve_by_current_user"] is False
-        assert data["approval_status_for_user"] == "own_version"
+        assert data["approval_status_for_user"] == "own_draft"
 
         # After user approves -> flags update
         approver = current_user
         version.approvers.add(approver)
         request2 = factory.get("/")
         request2.user = approver
-        serializer = EntryVersionListSerializer(version, context={"request": request2})
+        serializer = EntryDraftListSerializer(version, context={"request": request2})
         data = serializer.data
         assert data["can_approve_by_current_user"] is False
         assert data["approval_status_for_user"] in {"already_approved", "already_approved_by_others"}
         assert data["user_has_approved"] is True
 
     def test_entry_version_create_serializer(self):
-        """Test EntryVersionCreateSerializer"""
-        from glossary.serializers import EntryVersionCreateSerializer
+        """Test EntryDraftCreateSerializer"""
+        from glossary.serializers import EntryDraftCreateSerializer
 
         entry = EntryFactory()
         author = UserFactory()
@@ -204,7 +204,7 @@ class TestEntryVersionSerializers:
             "author": author.id,
         }
 
-        serializer = EntryVersionCreateSerializer(
+        serializer = EntryDraftCreateSerializer(
             data=data, context={"request": request}
         )
         assert serializer.is_valid()
@@ -216,7 +216,7 @@ class TestEntryVersionSerializers:
 
     def test_entry_version_create_rejects_empty_quill_html(self):
         """Creation should reject content that's empty after stripping HTML."""
-        from glossary.serializers import EntryVersionCreateSerializer
+        from glossary.serializers import EntryDraftCreateSerializer
 
         entry = EntryFactory()
         author = UserFactory()
@@ -230,7 +230,7 @@ class TestEntryVersionSerializers:
             "author": author.id,
         }
 
-        serializer = EntryVersionCreateSerializer(
+        serializer = EntryDraftCreateSerializer(
             data=data, context={"request": request}
         )
         assert not serializer.is_valid()
@@ -238,10 +238,10 @@ class TestEntryVersionSerializers:
 
     def test_entry_version_update_rejects_empty_quill_html(self):
         """Update should reject content that's empty after stripping HTML."""
-        from glossary.serializers import EntryVersionUpdateSerializer
+        from glossary.serializers import EntryDraftUpdateSerializer
 
-        version = EntryVersionFactory()
-        serializer = EntryVersionUpdateSerializer(
+        version = EntryDraftFactory()
+        serializer = EntryDraftUpdateSerializer(
             instance=version, data={"content": "<p><br></p>"}, partial=True
         )
         assert not serializer.is_valid()

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../services/glossary.service';
-import { Domain, Term, Entry, CreateTermAndEntryRequest } from '../../models';
+import { Perspective, Term, Entry, CreateTermAndEntryRequest } from '../../models';
 
 @Component({
   selector: 'app-term-dialog',
@@ -17,26 +17,26 @@ export class TermDialogComponent implements OnInit {
   @Output() termCreated = new EventEmitter<Entry>();
 
   termText = '';
-  selectedDomainId: number | null = null;
+  selectedPerspectiveId: number | null = null;
   isOfficial = false;
-  domains: Domain[] = [];
+  perspectives: Perspective[] = [];
   isLoading = false;
   error: string | null = null;
 
   constructor(private glossaryService: GlossaryService) {}
 
   ngOnInit() {
-    this.loadDomains();
+    this.loadPerspectives();
   }
 
-  loadDomains() {
-    this.glossaryService.getDomains().subscribe({
+  loadPerspectives() {
+    this.glossaryService.getPerspectives().subscribe({
       next: (response) => {
-        this.domains = response.results;
+        this.perspectives = response.results;
       },
       error: (error) => {
-        console.error('Error loading domains:', error);
-        this.error = 'Failed to load domains';
+        console.error('Error loading perspectives:', error);
+        this.error = 'Failed to load perspectives';
       },
     });
   }
@@ -47,8 +47,8 @@ export class TermDialogComponent implements OnInit {
   }
 
   onSave() {
-    if (!this.termText.trim() || !this.selectedDomainId) {
-      this.error = 'Please enter a term and select a domain';
+    if (!this.termText.trim() || !this.selectedPerspectiveId) {
+      this.error = 'Please enter a term and select a perspective';
       return;
     }
 
@@ -58,7 +58,7 @@ export class TermDialogComponent implements OnInit {
     // Use new atomic create_with_term endpoint instead of separate calls
     const request: CreateTermAndEntryRequest = {
       term_text: this.termText.trim(),
-      domain_id: this.selectedDomainId,
+      perspective_id: this.selectedPerspectiveId,
       is_official: this.isOfficial,
     };
 
@@ -80,7 +80,7 @@ export class TermDialogComponent implements OnInit {
 
   private resetForm() {
     this.termText = '';
-    this.selectedDomainId = null;
+    this.selectedPerspectiveId = null;
     this.isOfficial = false;
     this.error = null;
   }

@@ -38,7 +38,7 @@ describe('AuthService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          domain_expert_for: []
+          perspective_curator_for: []
         }
       };
 
@@ -93,7 +93,7 @@ describe('AuthService', () => {
         first_name: 'Test',
         last_name: 'User',
         is_staff: false,
-        domain_expert_for: []
+        perspective_curator_for: []
       };
 
       service.getCurrentUser().subscribe(user => {

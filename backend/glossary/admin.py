@@ -5,10 +5,10 @@ from django.db import models
 
 from glossary.models import (
     Comment,
-    Domain,
-    DomainExpert,
+    Perspective,
+    PerspectiveCurator,
     Entry,
-    EntryVersion,
+    EntryDraft,
     Term,
 )
 
@@ -42,26 +42,26 @@ def mark_official_selected(modeladmin, request, queryset):
 mark_official_selected.short_description = "Mark as official"
 
 
-def bulk_approve_versions(modeladmin, request, queryset):
-    """Approve selected entry versions with current user"""
+def bulk_approve_drafts(modeladmin, request, queryset):
+    """Approve selected entry drafts with current user"""
     count = 0
-    for version in queryset:
+    for draft in queryset:
         try:
-            version.approve(request.user)
+            draft.approve(request.user)
             count += 1
         except Exception as e:
             modeladmin.message_user(
-                request, f"Could not approve version {version.id}: {e}", level="ERROR"
+                request, f"Could not approve draft {draft.id}: {e}", level="ERROR"
             )
-    modeladmin.message_user(request, f"Approved {count} versions.")
+    modeladmin.message_user(request, f"Approved {count} drafts.")
 
 
-bulk_approve_versions.short_description = "Approve selected versions"
+bulk_approve_drafts.short_description = "Approve selected drafts"
 
 
-# Inline for EntryVersion under Entry
-class EntryVersionInline(admin.TabularInline):
-    model = EntryVersion
+# Inline for EntryDraft under Entry
+class EntryDraftInline(admin.TabularInline):
+    model = EntryDraft
     extra = 0
     fields = ("author", "content", "timestamp", "approval_count_display", "is_approved")
     readonly_fields = ("timestamp", "approval_count_display", "is_approved")
@@ -90,8 +90,8 @@ class CommentInline(GenericTabularInline):
     readonly_fields = ("created_at",)
 
 
-@admin.register(Domain)
-class DomainAdmin(admin.ModelAdmin):
+@admin.register(Perspective)
+class PerspectiveAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "description_short",
@@ -137,30 +137,30 @@ class TermAdmin(admin.ModelAdmin):
 class EntryAdmin(admin.ModelAdmin):
     list_display = (
         "term",
-        "domain",
+        "perspective",
         "is_official",
-        "active_version_display",
+        "active_draft_display",
         "is_deleted",
         "created_at",
     )
-    list_filter = ("is_official", "is_deleted", "domain", "created_at")
-    search_fields = ("term__text", "domain__name")
+    list_filter = ("is_official", "is_deleted", "perspective", "created_at")
+    search_fields = ("term__text", "perspective__name")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
-    inlines = [EntryVersionInline]
+    inlines = [EntryDraftInline]
     actions = [soft_delete_selected, undelete_selected, mark_official_selected]
 
-    def active_version_display(self, obj):
-        if obj.active_version:
+    def active_draft_display(self, obj):
+        if obj.active_draft:
             return format_html(
-                '<span style="color: green;">v{}</span>', obj.active_version.id
+                '<span style="color: green;">draft{}</span>', obj.active_draft.id
             )
         return format_html('<span style="color: red;">None</span>')
 
-    active_version_display.short_description = "Active Version"
+    active_draft_display.short_description = "Active Draft"
 
 
-@admin.register(EntryVersion)
-class EntryVersionAdmin(admin.ModelAdmin):
+@admin.register(EntryDraft)
+class EntryDraftAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "entry",
@@ -170,7 +170,7 @@ class EntryVersionAdmin(admin.ModelAdmin):
         "is_approved_display",
         "is_deleted",
     )
-    list_filter = ("timestamp", "is_deleted", "entry__domain")
+    list_filter = ("timestamp", "is_deleted", "entry__perspective")
     search_fields = ("entry__term__text", "author__username", "content")
     readonly_fields = (
         "timestamp",
@@ -182,7 +182,7 @@ class EntryVersionAdmin(admin.ModelAdmin):
         "updated_by",
     )
     filter_horizontal = ("approvers",)
-    actions = [soft_delete_selected, undelete_selected, bulk_approve_versions]
+    actions = [soft_delete_selected, undelete_selected, bulk_approve_drafts]
 
     formfield_overrides = {
         models.TextField: {"widget": admin.widgets.AdminTextareaWidget()},
@@ -224,10 +224,10 @@ class CommentAdmin(admin.ModelAdmin):
     text_short.short_description = "Text"
 
 
-@admin.register(DomainExpert)
-class DomainExpertAdmin(admin.ModelAdmin):
-    list_display = ("user", "domain", "assigned_by", "is_deleted", "created_at")
-    list_filter = ("is_deleted", "domain", "created_at")
-    search_fields = ("user__username", "domain__name")
+@admin.register(PerspectiveCurator)
+class PerspectiveCuratorAdmin(admin.ModelAdmin):
+    list_display = ("user", "perspective", "assigned_by", "is_deleted", "created_at")
+    list_filter = ("is_deleted", "perspective", "created_at")
+    search_fields = ("user__username", "perspective__name")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
     actions = [soft_delete_selected, undelete_selected]

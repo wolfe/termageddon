@@ -96,9 +96,9 @@ export class TermDetailComponent implements OnInit, OnChanges {
   }
 
   get sanitizedContent(): SafeHtml {
-    if (this.entry?.active_version?.content) {
+    if (this.entry?.active_draft?.content) {
       return this.sanitizer.bypassSecurityTrustHtml(
-        this.entry.active_version.content,
+        this.entry.active_draft.content,
       );
     }
     return '';
@@ -106,7 +106,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
 
   onEditClick(): void {
     // Initialize edit content with current content
-    this.editContent = this.entry?.active_version?.content || '';
+    this.editContent = this.entry?.active_draft?.content || '';
     this.editRequested.emit();
   }
 
@@ -115,80 +115,80 @@ export class TermDetailComponent implements OnInit, OnChanges {
     console.log('Current user:', this.permissionService.currentUser);
 
     // First check if there's an existing unpublished version by the current user
-    this.checkForExistingUnpublishedVersion();
+    this.checkForExistingUnpublishedDraft();
   }
 
-  private checkForExistingUnpublishedVersion(): void {
+  private checkForExistingUnpublishedDraft(): void {
     if (!this.permissionService.currentUser) {
       alert('You must be logged in to save definitions.');
       return;
     }
 
-    // Check for existing unpublished version
+    // Check for existing unpublished draft
     this.glossaryService
-      .getUnpublishedVersionForEntry(
+      .getUnpublishedDraftForEntry(
         this.entry.id,
         this.permissionService.currentUser.id,
       )
       .subscribe({
-        next: (existingVersion) => {
-          if (existingVersion) {
-            // Update existing unpublished version
-            this.updateExistingVersion(existingVersion.id);
+        next: (existingDraft) => {
+          if (existingDraft) {
+            // Update existing unpublished draft
+            this.updateExistingDraft(existingDraft.id);
           } else {
-            // Create new version
-            this.createNewVersion();
+            // Create new draft
+            this.createNewDraft();
           }
         },
         error: (error) => {
-          console.error('Error checking for existing version:', error);
-          // If there's an error checking, try to create a new version
-          this.createNewVersion();
+          console.error('Error checking for existing draft:', error);
+          // If there's an error checking, try to create a new draft
+          this.createNewDraft();
         },
       });
   }
 
-  private updateExistingVersion(versionId: number): void {
+  private updateExistingDraft(draftId: number): void {
     const updateData = {
       content: this.editContent.trim(),
     };
 
-    console.log('Updating existing version:', versionId, updateData);
+    console.log('Updating existing draft:', draftId, updateData);
 
-    this.glossaryService.updateEntryVersion(versionId, updateData).subscribe({
-      next: (updatedVersion) => {
-        console.log('Successfully updated version:', updatedVersion);
+    this.glossaryService.updateEntryDraft(draftId, updateData).subscribe({
+      next: (updatedDraft) => {
+        console.log('Successfully updated draft:', updatedDraft);
         this.editSaved.emit(this.entry);
         alert(
           'Definition updated successfully! It will be visible once approved.',
         );
       },
       error: (error) => {
-        console.error('Failed to update version:', error);
+        console.error('Failed to update draft:', error);
         this.handleSaveError(error);
       },
     });
   }
 
-  private createNewVersion(): void {
-    const versionData = {
+  private createNewDraft(): void {
+    const draftData = {
       entry: this.entry.id,
       content: this.editContent.trim(),
       author: this.permissionService.currentUser?.id || 1,
     };
 
-    console.log('Creating new version:', versionData);
+    console.log('Creating new draft:', draftData);
 
-    this.glossaryService.createEntryVersion(versionData).subscribe({
-      next: (newVersion) => {
-        console.log('Successfully created version:', newVersion);
+    this.glossaryService.createEntryDraft(draftData).subscribe({
+      next: (newDraft) => {
+        console.log('Successfully created draft:', newDraft);
         this.editSaved.emit(this.entry);
         alert(
           'Definition saved successfully! It will be visible once approved.',
         );
       },
       error: (error) => {
-        console.error('Failed to create version:', error);
+        console.error('Failed to create draft:', error);
         this.handleSaveError(error);
       },
     });
@@ -224,21 +224,21 @@ export class TermDetailComponent implements OnInit, OnChanges {
   }
 
   canEndorse(): boolean {
-    return this.permissionService.canMarkOfficial(this.entry.domain.id);
+    return this.permissionService.canMarkOfficial(this.entry.perspective.id);
   }
 
   getEndorseTooltip(): string {
     if (!this.canEndorse()) {
-      return 'Only domain experts can endorse';
+      return 'Only perspective curators can endorse';
     }
-    if (this.entry.active_version?.is_endorsed) {
+    if (this.entry.active_draft?.is_endorsed) {
       return 'This definition is already endorsed';
     }
-    return 'Endorse this definition as a domain expert';
+    return 'Endorse this definition as a perspective curator';
   }
 
   onEndorseClick(): void {
-    if (!this.canEndorse() || this.entry.active_version?.is_endorsed) {
+    if (!this.canEndorse() || this.entry.active_draft?.is_endorsed) {
       return;
     }
 
@@ -270,12 +270,12 @@ export class TermDetailComponent implements OnInit, OnChanges {
       .toUpperCase();
   }
 
-  switchToDomain(entry: Entry): void {
+  switchToPerspective(entry: Entry): void {
     this.entry = entry;
     this.loadComments();
   }
 
-  hasMultipleDomains(): boolean {
+  hasMultiplePerspectives(): boolean {
     return this.termEntries.length > 1;
   }
 

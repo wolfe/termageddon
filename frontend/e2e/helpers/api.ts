@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
-import { TEST_TERMS, TEST_DEFINITIONS, TEST_DOMAINS } from '../fixtures/testData';
+import { TEST_TERMS, TEST_DEFINITIONS, TEST_PERSPECTIVES } from '../fixtures/testData';
 
 export interface CreatedResource {
-  type: 'term' | 'version' | 'entry';
+  type: 'term' | 'draft' | 'entry';
   id: string;
   name?: string;
 }
@@ -78,8 +78,8 @@ export class ApiHelper {
    */
   private async deleteResource(resource: CreatedResource) {
     switch (resource.type) {
-      case 'version':
-        await this.deleteVersion(resource.id);
+      case 'draft':
+        await this.deleteDraft(resource.id);
         break;
       case 'entry':
         await this.deleteEntry(resource.id);
@@ -107,7 +107,7 @@ export class ApiHelper {
   /**
    * Create a test term via API
    */
-  async createTerm(termName: string, domain: string, definition?: string) {
+  async createTerm(termName: string, perspective: string, definition?: string) {
     // Ensure we're authenticated by checking if we can access a protected endpoint
     const authToken = await this.getAuthToken();
     const authCheck = await this.page.request.get('/api/auth/me/', {
@@ -120,27 +120,27 @@ export class ApiHelper {
       throw new Error('Not authenticated - cannot create entries via API');
     }
     
-    console.log(`Creating entry with term: ${termName} in domain: ${domain}`);
+    console.log(`Creating entry with term: ${termName} in perspective: ${perspective}`);
     
-    // First, get the domain ID using the authenticated page context
-    const domainResponse = await this.page.request.get('/api/domains/', {
+    // First, get the perspective ID using the authenticated page context
+    const perspectiveResponse = await this.page.request.get('/api/perspectives/', {
       headers: {
         'Authorization': `Token ${await this.getAuthToken()}`
       }
     });
-    if (!domainResponse.ok()) {
-      throw new Error(`Failed to get domains: ${domainResponse.status()}`);
+    if (!perspectiveResponse.ok()) {
+      throw new Error(`Failed to get perspectives: ${perspectiveResponse.status()}`);
     }
-    const domains = await domainResponse.json();
-    const domainObj = domains.find((d: any) => d.name === domain);
-    if (!domainObj) {
-      throw new Error(`Domain '${domain}' not found`);
+    const perspectives = await perspectiveResponse.json();
+    const perspectiveObj = perspectives.find((p: any) => p.name === perspective);
+    if (!perspectiveObj) {
+      throw new Error(`Perspective '${perspective}' not found`);
     }
     
     const response = await this.page.request.post('/api/entries/create_with_term/', {
       data: {
         term_text: termName,
-        domain_id: domainObj.id,
+        perspective_id: perspectiveObj.id,
         is_official: false
       },
       headers: {
@@ -178,39 +178,39 @@ export class ApiHelper {
   }
 
   /**
-   * Create a test definition version via API
+   * Create a test definition draft via API
    */
-  async createDefinitionVersion(termId: string, content: string) {
-    const response = await this.page.request.post(`/api/terms/${termId}/versions/`, {
+  async createDefinitionDraft(termId: string, content: string) {
+    const response = await this.page.request.post(`/api/terms/${termId}/drafts/`, {
       data: {
         content: content
       }
     });
     
     if (!response.ok()) {
-      throw new Error(`Failed to create definition version: ${response.status()}`);
+      throw new Error(`Failed to create definition draft: ${response.status()}`);
     }
     
     const result = await response.json();
     
-    // Track the created version for cleanup
+    // Track the created draft for cleanup
     this.trackResource({
-      type: 'version',
+      type: 'draft',
       id: result.id,
-      name: `version for term ${termId}`
+      name: `draft for term ${termId}`
     });
     
     return result;
   }
 
   /**
-   * Delete a version via API
+   * Delete a draft via API
    */
-  async deleteVersion(versionId: string) {
-    const response = await this.page.request.delete(`/api/versions/${versionId}/`);
+  async deleteDraft(draftId: string) {
+    const response = await this.page.request.delete(`/api/drafts/${draftId}/`);
     
     if (!response.ok()) {
-      throw new Error(`Failed to delete version: ${response.status()}`);
+      throw new Error(`Failed to delete draft: ${response.status()}`);
     }
   }
 
@@ -226,39 +226,39 @@ export class ApiHelper {
   }
 
   /**
-   * Approve a definition version via API
+   * Approve a definition draft via API
    */
-  async approveVersion(versionId: string) {
-    const response = await this.page.request.post(`/api/versions/${versionId}/approve/`);
+  async approveDraft(draftId: string) {
+    const response = await this.page.request.post(`/api/drafts/${draftId}/approve/`);
     
     if (!response.ok()) {
-      throw new Error(`Failed to approve version: ${response.status()}`);
+      throw new Error(`Failed to approve draft: ${response.status()}`);
     }
     
     return response.json();
   }
 
   /**
-   * Publish a definition version via API
+   * Publish a definition draft via API
    */
-  async publishVersion(versionId: string) {
-    const response = await this.page.request.post(`/api/versions/${versionId}/publish/`);
+  async publishDraft(draftId: string) {
+    const response = await this.page.request.post(`/api/drafts/${draftId}/publish/`);
     
     if (!response.ok()) {
-      throw new Error(`Failed to publish version: ${response.status()}`);
+      throw new Error(`Failed to publish draft: ${response.status()}`);
     }
     
     return response.json();
   }
 
   /**
-   * Endorse a definition version via API
+   * Endorse a definition draft via API
    */
-  async endorseVersion(versionId: string) {
-    const response = await this.page.request.post(`/api/versions/${versionId}/endorse/`);
+  async endorseDraft(draftId: string) {
+    const response = await this.page.request.post(`/api/drafts/${draftId}/endorse/`);
     
     if (!response.ok()) {
-      throw new Error(`Failed to endorse version: ${response.status()}`);
+      throw new Error(`Failed to endorse draft: ${response.status()}`);
     }
     
     return response.json();
@@ -291,13 +291,13 @@ export class ApiHelper {
   }
 
   /**
-   * Get pending versions via API
+   * Get pending drafts via API
    */
-  async getPendingVersions() {
-    const response = await this.page.request.get('/api/versions/pending/');
+  async getPendingDrafts() {
+    const response = await this.page.request.get('/api/drafts/pending/');
     
     if (!response.ok()) {
-      throw new Error(`Failed to get pending versions: ${response.status()}`);
+      throw new Error(`Failed to get pending drafts: ${response.status()}`);
     }
     
     return response.json();
@@ -306,10 +306,10 @@ export class ApiHelper {
   /**
    * Search terms via API
    */
-  async searchTerms(query: string, domain?: string) {
+  async searchTerms(query: string, perspective?: string) {
     const params = new URLSearchParams({ search: query });
-    if (domain) {
-      params.append('domain', domain);
+    if (perspective) {
+      params.append('perspective', perspective);
     }
     
     const response = await this.page.request.get(`/api/terms/?${params.toString()}`);
@@ -425,29 +425,29 @@ export class ApiHelper {
    */
   async getTestDataStats() {
     const terms = await this.getAllTerms();
-    const pendingVersions = await this.getPendingVersions();
+    const pendingDrafts = await this.getPendingDrafts();
     
     return {
       totalTerms: terms.length,
-      pendingVersions: pendingVersions.length,
-      domains: [...new Set(terms.map((term: any) => term.domain?.name).filter(Boolean))]
+      pendingDrafts: pendingDrafts.length,
+      perspectives: [...new Set(terms.map((term: any) => term.perspective?.name).filter(Boolean))]
     };
   }
 
   /**
    * Create a test term with unique name to avoid conflicts
    */
-  async createUniqueTerm(domain: string, definition?: string) {
+  async createUniqueTerm(perspective: string, definition?: string) {
     const timestamp = Date.now();
     const termName = `test_${timestamp}_term`;
-    return await this.createTerm(termName, domain, definition);
+    return await this.createTerm(termName, perspective, definition);
   }
 
   /**
    * Create a test term with specific approval state
    */
-  async createTermWithApprovalState(termName: string, domain: string, definition: string, approvalState: 'no_approvals' | 'one_approval' | 'two_approvals' | 'published') {
-    const result = await this.createTerm(termName, domain, definition);
+  async createTermWithApprovalState(termName: string, perspective: string, definition: string, approvalState: 'no_approvals' | 'one_approval' | 'two_approvals' | 'published') {
+    const result = await this.createTerm(termName, perspective, definition);
     
     if (approvalState !== 'no_approvals') {
       // Get all users to assign as approvers
@@ -455,11 +455,11 @@ export class ApiHelper {
       const approvers = users.slice(0, approvalState === 'one_approval' ? 1 : 2);
       
       for (const approver of approvers) {
-        await this.approveVersion(result.version?.id || result.id);
+        await this.approveDraft(result.draft?.id || result.id);
       }
       
       if (approvalState === 'published') {
-        await this.publishVersion(result.version?.id || result.id);
+        await this.publishDraft(result.draft?.id || result.id);
       }
     }
     
@@ -480,11 +480,11 @@ export class ApiHelper {
   }
 
   /**
-   * Reset approval state for a version
+   * Reset approval state for a draft
    */
-  async resetVersionApprovalState(versionId: string) {
+  async resetDraftApprovalState(draftId: string) {
     // This would need to be implemented based on the API
     // For now, we'll just log it
-    console.log(`Resetting approval state for version ${versionId}`);
+    console.log(`Resetting approval state for draft ${draftId}`);
   }
 }

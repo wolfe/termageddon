@@ -58,15 +58,15 @@ class AuditedModel(models.Model):
         super().delete(using=using, keep_parents=keep_parents)
 
 
-class Domain(AuditedModel):
-    """Domain or category for terms (e.g., 'Finance', 'Technology')"""
+class Perspective(AuditedModel):
+    """Perspective or category for terms (e.g., 'Finance', 'Technology')"""
 
     name = models.CharField(max_length=100)
     name_normalized = models.CharField(max_length=100, editable=False, db_index=True, default='')
     description = models.TextField(blank=True)
 
     class Meta:
-        db_table = "glossary_domain"
+        db_table = "glossary_perspective"
 
     def __str__(self):
         return self.name
@@ -75,12 +75,12 @@ class Domain(AuditedModel):
         """Validate uniqueness among non-deleted records"""
         super().clean()
         existing = (
-            Domain.all_objects.filter(name=self.name, is_deleted=False)
+            Perspective.all_objects.filter(name=self.name, is_deleted=False)
             .exclude(pk=self.pk)
             .exists()
         )
         if existing:
-            raise ValidationError({"name": "A domain with this name already exists."})
+            raise ValidationError({"name": "A perspective with this name already exists."})
 
     def save(self, *args, **kwargs):
         # Auto-populate name_normalized
@@ -123,12 +123,12 @@ class Term(AuditedModel):
 
 
 class Entry(AuditedModel):
-    """An entry represents a (term, domain) pair"""
+    """An entry represents a (term, perspective) pair"""
 
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="entries")
-    domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name="entries")
-    active_version = models.ForeignKey(
-        "EntryVersion",
+    perspective = models.ForeignKey(Perspective, on_delete=models.CASCADE, related_name="entries")
+    active_draft = models.ForeignKey(
+        "EntryDraft",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -136,28 +136,28 @@ class Entry(AuditedModel):
     )
     is_official = models.BooleanField(
         default=False,
-        help_text="Indicates this is the official definition for this term in this domain",
+        help_text="Indicates this is the official definition for this term in this perspective",
     )
 
     class Meta:
         db_table = "glossary_entry"
 
     def __str__(self):
-        return f"{self.term.text} ({self.domain.name})"
+        return f"{self.term.text} ({self.perspective.name})"
 
     def clean(self):
-        """Validate term+domain uniqueness among non-deleted records"""
+        """Validate term+perspective uniqueness among non-deleted records"""
         super().clean()
         existing = (
             Entry.all_objects.filter(
-                term=self.term, domain=self.domain, is_deleted=False
+                term=self.term, perspective=self.perspective, is_deleted=False
             )
             .exclude(pk=self.pk)
             .exists()
         )
         if existing:
             raise ValidationError(
-                "An entry for this term and domain combination already exists."
+                "An entry for this term and perspective combination already exists."
             )
 
     def save(self, *args, **kwargs):
@@ -165,47 +165,47 @@ class Entry(AuditedModel):
         super().save(*args, **kwargs)
 
 
-class EntryVersion(AuditedModel):
-    """A version of an entry's definition - requires approval to become active"""
+class EntryDraft(AuditedModel):
+    """A draft of an entry's definition - requires approval to become active"""
 
-    entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="versions")
+    entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="drafts")
     content = models.TextField(help_text="Rich HTML content (sanitized on save)")
     author = models.ForeignKey(
-        User, on_delete=models.PROTECT, related_name="authored_versions"
+        User, on_delete=models.PROTECT, related_name="authored_drafts"
     )
     timestamp = models.DateTimeField(auto_now_add=True)
     approvers = models.ManyToManyField(
-        User, related_name="approved_versions", blank=True
+        User, related_name="approved_drafts", blank=True
     )
     requested_reviewers = models.ManyToManyField(
         User,
         related_name="requested_reviews",
         blank=True,
-        help_text="Users specifically requested to review this version",
+        help_text="Users specifically requested to review this draft",
     )
     is_published = models.BooleanField(
-        default=False, help_text="Whether this version has been published as active"
+        default=False, help_text="Whether this draft has been published as active"
     )
     endorsed_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="endorsed_versions",
-        help_text="Domain expert who endorsed this version"
+        related_name="endorsed_drafts",
+        help_text="Perspective curator who endorsed this draft"
     )
     endorsed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = "glossary_entry_version"
+        db_table = "glossary_entry_draft"
         ordering = ["-timestamp"]
 
     def __str__(self):
-        return f"{self.entry} - v{self.id} by {self.author.username}"
+        return f"{self.entry} - draft{self.id} by {self.author.username}"
 
     @property
     def is_approved(self):
-        """Check if this version has enough approvals"""
+        """Check if this draft has enough approvals"""
         return self.approvers.count() >= settings.MIN_APPROVALS
 
     @property
@@ -215,14 +215,14 @@ class EntryVersion(AuditedModel):
 
     @property
     def is_endorsed(self):
-        """Check if this version has been endorsed by a domain expert"""
+        """Check if this draft has been endorsed by a perspective curator"""
         return self.endorsed_by is not None
 
     def clean(self):
-        """Validate max 1 unpublished version per author per entry"""
+        """Validate max 1 unpublished draft per author per entry"""
         super().clean()
         if not self.pk:  # Only check on creation
-            existing_unpublished = EntryVersion.objects.filter(
+            existing_unpublished = EntryDraft.objects.filter(
                 entry=self.entry,
                 author=self.author,
                 is_deleted=False,
@@ -231,27 +231,27 @@ class EntryVersion(AuditedModel):
 
             if existing_unpublished.exists():
                 raise ValidationError(
-                    f"You already have an unpublished version for this entry. "
-                    f"Please edit the existing version or wait for it to be published first."
+                    f"You already have an unpublished draft for this entry. "
+                    f"Please edit the existing draft or wait for it to be published first."
                 )
 
     def approve(self, user):
         """Add a user as an approver if valid"""
         if user == self.author:
-            raise ValidationError("Authors cannot approve their own versions.")
+            raise ValidationError("Authors cannot approve their own drafts.")
 
         if self.approvers.filter(pk=user.pk).exists():
-            raise ValidationError("You have already approved this version.")
+            raise ValidationError("You have already approved this draft.")
 
         self.approvers.add(user)
+        # Remove user from requested reviewers since they've now approved
+        self.requested_reviewers.remove(user)
 
     def request_review(self, user, reviewers):
-        """Request specific users to review this version"""
-        if user != self.author:
-            raise ValidationError("Only the author can request reviews.")
-
+        """Request specific users to review this draft"""
+        # Remove author-only restriction - anyone can request reviews
         if self.is_published:
-            raise ValidationError("Cannot request reviews for published versions.")
+            raise ValidationError("Cannot request reviews for published drafts.")
 
         self.requested_reviewers.set(reviewers)
 
@@ -260,15 +260,15 @@ class EntryVersion(AuditedModel):
         self.approvers.clear()
 
     def publish(self, user):
-        """Publish this version as the active version"""
+        """Publish this draft as the active draft"""
         if not self.is_approved:
-            raise ValidationError("Version must be approved before publishing.")
+            raise ValidationError("Draft must be approved before publishing.")
 
         if self.is_published:
-            raise ValidationError("Version is already published.")
+            raise ValidationError("Draft is already published.")
 
-        # Set this version as the active version
-        self.entry.active_version = self
+        # Set this draft as the active draft
+        self.entry.active_draft = self
         self.entry.save()
 
         # Mark as published
@@ -279,13 +279,13 @@ class EntryVersion(AuditedModel):
         # If content is being updated and there are existing approvals, clear them
         if self.pk:
             try:
-                old_version = EntryVersion.objects.get(pk=self.pk)
+                old_draft = EntryDraft.objects.get(pk=self.pk)
                 if (
-                    old_version.content != self.content
-                    and old_version.approvers.exists()
+                    old_draft.content != self.content
+                    and old_draft.approvers.exists()
                 ):
                     self.clear_approvals()
-            except EntryVersion.DoesNotExist:
+            except EntryDraft.DoesNotExist:
                 pass
 
         self.full_clean()
@@ -328,38 +328,38 @@ class Comment(AuditedModel):
         super().save(*args, **kwargs)
 
 
-class DomainExpert(AuditedModel):
-    """Tracks which users are experts for which domains"""
+class PerspectiveCurator(AuditedModel):
+    """Tracks which users are curators for which perspectives"""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="expertise")
-    domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name="experts")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="curatorship")
+    perspective = models.ForeignKey(Perspective, on_delete=models.CASCADE, related_name="curators")
     assigned_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="assigned_experts",
+        related_name="assigned_curators",
     )
 
     class Meta:
-        db_table = "glossary_domain_expert"
+        db_table = "glossary_perspective_curator"
 
     def __str__(self):
-        return f"{self.user.username} - {self.domain.name}"
+        return f"{self.user.username} - {self.perspective.name}"
 
     def clean(self):
-        """Validate user+domain uniqueness among non-deleted records"""
+        """Validate user+perspective uniqueness among non-deleted records"""
         super().clean()
         existing = (
-            DomainExpert.all_objects.filter(
-                user=self.user, domain=self.domain, is_deleted=False
+            PerspectiveCurator.all_objects.filter(
+                user=self.user, perspective=self.perspective, is_deleted=False
             )
             .exclude(pk=self.pk)
             .exists()
         )
         if existing:
             raise ValidationError(
-                "This user is already a domain expert for this domain."
+                "This user is already a perspective curator for this perspective."
             )
 
     def save(self, *args, **kwargs):
@@ -367,35 +367,35 @@ class DomainExpert(AuditedModel):
         super().save(*args, **kwargs)
 
 
-# Helper method to check if a user is a domain expert
-def is_domain_expert_for(user, domain_id):
-    """Check if a user is a domain expert for a specific domain"""
-    return DomainExpert.objects.filter(user=user, domain_id=domain_id).exists()
+# Helper method to check if a user is a perspective curator
+def is_perspective_curator_for(user, perspective_id):
+    """Check if a user is a perspective curator for a specific perspective"""
+    return PerspectiveCurator.objects.filter(user=user, perspective_id=perspective_id).exists()
 
 
 # Monkey-patch the User model to add the helper method
-User.add_to_class("is_domain_expert_for", is_domain_expert_for)
+User.add_to_class("is_perspective_curator_for", is_perspective_curator_for)
 
 
-# Signal to auto-activate approved versions
+# Signal to auto-activate approved drafts
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
 
-@receiver(m2m_changed, sender=EntryVersion.approvers.through)
-def auto_activate_approved_version(sender, instance, action, **kwargs):
+@receiver(m2m_changed, sender=EntryDraft.approvers.through)
+def auto_activate_approved_draft(sender, instance, action, **kwargs):
     """
-    When an EntryVersion is approved (approval_count >= MIN_APPROVALS),
-    check if entry.active_version is None or older than this version,
-    and if so, set this as entry.active_version
+    When an EntryDraft is approved (approval_count >= MIN_APPROVALS),
+    check if entry.active_draft is None or older than this draft,
+    and if so, set this as entry.active_draft
     """
     if action == "post_add":
         if instance.is_approved:
             entry = instance.entry
-            # Check if this should become the active version
-            if entry.active_version is None or (
-                entry.active_version
-                and instance.timestamp > entry.active_version.timestamp
+            # Check if this should become the active draft
+            if entry.active_draft is None or (
+                entry.active_draft
+                and instance.timestamp > entry.active_draft.timestamp
             ):
                 # Use update() to avoid triggering save signal loops
-                Entry.objects.filter(pk=entry.pk).update(active_version=instance)
+                Entry.objects.filter(pk=entry.pk).update(active_draft=instance)

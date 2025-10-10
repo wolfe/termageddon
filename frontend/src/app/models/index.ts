@@ -4,10 +4,10 @@ export interface User {
   first_name: string;
   last_name: string;
   is_staff: boolean;
-  domain_expert_for?: number[];
+  perspective_curator_for?: number[];
 }
 
-export interface Domain {
+export interface Perspective {
   id: number;
   name: string;
   description: string;
@@ -24,7 +24,7 @@ export interface Term {
   updated_at: string;
 }
 
-export interface EntryVersion {
+export interface EntryDraft {
   id: number;
   entry: number;
   content: string;
@@ -40,7 +40,7 @@ export interface EntryVersion {
   is_endorsed: boolean;
   // New user-centric fields from backend
   can_approve_by_current_user?: boolean;
-  approval_status_for_user?: 'unknown' | 'own_version' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
+  approval_status_for_user?: 'unknown' | 'own_draft' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
   user_has_approved?: boolean;
   remaining_approvals?: number;
   approval_percentage?: number;
@@ -51,8 +51,8 @@ export interface EntryVersion {
 export interface Entry {
   id: number;
   term: Term;
-  domain: Domain;
-  active_version?: EntryVersion;
+  perspective: Perspective;
+  active_draft?: EntryDraft;
   is_official: boolean;
   // New permission fields from backend
   can_user_endorse?: boolean;
@@ -74,12 +74,12 @@ export interface Comment {
   updated_at: string;
 }
 
-export interface DomainExpert {
+export interface PerspectiveCurator {
   id: number;
   user: User;
   user_id?: number;
-  domain: Domain;
-  domain_id?: number;
+  perspective: Perspective;
+  perspective_id?: number;
   assigned_by?: User;
   created_at: string;
 }
@@ -101,7 +101,7 @@ export interface LoginResponse {
   user: User;
 }
 
-export interface CreateEntryVersionRequest {
+export interface CreateEntryDraftRequest {
   entry: number;
   content: string;
   author: number;
@@ -115,8 +115,8 @@ export interface CreateCommentRequest {
   author: number;
 }
 
-// Enhanced EntryVersion with Entry details for review context
-export interface ReviewVersion {
+// Enhanced EntryDraft with Entry details for review context
+export interface ReviewDraft {
   id: number;
   entry: Entry;
   content: string;
@@ -127,10 +127,10 @@ export interface ReviewVersion {
   is_approved: boolean;
   approval_count: number;
   is_published: boolean;
-  replaces_version?: EntryVersion;
+  replaces_draft?: EntryDraft;
   // New user-centric fields from backend
   can_approve_by_current_user?: boolean;
-  approval_status_for_user?: 'unknown' | 'own_version' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
+  approval_status_for_user?: 'unknown' | 'own_draft' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
   user_has_approved?: boolean;
   remaining_approvals?: number;
   approval_percentage?: number;
@@ -151,6 +151,6 @@ export interface SystemConfig {
 
 export interface CreateTermAndEntryRequest {
   term_text: string;
-  domain_id: number;
+  perspective_id: number;
   is_official?: boolean;
 }

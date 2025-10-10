@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { GlossaryService } from './glossary.service';
-import { Domain, Entry, EntryVersion, Term, User, PaginatedResponse } from '../models';
+import { Perspective, Entry, EntryDraft, Term, User, PaginatedResponse } from '../models';
 
 describe('GlossaryService', () => {
   let service: GlossaryService;
@@ -24,63 +24,63 @@ describe('GlossaryService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('Domain operations', () => {
-    it('should get domains', () => {
-      const mockResponse: PaginatedResponse<Domain> = {
+  describe('Perspective operations', () => {
+    it('should get perspectives', () => {
+      const mockResponse: PaginatedResponse<Perspective> = {
         count: 2,
         next: null,
         previous: null,
         results: [
-          { id: 1, name: 'Domain 1', description: 'Description 1', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-          { id: 2, name: 'Domain 2', description: 'Description 2', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' }
+          { id: 1, name: 'Perspective 1', description: 'Description 1', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+          { id: 2, name: 'Perspective 2', description: 'Description 2', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' }
         ]
       };
 
-      service.getDomains().subscribe(response => {
+      service.getPerspectives().subscribe(response => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/domains/');
+      const req = httpMock.expectOne('http://localhost:8000/api/perspectives/');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
 
-    it('should get domain by id', () => {
-      const mockDomain: Domain = {
+    it('should get perspective by id', () => {
+      const mockPerspective: Perspective = {
         id: 1,
-        name: 'Test Domain',
+        name: 'Test Perspective',
         description: 'Test Description',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
       };
 
-      service.getDomain(1).subscribe(domain => {
-        expect(domain).toEqual(mockDomain);
+      service.getPerspective(1).subscribe(perspective => {
+        expect(perspective).toEqual(mockPerspective);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/domains/1/');
+      const req = httpMock.expectOne('http://localhost:8000/api/perspectives/1/');
       expect(req.request.method).toBe('GET');
-      req.flush(mockDomain);
+      req.flush(mockPerspective);
     });
 
-    it('should create domain', () => {
-      const newDomain = { name: 'New Domain', description: 'New Description' };
-      const mockDomain: Domain = {
+    it('should create perspective', () => {
+      const newPerspective = { name: 'New Perspective', description: 'New Description' };
+      const mockPerspective: Perspective = {
         id: 1,
-        name: 'New Domain',
+        name: 'New Perspective',
         description: 'New Description',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
       };
 
-      service.createDomain(newDomain).subscribe(domain => {
-        expect(domain).toEqual(mockDomain);
+      service.createPerspective(newPerspective).subscribe(perspective => {
+        expect(perspective).toEqual(mockPerspective);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/domains/');
+      const req = httpMock.expectOne('http://localhost:8000/api/perspectives/');
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(newDomain);
-      req.flush(mockDomain);
+      expect(req.request.body).toEqual(newPerspective);
+      req.flush(mockPerspective);
     });
   });
 
@@ -170,9 +170,9 @@ describe('GlossaryService', () => {
               created_at: '2024-01-01T00:00:00Z',
               updated_at: '2024-01-01T00:00:00Z'
             },
-            domain: {
+            perspective: {
               id: 1,
-              name: 'Test Domain',
+              name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
               updated_at: '2024-01-01T00:00:00Z'
@@ -184,12 +184,12 @@ describe('GlossaryService', () => {
         ]
       };
 
-      const filters = { domain: '1', approval_status: 'approved' };
+      const filters = { perspective: '1', approval_status: 'approved' };
       service.getEntries(filters).subscribe(response => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/?domain=1&approval_status=approved');
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/?perspective=1&approval_status=approved');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -202,11 +202,11 @@ describe('GlossaryService', () => {
         results: []
       };
 
-      service.searchEntries('test', { domain: '1' }).subscribe(response => {
+      service.searchEntries('test', { perspective: '1' }).subscribe(response => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/?search=test&domain=1');
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/?search=test&perspective=1');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -222,9 +222,9 @@ describe('GlossaryService', () => {
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z'
         },
-        domain: {
+        perspective: {
           id: 1,
-          name: 'Test Domain',
+          name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z'
@@ -253,7 +253,7 @@ describe('GlossaryService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          domain_expert_for: []
+          perspective_curator_for: []
         }
       ];
 

@@ -5,7 +5,7 @@ import { AuthHelper } from './auth';
 export interface TestTerm {
   id: string;
   name: string;
-  domain: string;
+  perspective: string;
   definition: string;
   approvalState: 'no_approvals' | 'one_approval' | 'two_approvals' | 'published';
 }
@@ -13,7 +13,7 @@ export interface TestTerm {
 export interface TestUser {
   username: string;
   password: string;
-  domains: string[];
+  perspectives: string[];
 }
 
 export interface TestScenario {
@@ -37,7 +37,7 @@ export class TestFixtures {
    */
   async createTestTerm(options: {
     name?: string;
-    domain: string;
+    perspective: string;
     definition: string;
     approvalState?: 'no_approvals' | 'one_approval' | 'two_approvals' | 'published';
   }): Promise<TestTerm> {
@@ -45,7 +45,7 @@ export class TestFixtures {
     
     const result = await this.api.createTermWithApprovalState(
       termName,
-      options.domain,
+      options.perspective,
       options.definition,
       options.approvalState || 'no_approvals'
     );
@@ -53,7 +53,7 @@ export class TestFixtures {
     const testTerm: TestTerm = {
       id: result.id,
       name: termName,
-      domain: options.domain,
+      perspective: options.perspective,
       definition: options.definition,
       approvalState: options.approvalState || 'no_approvals'
     };
@@ -69,15 +69,15 @@ export class TestFixtures {
   }
 
   /**
-   * Create multiple test terms for a domain
+   * Create multiple test terms for a perspective
    */
-  async createTestTermsForDomain(domain: string, count: number = 3): Promise<TestTerm[]> {
+  async createTestTermsForPerspective(perspective: string, count: number = 3): Promise<TestTerm[]> {
     const terms: TestTerm[] = [];
     
     for (let i = 0; i < count; i++) {
       const term = await this.createTestTerm({
-        domain,
-        definition: `Test definition ${i + 1} for ${domain}`,
+        perspective,
+        definition: `Test definition ${i + 1} for ${perspective}`,
         approvalState: i === 0 ? 'no_approvals' : i === 1 ? 'one_approval' : 'two_approvals'
       });
       terms.push(term);
@@ -93,9 +93,9 @@ export class TestFixtures {
     const defaultScenario: TestScenario = {
       terms: [],
       users: [
-        { username: 'mariacarter', password: 'mariacarter', domains: ['Physics', 'Chemistry'] },
-        { username: 'bencarter', password: 'bencarter', domains: ['Chemistry', 'Biology'] },
-        { username: 'sofiarossi', password: 'sofiarossi', domains: ['Computer Science', 'Graph Theory'] }
+        { username: 'mariacarter', password: 'mariacarter', perspectives: ['Physics', 'Chemistry'] },
+        { username: 'bencarter', password: 'bencarter', perspectives: ['Chemistry', 'Biology'] },
+        { username: 'sofiarossi', password: 'sofiarossi', perspectives: ['Computer Science', 'Graph Theory'] }
       ],
       description: 'Default test scenario'
     };
@@ -104,11 +104,11 @@ export class TestFixtures {
 
     // Create terms if specified
     if (finalScenario.terms.length === 0) {
-      // Create default terms for each domain
-      const domains = [...new Set(finalScenario.users.flatMap(u => u.domains))];
-      for (const domain of domains) {
-        const domainTerms = await this.createTestTermsForDomain(domain, 2);
-        finalScenario.terms.push(...domainTerms);
+      // Create default terms for each perspective
+      const perspectives = [...new Set(finalScenario.users.flatMap(u => u.perspectives))];
+      for (const perspective of perspectives) {
+        const perspectiveTerms = await this.createTestTermsForPerspective(perspective, 2);
+        finalScenario.terms.push(...perspectiveTerms);
       }
     } else {
       // Create specified terms
@@ -125,10 +125,10 @@ export class TestFixtures {
   /**
    * Create a term that needs approval (no approvals yet)
    */
-  async createPendingApprovalTerm(domain: string, definition?: string): Promise<TestTerm> {
+  async createPendingApprovalTerm(perspective: string, definition?: string): Promise<TestTerm> {
     return await this.createTestTerm({
-      domain,
-      definition: definition || `Pending approval term for ${domain}`,
+      perspective,
+      definition: definition || `Pending approval term for ${perspective}`,
       approvalState: 'no_approvals'
     });
   }
@@ -136,10 +136,10 @@ export class TestFixtures {
   /**
    * Create a term with one approval
    */
-  async createPartiallyApprovedTerm(domain: string, definition?: string): Promise<TestTerm> {
+  async createPartiallyApprovedTerm(perspective: string, definition?: string): Promise<TestTerm> {
     return await this.createTestTerm({
-      domain,
-      definition: definition || `Partially approved term for ${domain}`,
+      perspective,
+      definition: definition || `Partially approved term for ${perspective}`,
       approvalState: 'one_approval'
     });
   }
@@ -147,10 +147,10 @@ export class TestFixtures {
   /**
    * Create a fully approved term
    */
-  async createFullyApprovedTerm(domain: string, definition?: string): Promise<TestTerm> {
+  async createFullyApprovedTerm(perspective: string, definition?: string): Promise<TestTerm> {
     return await this.createTestTerm({
-      domain,
-      definition: definition || `Fully approved term for ${domain}`,
+      perspective,
+      definition: definition || `Fully approved term for ${perspective}`,
       approvalState: 'two_approvals'
     });
   }
@@ -158,10 +158,10 @@ export class TestFixtures {
   /**
    * Create a published term
    */
-  async createPublishedTerm(domain: string, definition?: string): Promise<TestTerm> {
+  async createPublishedTerm(perspective: string, definition?: string): Promise<TestTerm> {
     return await this.createTestTerm({
-      domain,
-      definition: definition || `Published term for ${domain}`,
+      perspective,
+      definition: definition || `Published term for ${perspective}`,
       approvalState: 'published'
     });
   }
@@ -179,7 +179,7 @@ export class TestFixtures {
    */
   async createUserSession(user: keyof typeof import('../fixtures/testData').TEST_USERS) {
     await this.auth.setupTestSession(user);
-    return this.auth.getUserDomains(user);
+    return this.auth.getUserPerspectives(user);
   }
 
   /**
@@ -236,8 +236,8 @@ export class TestFixtures {
     const scenario: TestScenario = {
       description: 'Approval workflow test scenario',
       users: [
-        { username: 'mariacarter', password: 'mariacarter', domains: ['Physics', 'Chemistry'] },
-        { username: 'bencarter', password: 'bencarter', domains: ['Chemistry', 'Biology'] }
+        { username: 'mariacarter', password: 'mariacarter', perspectives: ['Physics', 'Chemistry'] },
+        { username: 'bencarter', password: 'bencarter', perspectives: ['Chemistry', 'Biology'] }
       ],
       terms: []
     };
@@ -252,29 +252,29 @@ export class TestFixtures {
   }
 
   /**
-   * Create a domain-specific test scenario
+   * Create a perspective-specific test scenario
    */
-  async createDomainScenario(domain: string): Promise<TestScenario> {
-    const users = this.auth.getUsersWithDomainAccess(domain);
+  async createPerspectiveScenario(perspective: string): Promise<TestScenario> {
+    const users = this.auth.getUsersWithPerspectiveAccess(perspective);
     
     if (users.length === 0) {
-      throw new Error(`No users found with access to domain: ${domain}`);
+      throw new Error(`No users found with access to perspective: ${perspective}`);
     }
 
     const scenario: TestScenario = {
-      description: `Test scenario for ${domain} domain`,
+      description: `Test scenario for ${perspective} perspective`,
       users: users.map(user => ({
         username: user.toLowerCase(),
         password: user.toLowerCase(),
-        domains: this.auth.getUserDomains(user)
+        perspectives: this.auth.getUserPerspectives(user)
       })),
       terms: []
     };
 
-    // Create terms for this domain
-    scenario.terms.push(await this.createPendingApprovalTerm(domain, `New term in ${domain}`));
-    scenario.terms.push(await this.createPartiallyApprovedTerm(domain, `Partially approved term in ${domain}`));
-    scenario.terms.push(await this.createFullyApprovedTerm(domain, `Fully approved term in ${domain}`));
+    // Create terms for this perspective
+    scenario.terms.push(await this.createPendingApprovalTerm(perspective, `New term in ${perspective}`));
+    scenario.terms.push(await this.createPartiallyApprovedTerm(perspective, `Partially approved term in ${perspective}`));
+    scenario.terms.push(await this.createFullyApprovedTerm(perspective, `Fully approved term in ${perspective}`));
 
     return scenario;
   }

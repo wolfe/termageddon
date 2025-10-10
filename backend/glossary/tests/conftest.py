@@ -5,10 +5,10 @@ from faker import Faker
 
 from glossary.models import (
     Comment,
-    Domain,
-    DomainExpert,
+    Perspective,
+    PerspectiveCurator,
     Entry,
-    EntryVersion,
+    EntryDraft,
     Term,
 )
 
@@ -27,11 +27,11 @@ class UserFactory(DjangoModelFactory):
     is_active = True
 
 
-class DomainFactory(DjangoModelFactory):
+class PerspectiveFactory(DjangoModelFactory):
     class Meta:
-        model = Domain
+        model = Perspective
 
-    name = factory.Sequence(lambda n: f"Domain {n}")
+    name = factory.Sequence(lambda n: f"Perspective {n}")
     description = factory.Faker("text", max_nb_chars=200)
     created_by = factory.SubFactory(UserFactory)
 
@@ -50,14 +50,14 @@ class EntryFactory(DjangoModelFactory):
         model = Entry
 
     term = factory.SubFactory(TermFactory)
-    domain = factory.SubFactory(DomainFactory)
+    perspective = factory.SubFactory(PerspectiveFactory)
     is_official = False
     created_by = factory.SubFactory(UserFactory)
 
 
-class EntryVersionFactory(DjangoModelFactory):
+class EntryDraftFactory(DjangoModelFactory):
     class Meta:
-        model = EntryVersion
+        model = EntryDraft
 
     entry = factory.SubFactory(EntryFactory)
     content = factory.Faker("text", max_nb_chars=500)
@@ -75,11 +75,11 @@ class CommentFactory(DjangoModelFactory):
     content_object = factory.SubFactory(EntryFactory)
 
 
-class DomainExpertFactory(DjangoModelFactory):
+class PerspectiveCuratorFactory(DjangoModelFactory):
     class Meta:
-        model = DomainExpert
+        model = PerspectiveCurator
 
     user = factory.SubFactory(UserFactory)
-    domain = factory.SubFactory(DomainFactory)
+    perspective = factory.SubFactory(PerspectiveFactory)
     assigned_by = factory.SubFactory(UserFactory)
     created_by = factory.SubFactory(UserFactory)

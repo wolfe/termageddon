@@ -7,17 +7,17 @@ from rest_framework.test import APIClient
 
 from glossary.models import (
     Comment,
-    Domain,
-    DomainExpert,
+    Perspective,
+    PerspectiveCurator,
     Entry,
-    EntryVersion,
+    EntryDraft,
     Term,
 )
 from glossary.tests.conftest import (
-    DomainExpertFactory,
-    DomainFactory,
+    PerspectiveCuratorFactory,
+    PerspectiveFactory,
     EntryFactory,
-    EntryVersionFactory,
+    EntryDraftFactory,
     TermFactory,
     UserFactory,
 )
@@ -91,34 +91,34 @@ class TestAuthEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["username"] == authenticated_client.user.username
-        assert "domain_expert_for" in response.data
+        assert "perspective_curator_for" in response.data
 
 
 @pytest.mark.django_db
-class TestDomainViewSet:
-    """Test Domain API endpoints"""
+class TestPerspectiveViewSet:
+    """Test Perspective API endpoints"""
 
-    def test_list_domains(self, authenticated_client):
-        """Test listing domains"""
-        DomainFactory.create_batch(3)
-        url = reverse("domain-list")
+    def test_list_perspectives(self, authenticated_client):
+        """Test listing perspectives"""
+        PerspectiveFactory.create_batch(3)
+        url = reverse("perspective-list")
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 3
 
-    def test_create_domain_as_staff(self, staff_client):
-        """Test creating domain as staff"""
-        url = reverse("domain-list")
+    def test_create_perspective_as_staff(self, staff_client):
+        """Test creating perspective as staff"""
+        url = reverse("perspective-list")
         data = {"name": "Finance", "description": "Financial terms"}
         response = staff_client.post(url, data)
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert Domain.objects.filter(name="Finance").exists()
+        assert Perspective.objects.filter(name="Finance").exists()
 
-    def test_create_domain_as_regular_user_fails(self, authenticated_client):
-        """Test creating domain as regular user fails"""
-        url = reverse("domain-list")
+    def test_create_perspective_as_regular_user_fails(self, authenticated_client):
+        """Test creating perspective as regular user fails"""
+        url = reverse("perspective-list")
         data = {"name": "Finance", "description": "Financial terms"}
         response = authenticated_client.post(url, data)
 
@@ -170,8 +170,8 @@ class TestEntryViewSet:
         # Create entries with published versions
         entries = EntryFactory.create_batch(3)
         for entry in entries:
-            version = EntryVersionFactory(entry=entry, is_published=True)
-            entry.active_version = version
+            version = EntryDraftFactory(entry=entry, is_published=True)
+            entry.active_draft = version
             entry.save()
             
         url = reverse("entry-list")
@@ -180,39 +180,39 @@ class TestEntryViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 3
 
-    def test_filter_entries_by_domain(self, authenticated_client):
-        """Test filtering entries by domain"""
-        domain1 = DomainFactory()
-        domain2 = DomainFactory()
-        entry1 = EntryFactory(domain=domain1)
-        entry2 = EntryFactory(domain=domain2)
+    def test_filter_entries_by_perspective(self, authenticated_client):
+        """Test filtering entries by perspective"""
+        perspective1 = PerspectiveFactory()
+        perspective2 = PerspectiveFactory()
+        entry1 = EntryFactory(perspective=perspective1)
+        entry2 = EntryFactory(perspective=perspective2)
         
         # Create published versions
-        version1 = EntryVersionFactory(entry=entry1, is_published=True)
-        version2 = EntryVersionFactory(entry=entry2, is_published=True)
-        entry1.active_version = version1
-        entry2.active_version = version2
+        version1 = EntryDraftFactory(entry=entry1, is_published=True)
+        version2 = EntryDraftFactory(entry=entry2, is_published=True)
+        entry1.active_draft = version1
+        entry2.active_draft = version2
         entry1.save()
         entry2.save()
 
         url = reverse("entry-list")
-        response = authenticated_client.get(url, {"domain": domain1.id})
+        response = authenticated_client.get(url, {"perspective": perspective1.id})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 1
-        assert response.data["results"][0]["domain"]["id"] == domain1.id
+        assert response.data["results"][0]["perspective"]["id"] == perspective1.id
 
     def test_grouped_by_term(self, authenticated_client):
         """Test grouped_by_term aggregates entries by term"""
         term = TermFactory(text="Cache")
-        domain1 = DomainFactory()
-        domain2 = DomainFactory()
-        e1 = EntryFactory(term=term, domain=domain1)
-        e2 = EntryFactory(term=term, domain=domain2)
-        v1 = EntryVersionFactory(entry=e1, is_published=True)
-        v2 = EntryVersionFactory(entry=e2, is_published=True)
-        e1.active_version = v1
-        e2.active_version = v2
+        perspective1 = PerspectiveFactory()
+        perspective2 = PerspectiveFactory()
+        e1 = EntryFactory(term=term, perspective=perspective1)
+        e2 = EntryFactory(term=term, perspective=perspective2)
+        v1 = EntryDraftFactory(entry=e1, is_published=True)
+        v2 = EntryDraftFactory(entry=e2, is_published=True)
+        e1.active_draft = v1
+        e2.active_draft = v2
         e1.save()
         e2.save()
 
@@ -226,23 +226,23 @@ class TestEntryViewSet:
 
     def test_create_with_term(self, authenticated_client):
         """Test atomic creation of term + entry"""
-        domain = DomainFactory()
+        perspective = PerspectiveFactory()
         url = reverse("entry-create-with-term")
-        payload = {"term_text": "New Term", "domain_id": domain.id, "is_official": False}
+        payload = {"term_text": "New Term", "perspective_id": perspective.id, "is_official": False}
         response = authenticated_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert Entry.objects.filter(term__text="New Term", domain=domain).exists()
+        assert Entry.objects.filter(term__text="New Term", perspective=perspective).exists()
 
-    def test_endorse_as_domain_expert(self, authenticated_client):
-        """Test endorsing entry as domain expert"""
-        domain = DomainFactory()
-        entry = EntryFactory(domain=domain)
+    def test_endorse_as_perspective_curator(self, authenticated_client):
+        """Test endorsing entry as perspective curator"""
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(perspective=perspective)
         # Create a published version
-        version = EntryVersionFactory(entry=entry, is_published=True)
-        entry.active_version = version
+        version = EntryDraftFactory(entry=entry, is_published=True)
+        entry.active_draft = version
         entry.save()
-        DomainExpertFactory(user=authenticated_client.user, domain=domain)
+        PerspectiveCuratorFactory(user=authenticated_client.user, perspective=perspective)
 
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
         response = authenticated_client.post(url)
@@ -252,12 +252,12 @@ class TestEntryViewSet:
         assert version.is_endorsed is True
         assert version.endorsed_by == authenticated_client.user
 
-    def test_endorse_as_non_expert_fails(self, authenticated_client):
-        """Test endorsing entry without being expert fails"""
+    def test_endorse_as_non_curator_fails(self, authenticated_client):
+        """Test endorsing entry without being curator fails"""
         entry = EntryFactory()
         # Create a published version
-        version = EntryVersionFactory(entry=entry, is_published=True)
-        entry.active_version = version
+        version = EntryDraftFactory(entry=entry, is_published=True)
+        entry.active_draft = version
         entry.save()
         
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
@@ -267,13 +267,13 @@ class TestEntryViewSet:
 
 
 @pytest.mark.django_db
-class TestEntryVersionViewSet:
-    """Test EntryVersion API endpoints"""
+class TestEntryDraftViewSet:
+    """Test EntryDraft API endpoints"""
 
-    def test_create_entry_version(self, authenticated_client):
-        """Test creating an entry version"""
+    def test_create_entry_draft(self, authenticated_client):
+        """Test creating an entry draft"""
         entry = EntryFactory()
-        url = reverse("entryversion-list")
+        url = reverse("entrydraft-list")
         data = {
             "entry": entry.id,
             "content": "<p>Test definition</p>",
@@ -282,65 +282,65 @@ class TestEntryVersionViewSet:
         response = authenticated_client.post(url, data)
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert EntryVersion.objects.filter(entry=entry).exists()
+        assert EntryDraft.objects.filter(entry=entry).exists()
 
     def test_list_with_eligibility_and_search(self, authenticated_client):
         """Test eligibility and search filters"""
         other_user = UserFactory()
-        # Create versions: one by other user with specific content, one by current user
-        version1 = EntryVersionFactory(author=other_user, content="absorption of energy")
-        version2 = EntryVersionFactory(author=authenticated_client.user, content="other term")
+        # Create drafts: one by other user with specific content, one by current user
+        draft1 = EntryDraftFactory(author=other_user, content="absorption of energy")
+        draft2 = EntryDraftFactory(author=authenticated_client.user, content="other term")
 
-        url = reverse("entryversion-list")
-        # eligibility=can_approve should exclude own versions
+        url = reverse("entrydraft-list")
+        # eligibility=can_approve should exclude own drafts
         resp1 = authenticated_client.get(url, {"eligibility": "can_approve"})
         assert resp1.status_code == status.HTTP_200_OK
         ids = [v["id"] for v in resp1.data["results"]]
-        assert version1.id in ids
-        assert version2.id not in ids
+        assert draft1.id in ids
+        assert draft2.id not in ids
 
         # search should find by content substring
         # include show_all=true so relevance filter does not hide results
         resp2 = authenticated_client.get(url, {"search": "absorption", "show_all": "true"})
         assert resp2.status_code == status.HTTP_200_OK
         ids2 = [v["id"] for v in resp2.data["results"]]
-        assert version1.id in ids2
+        assert draft1.id in ids2
 
-    def test_approve_version(self, authenticated_client):
-        """Test approving a version"""
-        # Create a version authored by a different user so the test user can approve it
+    def test_approve_draft(self, authenticated_client):
+        """Test approving a draft"""
+        # Create a draft authored by a different user so the test user can approve it
         other_user = UserFactory()
-        version = EntryVersionFactory(author=other_user)
-        url = reverse("entryversion-approve", kwargs={"pk": version.id})
+        draft = EntryDraftFactory(author=other_user)
+        url = reverse("entrydraft-approve", kwargs={"pk": draft.id})
 
         # Add show_all=true to bypass filtering
         response = authenticated_client.post(url + "?show_all=true")
 
         assert response.status_code == status.HTTP_200_OK
-        version.refresh_from_db()
-        assert version.approvers.filter(pk=authenticated_client.user.pk).exists()
+        draft.refresh_from_db()
+        assert draft.approvers.filter(pk=authenticated_client.user.pk).exists()
 
-    def test_author_cannot_approve_own_version(self, authenticated_client):
-        """Test that authors cannot approve their own versions"""
-        version = EntryVersionFactory(author=authenticated_client.user)
-        url = reverse("entryversion-approve", kwargs={"pk": version.id})
+    def test_author_cannot_approve_own_draft(self, authenticated_client):
+        """Test that authors cannot approve their own drafts"""
+        draft = EntryDraftFactory(author=authenticated_client.user)
+        url = reverse("entrydraft-approve", kwargs={"pk": draft.id})
         response = authenticated_client.post(url)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "cannot approve their own" in response.data["detail"]
 
-    def test_approved_version_becomes_active(self, authenticated_client):
-        """Test that version becomes active when approved"""
+    def test_approved_draft_becomes_active(self, authenticated_client):
+        """Test that draft becomes active when approved"""
         entry = EntryFactory()
-        version = EntryVersionFactory(entry=entry)
+        draft = EntryDraftFactory(entry=entry)
 
         # Add 2 approvals (MIN_APPROVALS = 2)
         user1 = UserFactory()
         user2 = UserFactory()
-        version.approvers.add(user1, user2)
+        draft.approvers.add(user1, user2)
 
         entry.refresh_from_db()
-        assert entry.active_version == version
+        assert entry.active_draft == draft
 
 
 @pytest.mark.django_db
@@ -383,28 +383,28 @@ class TestCommentViewSet:
 
 
 @pytest.mark.django_db
-class TestDomainExpertViewSet:
-    """Test DomainExpert API endpoints"""
+class TestPerspectiveCuratorViewSet:
+    """Test PerspectiveCurator API endpoints"""
 
-    def test_create_domain_expert_as_staff(self, staff_client):
-        """Test creating domain expert as staff"""
+    def test_create_perspective_curator_as_staff(self, staff_client):
+        """Test creating perspective curator as staff"""
         user = UserFactory()
-        domain = DomainFactory()
+        perspective = PerspectiveFactory()
 
-        url = reverse("domainexpert-list")
-        data = {"user_id": user.id, "domain_id": domain.id}
+        url = reverse("perspectivecurator-list")
+        data = {"user_id": user.id, "perspective_id": perspective.id}
         response = staff_client.post(url, data)
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert DomainExpert.objects.filter(user=user, domain=domain).exists()
+        assert PerspectiveCurator.objects.filter(user=user, perspective=perspective).exists()
 
-    def test_create_domain_expert_as_regular_user_fails(self, authenticated_client):
-        """Test creating domain expert as regular user fails"""
+    def test_create_perspective_curator_as_regular_user_fails(self, authenticated_client):
+        """Test creating perspective curator as regular user fails"""
         user = UserFactory()
-        domain = DomainFactory()
+        perspective = PerspectiveFactory()
 
-        url = reverse("domainexpert-list")
-        data = {"user_id": user.id, "domain_id": domain.id}
+        url = reverse("perspectivecurator-list")
+        data = {"user_id": user.id, "perspective_id": perspective.id}
         response = authenticated_client.post(url, data)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -423,194 +423,195 @@ class TestSystemConfig:
 
 
 @pytest.mark.django_db
-class TestEntryVersionUpdateWorkflow:
-    """Test EntryVersion update workflow and approval clearing"""
+class TestEntryDraftUpdateWorkflow:
+    """Test EntryDraft update workflow and approval clearing"""
 
-    def test_update_unpublished_version_by_author(self, authenticated_client):
-        """Test updating an unpublished version by its author"""
+    def test_update_unpublished_draft_by_author(self, authenticated_client):
+        """Test updating an unpublished draft by its author"""
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
 
-        url = reverse("entryversion-detail", kwargs={"pk": version.id})
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         data = {"content": "Updated content"}
         response = authenticated_client.patch(url, data)
 
         assert response.status_code == status.HTTP_200_OK
-        version.refresh_from_db()
-        assert version.content == "Updated content"
+        draft.refresh_from_db()
+        assert draft.content == "Updated content"
 
-    def test_update_unpublished_version_by_other_user_fails(self, authenticated_client):
-        """Test updating an unpublished version by non-author fails"""
+    def test_update_unpublished_draft_by_other_user_fails(self, authenticated_client):
+        """Test updating an unpublished draft by non-author fails"""
         other_user = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=other_user, is_published=False
         )
 
-        url = reverse("entryversion-detail", kwargs={"pk": version.id})
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         data = {"content": "Updated content"}
         response = authenticated_client.patch(url, data)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_update_published_version_fails(self, authenticated_client):
-        """Test updating a published version fails"""
+    def test_update_published_draft_fails(self, authenticated_client):
+        """Test updating a published draft fails"""
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=True
         )
 
-        url = reverse("entryversion-detail", kwargs={"pk": version.id})
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         data = {"content": "Updated content"}
         response = authenticated_client.patch(url, data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "Cannot update published versions" in response.data["detail"]
+        assert "Cannot update published drafts" in response.data["detail"]
 
     def test_content_update_clears_approvals(self, authenticated_client):
         """Test that updating content clears existing approvals"""
         other_user = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
 
         # Add an approval
-        version.approvers.add(other_user)
-        assert version.approvers.count() == 1
+        draft.approvers.add(other_user)
+        assert draft.approvers.count() == 1
 
         # Update content
-        url = reverse("entryversion-detail", kwargs={"pk": version.id})
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         data = {"content": "Updated content"}
         response = authenticated_client.patch(url, data)
 
         assert response.status_code == status.HTTP_200_OK
-        version.refresh_from_db()
-        assert version.approvers.count() == 0
+        draft.refresh_from_db()
+        assert draft.approvers.count() == 0
 
     def test_request_review_workflow(self, authenticated_client):
-        """Test requesting specific reviewers for a version"""
+        """Test requesting specific reviewers for a draft"""
         reviewer1 = UserFactory()
         reviewer2 = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
 
-        url = reverse("entryversion-request-review", kwargs={"pk": version.id})
+        url = reverse("entrydraft-request-review", kwargs={"pk": draft.id})
         data = {"reviewer_ids": [reviewer1.id, reviewer2.id]}
         response = authenticated_client.post(url, data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
-        # Get fresh version from database
-        from glossary.models import EntryVersion
+        # Get fresh draft from database
+        from glossary.models import EntryDraft
 
-        version = EntryVersion.objects.get(pk=version.id)
-        requested_reviewers = list(version.requested_reviewers.all())
+        draft = EntryDraft.objects.get(pk=draft.id)
+        requested_reviewers = list(draft.requested_reviewers.all())
 
         assert len(requested_reviewers) == 2
         assert reviewer1 in requested_reviewers
         assert reviewer2 in requested_reviewers
 
-    def test_request_review_by_non_author_fails(self, authenticated_client):
-        """Test requesting review by non-author fails"""
+    def test_request_review_by_non_author_succeeds(self, authenticated_client):
+        """Test requesting review by non-author succeeds (anyone can request reviews)"""
         other_user = UserFactory()
         reviewer = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=other_user, is_published=False
         )
 
-        url = reverse("entryversion-request-review", kwargs={"pk": version.id})
+        url = reverse("entrydraft-request-review", kwargs={"pk": draft.id})
         data = {"reviewer_ids": [reviewer.id]}
         response = authenticated_client.post(url, data)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_200_OK
+        assert reviewer in draft.requested_reviewers.all()
 
-    def test_request_review_for_published_version_fails(self, authenticated_client):
-        """Test requesting review for published version fails"""
+    def test_request_review_for_published_draft_fails(self, authenticated_client):
+        """Test requesting review for published draft fails"""
         reviewer = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=True
         )
 
-        url = reverse("entryversion-request-review", kwargs={"pk": version.id})
+        url = reverse("entrydraft-request-review", kwargs={"pk": draft.id})
         data = {"reviewer_ids": [reviewer.id]}
         response = authenticated_client.post(url, data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_publish_approved_version(self, authenticated_client):
-        """Test publishing an approved version"""
+    def test_publish_approved_draft(self, authenticated_client):
+        """Test publishing an approved draft"""
         approver1 = UserFactory()
         approver2 = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
 
         # Add approvals (assuming MIN_APPROVALS = 2)
-        version.approvers.add(approver1, approver2)
+        draft.approvers.add(approver1, approver2)
 
-        url = reverse("entryversion-publish", kwargs={"pk": version.id})
+        url = reverse("entrydraft-publish", kwargs={"pk": draft.id})
         response = authenticated_client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
-        version.refresh_from_db()
+        draft.refresh_from_db()
         entry.refresh_from_db()
-        assert version.is_published is True
-        assert entry.active_version == version
+        assert draft.is_published is True
+        assert entry.active_draft == draft
 
-    def test_publish_unapproved_version_fails(self, authenticated_client):
-        """Test publishing an unapproved version fails"""
+    def test_publish_unapproved_draft_fails(self, authenticated_client):
+        """Test publishing an unapproved draft fails"""
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
 
-        url = reverse("entryversion-publish", kwargs={"pk": version.id})
+        url = reverse("entrydraft-publish", kwargs={"pk": draft.id})
         response = authenticated_client.post(url)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "Version must be approved" in response.data["detail"]
+        assert "Draft must be approved" in response.data["detail"]
 
-    def test_publish_already_published_version_fails(self, authenticated_client):
-        """Test publishing an already published version fails"""
+    def test_publish_already_published_draft_fails(self, authenticated_client):
+        """Test publishing an already published draft fails"""
         approver1 = UserFactory()
         approver2 = UserFactory()
         entry = EntryFactory()
-        version = EntryVersionFactory(
+        draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=True
         )
         # Add approvals to make it approved
-        version.approvers.add(approver1, approver2)
+        draft.approvers.add(approver1, approver2)
 
-        url = reverse("entryversion-publish", kwargs={"pk": version.id})
+        url = reverse("entrydraft-publish", kwargs={"pk": draft.id})
         response = authenticated_client.post(url)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "Version is already published" in response.data["detail"]
+        assert "Draft is already published" in response.data["detail"]
 
-    def test_edit_workflow_with_existing_unpublished_version(
+    def test_edit_workflow_with_existing_unpublished_draft(
         self, authenticated_client
     ):
-        """Test that editing creates new version only if no unpublished version exists"""
+        """Test that editing creates new draft only if no unpublished draft exists"""
         entry = EntryFactory()
 
-        # Create first unpublished version
-        version1 = EntryVersionFactory(
+        # Create first unpublished draft
+        draft1 = EntryDraftFactory(
             entry=entry,
             author=authenticated_client.user,
             is_published=False,
             content="Original content",
         )
 
-        # Try to create another version - should fail
-        url = reverse("entryversion-list")
+        # Try to create another draft - should fail
+        url = reverse("entrydraft-list")
         data = {
             "entry": entry.id,
             "content": "New content",
@@ -620,26 +621,26 @@ class TestEntryVersionUpdateWorkflow:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         # The error is in the __all__ field
-        assert "unpublished version" in str(response.data["__all__"][0])
+        assert "unpublished draft" in str(response.data["__all__"][0])
 
     def test_edit_workflow_after_publishing(self, authenticated_client):
-        """Test that editing after publishing creates new version"""
+        """Test that editing after publishing creates new draft"""
         approver1 = UserFactory()
         approver2 = UserFactory()
         entry = EntryFactory()
 
-        # Create and publish first version
-        version1 = EntryVersionFactory(
+        # Create and publish first draft
+        draft1 = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
-        version1.approvers.add(approver1, approver2)
+        draft1.approvers.add(approver1, approver2)
         # Use the API to publish instead of direct method call
-        url = reverse("entryversion-publish", kwargs={"pk": version1.id})
+        url = reverse("entrydraft-publish", kwargs={"pk": draft1.id})
         publish_response = authenticated_client.post(url)
         assert publish_response.status_code == status.HTTP_200_OK
 
-        # Now should be able to create new version
-        url = reverse("entryversion-list")
+        # Now should be able to create new draft
+        url = reverse("entrydraft-list")
         data = {
             "entry": entry.id,
             "content": "New content after publishing",
@@ -649,8 +650,205 @@ class TestEntryVersionUpdateWorkflow:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert (
-            EntryVersion.objects.filter(
+            EntryDraft.objects.filter(
                 entry=entry, author=authenticated_client.user
             ).count()
             == 2
         )
+
+
+@pytest.mark.django_db
+class TestEntryDraftEligibilityFiltering:
+    """Test EntryDraft eligibility filtering logic"""
+
+    def test_requested_or_approved_with_show_all_false(self, authenticated_client):
+        """Test eligibility=requested_or_approved with show_all=false shows only relevant drafts"""
+        other_user = UserFactory()
+        reviewer = UserFactory()
+        
+        # Create drafts with different relationships to the authenticated user
+        draft1 = EntryDraftFactory(author=other_user, is_published=False)  # Not related
+        draft2 = EntryDraftFactory(author=other_user, is_published=False)  # User is requested reviewer
+        draft3 = EntryDraftFactory(author=other_user, is_published=False)  # User has already approved
+        draft4 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # User's own draft
+        
+        # Set up relationships
+        draft2.requested_reviewers.add(authenticated_client.user)
+        draft3.approvers.add(authenticated_client.user)
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "eligibility": "requested_or_approved",
+            "show_all": "false"
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should include drafts where user is requested reviewer OR has approved
+        assert draft2.id in result_ids  # User is requested reviewer
+        assert draft3.id in result_ids  # User has already approved
+        assert draft1.id not in result_ids  # Not related to user
+        assert draft4.id not in result_ids  # User's own draft (not in requested_or_approved)
+
+    def test_requested_or_approved_with_show_all_true(self, authenticated_client):
+        """Test eligibility=requested_or_approved with show_all=true shows all unpublished drafts"""
+        other_user = UserFactory()
+        
+        # Create drafts
+        draft1 = EntryDraftFactory(author=other_user, is_published=False)
+        draft2 = EntryDraftFactory(author=other_user, is_published=False)
+        draft3 = EntryDraftFactory(author=other_user, is_published=True)  # Published - should be excluded
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "eligibility": "requested_or_approved",
+            "show_all": "true"
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should include all unpublished drafts regardless of relationship
+        assert draft1.id in result_ids
+        assert draft2.id in result_ids
+        assert draft3.id not in result_ids  # Published drafts excluded
+
+    def test_can_approve_eligibility(self, authenticated_client):
+        """Test eligibility=can_approve shows only drafts user can approve"""
+        other_user = UserFactory()
+        
+        # Create drafts with different approval states
+        draft1 = EntryDraftFactory(author=other_user, is_published=False)  # Can approve
+        draft2 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # Own draft
+        draft3 = EntryDraftFactory(author=other_user, is_published=False)  # Already approved by user
+        draft4 = EntryDraftFactory(author=other_user, is_published=False)  # Already fully approved
+        
+        # Set up relationships
+        draft3.approvers.add(authenticated_client.user)
+        # Add enough approvers to make draft4 fully approved
+        approver1 = UserFactory()
+        approver2 = UserFactory()
+        draft4.approvers.add(approver1, approver2)
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "eligibility": "can_approve",
+            "show_all": "true"  # Use show_all=true to bypass default filtering
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should only include draft1 (can approve)
+        assert draft1.id in result_ids
+        assert draft2.id not in result_ids  # Own draft
+        assert draft3.id not in result_ids  # Already approved by user
+        assert draft4.id not in result_ids  # Already fully approved
+
+    def test_own_eligibility(self, authenticated_client):
+        """Test eligibility=own shows only user's own drafts"""
+        other_user = UserFactory()
+        
+        # Create drafts
+        draft1 = EntryDraftFactory(author=authenticated_client.user, is_published=False)
+        draft2 = EntryDraftFactory(author=other_user, is_published=False)
+        draft3 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # Changed to unpublished
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "eligibility": "own",
+            "show_all": "true"
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should only include user's own drafts
+        assert draft1.id in result_ids
+        assert draft2.id not in result_ids
+        assert draft3.id in result_ids
+
+    def test_already_approved_eligibility(self, authenticated_client):
+        """Test eligibility=already_approved shows only drafts user has approved"""
+        other_user = UserFactory()
+        
+        # Create drafts
+        draft1 = EntryDraftFactory(author=other_user, is_published=False)
+        draft2 = EntryDraftFactory(author=other_user, is_published=False)
+        draft3 = EntryDraftFactory(author=authenticated_client.user, is_published=False)
+        
+        # Set up relationships
+        draft1.approvers.add(authenticated_client.user)
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "eligibility": "already_approved",
+            "show_all": "true"
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should only include drafts user has approved
+        assert draft1.id in result_ids
+        assert draft2.id not in result_ids
+        assert draft3.id not in result_ids
+
+    def test_eligibility_without_show_all_parameter(self, authenticated_client):
+        """Test that eligibility parameter works without show_all parameter"""
+        other_user = UserFactory()
+        
+        # Create drafts
+        draft1 = EntryDraftFactory(author=other_user, is_published=False)
+        draft2 = EntryDraftFactory(author=authenticated_client.user, is_published=False)
+        
+        # Set up relationship
+        draft1.requested_reviewers.add(authenticated_client.user)
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "eligibility": "requested_or_approved"
+            # No show_all parameter - should default to false
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should include draft1 (user is requested reviewer) but not draft2 (own draft)
+        assert draft1.id in result_ids
+        assert draft2.id not in result_ids
+
+    def test_no_eligibility_with_show_all_false(self, authenticated_client):
+        """Test default filtering when no eligibility parameter is provided"""
+        other_user = UserFactory()
+        
+        # Create drafts with different relationships
+        draft1 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # Own draft
+        draft2 = EntryDraftFactory(author=other_user, is_published=False)  # Not related
+        draft3 = EntryDraftFactory(author=other_user, is_published=False)  # User is requested reviewer
+        draft4 = EntryDraftFactory(author=other_user, is_published=False)  # Related term
+        
+        # Set up relationships
+        draft3.requested_reviewers.add(authenticated_client.user)
+        # Make draft4 related by having user author a draft for the same term
+        EntryDraftFactory(
+            entry=draft4.entry,
+            author=authenticated_client.user,
+            is_published=False
+        )
+        
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {
+            "show_all": "false"
+            # No eligibility parameter
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+        
+        # Should include drafts user authored, was requested to review, or for related terms
+        assert draft1.id in result_ids  # Own draft
+        assert draft2.id not in result_ids  # Not related
+        assert draft3.id in result_ids  # Requested reviewer
+        assert draft4.id in result_ids  # Related term

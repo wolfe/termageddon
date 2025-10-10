@@ -15,12 +15,12 @@ export class ReviewPage extends BasePage {
     return this.page.locator('input[type="checkbox"][id="showAll"]');
   }
 
-  get versionItems() {
-    return this.page.locator('[data-testid="version-item"]');
+  get draftItems() {
+    return this.page.locator('[data-testid="draft-item"]');
   }
 
-  get selectedVersion() {
-    return this.page.locator('[data-testid="version-item"].bg-termageddon-gray-light');
+  get selectedDraft() {
+    return this.page.locator('[data-testid="draft-item"].bg-termageddon-gray-light');
   }
 
   get approveButton() {
@@ -35,15 +35,15 @@ export class ReviewPage extends BasePage {
     return this.page.locator('button:has-text("Request Review")');
   }
 
-  get versionTitle() {
+  get draftTitle() {
     return this.page.locator('h1.text-xl.font-bold').first();
   }
 
-  get versionContent() {
+  get draftContent() {
     return this.page.locator('.prose.prose-sm.max-w-none.bg-gray-50');
   }
 
-  get domainBadge() {
+  get perspectiveBadge() {
     return this.page.locator('.bg-termageddon-blue.text-white').first();
   }
 
@@ -87,17 +87,17 @@ export class ReviewPage extends BasePage {
     return this.page.locator('text=No matches found');
   }
 
-  get selectVersionMessage() {
+  get selectDraftMessage() {
     return this.page.locator('text=Select a definition to review');
   }
 
   get eligibilityIndicators() {
-    // Look for the eligibility text spans in version items
-    return this.page.locator('[data-testid="version-item"] .px-2.py-0\\.5.text-xs.rounded.font-medium');
+    // Look for the eligibility text spans in draft items
+    return this.page.locator('[data-testid="draft-item"] .px-2.py-0\\.5.text-xs.rounded.font-medium');
   }
 
   get approvalCounts() {
-    return this.page.locator('[data-testid="version-item"] .text-orange-600.text-xs');
+    return this.page.locator('[data-testid="draft-item"] .text-orange-600.text-xs');
   }
 
   get alreadyApprovedText() {
@@ -133,24 +133,24 @@ export class ReviewPage extends BasePage {
     await this.waitForElementHidden('.animate-spin');
   }
 
-  async selectVersion(versionIndex: number = 0) {
-    const versionItem = this.versionItems.nth(versionIndex);
-    await versionItem.click();
+  async selectDraft(draftIndex: number = 0) {
+    const draftItem = this.draftItems.nth(draftIndex);
+    await draftItem.click();
     await this.waitForNavigation();
   }
 
-  async selectVersionByTerm(termName: string) {
-    const versionItem = this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`);
-    await versionItem.click();
+  async selectDraftByTerm(termName: string) {
+    const draftItem = this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`);
+    await draftItem.click();
     await this.waitForNavigation();
   }
 
-  async approveVersion() {
+  async approveDraft() {
     await this.approveButton.click();
     await this.waitForNavigation();
   }
 
-  async publishVersion() {
+  async publishDraft() {
     await this.publishButton.click();
     await this.waitForNavigation();
   }
@@ -174,17 +174,17 @@ export class ReviewPage extends BasePage {
     await expect(this.showAllCheckbox).toBeVisible();
   }
 
-  async expectVersionItemVisible(termName: string) {
-    await expect(this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`)).toBeVisible();
+  async expectDraftItemVisible(termName: string) {
+    await expect(this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`)).toBeVisible();
   }
 
-  async expectVersionItemNotVisible(termName: string) {
-    await expect(this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`)).toBeHidden();
+  async expectDraftItemNotVisible(termName: string) {
+    await expect(this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`)).toBeHidden();
   }
 
-  async expectVersionSelected(termName: string) {
-    const versionItem = this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`);
-    const classes = await versionItem.getAttribute('class');
+  async expectDraftSelected(termName: string) {
+    const draftItem = this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`);
+    const classes = await draftItem.getAttribute('class');
     expect(classes).toContain('bg-termageddon-gray-light');
   }
 
@@ -212,16 +212,16 @@ export class ReviewPage extends BasePage {
     await expect(this.requestReviewButton).toBeHidden();
   }
 
-  async expectVersionTitle(termName: string) {
-    await expect(this.versionTitle).toHaveText(termName);
+  async expectDraftTitle(termName: string) {
+    await expect(this.draftTitle).toHaveText(termName);
   }
 
-  async expectVersionContentVisible() {
-    await expect(this.versionContent).toBeVisible();
+  async expectDraftContentVisible() {
+    await expect(this.draftContent).toBeVisible();
   }
 
-  async expectDomainBadge(domainName: string) {
-    await expect(this.domainBadge).toContainText(domainName);
+  async expectPerspectiveBadge(perspectiveName: string) {
+    await expect(this.perspectiveBadge).toContainText(perspectiveName);
   }
 
   async expectOfficialBadge() {
@@ -268,8 +268,8 @@ export class ReviewPage extends BasePage {
     await expect(this.noMatchesMessage).toContainText(`No matches found for "${searchTerm}"`);
   }
 
-  async expectSelectVersionMessage() {
-    await expect(this.selectVersionMessage).toBeVisible();
+  async expectSelectDraftMessage() {
+    await expect(this.selectDraftMessage).toBeVisible();
   }
 
   async expectEligibilityStatus(status: string) {
@@ -293,12 +293,12 @@ export class ReviewPage extends BasePage {
   }
 
   // Utility methods
-  async getVersionCount() {
-    return await this.versionItems.count();
+  async getDraftCount() {
+    return await this.draftItems.count();
   }
 
-  async getVersionTitles() {
-    const items = await this.versionItems.all();
+  async getDraftTitles() {
+    const items = await this.draftItems.all();
     return Promise.all(items.map(async (item) => {
       const title = await item.locator('h3').textContent();
       return title || '';
@@ -324,36 +324,36 @@ export class ReviewPage extends BasePage {
     return Promise.all(counts.map(count => count.textContent()));
   }
 
-  async isVersionEligible(termName: string) {
-    const versionItem = this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`).first();
-    const classes = await versionItem.getAttribute('class');
+  async isDraftEligible(termName: string) {
+    const draftItem = this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`).first();
+    const classes = await draftItem.getAttribute('class');
     return !classes?.includes('opacity-60');
   }
 
-  async hasVersionBeenApproved(termName: string) {
-    const versionItem = this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`).first();
-    return await versionItem.locator('text=✓ Approved by you').isVisible();
+  async hasDraftBeenApproved(termName: string) {
+    const draftItem = this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`).first();
+    return await draftItem.locator('text=✓ Approved by you').isVisible();
   }
 
-  async isOwnVersion(termName: string) {
-    const versionItem = this.page.locator(`[data-testid="version-item"]:has-text("${termName}")`).first();
-    const classes = await versionItem.getAttribute('class');
+  async isOwnDraft(termName: string) {
+    const draftItem = this.page.locator(`[data-testid="draft-item"]:has-text("${termName}")`).first();
+    const classes = await draftItem.getAttribute('class');
     return classes?.includes('opacity-60') || false;
   }
 
-  async waitForVersionsToLoad() {
-    // Wait for versions to load with a simpler approach
+  async waitForDraftsToLoad() {
+    // Wait for drafts to load with a simpler approach
     await this.page.waitForFunction(() => {
-      const versions = document.querySelectorAll('[data-testid="version-item"]');
-      return versions.length > 0;
+      const drafts = document.querySelectorAll('[data-testid="draft-item"]');
+      return drafts.length > 0;
     }, { timeout: 10000 });
   }
 
-  async getSelectedVersionTitle() {
-    return await this.versionTitle.textContent();
+  async getSelectedDraftTitle() {
+    return await this.draftTitle.textContent();
   }
 
-  async getSelectedVersionContent() {
-    return await this.versionContent.textContent();
+  async getSelectedDraftContent() {
+    return await this.draftContent.textContent();
   }
 }

@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-  CreateEntryVersionRequest,
-  Domain,
+  CreateEntryDraftRequest,
+  Perspective,
   Entry,
-  EntryVersion,
+  EntryDraft,
   PaginatedResponse,
   Term,
   User,
@@ -22,17 +22,17 @@ import { BaseService } from './base.service';
 })
 export class GlossaryService extends BaseService {
 
-  // Domain endpoints
-  getDomains(): Observable<PaginatedResponse<Domain>> {
-    return this.getPaginated<Domain>('/domains/');
+  // Perspective endpoints
+  getPerspectives(): Observable<PaginatedResponse<Perspective>> {
+    return this.getPaginated<Perspective>('/perspectives/');
   }
 
-  getDomain(id: number): Observable<Domain> {
-    return this.get<Domain>(`/domains/${id}/`);
+  getPerspective(id: number): Observable<Perspective> {
+    return this.get<Perspective>(`/perspectives/${id}/`);
   }
 
-  createDomain(domain: Partial<Domain>): Observable<Domain> {
-    return this.post<Domain>('/domains/', domain);
+  createPerspective(perspective: Partial<Perspective>): Observable<Perspective> {
+    return this.post<Perspective>('/perspectives/', perspective);
   }
 
   // Term endpoints
@@ -57,7 +57,7 @@ export class GlossaryService extends BaseService {
     return this.get<Entry>(`/entries/${id}/`);
   }
 
-  createEntry(entry: { term: number; domain: number; is_official?: boolean }): Observable<Entry> {
+  createEntry(entry: { term: number; perspective: number; is_official?: boolean }): Observable<Entry> {
     return this.post<Entry>('/entries/', entry);
   }
 
@@ -65,26 +65,26 @@ export class GlossaryService extends BaseService {
     return this.postAction<Entry>(`/entries/${entryId}/mark_official/`);
   }
 
-  // EntryVersion endpoints
-  getEntryVersions(
+  // EntryDraft endpoints
+  getEntryDrafts(
     entryId?: number,
-  ): Observable<PaginatedResponse<EntryVersion>> {
+  ): Observable<PaginatedResponse<EntryDraft>> {
     const filters = entryId ? { entry: entryId } : undefined;
-    return this.getPaginated<EntryVersion>('/entry-versions/', filters);
+    return this.getPaginated<EntryDraft>('/entry-drafts/', filters);
   }
 
-  getEntryVersion(id: number): Observable<EntryVersion> {
-    return this.get<EntryVersion>(`/entry-versions/${id}/`);
+  getEntryDraft(id: number): Observable<EntryDraft> {
+    return this.get<EntryDraft>(`/entry-drafts/${id}/`);
   }
 
-  createEntryVersion(
-    version: CreateEntryVersionRequest,
-  ): Observable<EntryVersion> {
-    return this.post<EntryVersion>('/entry-versions/', version);
+  createEntryDraft(
+    draft: CreateEntryDraftRequest,
+  ): Observable<EntryDraft> {
+    return this.post<EntryDraft>('/entry-drafts/', draft);
   }
 
-  approveVersion(versionId: number): Observable<EntryVersion> {
-    return this.postAction<EntryVersion>(`/entry-versions/${versionId}/approve/`);
+  approveDraft(draftId: number): Observable<EntryDraft> {
+    return this.postAction<EntryDraft>(`/entry-drafts/${draftId}/approve/`);
   }
 
   // Search entries
@@ -101,24 +101,24 @@ export class GlossaryService extends BaseService {
     return this.get<User[]>('/users/');
   }
 
-  // EntryVersion update methods
-  updateEntryVersion(
-    versionId: number,
-    data: Partial<EntryVersion>,
-  ): Observable<EntryVersion> {
-    return this.patch<EntryVersion>(`/entry-versions/${versionId}/`, data);
+  // EntryDraft update methods
+  updateEntryDraft(
+    draftId: number,
+    data: Partial<EntryDraft>,
+  ): Observable<EntryDraft> {
+    return this.patch<EntryDraft>(`/entry-drafts/${draftId}/`, data);
   }
 
-  getUnpublishedVersionForEntry(
+  getUnpublishedDraftForEntry(
     entryId: number,
     authorId: number,
-  ): Observable<EntryVersion | null> {
+  ): Observable<EntryDraft | null> {
     const filters = {
       entry: entryId,
       author: authorId,
       is_published: false,
     };
-    return this.getPaginated<EntryVersion>('/entry-versions/', filters).pipe(
+    return this.getPaginated<EntryDraft>('/entry-drafts/', filters).pipe(
       map((response) =>
         response.results.length > 0 ? response.results[0] : null,
       ),

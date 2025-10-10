@@ -24,18 +24,18 @@
         </div>
 
         <div class="form-group">
-          <label for="domain">Domain *</label>
+          <label for="perspective">Perspective *</label>
           <select
-            id="domain"
-            [(ngModel)]="selectedDomainId"
-            name="selectedDomainId"
+            id="perspective"
+            [(ngModel)]="selectedPerspectiveId"
+            name="selectedPerspectiveId"
             class="form-control"
             required
             [disabled]="isLoading"
           >
-            <option value="">Select a domain</option>
-            <option *ngFor="let domain of domains" [value]="domain.id">
-              {{ domain.name }}
+            <option value="">Select a perspective</option>
+            <option *ngFor="let perspective of perspectives" [value]="perspective.id">
+              {{ perspective.name }}
             </option>
           </select>
         </div>

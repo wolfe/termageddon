@@ -35,20 +35,20 @@ export class PermissionService {
     return this.currentUser?.is_staff || false;
   }
 
-  isDomainExpert(domainId?: number): boolean {
-    if (!this.currentUser || !this.currentUser.domain_expert_for) {
+  isPerspectiveCurator(perspectiveId?: number): boolean {
+    if (!this.currentUser || !this.currentUser.perspective_curator_for) {
       return false;
     }
 
-    if (domainId === undefined) {
-      return this.currentUser.domain_expert_for.length > 0;
+    if (perspectiveId === undefined) {
+      return this.currentUser.perspective_curator_for.length > 0;
     }
 
-    return this.currentUser.domain_expert_for.includes(domainId);
+    return this.currentUser.perspective_curator_for.includes(perspectiveId);
   }
 
-  canMarkOfficial(domainId: number): boolean {
-    return this.isAdmin() || this.isDomainExpert(domainId);
+  canMarkOfficial(perspectiveId: number): boolean {
+    return this.isAdmin() || this.isPerspectiveCurator(perspectiveId);
   }
 
   canApprove(authorId: number): boolean {

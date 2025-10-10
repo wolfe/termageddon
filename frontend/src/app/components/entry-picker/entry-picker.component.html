@@ -33,12 +33,12 @@
             <div class="entry-term">
               {{ entry.term.text }}
             </div>
-            <div class="entry-domain">
-              {{ entry.domain.name }}
+            <div class="entry-perspective">
+              {{ entry.perspective.name }}
             </div>
-            <div class="entry-preview" *ngIf="entry.active_version">
-              {{ entry.active_version.content | slice: 0 : 100
-              }}{{ entry.active_version.content.length > 100 ? "..." : "" }}
+            <div class="entry-preview" *ngIf="entry.active_draft">
+              {{ entry.active_draft.content | slice: 0 : 100
+              }}{{ entry.active_draft.content.length > 100 ? "..." : "" }}
             </div>
           </div>
           <div class="entry-status">
@@ -46,12 +46,12 @@
               >Official</span
             >
             <span
-              *ngIf="entry.active_version?.is_approved"
+              *ngIf="entry.active_draft?.is_approved"
               class="status-badge approved"
               >Approved</span
             >
             <span
-              *ngIf="entry.active_version && !entry.active_version.is_approved"
+              *ngIf="entry.active_draft && !entry.active_draft.is_approved"
               class="status-badge pending"
               >Pending</span
             >

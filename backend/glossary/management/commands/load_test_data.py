@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from glossary.models import Domain, DomainExpert, Entry, EntryVersion, Term
+from glossary.models import Perspective, PerspectiveCurator, Entry, EntryDraft, Term
 
 
 class Command(BaseCommand):
@@ -102,31 +102,31 @@ class Command(BaseCommand):
                     )
                 users[author_name] = user
 
-            # Create domains from CSV
-            unique_domains = set(row["domain"] for row in data)
-            domains = {}
-            for domain_name in unique_domains:
-                domain, created = Domain.objects.get_or_create(
-                    name=domain_name,
+            # Create perspectives from CSV
+            unique_perspectives = set(row["domain"] for row in data)
+            perspectives = {}
+            for perspective_name in unique_perspectives:
+                perspective, created = Perspective.objects.get_or_create(
+                    name=perspective_name,
                     defaults={
-                        "description": f"Terms related to {domain_name}",
+                        "description": f"Terms related to {perspective_name}",
                         "created_by": admin,
                     },
                 )
                 if created:
                     self.stdout.write(
-                        self.style.SUCCESS(f"Created domain: {domain_name}")
+                        self.style.SUCCESS(f"Created perspective: {perspective_name}")
                     )
-                domains[domain_name] = domain
+                perspectives[perspective_name] = perspective
 
-            # Assign specific users as domain experts for realistic demo
-            # Maria Flores - Physics, Chemistry expert
-            # Ben Carter - Chemistry, Biology expert  
-            # Sofia Rossi - Computer Science, Graph Theory expert
-            # Leo Schmidt - Biology, Geology expert
-            # Kenji Tanaka - Physics, Geology expert
+            # Assign specific users as perspective curators for realistic demo
+            # Maria Flores - Physics, Chemistry curator
+            # Ben Carter - Chemistry, Biology curator  
+            # Sofia Rossi - Computer Science, Graph Theory curator
+            # Leo Schmidt - Biology, Geology curator
+            # Kenji Tanaka - Physics, Geology curator
             
-            domain_expert_assignments = {
+            perspective_curator_assignments = {
                 "Maria Flores": ["Physics", "Chemistry"],
                 "Ben Carter": ["Chemistry", "Biology"], 
                 "Sofia Rossi": ["Computer Science", "Graph Theory"],
@@ -134,14 +134,14 @@ class Command(BaseCommand):
                 "Kenji Tanaka": ["Physics", "Geology"],
             }
             
-            for author_name, domain_names in domain_expert_assignments.items():
+            for author_name, perspective_names in perspective_curator_assignments.items():
                 if author_name in users:
                     user = users[author_name]
-                    for domain_name in domain_names:
-                        if domain_name in domains:
-                            DomainExpert.objects.get_or_create(
+                    for perspective_name in perspective_names:
+                        if perspective_name in perspectives:
+                            PerspectiveCurator.objects.get_or_create(
                                 user=user,
-                                domain=domains[domain_name],
+                                perspective=perspectives[perspective_name],
                                 defaults={
                                     "assigned_by": admin,
                                     "created_by": admin,
@@ -149,16 +149,16 @@ class Command(BaseCommand):
                             )
                             self.stdout.write(
                                 self.style.SUCCESS(
-                                    f"Assigned {author_name} as expert for {domain_name}"
+                                    f"Assigned {author_name} as curator for {perspective_name}"
                                 )
                             )
 
             # Load entries from CSV
             entries_created = 0
-            versions_created = 0
+            drafts_created = 0
 
             for row in data:
-                domain = domains[row["domain"]]
+                perspective = perspectives[row["domain"]]
                 author = users[row["author"]]
 
                 # Get or create term
@@ -169,34 +169,34 @@ class Command(BaseCommand):
                 # Get or create entry
                 entry, entry_created = Entry.objects.get_or_create(
                     term=term,
-                    domain=domain,
+                    perspective=perspective,
                     defaults={"created_by": admin},
                 )
                 if entry_created:
                     entries_created += 1
 
-                # Check if this author already has an unpublished version for this entry
-                existing_version = EntryVersion.objects.filter(
+                # Check if this author already has an unpublished draft for this entry
+                existing_draft = EntryDraft.objects.filter(
                     entry=entry,
                     author=author,
                     is_deleted=False,
                     is_published=False
                 ).first()
                 
-                if existing_version:
-                    # Update existing version instead of creating new one
-                    existing_version.content = f"<p>{row['definition']}</p>"
-                    existing_version.save()
-                    version = existing_version
+                if existing_draft:
+                    # Update existing draft instead of creating new one
+                    existing_draft.content = f"<p>{row['definition']}</p>"
+                    existing_draft.save()
+                    draft = existing_draft
                 else:
-                    # Create new entry version
-                    version = EntryVersion.objects.create(
+                    # Create new entry draft
+                    draft = EntryDraft.objects.create(
                         entry=entry,
                         content=f"<p>{row['definition']}</p>",
                         author=author,
                         created_by=admin,
                     )
-                versions_created += 1
+                drafts_created += 1
 
                 # Create realistic approval states
                 all_users = list(users.values())
@@ -208,24 +208,24 @@ class Command(BaseCommand):
                 
                 if approval_state == 'one_approval' and len(potential_approvers) >= 1:
                     approvers = random.sample(potential_approvers, 1)
-                    version.approvers.add(*approvers)
+                    draft.approvers.add(*approvers)
                 elif approval_state in ['two_approvals', 'published'] and len(potential_approvers) >= 2:
                     approvers = random.sample(potential_approvers, 2)
-                    version.approvers.add(*approvers)
+                    draft.approvers.add(*approvers)
                     
-                    # If published, mark as published and set as active version
+                    # If published, mark as published and set as active draft
                     if approval_state == 'published':
-                        version.is_published = True
-                        version.save()
-                        entry.active_version = version
+                        draft.is_published = True
+                        draft.save()
+                        entry.active_draft = draft
                         entry.save()
 
             self.stdout.write(self.style.SUCCESS(f"\nData loading complete!"))
             self.stdout.write(self.style.SUCCESS(f"Created {len(users)} users"))
-            self.stdout.write(self.style.SUCCESS(f"Created {len(domains)} domains"))
+            self.stdout.write(self.style.SUCCESS(f"Created {len(perspectives)} perspectives"))
             self.stdout.write(self.style.SUCCESS(f"Created {entries_created} entries"))
             self.stdout.write(
-                self.style.SUCCESS(f"Created {versions_created} entry versions")
+                self.style.SUCCESS(f"Created {drafts_created} entry drafts")
             )
             self.stdout.write(self.style.SUCCESS(f"\nLogin credentials:"))
             self.stdout.write(self.style.SUCCESS(f"  Superuser: admin / admin"))

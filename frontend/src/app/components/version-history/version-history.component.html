@@ -1,7 +1,7 @@
 <div class="modal-overlay" *ngIf="isOpen" (click)="onBackdropClick($event)">
   <div class="modal-dialog">
     <div class="modal-header">
-      <h3>Version History</h3>
+      <h3>Draft History</h3>
       <button
         type="button"
         class="close-btn"
@@ -13,28 +13,28 @@
     </div>
 
     <div class="modal-body">
-      <div *ngIf="loading" class="loading">Loading version history...</div>
+      <div *ngIf="loading" class="loading">Loading draft history...</div>
 
       <div *ngIf="error" class="error">
         {{ error }}
       </div>
 
-      <div *ngIf="!loading && !error" class="version-timeline">
+      <div *ngIf="!loading && !error" class="draft-timeline">
         <div
-          *ngFor="let version of versions; let i = index"
-          class="version-item"
-          [class.selected]="selectedVersion?.id === version.id"
-          [class.active]="isActiveVersion(version)"
-          (click)="selectVersion(version)"
+          *ngFor="let draft of drafts; let i = index"
+          class="draft-item"
+          [class.selected]="selectedDraft?.id === draft.id"
+          [class.active]="isActiveDraft(draft)"
+          (click)="selectDraft(draft)"
         >
-          <div class="version-indicator">
-            <div class="version-number">{{ versions.length - i }}</div>
-            <div class="timeline-line" *ngIf="i < versions.length - 1"></div>
+          <div class="draft-indicator">
+            <div class="draft-number">{{ drafts.length - i }}</div>
+            <div class="timeline-line" *ngIf="i < drafts.length - 1"></div>
           </div>
 
-          <div class="version-content">
-            <div class="version-header">
-              <div class="version-meta">
+          <div class="draft-content">
+            <div class="draft-header">
+              <div class="draft-meta">
                 <div class="author-info">
                   <div class="author-avatar">
                     {{ getInitials(version.author) }}
@@ -44,41 +44,41 @@
                       {{ version.author.first_name }}
                       {{ version.author.last_name }}
                     </div>
-                    <div class="version-date">
-                      {{ version.timestamp | date: "medium" }}
+                    <div class="draft-date">
+                      {{ draft.timestamp | date: "medium" }}
                     </div>
                   </div>
                 </div>
 
-                <div class="version-status">
+                <div class="draft-status">
                   <span
                     class="status-badge"
-                    [ngClass]="getVersionStatusClass(version)"
+                    [ngClass]="getDraftStatusClass(draft)"
                   >
-                    {{ getVersionStatus(version) }}
+                    {{ getDraftStatus(draft) }}
                   </span>
-                  <span *ngIf="isActiveVersion(version)" class="active-badge">
+                  <span *ngIf="isActiveDraft(draft)" class="active-badge">
                     Current
                   </span>
                 </div>
               </div>
             </div>
 
-            <div class="version-preview">
+            <div class="draft-preview">
               <div
                 class="preview-content"
-                [innerHTML]="version.content | slice: 0 : 200"
+                [innerHTML]="draft.content | slice: 0 : 200"
               ></div>
-              <div *ngIf="version.content.length > 200" class="preview-more">
+              <div *ngIf="draft.content.length > 200" class="preview-more">
                 ...
               </div>
             </div>
 
-            <div class="version-approvals" *ngIf="version.approvers.length > 0">
+            <div class="draft-approvals" *ngIf="draft.approvers.length > 0">
               <div class="approvals-label">Approved by:</div>
               <div class="approvers-list">
                 <div
-                  *ngFor="let approver of version.approvers"
+                  *ngFor="let approver of draft.approvers"
                   class="approver-avatar"
                   [title]="approver.first_name + ' ' + approver.last_name"
                 >

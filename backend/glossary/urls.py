@@ -5,9 +5,9 @@ from glossary import views
 from glossary.views import (
     CommentViewSet,
     CustomAuthToken,
-    DomainExpertViewSet,
-    DomainViewSet,
-    EntryVersionViewSet,
+    PerspectiveCuratorViewSet,
+    PerspectiveViewSet,
+    EntryDraftViewSet,
     EntryViewSet,
     TermViewSet,
     current_user_view,
@@ -18,12 +18,12 @@ from glossary.views import (
 
 # Create a router and register viewsets
 router = DefaultRouter()
-router.register(r"domains", DomainViewSet, basename="domain")
+router.register(r"perspectives", PerspectiveViewSet, basename="perspective")
 router.register(r"terms", TermViewSet, basename="term")
 router.register(r"entries", EntryViewSet, basename="entry")
-router.register(r"entry-versions", EntryVersionViewSet, basename="entryversion")
+router.register(r"entry-drafts", EntryDraftViewSet, basename="entrydraft")
 router.register(r"comments", CommentViewSet, basename="comment")
-router.register(r"domain-experts", DomainExpertViewSet, basename="domainexpert")
+router.register(r"perspective-curators", PerspectiveCuratorViewSet, basename="perspectivecurator")
 
 urlpatterns = [
     # Auth endpoints

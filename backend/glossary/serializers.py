@@ -6,10 +6,10 @@ from rest_framework import serializers
 
 from glossary.models import (
     Comment,
-    Domain,
-    DomainExpert,
+    Perspective,
+    PerspectiveCurator,
     Entry,
-    EntryVersion,
+    EntryDraft,
     Term,
 )
 
@@ -24,9 +24,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    """Detailed user serializer with domain expert info"""
+    """Detailed user serializer with perspective curator info"""
 
-    domain_expert_for = serializers.SerializerMethodField()
+    perspective_curator_for = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -36,22 +36,22 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_staff",
-            "domain_expert_for",
+            "perspective_curator_for",
         ]
 
-    def get_domain_expert_for(self, obj):
-        """Return list of domain IDs the user is an expert for"""
+    def get_perspective_curator_for(self, obj):
+        """Return list of perspective IDs the user is a curator for"""
         return list(
-            DomainExpert.objects.filter(user=obj).values_list("domain_id", flat=True)
+            PerspectiveCurator.objects.filter(user=obj).values_list("perspective_id", flat=True)
         )
 
 
-# Domain serializers
-class DomainSerializer(serializers.ModelSerializer):
-    """Domain serializer"""
+# Perspective serializers
+class PerspectiveSerializer(serializers.ModelSerializer):
+    """Perspective serializer"""
 
     class Meta:
-        model = Domain
+        model = Perspective
         fields = ["id", "name", "description", "created_at", "updated_at"]
         read_only_fields = ["created_at", "updated_at"]
 
@@ -73,9 +73,9 @@ class TermSerializer(serializers.ModelSerializer):
         read_only_fields = ["text_normalized", "created_at", "updated_at"]
 
 
-# EntryVersion serializers
-class EntryVersionListSerializer(serializers.ModelSerializer):
-    """EntryVersion serializer with nested user data"""
+# EntryDraft serializers
+class EntryDraftListSerializer(serializers.ModelSerializer):
+    """EntryDraft serializer with nested user data"""
 
     author = UserSerializer(read_only=True)
     approvers = UserSerializer(many=True, read_only=True)
@@ -92,7 +92,7 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
     approval_percentage = serializers.SerializerMethodField()
 
     class Meta:
-        model = EntryVersion
+        model = EntryDraft
         fields = [
             "id",
             "entry",
@@ -118,16 +118,16 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
         read_only_fields = ["timestamp", "created_at", "updated_at"]
 
     def get_can_approve_by_current_user(self, obj):
-        """Check if current user can approve this version"""
+        """Check if current user can approve this draft"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
         
-        # Cannot approve own versions
+        # Cannot approve own drafts
         if obj.author.id == request.user.id:
             return False
         
-        # Cannot approve if already approved this version
+        # Cannot approve if already approved this draft
         if obj.approvers.filter(pk=request.user.pk).exists():
             return False
         
@@ -141,7 +141,7 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
             return 'unknown'
         
         if obj.author.id == request.user.id:
-            return 'own_version'
+            return 'own_draft'
         
         if obj.approvers.filter(pk=request.user.pk).exists():
             return 'already_approved'
@@ -152,7 +152,7 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
         return 'can_approve'
 
     def get_user_has_approved(self, obj):
-        """Check if current user has already approved this version"""
+        """Check if current user has already approved this draft"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
@@ -171,8 +171,8 @@ class EntryVersionListSerializer(serializers.ModelSerializer):
         return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
 
 
-class EntryVersionCreateSerializer(serializers.Serializer):
-    """EntryVersion serializer for creation (uses IDs)"""
+class EntryDraftCreateSerializer(serializers.Serializer):
+    """EntryDraft serializer for creation (uses IDs)"""
 
     id = serializers.IntegerField(read_only=True)
     entry = serializers.PrimaryKeyRelatedField(queryset=Entry.objects.all())
@@ -202,22 +202,30 @@ class EntryVersionCreateSerializer(serializers.Serializer):
             validated_data["created_by"] = request.user
 
         try:
-            return EntryVersion.objects.create(**validated_data)
+            return EntryDraft.objects.create(**validated_data)
         except ValidationError as e:
             raise serializers.ValidationError(e.message_dict)
 
 
-class EntryVersionUpdateSerializer(serializers.ModelSerializer):
-    """EntryVersion serializer for updates (only content can be updated)"""
+class EntryDraftUpdateSerializer(serializers.ModelSerializer):
+    """EntryDraft serializer for updates (only content can be updated)"""
 
     class Meta:
-        model = EntryVersion
+        model = EntryDraft
         fields = ["content"]
 
     def update(self, instance, validated_data):
-        # Only allow updating content for unpublished versions
+        # Only allow updating content for unpublished drafts
         if instance.is_published:
-            raise serializers.ValidationError("Cannot update published versions.")
+            raise serializers.ValidationError("Cannot update published drafts.")
+
+        # Check if content has changed
+        old_content = instance.content
+        new_content = validated_data.get('content', old_content)
+        
+        # If content has changed, clear approvals and requested reviewers
+        if old_content != new_content:
+            instance.clear_approvals()
 
         return super().update(instance, validated_data)
 
@@ -236,8 +244,8 @@ class EntryListSerializer(serializers.ModelSerializer):
     """Entry serializer with nested data for list/retrieve"""
 
     term = TermSerializer(read_only=True)
-    domain = DomainSerializer(read_only=True)
-    active_version = EntryVersionListSerializer(read_only=True)
+    perspective = PerspectiveSerializer(read_only=True)
+    active_draft = EntryDraftListSerializer(read_only=True)
     can_user_endorse = serializers.SerializerMethodField()
     can_user_edit = serializers.SerializerMethodField()
 
@@ -246,8 +254,8 @@ class EntryListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "term",
-            "domain",
-            "active_version",
+            "perspective",
+            "active_draft",
             "is_official",
             "can_user_endorse",
             "can_user_edit",
@@ -266,8 +274,8 @@ class EntryListSerializer(serializers.ModelSerializer):
         if request.user.is_staff:
             return True
         
-        # Domain experts can endorse entries in their domain
-        return request.user.is_domain_expert_for(obj.domain.id)
+        # Perspective curators can endorse entries in their perspective
+        return request.user.is_perspective_curator_for(obj.perspective.id)
 
     def get_can_user_edit(self, obj):
         """Check if current user can edit this entry"""
@@ -279,8 +287,8 @@ class EntryListSerializer(serializers.ModelSerializer):
         if request.user.is_staff:
             return True
         
-        # Domain experts can edit entries in their domain
-        return request.user.is_domain_expert_for(obj.domain.id)
+        # Perspective curators can edit entries in their perspective
+        return request.user.is_perspective_curator_for(obj.perspective.id)
 
 
 class EntryCreateSerializer(serializers.ModelSerializer):
@@ -288,7 +296,7 @@ class EntryCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Entry
-        fields = ["id", "term", "domain", "is_official"]
+        fields = ["id", "term", "perspective", "is_official"]
 
     def create(self, validated_data):
         request = self.context.get("request")
@@ -297,8 +305,8 @@ class EntryCreateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class EntryVersionReviewSerializer(serializers.ModelSerializer):
-    """EntryVersion serializer with expanded entry data for review"""
+class EntryDraftReviewSerializer(serializers.ModelSerializer):
+    """EntryDraft serializer with expanded entry data for review"""
 
     author = UserSerializer(read_only=True)
     approvers = UserSerializer(many=True, read_only=True)
@@ -307,7 +315,7 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
     is_approved = serializers.BooleanField(read_only=True)
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
-    replaces_version = serializers.SerializerMethodField()
+    replaces_draft = serializers.SerializerMethodField()
     can_approve_by_current_user = serializers.SerializerMethodField()
     approval_status_for_user = serializers.SerializerMethodField()
     user_has_approved = serializers.SerializerMethodField()
@@ -315,7 +323,7 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
     approval_percentage = serializers.SerializerMethodField()
 
     class Meta:
-        model = EntryVersion
+        model = EntryDraft
         fields = [
             "id",
             "entry",
@@ -327,7 +335,7 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
             "is_approved",
             "approval_count",
             "is_published",
-            "replaces_version",
+            "replaces_draft",
             "can_approve_by_current_user",
             "approval_status_for_user",
             "user_has_approved",
@@ -338,23 +346,23 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
 
-    def get_replaces_version(self, obj):
-        """Get the currently active version that this version would replace"""
-        if obj.entry.active_version and obj.entry.active_version.id != obj.id:
-            return EntryVersionListSerializer(obj.entry.active_version).data
+    def get_replaces_draft(self, obj):
+        """Get the currently active draft that this draft would replace"""
+        if obj.entry.active_draft and obj.entry.active_draft.id != obj.id:
+            return EntryDraftListSerializer(obj.entry.active_draft).data
         return None
 
     def get_can_approve_by_current_user(self, obj):
-        """Check if current user can approve this version"""
+        """Check if current user can approve this draft"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
         
-        # Cannot approve own versions
+        # Cannot approve own drafts
         if obj.author.id == request.user.id:
             return False
         
-        # Cannot approve if already approved this version
+        # Cannot approve if already approved this draft
         if obj.approvers.filter(pk=request.user.pk).exists():
             return False
         
@@ -368,7 +376,7 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
             return 'unknown'
         
         if obj.author.id == request.user.id:
-            return 'own_version'
+            return 'own_draft'
         
         if obj.approvers.filter(pk=request.user.pk).exists():
             return 'already_approved'
@@ -379,7 +387,7 @@ class EntryVersionReviewSerializer(serializers.ModelSerializer):
         return 'can_approve'
 
     def get_user_has_approved(self, obj):
-        """Check if current user has already approved this version"""
+        """Check if current user has already approved this draft"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
@@ -459,28 +467,28 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-# DomainExpert serializers
-class DomainExpertSerializer(serializers.ModelSerializer):
-    """DomainExpert serializer"""
+# PerspectiveCurator serializers
+class PerspectiveCuratorSerializer(serializers.ModelSerializer):
+    """PerspectiveCurator serializer"""
 
     user = UserSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), source="user", write_only=True
     )
-    domain = DomainSerializer(read_only=True)
-    domain_id = serializers.PrimaryKeyRelatedField(
-        queryset=Domain.objects.all(), source="domain", write_only=True
+    perspective = PerspectiveSerializer(read_only=True)
+    perspective_id = serializers.PrimaryKeyRelatedField(
+        queryset=Perspective.objects.all(), source="perspective", write_only=True
     )
     assigned_by = UserSerializer(read_only=True)
 
     class Meta:
-        model = DomainExpert
+        model = PerspectiveCurator
         fields = [
             "id",
             "user",
             "user_id",
-            "domain",
-            "domain_id",
+            "perspective",
+            "perspective_id",
             "assigned_by",
             "created_at",
         ]

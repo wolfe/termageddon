@@ -106,35 +106,35 @@ export class AuthHelper {
   }
 
   /**
-   * Login as Maria Carter (Physics, Chemistry domains)
+   * Login as Maria Carter (Physics, Chemistry perspectives)
    */
   async loginAsMariaCarter() {
     return await this.loginAs('MARIA_CARTER');
   }
 
   /**
-   * Login as Ben Carter (Chemistry, Biology domains)
+   * Login as Ben Carter (Chemistry, Biology perspectives)
    */
   async loginAsBenCarter() {
     return await this.loginAs('BEN_CARTER');
   }
 
   /**
-   * Login as Sofia Rossi (Computer Science, Graph Theory domains)
+   * Login as Sofia Rossi (Computer Science, Graph Theory perspectives)
    */
   async loginAsSofiaRossi() {
     return await this.loginAs('SOFIA_ROSSI');
   }
 
   /**
-   * Login as Leo Schmidt (Biology, Geology domains)
+   * Login as Leo Schmidt (Biology, Geology perspectives)
    */
   async loginAsLeoSchmidt() {
     return await this.loginAs('LEO_SCHMIDT');
   }
 
   /**
-   * Login as Kenji Tanaka (Physics, Geology domains)
+   * Login as Kenji Tanaka (Physics, Geology perspectives)
    */
   async loginAsKenjiTanaka() {
     return await this.loginAs('KENJI_TANAKA');
@@ -197,9 +197,9 @@ export class AuthHelper {
   }
 
   /**
-   * Check if current user can approve in specific domain
+   * Check if current user can approve in specific perspective
    */
-  async canApproveInDomain(domain: string) {
+  async canApproveInPerspective(perspective: string) {
     // This would need to be implemented based on user permissions
     // For now, return true as a placeholder
     return true;
@@ -246,19 +246,19 @@ export class AuthHelper {
   }
 
   /**
-   * Get user domains for testing
+   * Get user perspectives for testing
    */
-  getUserDomains(user: keyof typeof TEST_USERS): string[] {
+  getUserPerspectives(user: keyof typeof TEST_USERS): string[] {
     const userData = TEST_USERS[user];
-    return userData.domains || [];
+    return userData.perspectives || [];
   }
 
   /**
-   * Check if user has access to specific domain
+   * Check if user has access to specific perspective
    */
-  hasDomainAccess(user: keyof typeof TEST_USERS, domain: string): boolean {
-    const userDomains = this.getUserDomains(user);
-    return userDomains.includes(domain);
+  hasPerspectiveAccess(user: keyof typeof TEST_USERS, perspective: string): boolean {
+    const userPerspectives = this.getUserPerspectives(user);
+    return userPerspectives.includes(perspective);
   }
 
   /**
@@ -269,11 +269,11 @@ export class AuthHelper {
   }
 
   /**
-   * Get users with specific domain access
+   * Get users with specific perspective access
    */
-  getUsersWithDomainAccess(domain: string): (keyof typeof TEST_USERS)[] {
+  getUsersWithPerspectiveAccess(perspective: string): (keyof typeof TEST_USERS)[] {
     return this.getAvailableUsers().filter(user => 
-      this.hasDomainAccess(user, domain)
+      this.hasPerspectiveAccess(user, perspective)
     );
   }
 
@@ -287,12 +287,12 @@ export class AuthHelper {
     for (const approver of users) {
       for (const author of users) {
         if (approver !== author) {
-          // Check if they share any domains
-          const approverDomains = this.getUserDomains(approver);
-          const authorDomains = this.getUserDomains(author);
-          const sharedDomains = approverDomains.filter(domain => authorDomains.includes(domain));
+          // Check if they share any perspectives
+          const approverPerspectives = this.getUserPerspectives(approver);
+          const authorPerspectives = this.getUserPerspectives(author);
+          const sharedPerspectives = approverPerspectives.filter(perspective => authorPerspectives.includes(perspective));
           
-          if (sharedDomains.length > 0) {
+          if (sharedPerspectives.length > 0) {
             pairs.push({ approver, author });
           }
         }

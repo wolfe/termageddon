@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EntryVersion, Entry, User } from '../../models';
+import { EntryDraft, Entry, User } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
 
 @Component({
@@ -14,67 +14,67 @@ export class VersionHistoryComponent implements OnInit {
   @Input() entry!: Entry;
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
-  @Output() versionSelected = new EventEmitter<EntryVersion>();
+  @Output() draftSelected = new EventEmitter<EntryDraft>();
 
-  versions: EntryVersion[] = [];
+  drafts: EntryDraft[] = [];
   loading = false;
   error: string | null = null;
-  selectedVersion: EntryVersion | null = null;
+  selectedDraft: EntryDraft | null = null;
 
   constructor(private glossaryService: GlossaryService) {}
 
   ngOnInit() {
     if (this.isOpen && this.entry) {
-      this.loadVersions();
+      this.loadDrafts();
     }
   }
 
   ngOnChanges() {
     if (this.isOpen && this.entry) {
-      this.loadVersions();
+      this.loadDrafts();
     }
   }
 
-  loadVersions() {
+  loadDrafts() {
     this.loading = true;
     this.error = null;
 
-    this.glossaryService.getEntryVersions(this.entry.id).subscribe({
+    this.glossaryService.getEntryDrafts(this.entry.id).subscribe({
       next: (response) => {
-        this.versions = response.results;
+        this.drafts = response.results;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading versions:', error);
-        this.error = 'Failed to load version history';
+        console.error('Error loading drafts:', error);
+        this.error = 'Failed to load draft history';
         this.loading = false;
       },
     });
   }
 
-  selectVersion(version: EntryVersion) {
-    this.selectedVersion = version;
-    this.versionSelected.emit(version);
+  selectDraft(draft: EntryDraft) {
+    this.selectedDraft = draft;
+    this.draftSelected.emit(draft);
   }
 
-  isActiveVersion(version: EntryVersion): boolean {
-    return this.entry.active_version?.id === version.id;
+  isActiveDraft(draft: EntryDraft): boolean {
+    return this.entry.active_draft?.id === draft.id;
   }
 
-  getVersionStatus(version: EntryVersion): string {
-    if (version.is_published) {
+  getDraftStatus(draft: EntryDraft): string {
+    if (draft.is_published) {
       return 'Published';
-    } else if (version.is_approved) {
+    } else if (draft.is_approved) {
       return 'Approved';
     } else {
       return 'Pending';
     }
   }
 
-  getVersionStatusClass(version: EntryVersion): string {
-    if (version.is_published) {
+  getDraftStatusClass(draft: EntryDraft): string {
+    if (draft.is_published) {
       return 'status-published';
-    } else if (version.is_approved) {
+    } else if (draft.is_approved) {
       return 'status-approved';
     } else {
       return 'status-pending';

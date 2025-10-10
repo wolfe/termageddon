@@ -11,35 +11,35 @@ export const TEST_USERS = {
     password: 'mariacarter',
     firstName: 'Maria',
     lastName: 'Carter',
-    domains: ['Physics', 'Chemistry']
+    perspectives: ['Physics', 'Chemistry']
   },
   BEN_CARTER: { 
     username: 'bencarter', 
     password: 'bencarter',
     firstName: 'Ben',
     lastName: 'Carter',
-    domains: ['Chemistry', 'Biology']
+    perspectives: ['Chemistry', 'Biology']
   },
   SOFIA_ROSSI: { 
     username: 'sofiarossi', 
     password: 'sofiarossi',
     firstName: 'Sofia',
     lastName: 'Rossi',
-    domains: ['Computer Science', 'Graph Theory']
+    perspectives: ['Computer Science', 'Graph Theory']
   },
   LEO_SCHMIDT: { 
     username: 'leoschmidt', 
     password: 'leoschmidt',
     firstName: 'Leo',
     lastName: 'Schmidt',
-    domains: ['Biology', 'Geology']
+    perspectives: ['Biology', 'Geology']
   },
   KENJI_TANAKA: { 
     username: 'kenjitanaka', 
     password: 'kenjitanaka',
     firstName: 'Kenji',
     lastName: 'Tanaka',
-    domains: ['Physics', 'Geology']
+    perspectives: ['Physics', 'Geology']
   }
 } as const;
 
@@ -56,7 +56,7 @@ export const TEST_TERMS = {
   WAVE: 'wave'
 } as const;
 
-export const TEST_DOMAINS = {
+export const TEST_PERSPECTIVES = {
   PHYSICS: 'Physics',
   CHEMISTRY: 'Chemistry',
   BIOLOGY: 'Biology',
@@ -141,7 +141,7 @@ export const TEST_WORKFLOWS = {
   APPROVAL_WORKFLOW: 'User approves a pending term definition',
   PUBLISHING_WORKFLOW: 'User publishes an approved term definition',
   ENDORSEMENT_WORKFLOW: 'User endorses a term definition',
-  DOMAIN_SWITCHING_WORKFLOW: 'User switches between different domain contexts',
+  PERSPECTIVE_SWITCHING_WORKFLOW: 'User switches between different perspective contexts',
   SEARCH_WORKFLOW: 'User searches for terms using various filters'
 } as const;
 

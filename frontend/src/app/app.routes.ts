@@ -3,6 +3,7 @@ import { LoginComponent } from './components/login/login.component';
 import { MainLayoutComponent } from './components/main-layout/main-layout.component';
 import { GlossaryViewComponent } from './components/glossary-view/glossary-view.component';
 import { ReviewDashboardComponent } from './components/review-dashboard/review-dashboard.component';
+import { MyDraftsComponent } from './components/my-drafts/my-drafts.component';
 import { authGuard } from './guards/auth.guard';
 import { loginGuard } from './guards/login.guard';
 
@@ -24,6 +25,10 @@ export const routes: Routes = [
       {
         path: 'review',
         component: ReviewDashboardComponent,
+      },
+      {
+        path: 'my-drafts',
+        component: MyDraftsComponent,
       },
       {
         path: '',

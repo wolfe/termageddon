@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  EntryVersion,
+  EntryDraft,
   PaginatedResponse,
-  ReviewVersion,
+  ReviewDraft,
   User,
 } from '../models';
 
@@ -17,56 +17,56 @@ export class ReviewService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get all entry versions (approved and unapproved)
+   * Get all entry drafts (approved and unapproved)
    */
-  getEntryVersions(params?: any): Observable<PaginatedResponse<EntryVersion>> {
+  getEntryDrafts(params?: any): Observable<PaginatedResponse<EntryDraft>> {
     const queryParams = params ? this.buildQueryString(params) : '';
-    return this.http.get<PaginatedResponse<EntryVersion>>(
-      `${this.API_URL}/entry-versions/${queryParams}`,
+    return this.http.get<PaginatedResponse<EntryDraft>>(
+      `${this.API_URL}/entry-drafts/${queryParams}`,
     );
   }
 
   /**
-   * Get entry versions with expanded entry details for review
+   * Get entry drafts with expanded entry details for review
    */
-  getReviewVersions(
+  getReviewDrafts(
     params: string = '',
-  ): Observable<PaginatedResponse<ReviewVersion>> {
-    const baseUrl = `${this.API_URL}/entry-versions/`;
+  ): Observable<PaginatedResponse<ReviewDraft>> {
+    const baseUrl = `${this.API_URL}/entry-drafts/`;
     const url = params
       ? `${baseUrl}${params}`
-      : `${baseUrl}?expand=entry,entry.term,entry.domain`;
-    return this.http.get<PaginatedResponse<ReviewVersion>>(url);
+      : `${baseUrl}?expand=entry,entry.term,entry.perspective`;
+    return this.http.get<PaginatedResponse<ReviewDraft>>(url);
   }
 
   /**
-   * Get pending versions (unapproved) only
+   * Get pending drafts (unapproved) only
    */
-  getPendingVersions(): Observable<PaginatedResponse<ReviewVersion>> {
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?is_approved=false&expand=entry,entry.term,entry.domain`,
+  getPendingDrafts(): Observable<PaginatedResponse<ReviewDraft>> {
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?is_approved=false&expand=entry,entry.term,entry.perspective`,
     );
   }
 
   /**
-   * Approve an entry version
+   * Approve an entry draft
    */
-  approveVersion(versionId: number): Observable<EntryVersion> {
-    return this.http.post<EntryVersion>(
-      `${this.API_URL}/entry-versions/${versionId}/approve/`,
+  approveDraft(draftId: number): Observable<EntryDraft> {
+    return this.http.post<EntryDraft>(
+      `${this.API_URL}/entry-drafts/${draftId}/approve/`,
       {},
     );
   }
 
   /**
-   * Request specific users to review a version
+   * Request specific users to review a draft
    */
   requestReview(
-    versionId: number,
+    draftId: number,
     reviewerIds: number[],
-  ): Observable<EntryVersion> {
-    return this.http.post<EntryVersion>(
-      `${this.API_URL}/entry-versions/${versionId}/request_review/`,
+  ): Observable<EntryDraft> {
+    return this.http.post<EntryDraft>(
+      `${this.API_URL}/entry-drafts/${draftId}/request_review/`,
       {
         reviewer_ids: reviewerIds,
       },
@@ -74,34 +74,34 @@ export class ReviewService {
   }
 
   /**
-   * Publish an approved version
+   * Publish an approved draft
    */
-  publishVersion(versionId: number): Observable<EntryVersion> {
-    return this.http.post<EntryVersion>(
-      `${this.API_URL}/entry-versions/${versionId}/publish/`,
+  publishDraft(draftId: number): Observable<EntryDraft> {
+    return this.http.post<EntryDraft>(
+      `${this.API_URL}/entry-drafts/${draftId}/publish/`,
       {},
     );
   }
 
   /**
-   * Get versions by specific author
+   * Get drafts by specific author
    */
-  getVersionsByAuthor(
+  getDraftsByAuthor(
     authorId: number,
-  ): Observable<PaginatedResponse<ReviewVersion>> {
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?author=${authorId}&expand=entry,entry.term,entry.domain`,
+  ): Observable<PaginatedResponse<ReviewDraft>> {
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?author=${authorId}&expand=entry,entry.term,entry.perspective`,
     );
   }
 
   /**
-   * Get versions for a specific entry
+   * Get drafts for a specific entry
    */
-  getVersionsForEntry(
+  getDraftsForEntry(
     entryId: number,
-  ): Observable<PaginatedResponse<ReviewVersion>> {
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?entry=${entryId}&expand=entry,entry.term,entry.domain`,
+  ): Observable<PaginatedResponse<ReviewDraft>> {
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?entry=${entryId}&expand=entry,entry.term,entry.perspective`,
     );
   }
 
@@ -113,44 +113,51 @@ export class ReviewService {
   }
 
   /**
-   * Get versions that the current user can approve
+   * Get drafts that the current user can approve
    */
-  getVersionsCanApprove(): Observable<PaginatedResponse<ReviewVersion>> {
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?eligibility=can_approve&expand=entry,entry.term,entry.domain`,
-    );
-  }
-
-  /**
-   * Get user's own versions
-   */
-  getOwnVersions(): Observable<PaginatedResponse<ReviewVersion>> {
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?eligibility=own&expand=entry,entry.term,entry.domain`,
-    );
-  }
-
-  /**
-   * Get versions already approved by current user
-   */
-  getApprovedVersions(): Observable<PaginatedResponse<ReviewVersion>> {
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?eligibility=already_approved&expand=entry,entry.term,entry.domain`,
-    );
-  }
-
-  /**
-   * Search versions with full-text search
-   */
-  searchVersions(searchTerm: string, showAll: boolean = false): Observable<PaginatedResponse<ReviewVersion>> {
+  getDraftsCanApprove(showAll: boolean = false): Observable<PaginatedResponse<ReviewDraft>> {
     const params = new URLSearchParams();
-    params.set('search', searchTerm);
-    params.set('expand', 'entry,entry.term,entry.domain');
+    params.set('eligibility', 'requested_or_approved');
+    params.set('expand', 'entry,entry.term,entry.perspective');
     if (showAll) {
       params.set('show_all', 'true');
     }
-    return this.http.get<PaginatedResponse<ReviewVersion>>(
-      `${this.API_URL}/entry-versions/?${params.toString()}`,
+    
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?${params.toString()}`,
+    );
+  }
+
+  /**
+   * Get user's own drafts
+   */
+  getOwnDrafts(): Observable<PaginatedResponse<ReviewDraft>> {
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?eligibility=own&expand=entry,entry.term,entry.perspective`,
+    );
+  }
+
+  /**
+   * Get drafts already approved by current user
+   */
+  getApprovedDrafts(): Observable<PaginatedResponse<ReviewDraft>> {
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?eligibility=already_approved&expand=entry,entry.term,entry.perspective`,
+    );
+  }
+
+  /**
+   * Search drafts with full-text search
+   */
+  searchDrafts(searchTerm: string, showAll: boolean = false): Observable<PaginatedResponse<ReviewDraft>> {
+    const params = new URLSearchParams();
+    params.set('search', searchTerm);
+    params.set('expand', 'entry,entry.term,entry.perspective');
+    if (showAll) {
+      params.set('show_all', 'true');
+    }
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?${params.toString()}`,
     );
   }
 

@@ -2,7 +2,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Domain, Entry, User, GroupedEntry } from '../../models';
+import { Perspective, Entry, User, GroupedEntry } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
 import { TermDialogComponent } from '../term-dialog/term-dialog.component';
 
@@ -20,21 +20,21 @@ export class TermListComponent implements OnInit {
 
   entries: Entry[] = [];
   groupedEntries: GroupedEntry[] = [];
-  domains: Domain[] = [];
+  perspectives: Perspective[] = [];
   users: User[] = [];
   isLoading: boolean = false;
   selectedEntry: Entry | null = null;
   showCreateDialog: boolean = false;
 
   searchControl = new FormControl('');
-  domainControl = new FormControl('');
+  perspectiveControl = new FormControl('');
   authorControl = new FormControl('');
   sortControl = new FormControl('term__text_normalized');
 
   constructor(private glossaryService: GlossaryService) {}
 
   ngOnInit(): void {
-    this.loadDomains();
+    this.loadPerspectives();
     this.loadUsers();
     this.loadEntries();
 
@@ -44,18 +44,18 @@ export class TermListComponent implements OnInit {
       .subscribe(() => this.loadEntries());
 
     // Other filters trigger immediate search
-    this.domainControl.valueChanges.subscribe(() => this.loadEntries());
+    this.perspectiveControl.valueChanges.subscribe(() => this.loadEntries());
     this.authorControl.valueChanges.subscribe(() => this.loadEntries());
     this.sortControl.valueChanges.subscribe(() => this.loadEntries());
   }
 
-  loadDomains(): void {
-    this.glossaryService.getDomains().subscribe({
+  loadPerspectives(): void {
+    this.glossaryService.getPerspectives().subscribe({
       next: (response) => {
-        this.domains = response.results;
+        this.perspectives = response.results;
       },
       error: (error) => {
-        console.error('Failed to load domains:', error);
+        console.error('Failed to load perspectives:', error);
       },
     });
   }
@@ -79,8 +79,8 @@ export class TermListComponent implements OnInit {
       filters.search = this.searchControl.value;
     }
 
-    if (this.domainControl.value) {
-      filters.domain = this.domainControl.value;
+    if (this.perspectiveControl.value) {
+      filters.perspective = this.perspectiveControl.value;
     }
 
     if (this.authorControl.value) {
@@ -123,7 +123,7 @@ export class TermListComponent implements OnInit {
 
   clearFilters(): void {
     this.searchControl.setValue('');
-    this.domainControl.setValue('');
+    this.perspectiveControl.setValue('');
     this.authorControl.setValue('');
     this.sortControl.setValue('term__text_normalized');
   }
@@ -131,7 +131,7 @@ export class TermListComponent implements OnInit {
   getFilterCount(): number {
     let count = 0;
     if (this.searchControl.value) count++;
-    if (this.domainControl.value) count++;
+    if (this.perspectiveControl.value) count++;
     if (this.authorControl.value) count++;
     return count;
   }
@@ -159,7 +159,7 @@ export class TermListComponent implements OnInit {
     return termEntries[0];
   }
 
-  selectEntryByDomain(entry: Entry): void {
+  selectEntryByPerspective(entry: Entry): void {
     this.selectEntry(entry);
     // Also emit termSelected with all entries for this term to populate termEntries
     const termId = entry.term.id;
@@ -169,6 +169,6 @@ export class TermListComponent implements OnInit {
   }
 
   hasAnyEndorsedEntry(termEntries: Entry[]): boolean {
-    return termEntries.some(entry => entry.active_version?.is_endorsed);
+    return termEntries.some(entry => entry.active_draft?.is_endorsed);
   }
 }

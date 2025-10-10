@@ -11,24 +11,24 @@ from rest_framework.response import Response
 
 from glossary.models import (
     Comment,
-    Domain,
-    DomainExpert,
+    Perspective,
+    PerspectiveCurator,
     Entry,
-    EntryVersion,
+    EntryDraft,
     Term,
 )
 from glossary.serializers import (
     CommentCreateSerializer,
     CommentListSerializer,
-    DomainExpertSerializer,
-    DomainSerializer,
+    PerspectiveCuratorSerializer,
+    PerspectiveSerializer,
     EntryCreateSerializer,
     EntryListSerializer,
     EntryUpdateSerializer,
-    EntryVersionCreateSerializer,
-    EntryVersionListSerializer,
-    EntryVersionReviewSerializer,
-    EntryVersionUpdateSerializer,
+    EntryDraftCreateSerializer,
+    EntryDraftListSerializer,
+    EntryDraftReviewSerializer,
+    EntryDraftUpdateSerializer,
     TermSerializer,
 )
 
@@ -45,23 +45,23 @@ class IsStaffOrReadOnly(IsAuthenticated):
         return request.user.is_staff
 
 
-class IsDomainExpertOrStaff(IsAuthenticated):
-    """Allow domain experts or staff"""
+class IsPerspectiveCuratorOrStaff(IsAuthenticated):
+    """Allow perspective curators or staff"""
 
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
         return (
             request.user.is_staff
-            or DomainExpert.objects.filter(user=request.user).exists()
+            or PerspectiveCurator.objects.filter(user=request.user).exists()
         )
 
 
-class DomainViewSet(viewsets.ModelViewSet):
-    """ViewSet for Domain model"""
+class PerspectiveViewSet(viewsets.ModelViewSet):
+    """ViewSet for Perspective model"""
 
-    queryset = Domain.objects.all()
-    serializer_class = DomainSerializer
+    queryset = Perspective.objects.all()
+    serializer_class = PerspectiveSerializer
     permission_classes = [IsStaffOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "description"]
@@ -102,15 +102,15 @@ class EntryViewSet(viewsets.ModelViewSet):
     """ViewSet for Entry model"""
 
     queryset = Entry.objects.select_related(
-        "term", "domain", "active_version"
-    ).prefetch_related("active_version__author", "active_version__approvers")
+        "term", "perspective", "active_draft"
+    ).prefetch_related("active_draft__author", "active_draft__approvers")
     permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-    filterset_fields = ["domain", "is_official"]
+    filterset_fields = ["perspective", "is_official"]
     search_fields = ["term__text", "term__text_normalized"]
     ordering_fields = ["term__text", "term__text_normalized", "created_at", "updated_at"]
     ordering = ["term__text_normalized"]
@@ -119,16 +119,16 @@ class EntryViewSet(viewsets.ModelViewSet):
         """Override queryset to handle additional filtering"""
         queryset = super().get_queryset()
         
-        # Only show entries with published versions (approved and published)
+        # Only show entries with published drafts (approved and published)
         queryset = queryset.filter(
-            active_version__isnull=False,
-            active_version__is_published=True
+            active_draft__isnull=False,
+            active_draft__is_published=True
         )
         
         # Handle author filtering
         author_id = self.request.query_params.get('author')
         if author_id:
-            queryset = queryset.filter(active_version__author_id=author_id)
+            queryset = queryset.filter(active_draft__author_id=author_id)
         
         # Handle date range filtering
         created_after = self.request.query_params.get('created_after')
@@ -154,41 +154,41 @@ class EntryViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsDomainExpertOrStaff])
+    @action(detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff])
     def endorse(self, request, pk=None):
-        """Endorse the active version of an entry (requires domain expert or staff)"""
+        """Endorse the active draft of an entry (requires perspective curator or staff)"""
         entry = self.get_object()
 
-        # Check if user is domain expert for this entry's domain or is staff
-        if not request.user.is_staff and not request.user.is_domain_expert_for(
-            entry.domain.id
+        # Check if user is perspective curator for this entry's perspective or is staff
+        if not request.user.is_staff and not request.user.is_perspective_curator_for(
+            entry.perspective.id
         ):
             return Response(
                 {
-                    "detail": "You must be a domain expert or staff to endorse definitions."
+                    "detail": "You must be a perspective curator or staff to endorse definitions."
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Check if there's an active version to endorse
-        if not entry.active_version:
+        # Check if there's an active draft to endorse
+        if not entry.active_draft:
             return Response(
-                {"detail": "No active version to endorse."},
+                {"detail": "No active draft to endorse."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Check if already endorsed
-        if entry.active_version.is_endorsed:
+        if entry.active_draft.is_endorsed:
             return Response(
-                {"detail": "This version is already endorsed."},
+                {"detail": "This draft is already endorsed."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Endorse the version
+        # Endorse the draft
         from django.utils import timezone
-        entry.active_version.endorsed_by = request.user
-        entry.active_version.endorsed_at = timezone.now()
-        entry.active_version.save()
+        entry.active_draft.endorsed_by = request.user
+        entry.active_draft.endorsed_at = timezone.now()
+        entry.active_draft.save()
 
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
@@ -234,12 +234,12 @@ class EntryViewSet(viewsets.ModelViewSet):
         from django.db import transaction
         
         term_text = request.data.get('term_text')
-        domain_id = request.data.get('domain_id')
+        perspective_id = request.data.get('perspective_id')
         is_official = request.data.get('is_official', False)
         
-        if not term_text or not domain_id:
+        if not term_text or not perspective_id:
             return Response(
-                {"detail": "term_text and domain_id are required."},
+                {"detail": "term_text and perspective_id are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         
@@ -255,7 +255,7 @@ class EntryViewSet(viewsets.ModelViewSet):
                 # Create the entry
                 entry = Entry.objects.create(
                     term=term,
-                    domain_id=domain_id,
+                    perspective_id=perspective_id,
                     is_official=is_official,
                     created_by=request.user
                 )
@@ -276,10 +276,10 @@ class EntryViewSet(viewsets.ModelViewSet):
             )
 
 
-class EntryVersionViewSet(viewsets.ModelViewSet):
-    """ViewSet for EntryVersion model"""
+class EntryDraftViewSet(viewsets.ModelViewSet):
+    """ViewSet for EntryDraft model"""
 
-    queryset = EntryVersion.objects.select_related("entry", "author").prefetch_related(
+    queryset = EntryDraft.objects.select_related("entry", "author").prefetch_related(
         "approvers"
     )
     permission_classes = [IsAuthenticated]
@@ -304,14 +304,14 @@ class EntryVersionViewSet(viewsets.ModelViewSet):
         is_approved = self.request.query_params.get("is_approved")
         if is_approved is not None:
             if is_approved.lower() == "true":
-                # Filter for approved versions (approval_count >= MIN_APPROVALS)
+                # Filter for approved drafts (approval_count >= MIN_APPROVALS)
                 from django.db.models import Count
 
                 queryset = queryset.annotate(
                     approval_count_annotated=Count("approvers")
                 ).filter(approval_count_annotated__gte=settings.MIN_APPROVALS)
             elif is_approved.lower() == "false":
-                # Filter for unapproved versions (approval_count < MIN_APPROVALS)
+                # Filter for unapproved drafts (approval_count < MIN_APPROVALS)
                 from django.db.models import Count
 
                 queryset = queryset.annotate(
@@ -325,8 +325,8 @@ class EntryVersionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(entry__term__text__icontains=search) |
                 Q(entry__term__text_normalized__icontains=search) |
-                Q(entry__domain__name__icontains=search) |
-                Q(entry__domain__name_normalized__icontains=search) |
+                Q(entry__perspective__name__icontains=search) |
+                Q(entry__perspective__name_normalized__icontains=search) |
                 Q(author__username__icontains=search) |
                 Q(author__first_name__icontains=search) |
                 Q(author__last_name__icontains=search) |
@@ -335,54 +335,63 @@ class EntryVersionViewSet(viewsets.ModelViewSet):
 
         # Handle eligibility filtering for current user
         eligibility = self.request.query_params.get("eligibility")
-        if eligibility and self.request.user.is_authenticated:
+        show_all = self.request.query_params.get("show_all", "false").lower() == "true"
+        
+        # Apply eligibility filtering when specified
+        # Special case: requested_or_approved with show_all=true ignores eligibility filtering
+        if eligibility and self.request.user.is_authenticated and not (eligibility == "requested_or_approved" and show_all):
             from django.db.models import Q, Count
             
             if eligibility == "can_approve":
-                # Versions the user can approve (not own, not already approved, not approved)
+                # Drafts the user can approve (not own, not already approved by them, not fully approved)
                 queryset = queryset.annotate(
                     approval_count_annotated=Count("approvers")
                 ).filter(
-                    ~Q(author=self.request.user),  # Not own versions
+                    ~Q(author=self.request.user),  # Not own drafts
                     ~Q(approvers=self.request.user),  # Not already approved by user
                     approval_count_annotated__lt=settings.MIN_APPROVALS  # Not approved yet
                 )
+            elif eligibility == "requested_or_approved":
+                # Drafts the user was requested to review OR has already approved
+                queryset = queryset.filter(
+                    Q(requested_reviewers=self.request.user) | Q(approvers=self.request.user)
+                ).distinct()
             elif eligibility == "own":
-                # User's own versions
+                # User's own drafts
                 queryset = queryset.filter(author=self.request.user)
             elif eligibility == "already_approved":
-                # Versions already approved by user
+                # Drafts already approved by user
                 queryset = queryset.filter(approvers=self.request.user)
 
         # Handle show_all parameter for review filtering
         # Only apply filtering for list actions, not detail actions (like approve)
-        show_all = self.request.query_params.get("show_all", "false").lower() == "true"
         
-        # By default, exclude published versions from review unless show_all is true
-        if not show_all and self.action in ["list", "retrieve"]:
+        # Always exclude published drafts from review (they're not drafts anymore)
+        if self.action in ["list", "retrieve"]:
             queryset = queryset.filter(is_published=False)
         
+        # Apply additional filtering when show_all is false, but respect eligibility parameter
         if (
             not show_all
             and self.request.user.is_authenticated
             and self.action in ["list", "retrieve"]
-            and not eligibility  # Don't apply relevance filtering if eligibility is specified
+            and not eligibility  # Only apply default filtering if no specific eligibility is requested
         ):
-            # Show only versions the user should see:
-            # 1. Versions they authored
-            # 2. Versions they were requested to review
-            # 3. Versions for terms they have authored before
+            # Show only drafts the user should see:
+            # 1. Drafts they authored
+            # 2. Drafts they were requested to review
+            # 3. Drafts for terms they have authored before
             from django.db.models import Q, Exists, OuterRef
 
-            # Get terms the user has authored versions for
+            # Get terms the user has authored drafts for
             user_authored_terms = (
-                EntryVersion.objects.filter(author=self.request.user, is_deleted=False)
+                EntryDraft.objects.filter(author=self.request.user, is_deleted=False)
                 .values_list("entry__term", flat=True)
                 .distinct()
             )
 
             queryset = queryset.filter(
-                Q(author=self.request.user)  # Own versions
+                Q(author=self.request.user)  # Own drafts
                 | Q(requested_reviewers=self.request.user)  # Requested to review
                 | Q(entry__term__in=user_authored_terms)  # Related terms
             ).distinct()
@@ -390,107 +399,107 @@ class EntryVersionViewSet(viewsets.ModelViewSet):
         # Check if expand parameter is present
         expand = self.request.query_params.get("expand", "")
         if "entry" in expand:
-            # Include entry with term and domain for review
+            # Include entry with term and perspective for review
             queryset = queryset.select_related(
-                "entry__term", "entry__domain", "entry__active_version"
+                "entry__term", "entry__perspective", "entry__active_draft"
             ).prefetch_related(
-                "entry__active_version__author", "entry__active_version__approvers"
+                "entry__active_draft__author", "entry__active_draft__approvers"
             )
 
         return queryset
 
     def get_serializer_class(self):
         if self.action == "create":
-            return EntryVersionCreateSerializer
+            return EntryDraftCreateSerializer
         elif self.action in ["update", "partial_update"]:
-            return EntryVersionUpdateSerializer
+            return EntryDraftUpdateSerializer
 
         # Use review serializer if expand parameter includes entry
         expand = self.request.query_params.get("expand", "")
         if "entry" in expand:
-            return EntryVersionReviewSerializer
+            return EntryDraftReviewSerializer
 
-        return EntryVersionListSerializer
+        return EntryDraftListSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, created_by=self.request.user)
 
     def update(self, request, *args, **kwargs):
-        """Update an unpublished version (only by author)"""
-        version = self.get_object()
+        """Update an unpublished draft (only by author)"""
+        draft = self.get_object()
 
-        # Only allow updating unpublished versions by the author
-        if version.is_published:
+        # Only allow updating unpublished drafts by the author
+        if draft.is_published:
             return Response(
-                {"detail": "Cannot update published versions."},
+                {"detail": "Cannot update published drafts."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if version.author != request.user:
+        if draft.author != request.user:
             return Response(
-                {"detail": "You can only update your own versions."},
+                {"detail": "You can only update your own drafts."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
-        """Partial update an unpublished version (only by author)"""
-        version = self.get_object()
+        """Partial update an unpublished draft (only by author)"""
+        draft = self.get_object()
 
-        # Only allow updating unpublished versions by the author
-        if version.is_published:
+        # Only allow updating unpublished drafts by the author
+        if draft.is_published:
             return Response(
-                {"detail": "Cannot update published versions."},
+                {"detail": "Cannot update published drafts."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if version.author != request.user:
+        if draft.author != request.user:
             return Response(
-                {"detail": "You can only update your own versions."},
+                {"detail": "You can only update your own drafts."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         return super().partial_update(request, *args, **kwargs)
 
     def perform_update(self, serializer):
-        """Save the updated version"""
+        """Save the updated draft"""
         serializer.save(updated_by=self.request.user)
 
     @action(detail=True, methods=["post"])
     def approve(self, request, pk=None):
-        """Approve a version (any authenticated user except author)"""
-        version = self.get_object()
+        """Approve a draft (any authenticated user except author)"""
+        draft = self.get_object()
 
         try:
-            version.approve(request.user)
-            serializer = self.get_serializer(version)
+            draft.approve(request.user)
+            serializer = self.get_serializer(draft)
             return Response(serializer.data)
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=["post"])
     def request_review(self, request, pk=None):
-        """Request specific users to review this version"""
-        version = self.get_object()
+        """Request specific users to review this draft"""
+        draft = self.get_object()
         reviewer_ids = request.data.get("reviewer_ids", [])
 
         try:
             reviewers = User.objects.filter(id__in=reviewer_ids)
-            version.request_review(request.user, reviewers)
-            serializer = self.get_serializer(version)
+            draft.request_review(request.user, reviewers)
+            serializer = self.get_serializer(draft)
             return Response(serializer.data)
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
-        """Publish an approved version"""
-        version = self.get_object()
+        """Publish an approved draft"""
+        draft = self.get_object()
 
         try:
-            version.publish(request.user)
-            serializer = self.get_serializer(version)
+            draft.publish(request.user)
+            serializer = self.get_serializer(draft)
             return Response(serializer.data)
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -572,14 +581,14 @@ class CommentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class DomainExpertViewSet(viewsets.ModelViewSet):
-    """ViewSet for DomainExpert model (staff only)"""
+class PerspectiveCuratorViewSet(viewsets.ModelViewSet):
+    """ViewSet for PerspectiveCurator model (staff only)"""
 
-    queryset = DomainExpert.objects.select_related("user", "domain", "assigned_by")
-    serializer_class = DomainExpertSerializer
+    queryset = PerspectiveCurator.objects.select_related("user", "perspective", "assigned_by")
+    serializer_class = PerspectiveCuratorSerializer
     permission_classes = [IsStaffOrReadOnly]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["user", "domain"]
+    filterset_fields = ["user", "perspective"]
     http_method_names = ["get", "post", "delete", "head", "options"]  # No update
 
     def perform_create(self, serializer):

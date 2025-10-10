@@ -1,0 +1,20 @@
+GENERAL CURSOR GUIDANCE:
+
+Always maintain working unit and integration tests.
+
+Use minimal e2e tests to make sure the backend and frontend are "speaking the same language" as it were.  It's most important that the API is exercised, and less critical that every user flow is covered.
+
+Do not leave whitespace at ends of lines.
+
+Use minimal comments which do not read me the code, but help explain confusing or complex logic.
+
+Try to put complex business logic in the backend to keep the frontend as simple as possible and focused on presentation.
+
+Re-run all frontend and/or backend tests if any changes are made.  I will run e2e tests myself as needed.
+
+For e2e tests, use best practices using few, if any, waits.
+
+COMPLEX RULES:
+
+Items in Pending Reviews are drafts which have not been published and which I have been asked to approve or have alreay approved.
+ If the "Show all drafts" is checked, you get to see even those you have not be asked to approve
