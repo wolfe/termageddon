@@ -5,12 +5,13 @@ import { Comment, User, CreateCommentRequest } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
+import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component';
 import { getInitials, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-comment-thread',
   standalone: true,
-  imports: [CommonModule, FormsModule, RelativeTimePipe],
+  imports: [CommonModule, FormsModule, RelativeTimePipe, UserAvatarComponent],
   templateUrl: './comment-thread.component.html',
   styleUrls: ['./comment-thread.component.scss'],
 })

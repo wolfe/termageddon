@@ -33,7 +33,10 @@
             <div class="entry-term">
               {{ entry.term.text }}
             </div>
-            <div class="entry-perspective">
+            <div 
+              class="entry-perspective cursor-default"
+              [title]="entry.perspective.description || entry.perspective.name"
+            >
               {{ entry.perspective.name }}
             </div>
             <div class="entry-preview" *ngIf="entry.active_draft">

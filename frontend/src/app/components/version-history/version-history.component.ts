@@ -2,12 +2,13 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EntryDraft, Entry, User } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
+import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component';
 import { getInitials, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-version-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UserAvatarComponent],
   templateUrl: './version-history.component.html',
   styleUrls: ['./version-history.component.scss'],
 })

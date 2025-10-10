@@ -36,9 +36,7 @@
             <div class="draft-header">
               <div class="draft-meta">
                 <div class="author-info">
-                  <div class="author-avatar cursor-help" [title]="getUserDisplayName(version.author)">
-                    {{ getInitials(version.author) }}
-                  </div>
+                  <app-user-avatar [user]="version.author" color="blue" size="large"></app-user-avatar>
                   <div class="author-details">
                     <div class="author-name">
                       {{ getUserDisplayName(version.author) }}
@@ -76,13 +74,12 @@
             <div class="draft-approvals" *ngIf="draft.approvers.length > 0">
               <div class="approvals-label">Approved by:</div>
               <div class="approvers-list">
-                <div
+                <app-user-avatar 
                   *ngFor="let approver of draft.approvers"
-                  class="approver-avatar cursor-help"
-                  [title]="getUserDisplayName(approver)"
-                >
-                  {{ getInitials(approver) }}
-                </div>
+                  [user]="approver" 
+                  color="green" 
+                  size="medium"
+                ></app-user-avatar>
               </div>
             </div>
           </div>

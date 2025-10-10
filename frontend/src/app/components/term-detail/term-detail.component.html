@@ -61,12 +61,7 @@
         <span class="text-sm text-gray-600">Approved by:</span>
         <div class="flex space-x-1">
           @for (approver of entry.active_draft.approvers; track approver.id) {
-            <div
-              class="w-8 h-8 rounded-full bg-termageddon-blue text-white flex items-center justify-center text-xs font-semibold cursor-help"
-              [title]="getUserDisplayName(approver)"
-            >
-              {{ getInitials(getUserDisplayName(approver)) }}
-            </div>
+            <app-user-avatar [user]="approver" color="blue" size="large"></app-user-avatar>
           }
         </div>
       </div>
@@ -77,12 +72,11 @@
       <div class="mt-3 flex items-center space-x-2">
         <span class="text-sm text-gray-600">Endorsed by:</span>
         <div class="flex items-center space-x-2">
-          <div
-            class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-semibold cursor-help"
-            [title]="entry.active_draft?.endorsed_by ? getUserDisplayName(entry.active_draft?.endorsed_by) : ''"
-          >
-            {{ entry.active_draft?.endorsed_by ? getInitials(getUserDisplayName(entry.active_draft?.endorsed_by)) : '' }}
-          </div>
+          <app-user-avatar 
+            [user]="entry.active_draft?.endorsed_by" 
+            color="yellow" 
+            size="large"
+          ></app-user-avatar>
           <span class="text-sm text-gray-600">
             {{ entry.active_draft?.endorsed_at | date: "medium" }}
           </span>

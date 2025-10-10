@@ -7,12 +7,13 @@ import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { DefinitionFormComponent } from '../definition-form/definition-form.component';
 import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
+import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component';
 import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-term-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, DefinitionFormComponent, CommentThreadComponent],
+  imports: [CommonModule, FormsModule, DefinitionFormComponent, CommentThreadComponent, UserAvatarComponent],
   templateUrl: './term-detail.component.html',
   styleUrl: './term-detail.component.scss',
 })

@@ -7,7 +7,10 @@
           {{ draft.entry.term.text }}
         </h2>
         <div class="flex items-center space-x-2 mt-1">
-          <span class="px-2 py-1 bg-termageddon-blue text-white text-xs rounded">
+          <span 
+            class="px-2 py-1 bg-termageddon-blue text-white text-xs rounded cursor-default"
+            [title]="draft.entry.perspective.description || draft.entry.perspective.name"
+          >
             {{ draft.entry.perspective.name }}
           </span>
           @if (draft.entry.is_official) {
@@ -65,12 +68,7 @@
         <div class="flex items-center space-x-1">
           <span>Approved by:</span>
           @for (approver of draft.approvers; track approver.id) {
-            <div
-              class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold cursor-help"
-              [title]="getUserDisplayName(approver)"
-            >
-              {{ getInitials(approver) }}
-            </div>
+            <app-user-avatar [user]="approver" color="green" size="medium"></app-user-avatar>
           }
         </div>
       }
@@ -83,12 +81,7 @@
           <span class="text-sm text-gray-600">Approval Requests:</span>
           <div class="flex space-x-1">
             @for (reviewer of draft.requested_reviewers; track reviewer.id) {
-              <div
-                class="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-semibold cursor-help"
-                [title]="getUserDisplayName(reviewer)"
-              >
-                {{ getInitials(reviewer) }}
-              </div>
+              <app-user-avatar [user]="reviewer" color="purple" size="medium"></app-user-avatar>
             }
           </div>
         </div>

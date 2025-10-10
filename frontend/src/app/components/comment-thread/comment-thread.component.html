@@ -34,9 +34,7 @@
       <div class="comment-main" [class.resolved]="comment.is_resolved">
         <div class="comment-header">
           <div class="comment-author">
-            <div class="author-avatar approver-avatar cursor-help" [title]="getUserDisplayName(comment.author)">
-              {{ getInitials(comment.author) }}
-            </div>
+            <app-user-avatar [user]="comment.author" color="blue" size="medium"></app-user-avatar>
             <div class="author-info">
               <span class="author-name">{{ getUserDisplayName(comment.author) }}</span>
               <span class="comment-date">{{ comment.created_at | relativeTime }}</span>
@@ -111,9 +109,7 @@
           <div class="reply-main">
             <div class="reply-header">
               <div class="reply-author">
-                <div class="author-avatar approver-avatar small cursor-help" [title]="getUserDisplayName(reply.author)">
-                  {{ getInitials(reply.author) }}
-                </div>
+                <app-user-avatar [user]="reply.author" color="blue" size="small"></app-user-avatar>
                 <div class="author-info">
                   <span class="author-name">{{ getUserDisplayName(reply.author) }}</span>
                   <span class="reply-date">{{ reply.created_at | relativeTime }}</span>
