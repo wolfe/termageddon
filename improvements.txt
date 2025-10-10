@@ -1,0 +1,11 @@
+Repair bug whereby filter box doesn't work on the Review and My Drafts pages.
+
+If you click edit on an Entry, and you have a draft in progress, load the content of the draft; add a notification that there is a draft in progress
+
+Reserve a portion of the header for notifications; use that space for alerts that do not need dismissing.  Notification stays up for a fixed amount of time, try 5 seconds.
+
+For those alerts that require confirmation or cancel, create a confirmation popup widget rather than the native browser alert
+
+In the dialog we need a selector for entries.
+
+Already approved even though 1/2 Approvals
