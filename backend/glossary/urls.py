@@ -12,6 +12,7 @@ from glossary.views import (
     TermViewSet,
     current_user_view,
     logout_view,
+    reset_test_database,
     system_config_view,
     users_list_view,
 )
@@ -33,5 +34,7 @@ urlpatterns = [
     # API endpoints
     path("users/", users_list_view, name="users-list"),
     path("system-config/", system_config_view, name="system-config"),
+    # Test endpoints
+    path("test/reset-database/", reset_test_database, name="reset-test-database"),
     path("", include(router.urls)),
 ]

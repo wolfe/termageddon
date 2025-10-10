@@ -163,74 +163,6 @@ run_e2e_tests() {
         npx playwright install
     fi
     
-    # Start backend server in background if not running
-    if ! curl -s http://localhost:8000/api/ >/dev/null 2>&1; then
-        print_status "Starting backend server..."
-        cd ../backend
-        
-        # Create virtual environment if it doesn't exist
-        if [ ! -d "venv" ]; then
-            print_status "Creating backend virtual environment..."
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-        else
-            source venv/bin/activate
-        fi
-        
-        # Ensure database is set up for E2E tests
-        print_status "Setting up database for E2E tests..."
-        python manage.py migrate --noinput
-        
-        # Load test data if not already present
-        print_status "Loading test data..."
-        python manage.py load_test_data
-        
-        # Collect static files
-        print_status "Collecting static files..."
-        python manage.py collectstatic --noinput > /dev/null 2>&1
-        
-        python manage.py runserver > ../backend.log 2>&1 &
-        BACKEND_PID=$!
-        cd ../frontend
-        
-        # Wait for backend to start
-        print_status "Waiting for backend server to start..."
-        sleep 5
-        
-        # Check if backend is running
-        if ! curl -s http://localhost:8000/api/ >/dev/null 2>&1; then
-            print_error "Failed to start backend server"
-            kill $BACKEND_PID 2>/dev/null || true
-            return 1
-        fi
-    else
-        print_status "Backend server already running"
-        BACKEND_PID=""
-    fi
-    
-    # Start frontend server in background if not running
-    if ! curl -s http://localhost:4200/ >/dev/null 2>&1; then
-        print_status "Starting frontend server..."
-        npm start > ../frontend.log 2>&1 &
-        FRONTEND_PID=$!
-        
-        # Wait for frontend to start
-        print_status "Waiting for frontend server to start..."
-        sleep 10
-        
-        # Check if frontend is running
-        if ! curl -s http://localhost:4200/ >/dev/null 2>&1; then
-            print_error "Failed to start frontend server"
-            kill $BACKEND_PID 2>/dev/null || true
-            kill $FRONTEND_PID 2>/dev/null || true
-            return 1
-        fi
-    else
-        print_status "Frontend server already running"
-        FRONTEND_PID=""
-    fi
-    
     # Verify E2E test isolation setup
     print_status "Verifying E2E test isolation setup..."
     
@@ -250,30 +182,21 @@ run_e2e_tests() {
     print_status "Running Playwright e2e tests with isolation..."
     print_status "Note: Tests will run sequentially for proper isolation"
     
+    # Use Playwright's webServer configuration instead of manual server management
+    # This ensures servers are properly managed during test execution
+    
+    # Run tests and capture result
+    test_result=0
     if npx playwright test --reporter=line; then
         print_success "E2E tests passed with isolation"
     else
         print_error "E2E tests failed"
         print_status "Check the test isolation setup and ensure database reset command works"
-        # Clean up servers if we started them
-        if [ ! -z "$BACKEND_PID" ]; then
-            kill $BACKEND_PID 2>/dev/null || true
-        fi
-        if [ ! -z "$FRONTEND_PID" ]; then
-            kill $FRONTEND_PID 2>/dev/null || true
-        fi
-        return 1
+        test_result=1
     fi
     
-    # Clean up servers if we started them
-    if [ ! -z "$BACKEND_PID" ]; then
-        print_status "Stopping backend server..."
-        kill $BACKEND_PID 2>/dev/null || true
-    fi
-    if [ ! -z "$FRONTEND_PID" ]; then
-        print_status "Stopping frontend server..."
-        kill $FRONTEND_PID 2>/dev/null || true
-    fi
+    # Return the test result
+    return $test_result
     
     cd ..
 }

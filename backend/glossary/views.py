@@ -656,3 +656,27 @@ def system_config_view(request):
         "MIN_APPROVALS": settings.MIN_APPROVALS,
         "DEBUG": settings.DEBUG,
     })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_test_database(request):
+    """Reset test database - only works in TEST_MODE"""
+    import os
+    from django.core.management import call_command
+    
+    if os.getenv('TEST_MODE') != 'true':
+        return Response(
+            {"error": "This endpoint only works in TEST_MODE"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    try:
+        # Call management command to reset database
+        call_command('reset_test_db')
+        return Response({"status": "Database reset complete"})
+    except Exception as e:
+        return Response(
+            {"error": f"Failed to reset database: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

@@ -201,6 +201,21 @@ export class TestFixtures {
   }
 
   /**
+   * Reset the test database to initial state
+   */
+  async resetDatabase() {
+    // Make request directly to backend server
+    const response = await this.page.request.post('http://localhost:8000/api/test/reset-database/');
+    if (!response.ok()) {
+      const errorText = await response.text();
+      throw new Error(`Failed to reset test database: ${response.status()} - ${errorText}`);
+    }
+    
+    // Clear resource tracking since database was reset
+    this.createdResources = [];
+  }
+
+  /**
    * Clean up all created resources
    */
   async cleanup() {

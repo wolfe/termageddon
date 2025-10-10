@@ -19,13 +19,19 @@ test.describe('Termageddon Main Flows', () => {
   let createdResources: string[] = [];
 
   test.beforeEach(async ({ page }) => {
+    // Initialize fixtures first
+    fixtures = new TestFixtures(page);
+    
+    // Reset database to known state before each test
+    await fixtures.resetDatabase();
+    
+    // Initialize page objects
     loginPage = new LoginPage(page);
     glossaryPage = new GlossaryPage(page);
     termDetailPage = new TermDetailPage(page);
     reviewPage = new ReviewPage(page);
     authHelper = new AuthHelper(page);
     apiHelper = new ApiHelper(page);
-    fixtures = new TestFixtures(page);
   });
 
   test.afterEach(async ({ page }) => {
@@ -64,6 +70,8 @@ test.describe('Termageddon Main Flows', () => {
 
   test.describe('Term Management Flow', () => {
     test.beforeEach(async ({ page }) => {
+      // Initialize authHelper for this test suite
+      authHelper = new AuthHelper(page);
       await authHelper.loginAsAdmin();
     });
 
@@ -111,14 +119,10 @@ test.describe('Termageddon Main Flows', () => {
 
   test.describe('Review Process Flow', () => {
     test.beforeEach(async ({ page }) => {
+      // Initialize authHelper for this test suite
+      authHelper = new AuthHelper(page);
       await authHelper.loginAsAdmin();
-      // Create a test draft for review
-      const termId = await fixtures.createTestTerm({
-        perspective: 'Physics',
-        definition: 'A test definition for automated testing'
-      });
-      const draftId = await fixtures.createTestDraft(termId);
-      createdResources.push(`draft-${draftId}`);
+      // Note: Test data is created fresh for each test via database reset
     });
 
     test('should complete full review workflow', async ({ page }) => {
@@ -126,7 +130,7 @@ test.describe('Termageddon Main Flows', () => {
       await reviewPage.goto();
       await reviewPage.expectReviewDashboardVisible();
 
-      // Select a draft for review
+      // Select a draft for review (using existing test data)
       await reviewPage.selectDraft();
       await reviewPage.expectDraftDetailsVisible();
 
@@ -168,6 +172,8 @@ test.describe('Termageddon Main Flows', () => {
 
   test.describe('Navigation Flow', () => {
     test.beforeEach(async ({ page }) => {
+      // Initialize authHelper for this test suite
+      authHelper = new AuthHelper(page);
       await authHelper.loginAsAdmin();
     });
 
@@ -215,6 +221,8 @@ test.describe('Termageddon Main Flows', () => {
 
   test.describe('Error Handling Flow', () => {
     test.beforeEach(async ({ page }) => {
+      // Initialize authHelper for this test suite
+      authHelper = new AuthHelper(page);
       await authHelper.loginAsAdmin();
     });
 

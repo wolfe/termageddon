@@ -1,23 +1,43 @@
 import { chromium, FullConfig } from '@playwright/test';
-import { execSync } from 'child_process';
 import { join } from 'path';
 
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting global test setup...');
   
   try {
-    // Reset and seed database
-    console.log('📊 Resetting database and loading test data...');
-    const backendPath = join(__dirname, '../../backend');
+    // Initialize test database via API endpoint
+    const baseURL = config.projects?.[0]?.use?.baseURL || 'http://localhost:4200';
+    const apiURL = baseURL.replace(':4200', ':8000');
     
-        // Run database reset command with virtual environment activated
-        execSync('source venv/bin/activate && python manage.py reset_test_db', {
-          cwd: backendPath,
-          stdio: 'inherit',
-          shell: '/bin/bash'
+    console.log('📊 Initializing test database...');
+    
+    // Try to connect to the backend server with retries
+    let response;
+    let retries = 10;
+    let lastError;
+    
+    while (retries > 0) {
+      try {
+        response = await fetch(`${apiURL}/api/test/reset-database/`, {
+          method: 'POST'
         });
+        break; // Success, exit retry loop
+      } catch (error) {
+        lastError = error;
+        retries--;
+        if (retries > 0) {
+          console.log(`⏳ Backend server not ready, retrying in 2 seconds... (${retries} retries left)`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
     
-    console.log('✅ Database reset complete');
+    if (!response || !response.ok) {
+      const errorText = response ? await response.text() : 'No response';
+      throw new Error(`Failed to initialize test database: ${response?.status || 'No response'} - ${errorText}`);
+    }
+    
+    console.log('✅ Test database initialized');
     
     // Setup authentication states for all test users
     console.log('🔐 Setting up authentication states...');

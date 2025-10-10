@@ -50,18 +50,25 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: [
-  //   {
-  //     command: 'npm run start',
-  //     url: 'http://localhost:4200',
-  //     reuseExistingServer: true,
-  //     timeout: 120 * 1000,
-  //   },
-  //   {
-  //     command: 'cd ../backend && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py runserver 8000',
-  //     url: 'http://localhost:8000',
-  //     reuseExistingServer: true,
-  //     timeout: 120 * 1000,
-  //   },
-  // ],
+  webServer: process.env.SKIP_WEBSERVER ? undefined : [
+    {
+      command: 'npm run start -- --host 0.0.0.0 --port 4200',
+      url: 'http://localhost:4200',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+    {
+      command: 'cd ../backend && TEST_MODE=true source venv/bin/activate && python manage.py runserver 8000',
+      url: 'http://localhost:8000/api/',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      env: {
+        TEST_MODE: 'true'
+      },
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  ],
 });
