@@ -1,0 +1,43 @@
+/* Master Detail Layout Styles */
+.master-detail-layout {
+  @apply h-full flex bg-white;
+}
+
+.sidebar {
+  @apply flex flex-col;
+}
+
+.sidebar.with-border {
+  @apply border-r border-gray-300;
+}
+
+.sidebar-header {
+  @apply p-4 border-b border-gray-300;
+}
+
+.sidebar-title {
+  @apply text-xl font-bold text-termageddon-gray-dark;
+}
+
+.sidebar-subtitle {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+.detail-panel {
+  @apply flex flex-col;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .master-detail-layout {
+    @apply flex-col;
+  }
+  
+  .sidebar {
+    @apply w-full border-r-0 border-b;
+  }
+  
+  .detail-panel {
+    @apply w-full;
+  }
+}

@@ -1,0 +1,52 @@
+/* Draft List Item Styles */
+.draft-list-item {
+  @apply p-3 cursor-pointer transition-colors;
+}
+
+.draft-list-item.selected {
+  @apply bg-termageddon-blue text-white;
+}
+
+.draft-list-item:not(.selected) {
+  @apply bg-gray-50 hover:bg-gray-100;
+}
+
+.draft-list-item.disabled {
+  @apply opacity-60;
+}
+
+.draft-content {
+  @apply flex-1 min-w-0;
+}
+
+.draft-title {
+  @apply font-semibold text-sm text-termageddon-gray-dark truncate;
+}
+
+.draft-perspective {
+  @apply text-xs opacity-75 mt-1;
+}
+
+.draft-metadata {
+  @apply flex items-center space-x-2 mt-2;
+}
+
+.draft-status {
+  @apply px-2 py-1 text-xs rounded font-semibold;
+}
+
+.draft-timestamp {
+  @apply text-xs opacity-75;
+}
+
+.draft-approvers {
+  @apply flex items-center space-x-1 mt-2;
+}
+
+.approver-avatar-small {
+  @apply w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold;
+}
+
+.publish-button {
+  @apply ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700;
+}

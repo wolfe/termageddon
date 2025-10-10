@@ -1,0 +1,64 @@
+/* Draft Detail Panel Styles */
+.draft-detail-panel {
+  @apply flex flex-col h-full;
+}
+
+.draft-header {
+  @apply p-4 border-b border-gray-300;
+}
+
+.draft-content {
+  @apply flex-1 overflow-y-auto;
+}
+
+.draft-metadata {
+  @apply flex items-center space-x-4 text-sm text-gray-600 mt-3;
+}
+
+.approver-avatar {
+  @apply w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold;
+}
+
+.reviewer-avatar {
+  @apply w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-semibold;
+}
+
+.edit-form {
+  @apply space-y-4;
+}
+
+.edit-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent;
+}
+
+.action-buttons {
+  @apply flex space-x-2;
+}
+
+.action-button {
+  @apply px-4 py-2 text-white rounded text-sm font-medium;
+}
+
+.button-primary {
+  @apply bg-blue-600 hover:bg-blue-700;
+}
+
+.button-success {
+  @apply bg-green-600 hover:bg-green-700;
+}
+
+.button-warning {
+  @apply bg-yellow-600 hover:bg-yellow-700;
+}
+
+.button-danger {
+  @apply bg-red-600 hover:bg-red-700;
+}
+
+.button-secondary {
+  @apply bg-gray-500 hover:bg-gray-600;
+}
+
+.button-disabled {
+  @apply bg-gray-400 cursor-not-allowed;
+}

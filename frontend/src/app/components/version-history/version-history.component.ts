@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EntryDraft, Entry, User } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
+import { getInitials, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-version-history',
@@ -81,9 +82,8 @@ export class VersionHistoryComponent implements OnInit {
     }
   }
 
-  getInitials(user: User): string {
-    return `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase();
-  }
+  getInitials = getInitials;
+  getUserDisplayName = getUserDisplayName;
 
   onClose() {
     this.close.emit();

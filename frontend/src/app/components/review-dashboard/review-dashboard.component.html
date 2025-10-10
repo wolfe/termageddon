@@ -1,331 +1,111 @@
-<div class="h-full flex">
-  <!-- Left Sidebar: Pending Drafts List (50%) -->
-  <div class="w-[50%] border-r border-gray-300 overflow-hidden">
-    <div class="h-full flex flex-col bg-white">
-      <!-- Header -->
-      <div class="p-3 border-b border-gray-300">
-        <h2 class="text-lg font-bold text-termageddon-gray-dark">Pending Reviews</h2>
-        <p class="text-sm text-gray-600">Definitions waiting for approval</p>
-        <div class="flex items-center space-x-4 mt-2 text-xs">
-          <span class="flex items-center">
-            <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-            {{ getEligibleCount() }} ready to approve
-          </span>
-          <span class="flex items-center">
-            <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-            {{ getAlreadyApprovedCount() }} already approved
-          </span>
-          <span class="flex items-center">
-            <span class="w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
-            {{ getOwnDraftsCount() }} your drafts
-          </span>
-        </div>
+<app-master-detail-layout
+  sidebarTitle="Pending Reviews"
+  sidebarSubtitle="Definitions waiting for approval"
+  sidebarWidth="w-2/5"
+>
+  <!-- Sidebar Content -->
+  <div sidebar>
+    <!-- Status Summary -->
+    <div class="p-3 border-b border-gray-300">
+      <div class="flex items-center space-x-4 text-xs">
+        <span class="flex items-center">
+          <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+          {{ getEligibleCount() }} ready to approve
+        </span>
+        <span class="flex items-center">
+          <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+          {{ getAlreadyApprovedCount() }} already approved
+        </span>
+        <span class="flex items-center">
+          <span class="w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+          {{ getOwnDraftsCount() }} your drafts
+        </span>
       </div>
+    </div>
 
-      <!-- Search -->
-      <div class="p-3 border-b border-gray-300">
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          (input)="onSearch()"
-          data-testid="review-search-input"
-          placeholder="Search terms, perspectives, authors..."
-          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm mb-3"
-        />
-        <div class="flex items-center">
-          <input
-            type="checkbox"
-            id="showAll"
-            [(ngModel)]="showAll"
-            (change)="onShowAllChange()"
-            class="mr-2"
-          />
-          <label for="showAll" class="text-sm text-gray-600">
-            Show all drafts (not just relevant to you)
-          </label>
-        </div>
+    <!-- Search and Filters -->
+    <app-search-filter-bar
+      placeholder="Search terms, perspectives, authors..."
+      [searchTerm]="searchTerm"
+      [filters]="filters"
+      [loading]="loading"
+      (search)="onSearch()"
+      (filterChanged)="onFilterChanged($event)"
+      (cleared)="searchTerm = ''; onSearch()"
+    ></app-search-filter-bar>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex-1 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-termageddon-accent mx-auto"></div>
+        <p class="text-gray-600 mt-2 text-sm">Loading...</p>
       </div>
+    </div>
 
-      <!-- Loading State -->
-      <div *ngIf="loading" class="flex-1 flex items-center justify-center">
-        <div class="text-center">
-          <div
-            class="animate-spin rounded-full h-8 w-8 border-b-2 border-termageddon-accent mx-auto"
-          ></div>
-          <p class="text-gray-600 mt-2 text-sm">Loading...</p>
-        </div>
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="flex-1 flex items-center justify-center">
+      <div class="text-center text-orange-600">
+        <p class="text-sm">{{ error }}</p>
+        <button
+          (click)="loadPendingDrafts()"
+          class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
+        >
+          Retry
+        </button>
       </div>
+    </div>
 
-      <!-- Error State -->
-      <div
-        *ngIf="error && !loading"
-        class="flex-1 flex items-center justify-center"
-      >
-        <div class="text-center text-orange-600">
-          <p class="text-sm">{{ error }}</p>
-          <button
-            (click)="loadPendingDrafts()"
-            class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
-          >
-            Retry
-          </button>
+    <!-- Drafts List -->
+    <div *ngIf="!loading && !error" class="flex-1 overflow-y-auto">
+      @if (filteredDrafts.length === 0) {
+        <div class="p-4 text-center text-gray-500">
+          <p class="text-sm">
+            @if (pendingDrafts.length === 0) {
+              No pending reviews found.
+            } @else {
+              No matches found for "{{ searchTerm }}".
+            }
+          </p>
         </div>
-      </div>
-
-      <!-- Drafts List -->
-      <div *ngIf="!loading && !error" class="flex-1 overflow-y-auto">
-        @if (filteredDrafts.length === 0) {
-          <div class="p-4 text-center text-gray-500">
-            <p class="text-sm">
-              @if (pendingDrafts.length === 0) {
-                No pending reviews found.
-              } @else {
-                No matches found for "{{ searchTerm }}".
-              }
-            </p>
-          </div>
-        } @else {
-          @for (draft of filteredDrafts; track draft.id) {
-            <div
-              (click)="selectDraft(draft)"
-              data-testid="draft-item"
-              [class.bg-termageddon-gray-light]="selectedDraft?.id === draft.id"
-              [class.opacity-60]="
-                draft.approval_status_for_user === 'own_draft'
-              "
-              class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <h3 class="font-semibold text-sm text-termageddon-gray-dark">
-                    {{ draft.entry.term.text }}
-                  </h3>
-                  <div class="flex items-center space-x-2 mt-1">
-                    <span
-                      class="inline-block px-2 py-0.5 bg-termageddon-blue text-white text-xs rounded"
-                    >
-                      {{ draft.entry.perspective.name }}
-                    </span>
-                    @if (draft.entry.is_official) {
-                      <span
-                        class="px-2 py-0.5 bg-yellow-400 text-black text-xs rounded"
-                      >
-                        Official
-                      </span>
-                    }
-                    <!-- Eligibility indicator -->
-                    <span
-                      class="px-2 py-0.5 text-xs rounded font-medium"
-                      [class]="getEligibilityClass(draft)"
-                    >
-                      {{ getEligibilityText(draft) }}
-                    </span>
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ draft.author.first_name }}
-                    {{ draft.author.last_name }} •
-                    {{ draft.timestamp | date: "short" }}
-                  </div>
-                </div>
-                <div class="flex flex-col items-end">
-                  <span class="text-orange-600 text-xs"
-                    >{{ draft.approval_count }}/2 Approvals</span
-                  >
-                  @if (
-                    draft.approval_status_for_user === "already_approved"
-                  ) {
-                    <span class="mt-1 text-xs text-green-600 font-medium"
-                      >✓ Approved by you</span
-                    >
-                  } @else if (
-                    draft.approval_status_for_user === "own_draft"
-                  ) {
-                    <span class="mt-1 text-xs text-gray-500"
-                      >Cannot approve own</span
-                    >
-                  } @else {
-                    <span class="mt-1 text-xs text-blue-600 font-medium"
-                      >Click to review</span
-                    >
-                  }
-                </div>
-              </div>
-            </div>
-          }
+      } @else {
+        @for (draft of filteredDrafts; track draft.id) {
+          <app-draft-list-item
+            [draft]="draft"
+            [selected]="selectedDraft?.id === draft.id"
+            [showStatus]="true"
+            statusType="eligibility"
+            [showPublishButton]="false"
+            [showApprovalStatus]="true"
+            (clicked)="selectDraft($event)"
+          ></app-draft-list-item>
         }
-      </div>
+      }
     </div>
   </div>
 
-  <!-- Right Content Area -->
-  <div class="flex-1 flex flex-col">
-    @if (selectedDraft) {
-      <!-- Header -->
-      <div class="p-4 border-b border-gray-300">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-bold text-termageddon-gray-dark">
-              {{ selectedDraft.entry.term.text }}
-            </h2>
-            <div class="flex items-center space-x-2 mt-1">
-              <span class="px-2 py-1 bg-termageddon-blue text-white text-xs rounded">
-                {{ selectedDraft.entry.perspective.name }}
-              </span>
-              @if (selectedDraft.entry.is_official) {
-                <span class="px-2 py-1 bg-yellow-400 text-black text-xs rounded font-semibold">
-                  OFFICIAL
-                </span>
-              }
-              <span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs rounded font-medium">
-                {{ selectedDraft.approval_count }}/2 Approvals
-              </span>
-            </div>
-          </div>
-          <div class="flex space-x-2">
-            @if (selectedDraft.is_approved) {
-              <button
-                (click)="publishDraft(selectedDraft)"
-                data-testid="publish-button"
-                [disabled]="loading"
-                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
-              >
-                Publish Draft
-              </button>
-            }
-            <ng-container [ngSwitch]="getApprovalAccessLevel()">
-              <button
-                *ngSwitchCase="'can_approve'"
-                (click)="approveDraft()"
-                data-testid="approve-button"
-                [disabled]="loading"
-                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium"
-              >
-                Approve
-              </button>
-              <button
-                *ngSwitchCase="'own_draft'"
-                (click)="requestReview(selectedDraft)"
-                [disabled]="requestingReview"
-                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm font-medium"
-              >
-                {{ requestingReview ? 'Requesting...' : 'Request Review' }}
-              </button>
-              <button
-                *ngSwitchCase="'already_approved'"
-                (click)="requestReview(selectedDraft)"
-                [disabled]="requestingReview"
-                class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-400 text-sm font-medium"
-              >
-                {{ requestingReview ? 'Requesting...' : 'Request Additional Reviewers' }}
-              </button>
-              <button
-                *ngSwitchCase="'already_approved_by_others'"
-                (click)="requestReview(selectedDraft)"
-                [disabled]="requestingReview"
-                class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-400 text-sm font-medium"
-              >
-                {{ requestingReview ? 'Requesting...' : 'Request Additional Reviewers' }}
-              </button>
-            </ng-container>
-          </div>
-        </div>
-        
-        <!-- Metadata -->
-        <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
-          <span>Author: {{ selectedDraft.author.first_name }} {{ selectedDraft.author.last_name }}</span>
-          <span>Created: {{ selectedDraft.timestamp | date: "medium" }}</span>
-          @if (selectedDraft.approvers.length > 0) {
-            <div class="flex items-center space-x-1">
-              <span>Approved by:</span>
-              @for (approver of selectedDraft.approvers; track approver.id) {
-                <div
-                  class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold"
-                  [title]="approver.first_name + ' ' + approver.last_name"
-                >
-                  {{ approver.first_name | slice: 0 : 1 }}{{ approver.last_name | slice: 0 : 1 }}
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- Requested Reviewers -->
-        @if (selectedDraft.requested_reviewers.length > 0) {
-          <div class="mt-3">
-            <div class="flex items-center space-x-2">
-              <span class="text-sm text-gray-600">Approval Requests:</span>
-              <div class="flex space-x-1">
-                @for (reviewer of selectedDraft.requested_reviewers; track reviewer.id) {
-                  <div
-                    class="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-semibold"
-                    [title]="reviewer.first_name + ' ' + reviewer.last_name"
-                  >
-                    {{ reviewer.first_name | slice: 0 : 1 }}{{ reviewer.last_name | slice: 0 : 1 }}
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Content Area -->
-      <div class="flex-1 overflow-y-auto">
-        <div class="p-6">
-          <div class="prose max-w-none">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Proposed Definition</h3>
-            <div class="bg-gray-50 p-4 rounded-lg" [innerHTML]="selectedDraft.content"></div>
-          </div>
-
-          @if (selectedDraft.replaces_draft) {
-            <div class="mt-8 prose max-w-none">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
-              <div class="bg-gray-100 p-4 rounded-lg" [innerHTML]="selectedDraft.replaces_draft.content"></div>
-              <div class="mt-3 text-sm text-gray-600">
-                <p>Author: {{ selectedDraft.replaces_draft.author.first_name }} {{ selectedDraft.replaces_draft.author.last_name }}</p>
-                <p>Created: {{ selectedDraft.replaces_draft.timestamp | date: "medium" }}</p>
-              </div>
-            </div>
-          } @else {
-            <div class="mt-8 prose max-w-none">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
-              <div class="bg-gray-100 p-4 rounded-lg text-gray-500 italic">
-                This is a new entry - no published version exists yet.
-              </div>
-            </div>
-          }
-
-          <!-- Comments Section -->
-          <div class="mt-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Comments</h3>
-            @if (isLoadingComments) {
-              <div class="text-center text-gray-500 py-4">
-                <p>Loading comments...</p>
-              </div>
-            } @else {
-              <app-comment-thread
-                [comments]="comments"
-                [objectId]="selectedDraft.entry.id"
-                [contentType]="1"
-                (commentAdded)="onCommentAdded($event)"
-                (commentResolved)="onCommentResolved($event)"
-                (commentUnresolved)="onCommentUnresolved($event)"
-              ></app-comment-thread>
-            }
-          </div>
-        </div>
-      </div>
-    } @else {
-      <!-- No Selection -->
-      <div class="flex-1 flex items-center justify-center">
-        <div class="text-center text-gray-500">
-          <h3 class="text-lg font-medium mb-2">Select a Definition</h3>
-          <p>Choose a definition from the sidebar to review</p>
-        </div>
-      </div>
-    }
+  <!-- Detail Panel -->
+  <div detail>
+    <app-draft-detail-panel
+      [draft]="selectedDraft"
+      [canEdit]="false"
+      [canPublishFlag]="true"
+      [canApproveFlag]="true"
+      [showPublishButton]="true"
+      [showRequestReviewButton]="true"
+      [showApproveButton]="true"
+      [isLoadingComments]="isLoadingComments"
+      [comments]="comments"
+      [requestingReview]="requestingReview"
+      [currentUserId]="currentUser?.id"
+      (approve)="approveDraft()"
+      (publish)="publishDraft(selectedDraft!)"
+      (requestReview)="requestReview(selectedDraft!)"
+      (commentAdded)="onCommentAdded($event)"
+      (commentResolved)="onCommentResolved($event)"
+      (commentUnresolved)="onCommentUnresolved($event)"
+    ></app-draft-detail-panel>
   </div>
-</div>
+</app-master-detail-layout>
 
 <!-- Reviewer Selector Dialog -->
 <app-reviewer-selector-dialog

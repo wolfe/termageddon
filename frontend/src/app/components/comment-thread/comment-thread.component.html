@@ -34,11 +34,11 @@
       <div class="comment-main" [class.resolved]="comment.is_resolved">
         <div class="comment-header">
           <div class="comment-author">
-            <div class="author-avatar approver-avatar" [title]="comment.author.first_name + ' ' + comment.author.last_name">
+            <div class="author-avatar approver-avatar cursor-help" [title]="getUserDisplayName(comment.author)">
               {{ getInitials(comment.author) }}
             </div>
             <div class="author-info">
-              <span class="author-name">{{ comment.author.first_name }} {{ comment.author.last_name }}</span>
+              <span class="author-name">{{ getUserDisplayName(comment.author) }}</span>
               <span class="comment-date">{{ comment.created_at | relativeTime }}</span>
             </div>
             <div class="reply-count" *ngIf="getReplyCount(comment) > 0">
@@ -111,11 +111,11 @@
           <div class="reply-main">
             <div class="reply-header">
               <div class="reply-author">
-                <div class="author-avatar approver-avatar small" [title]="reply.author.first_name + ' ' + reply.author.last_name">
+                <div class="author-avatar approver-avatar small cursor-help" [title]="getUserDisplayName(reply.author)">
                   {{ getInitials(reply.author) }}
                 </div>
                 <div class="author-info">
-                  <span class="author-name">{{ reply.author.first_name }} {{ reply.author.last_name }}</span>
+                  <span class="author-name">{{ getUserDisplayName(reply.author) }}</span>
                   <span class="reply-date">{{ reply.created_at | relativeTime }}</span>
                 </div>
               </div>

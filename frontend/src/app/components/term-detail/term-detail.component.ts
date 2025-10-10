@@ -7,6 +7,7 @@ import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { DefinitionFormComponent } from '../definition-form/definition-form.component';
 import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
+import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-term-detail',
@@ -262,13 +263,8 @@ export class TermDetailComponent implements OnInit, OnChanges {
     });
   }
 
-  getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
-  }
+  getInitials = getInitialsFromName;
+  getUserDisplayName = getUserDisplayName;
 
   switchToPerspective(entry: Entry): void {
     this.entry = entry;

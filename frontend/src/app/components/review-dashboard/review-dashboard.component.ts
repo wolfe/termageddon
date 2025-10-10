@@ -7,12 +7,25 @@ import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
-import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
+import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
+import { SearchFilterBarComponent, FilterConfig } from '../shared/search-filter-bar/search-filter-bar.component';
+import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
+import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
+import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish, canApprove, getRemainingApprovals, getApprovalAccessLevel } from '../../utils/draft-status.util';
+import { getInitials } from '../../utils/user.util';
 
 @Component({
   selector: 'app-review-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReviewerSelectorDialogComponent, CommentThreadComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ReviewerSelectorDialogComponent,
+    MasterDetailLayoutComponent,
+    SearchFilterBarComponent,
+    DraftListItemComponent,
+    DraftDetailPanelComponent
+  ],
   templateUrl: './review-dashboard.component.html',
   styleUrl: './review-dashboard.component.scss',
 })
@@ -37,6 +50,29 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   // Comment state
   comments: Comment[] = [];
   isLoadingComments = false;
+
+  // Filter configuration
+  filters: FilterConfig[] = [
+    {
+      id: 'showAll',
+      label: 'Show all drafts (not just relevant to you)',
+      type: 'checkbox',
+      value: false
+    }
+  ];
+
+  // Utility functions
+  getDraftStatus = getDraftStatus;
+  getDraftStatusClass = getDraftStatusClass;
+  getApprovalStatusText = getApprovalStatusText;
+  getEligibilityText = getEligibilityText;
+  getEligibilityClass = getEligibilityClass;
+  getApprovalReason = getApprovalReason;
+  canPublish = canPublish;
+  canApprove = canApprove;
+  getRemainingApprovals = getRemainingApprovals;
+  getApprovalAccessLevel = getApprovalAccessLevel;
+  getInitials = getInitials;
 
   // Subscription management
   private userSubscription?: Subscription;
@@ -123,10 +159,6 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     this.loadComments();
   }
 
-  canApprove(draft: ReviewDraft): boolean {
-    // Use backend field instead of client-side logic
-    return draft.can_approve_by_current_user ?? false;
-  }
 
   approveDraft(): void {
     if (!this.selectedDraft) return;
@@ -173,86 +205,6 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     return this.selectedDraft.user_has_approved ?? false;
   }
 
-  getApprovalStatus(): string {
-    if (!this.selectedDraft) return '';
-
-    if (this.selectedDraft.is_approved) {
-      return 'Approved';
-    }
-    return `${this.selectedDraft.approval_count}/2 Approvals`;
-  }
-
-  getRemainingApprovals(): number {
-    if (!this.selectedDraft) return 0;
-    // Use backend field instead of hardcoded calculation
-    return this.selectedDraft.remaining_approvals ?? 0;
-  }
-
-  getApprovalAccessLevel(): string {
-    if (!this.selectedDraft) return 'cannotApprove';
-    // Use backend field instead of client-side logic
-    return this.selectedDraft.approval_status_for_user ?? 'unknown';
-  }
-
-  getApprovalReason(): string {
-    if (!this.selectedDraft) return 'No draft selected';
-    if (!this.currentUser) return 'Please log in to approve definitions';
-    
-    // Use the backend-provided approval status for more specific messaging
-    const status = this.selectedDraft.approval_status_for_user ?? 'unknown';
-    
-    switch (status) {
-      case 'own_draft':
-        return 'You cannot approve your own definition';
-      case 'already_approved':
-        return 'You have already approved this definition';
-      case 'already_approved_by_others':
-        return 'This definition has already been approved by others';
-      case 'can_approve':
-        return 'This definition is ready for your approval';
-      case 'unknown':
-        return 'Unable to determine approval status';
-      default:
-        return 'This definition cannot be approved at this time';
-    }
-  }
-
-  getDraftEligibilityStatus(draft: ReviewDraft): string {
-    // Use backend field instead of client-side logic
-    return draft.approval_status_for_user ?? 'unknown';
-  }
-
-  getEligibilityText(draft: ReviewDraft): string {
-    const status = draft.approval_status_for_user ?? 'unknown';
-    switch (status) {
-      case 'own_draft':
-        return 'Your draft';
-      case 'already_approved':
-        return 'Already approved';
-      case 'can_approve':
-        return 'Ready to approve';
-      case 'already_approved_by_others':
-        return 'Approved by others';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  getEligibilityClass(draft: ReviewDraft): string {
-    const status = draft.approval_status_for_user ?? 'unknown';
-    switch (status) {
-      case 'own_draft':
-        return 'text-gray-500 bg-gray-100';
-      case 'already_approved':
-        return 'text-green-600 bg-green-50';
-      case 'can_approve':
-        return 'text-blue-600 bg-blue-50';
-      case 'already_approved_by_others':
-        return 'text-green-600 bg-green-50';
-      default:
-        return 'text-gray-500 bg-gray-100';
-    }
-  }
 
   getEligibleCount(): number {
     return this.filteredDrafts.filter(
@@ -280,6 +232,13 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       this.searchTerm = currentSearchTerm;
       this.onSearch();
     });
+  }
+
+  onFilterChanged(event: { filterId: string; value: any }): void {
+    if (event.filterId === 'showAll') {
+      this.showAll = event.value;
+      this.onShowAllChange();
+    }
   }
 
   requestReview(draft: ReviewDraft): void {

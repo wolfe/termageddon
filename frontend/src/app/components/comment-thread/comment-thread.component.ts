@@ -5,6 +5,7 @@ import { Comment, User, CreateCommentRequest } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
+import { getInitials, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-comment-thread',
@@ -171,9 +172,8 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     return !comment.is_resolved && this.permissionService.currentUser !== null;
   }
 
-  getInitials(user: User): string {
-    return `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase();
-  }
+  getInitials = getInitials;
+  getUserDisplayName = getUserDisplayName;
 
   toggleCommentCollapse(comment: Comment): void {
     if (this.collapsedComments.has(comment.id)) {

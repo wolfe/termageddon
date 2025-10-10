@@ -1,0 +1,194 @@
+@if (draft) {
+  <!-- Header -->
+  <div class="p-4 border-b border-gray-300">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-termageddon-gray-dark">
+          {{ draft.entry.term.text }}
+        </h2>
+        <div class="flex items-center space-x-2 mt-1">
+          <span class="px-2 py-1 bg-termageddon-blue text-white text-xs rounded">
+            {{ draft.entry.perspective.name }}
+          </span>
+          @if (draft.entry.is_official) {
+            <span class="px-2 py-1 bg-yellow-400 text-black text-xs rounded font-semibold">
+              OFFICIAL
+            </span>
+          }
+          <span class="px-3 py-1 text-xs rounded font-medium" [ngClass]="getDraftStatusClass(draft)">
+            {{ getDraftStatus(draft) }}
+          </span>
+        </div>
+      </div>
+      <div class="flex space-x-2">
+        @if (showPublishButton && canPublishUtil(draft)) {
+          <button
+            (click)="onPublish()"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+          >
+            Publish Draft
+          </button>
+        }
+        @if (showRequestReviewButton) {
+          <button
+            (click)="onRequestReview()"
+            [disabled]="requestingReview"
+            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 text-sm font-medium"
+          >
+            {{ requestingReview ? 'Requesting...' : 'Request Reviewers' }}
+          </button>
+        }
+        @if (canEdit) {
+          <button
+            (click)="onEdit()"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+          >
+            {{ isEditing() ? 'Cancel Edit' : 'Edit Draft' }}
+          </button>
+        }
+        @if (showApproveButton && canApproveUtil(draft)) {
+          <button
+            (click)="onApprove()"
+            [class]="getActionButtonClass()"
+          >
+            {{ getActionButtonText() }}
+          </button>
+        }
+      </div>
+    </div>
+    
+    <!-- Metadata -->
+    <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
+      <span>Author: {{ getUserDisplayName(draft.author) }}</span>
+      <span>Created: {{ draft.timestamp | date: "medium" }}</span>
+      @if (draft.approvers.length > 0) {
+        <div class="flex items-center space-x-1">
+          <span>Approved by:</span>
+          @for (approver of draft.approvers; track approver.id) {
+            <div
+              class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold cursor-help"
+              [title]="getUserDisplayName(approver)"
+            >
+              {{ getInitials(approver) }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Requested Reviewers -->
+    @if (draft.requested_reviewers.length > 0) {
+      <div class="mt-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-600">Approval Requests:</span>
+          <div class="flex space-x-1">
+            @for (reviewer of draft.requested_reviewers; track reviewer.id) {
+              <div
+                class="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-semibold cursor-help"
+                [title]="getUserDisplayName(reviewer)"
+              >
+                {{ getInitials(reviewer) }}
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Approval Status Info -->
+    @if (currentUserId && getApprovalReason(draft, currentUserId)) {
+      <div class="mt-3 text-sm text-gray-600">
+        {{ getApprovalReason(draft, currentUserId) }}
+      </div>
+    }
+  </div>
+
+  <!-- Content Area -->
+  <div class="flex-1 overflow-y-auto">
+    @if (isEditing()) {
+      <!-- Edit Mode -->
+      <div class="p-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Definition Content
+            </label>
+            <textarea
+              [(ngModel)]="editContent"
+              rows="12"
+              class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent"
+              placeholder="Enter your definition..."
+            ></textarea>
+          </div>
+          <div class="flex space-x-3">
+            <button
+              (click)="onSaveEdit()"
+              class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+            >
+              Save Changes
+            </button>
+            <button
+              (click)="onCancelEdit()"
+              class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- View Mode -->
+      <div class="p-6">
+        <div class="prose max-w-none">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Proposed Definition</h3>
+          <div class="bg-gray-50 p-4 rounded-lg" [innerHTML]="draft.content"></div>
+        </div>
+
+        @if (draft.replaces_draft) {
+          <div class="mt-8 prose max-w-none">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
+            <div class="bg-gray-100 p-4 rounded-lg" [innerHTML]="draft.replaces_draft.content"></div>
+            <div class="mt-3 text-sm text-gray-600">
+              <p>Author: {{ draft.replaces_draft.author.first_name }} {{ draft.replaces_draft.author.last_name }}</p>
+              <p>Created: {{ draft.replaces_draft.timestamp | date: "medium" }}</p>
+            </div>
+          </div>
+        } @else {
+          <div class="mt-8 prose max-w-none">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
+            <div class="bg-gray-100 p-4 rounded-lg text-gray-500 italic">
+              This is a new entry - no published version exists yet.
+            </div>
+          </div>
+        }
+
+        <!-- Comments Section -->
+        <div class="mt-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Comments</h3>
+          @if (isLoadingComments) {
+            <div class="text-center text-gray-500 py-4">
+              <p>Loading comments...</p>
+            </div>
+          } @else {
+            <app-comment-thread
+              [comments]="comments"
+              [objectId]="draft.entry.id"
+              [contentType]="1"
+              (commentAdded)="onCommentAdded($event)"
+              (commentResolved)="onCommentResolved($event)"
+              (commentUnresolved)="onCommentUnresolved($event)"
+            ></app-comment-thread>
+          }
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <!-- No Selection -->
+  <div class="flex-1 flex items-center justify-center">
+    <div class="text-center text-gray-500">
+      <h3 class="text-lg font-medium mb-2">Select a Definition</h3>
+      <p>Choose a definition from the sidebar to review</p>
+    </div>
+  </div>
+}

@@ -1,0 +1,42 @@
+<div
+  (click)="onItemClick()"
+  [class]="getItemClass()"
+  data-testid="draft-item"
+>
+  <div class="flex items-start justify-between">
+    <div class="flex-1 min-w-0">
+      <h3 class="font-semibold text-sm text-termageddon-gray-dark truncate">
+        {{ draft.entry.term.text }}
+      </h3>
+      <p class="text-xs opacity-75 mt-1">
+        {{ draft.entry.perspective.name }}
+      </p>
+      <div class="flex items-center space-x-2 mt-2">
+        @if (showStatus) {
+          <span
+            class="px-2 py-1 text-xs rounded font-semibold"
+            [ngClass]="getStatusClass()"
+          >
+            {{ getStatusText() }}
+          </span>
+        }
+        <span class="text-xs opacity-75">
+          {{ draft.timestamp | date: "short" }}
+        </span>
+        @if (showApprovalStatus) {
+          <span class="text-xs opacity-75">
+            {{ draft.approval_count }}/2 Approvals
+          </span>
+        }
+      </div>
+    </div>
+    @if (showPublishButton && canPublish(draft)) {
+      <button
+        (click)="onPublishClick($event)"
+        class="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+      >
+        Publish
+      </button>
+    }
+  </div>
+</div>

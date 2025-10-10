@@ -1,0 +1,48 @@
+/* Search Filter Bar Styles */
+.search-filter-bar {
+  @apply p-3 border-b border-gray-300;
+}
+
+.search-input-container {
+  @apply relative mb-3;
+}
+
+.search-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm;
+}
+
+.clear-button {
+  @apply absolute right-2 top-2 text-gray-400 hover:text-gray-600;
+}
+
+.loading-spinner {
+  @apply absolute right-2 top-2;
+}
+
+.spinner {
+  @apply animate-spin rounded-full h-4 w-4 border-b-2 border-termageddon-accent;
+}
+
+.filters-container {
+  @apply space-y-2;
+}
+
+.filter-item {
+  @apply flex items-center;
+}
+
+.filter-checkbox {
+  @apply mr-2;
+}
+
+.filter-label {
+  @apply text-sm text-gray-600;
+}
+
+.filter-select {
+  @apply px-2 py-1 border border-gray-300 rounded text-sm;
+}
+
+.filter-text-input {
+  @apply px-2 py-1 border border-gray-300 rounded text-sm;
+}

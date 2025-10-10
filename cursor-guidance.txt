@@ -16,5 +16,5 @@ For e2e tests, use best practices using few, if any, waits.
 
 COMPLEX RULES:
 
-Items in Pending Reviews are drafts which have not been published and which I have been asked to approve or have alreay approved.
+Items in Pending Reviews are drafts which have not been published and which I have been asked to approve or have already approved.
  If the "Show all drafts" is checked, you get to see even those you have not be asked to approve

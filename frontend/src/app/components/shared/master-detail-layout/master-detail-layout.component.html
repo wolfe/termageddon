@@ -1,0 +1,24 @@
+<div class="h-full flex bg-white">
+  <!-- Sidebar -->
+  <div [class]="sidebarWidth + (showBorder ? ' border-r border-gray-300' : '')" class="flex flex-col">
+    <!-- Sidebar Header -->
+    @if (sidebarTitle || sidebarSubtitle) {
+      <div class="p-4 border-b border-gray-300">
+        @if (sidebarTitle) {
+          <h1 class="text-xl font-bold text-termageddon-gray-dark">{{ sidebarTitle }}</h1>
+        }
+        @if (sidebarSubtitle) {
+          <p class="text-sm text-gray-600 mt-1">{{ sidebarSubtitle }}</p>
+        }
+      </div>
+    }
+    
+    <!-- Sidebar Content -->
+    <ng-content select="[sidebar]"></ng-content>
+  </div>
+
+  <!-- Detail Panel -->
+  <div [class]="detailWidth" class="flex flex-col">
+    <ng-content select="[detail]"></ng-content>
+  </div>
+</div>

@@ -36,13 +36,12 @@
             <div class="draft-header">
               <div class="draft-meta">
                 <div class="author-info">
-                  <div class="author-avatar">
+                  <div class="author-avatar cursor-help" [title]="getUserDisplayName(version.author)">
                     {{ getInitials(version.author) }}
                   </div>
                   <div class="author-details">
                     <div class="author-name">
-                      {{ version.author.first_name }}
-                      {{ version.author.last_name }}
+                      {{ getUserDisplayName(version.author) }}
                     </div>
                     <div class="draft-date">
                       {{ draft.timestamp | date: "medium" }}
@@ -79,8 +78,8 @@
               <div class="approvers-list">
                 <div
                   *ngFor="let approver of draft.approvers"
-                  class="approver-avatar"
-                  [title]="approver.first_name + ' ' + approver.last_name"
+                  class="approver-avatar cursor-help"
+                  [title]="getUserDisplayName(approver)"
                 >
                   {{ getInitials(approver) }}
                 </div>

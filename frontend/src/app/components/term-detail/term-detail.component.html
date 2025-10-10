@@ -62,10 +62,10 @@
         <div class="flex space-x-1">
           @for (approver of entry.active_draft.approvers; track approver.id) {
             <div
-              class="w-8 h-8 rounded-full bg-termageddon-blue text-white flex items-center justify-center text-xs font-semibold"
-              [title]="approver.first_name + ' ' + approver.last_name"
+              class="w-8 h-8 rounded-full bg-termageddon-blue text-white flex items-center justify-center text-xs font-semibold cursor-help"
+              [title]="getUserDisplayName(approver)"
             >
-              {{ getInitials(approver.first_name + " " + approver.last_name) }}
+              {{ getInitials(getUserDisplayName(approver)) }}
             </div>
           }
         </div>
@@ -78,10 +78,10 @@
         <span class="text-sm text-gray-600">Endorsed by:</span>
         <div class="flex items-center space-x-2">
           <div
-            class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-semibold"
-            [title]="entry.active_draft?.endorsed_by?.first_name + ' ' + entry.active_draft?.endorsed_by?.last_name"
+            class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-semibold cursor-help"
+            [title]="entry.active_draft?.endorsed_by ? getUserDisplayName(entry.active_draft?.endorsed_by) : ''"
           >
-            {{ getInitials(entry.active_draft?.endorsed_by?.first_name + " " + entry.active_draft?.endorsed_by?.last_name) }}
+            {{ entry.active_draft?.endorsed_by ? getInitials(getUserDisplayName(entry.active_draft?.endorsed_by)) : '' }}
           </div>
           <span class="text-sm text-gray-600">
             {{ entry.active_draft?.endorsed_at | date: "medium" }}

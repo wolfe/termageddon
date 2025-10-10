@@ -6,13 +6,26 @@ import { ReviewService } from '../../services/review.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
-import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
+import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
+import { SearchFilterBarComponent } from '../shared/search-filter-bar/search-filter-bar.component';
+import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
+import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
 import { ReviewDraft, PaginatedResponse, User, Comment } from '../../models';
+import { getDraftStatus, getDraftStatusClass, canPublish } from '../../utils/draft-status.util';
+import { getInitials } from '../../utils/user.util';
 
 @Component({
   selector: 'app-my-drafts',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReviewerSelectorDialogComponent, CommentThreadComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ReviewerSelectorDialogComponent,
+    MasterDetailLayoutComponent,
+    SearchFilterBarComponent,
+    DraftListItemComponent,
+    DraftDetailPanelComponent
+  ],
   templateUrl: './my-drafts.component.html',
   styleUrls: ['./my-drafts.component.scss'],
 })
@@ -194,40 +207,13 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     }
   }
 
-  getDraftStatus(draft: ReviewDraft): string {
-    if (draft.is_published) {
-      return 'Published';
-    } else if (draft.is_approved) {
-      return 'Approved';
-    } else if (draft.approval_count >= 2) {
-      return 'Ready to Publish';
-    } else {
-      return `Pending (${draft.approval_count}/2)`;
-    }
-  }
-
-  getDraftStatusClass(draft: ReviewDraft): string {
-    if (draft.is_published) {
-      return 'status-published';
-    } else if (draft.is_approved) {
-      return 'status-approved';
-    } else if (draft.approval_count >= 2) {
-      return 'status-ready';
-    } else {
-      return 'status-pending';
-    }
-  }
-
-  getInitials(user: User): string {
-    return `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase();
-  }
-
-  canPublish(draft: ReviewDraft): boolean {
-    return draft.is_approved && !draft.is_published;
+  onApprove(): void {
+    // My Drafts doesn't support approval - this is just a placeholder
+    console.log('Approval not supported in My Drafts');
   }
 
   publishDraft(draft: ReviewDraft): void {
-    if (!this.canPublish(draft)) {
+    if (!canPublish(draft)) {
       return;
     }
 
