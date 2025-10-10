@@ -161,10 +161,8 @@ export class TermDetailComponent implements OnInit, OnChanges {
     this.glossaryService.updateEntryDraft(draftId, updateData).subscribe({
       next: (updatedDraft) => {
         console.log('Successfully updated draft:', updatedDraft);
-        this.editSaved.emit(this.entry);
-        alert(
-          'Definition updated successfully! It will be visible once approved.',
-        );
+        // Refresh the entry data to get the updated content
+        this.refreshEntryData();
       },
       error: (error) => {
         console.error('Failed to update draft:', error);
@@ -185,10 +183,8 @@ export class TermDetailComponent implements OnInit, OnChanges {
     this.glossaryService.createEntryDraft(draftData).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
-        this.editSaved.emit(this.entry);
-        alert(
-          'Definition saved successfully! It will be visible once approved.',
-        );
+        // Refresh the entry data to get the updated content
+        this.refreshEntryData();
       },
       error: (error) => {
         console.error('Failed to create draft:', error);
@@ -197,6 +193,32 @@ export class TermDetailComponent implements OnInit, OnChanges {
     });
   }
 
+
+  private refreshEntryData(): void {
+    // Refresh the entry data to get the updated content
+    this.glossaryService.getEntry(this.entry.id).subscribe({
+      next: (updatedEntry) => {
+        console.log('Refreshed entry data:', updatedEntry);
+        console.log('Updated entry active_draft:', updatedEntry.active_draft);
+        console.log('Updated entry active_draft content:', updatedEntry.active_draft?.content);
+        // Update the local entry object
+        Object.assign(this.entry, updatedEntry);
+        // Emit the updated entry
+        this.editSaved.emit(this.entry);
+        alert(
+          'Definition saved successfully! It will be visible once approved.',
+        );
+      },
+      error: (error) => {
+        console.error('Failed to refresh entry data:', error);
+        // Still emit the original entry as fallback
+        this.editSaved.emit(this.entry);
+        alert(
+          'Definition saved successfully! It will be visible once approved.',
+        );
+      },
+    });
+  }
 
   private handleSaveError(error: any): void {
     // Show specific error message based on the type of error

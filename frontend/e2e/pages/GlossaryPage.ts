@@ -96,8 +96,64 @@ export class GlossaryPage extends BasePage {
   }
 
   // Assertions
+  async expectTermsVisible() {
+    await expect(this.termNames.first()).toBeVisible();
+  }
+
+  async clickOnFirstTerm() {
+    const firstTerm = this.termNames.first();
+    await firstTerm.click();
+    await this.waitForNavigation();
+  }
+
+  async searchTerm(term: string) {
+    await this.searchInput.fill(term);
+    await this.page.keyboard.press('Enter');
+    await this.waitForNavigation();
+  }
+
+  async expectSearchResultsVisible() {
+    await expect(this.termNames.first()).toBeVisible();
+  }
+
+  async selectPerspective(perspective: string) {
+    await this.perspectiveFilter.selectOption(perspective);
+    await this.waitForNavigation();
+  }
+
+  async expectFilteredResults() {
+    await expect(this.termNames.first()).toBeVisible();
+  }
+
+  async clearSearch() {
+    await this.searchInput.clear();
+    await this.page.keyboard.press('Enter');
+    await this.waitForNavigation();
+  }
+
+  async expectAllTermsVisible() {
+    await expect(this.termNames.first()).toBeVisible();
+  }
+
+  async clearFilters() {
+    await this.clearFiltersButton.click();
+    await this.waitForNavigation();
+  }
+
+  async expectErrorMessage(message: string) {
+    const errorElement = this.page.locator('.text-orange-600, .bg-orange-100');
+    await expect(errorElement).toBeVisible();
+    await expect(errorElement).toContainText(message);
+  }
+
   async expectSearchInputVisible() {
     await this.expectVisibleByTestId('term-search-input');
+  }
+
+  async expectToBeOnGlossaryPage() {
+    await expect(this.page).toHaveURL(/.*\/(glossary)?.*/);
+    await this.expectSearchInputVisible();
+    await this.expectPerspectiveFilterVisible();
   }
 
   async expectPerspectiveFilterVisible() {

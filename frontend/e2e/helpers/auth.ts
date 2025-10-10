@@ -140,6 +140,10 @@ export class AuthHelper {
     return await this.loginAs('KENJI_TANAKA');
   }
 
+  async loginAsUser(username: string, password: string) {
+    await this.loginWithCredentials(username, password);
+  }
+
   /**
    * Login with custom credentials
    */

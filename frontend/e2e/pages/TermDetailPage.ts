@@ -75,10 +75,36 @@ export class TermDetailPage extends BasePage {
     return this.page.locator('text=No approved definition available');
   }
 
-  // Actions
-  async clickEdit() {
+  async expectTermDetailsVisible() {
+    await expect(this.termTitle).toBeVisible();
+    await expect(this.contentArea).toBeVisible();
+  }
+
+  async expectEditModeActive() {
+    await expect(this.page.locator('app-definition-form')).toBeVisible();
+  }
+
+  async clickEditButton() {
     await this.editButton.click();
     await this.waitForElement('app-definition-form');
+  }
+
+  async enterDefinition(content: string) {
+    const editor = this.page.locator('app-definition-form .ql-editor');
+    await editor.fill(content);
+  }
+
+  async clickSaveButton() {
+    await this.saveButton.click();
+    await this.waitForNavigation();
+  }
+
+  async expectEditModeInactive() {
+    await expect(this.page.locator('app-definition-form')).toBeHidden();
+  }
+
+  async expectDefinitionContent(content: string) {
+    await expect(this.contentArea).toContainText(content);
   }
 
   async clickEndorse() {

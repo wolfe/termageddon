@@ -112,10 +112,13 @@ export class ReviewPage extends BasePage {
     return this.page.locator('text=Click to review');
   }
 
-  // Actions
-  async goto() {
-    await this.page.goto('/review');
-    await this.waitForNavigation();
+  async expectToBeOnReviewPage() {
+    await expect(this.page).toHaveURL(/.*\/review.*/);
+    await this.expectSearchInputVisible();
+  }
+
+  async expectSearchInputVisible() {
+    await this.expectVisibleByTestId('review-search-input');
   }
 
   async search(term: string) {

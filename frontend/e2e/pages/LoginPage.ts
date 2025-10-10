@@ -96,8 +96,9 @@ export class LoginPage extends BasePage {
     await expect(this.errorMessage).toContainText(message);
   }
 
-  async expectTestCredentialsVisible() {
-    await expect(this.testCredentials).toBeVisible();
+  async expectToBeOnLoginPage() {
+    await expect(this.page).toHaveURL(/.*\/login.*/);
+    await this.expectLoginFormVisible();
   }
 
   async expectSubmitButtonDisabled() {
