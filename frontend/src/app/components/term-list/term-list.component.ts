@@ -5,11 +5,12 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Perspective, Entry, User, GroupedEntry } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
 import { TermDialogComponent } from '../term-dialog/term-dialog.component';
+import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
 
 @Component({
   selector: 'app-term-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TermDialogComponent],
+  imports: [CommonModule, ReactiveFormsModule, TermDialogComponent, PerspectivePillComponent],
   templateUrl: './term-list.component.html',
   styleUrl: './term-list.component.scss',
 })

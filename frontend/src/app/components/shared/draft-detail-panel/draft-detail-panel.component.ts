@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ReviewDraft, Comment } from '../../../models';
 import { CommentThreadComponent } from '../../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
+import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
 import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish as canPublishUtil, canApprove as canApproveUtil, getRemainingApprovals, getApprovalAccessLevel } from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
   selector: 'app-draft-detail-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, CommentThreadComponent, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, CommentThreadComponent, UserAvatarComponent, PerspectivePillComponent],
   templateUrl: './draft-detail-panel.component.html',
   styleUrl: './draft-detail-panel.component.scss'
 })

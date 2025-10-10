@@ -90,17 +90,15 @@
     <div class="px-4 py-2 border-b border-gray-200 bg-gray-50">
       <div class="flex space-x-1">
         @for (termEntry of termEntries; track termEntry.id) {
-          <button
+          <app-perspective-pill 
+            [perspective]="termEntry.perspective"
+            size="medium"
+            [variant]="entry.id === termEntry.id ? 'tab-selected' : 'tab-unselected'"
+            [clickable]="true"
+            [maxLength]="10"
             (click)="switchToPerspective(termEntry)"
-            [class.bg-green-100]="entry.id === termEntry.id"
-            [class.bg-gray-200]="entry.id !== termEntry.id"
-            [class.text-green-700]="entry.id === termEntry.id"
-            [class.text-gray-600]="entry.id !== termEntry.id"
-            class="px-3 py-1 text-sm rounded-t border border-b-0 hover:bg-gray-100 transition-colors"
             [title]="termEntry.perspective.description || termEntry.perspective.name"
-          >
-            {{ termEntry.perspective.name.length > 10 ? termEntry.perspective.name.substring(0, 10) + '...' : termEntry.perspective.name }}
-          </button>
+          ></app-perspective-pill>
         }
       </div>
     </div>

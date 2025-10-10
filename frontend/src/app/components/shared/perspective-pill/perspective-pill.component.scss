@@ -1,0 +1,63 @@
+.perspective-pill {
+  display: inline-block;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+  transition: opacity 0.2s ease;
+
+  // Size variants
+  &--small {
+    padding: 2px 8px;
+  }
+
+  &--medium {
+    padding: 4px 8px;
+  }
+
+  // Color variants
+  &--default {
+    background-color: #B7D1DB; // termageddon-blue
+    color: white;
+  }
+
+  &--selected {
+    background-color: #93728F; // termageddon-purple
+    color: white;
+  }
+
+  &--unselected {
+    background-color: #B2B3B0; // termageddon-gray
+    color: #1F2F38; // termageddon-gray-dark (gray-on-gray)
+  }
+
+  // Tab variants (for term-detail component)
+  &--tab-selected {
+    background-color: #93728F; // termageddon-purple
+    color: white;
+    border-radius: 4px 4px 0 0;
+    border: 1px solid #ccc;
+    border-bottom: none;
+  }
+
+  &--tab-unselected {
+    background-color: #E5E5E5; // light gray
+    color: #666;
+    border-radius: 4px 4px 0 0;
+    border: 1px solid #ccc;
+    border-bottom: none;
+  }
+
+  // Cursor variants
+  &--clickable {
+    cursor: pointer;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &--default {
+    cursor: default;
+  }
+}

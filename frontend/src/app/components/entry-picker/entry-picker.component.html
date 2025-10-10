@@ -33,12 +33,11 @@
             <div class="entry-term">
               {{ entry.term.text }}
             </div>
-            <div 
-              class="entry-perspective cursor-default"
-              [title]="entry.perspective.description || entry.perspective.name"
-            >
-              {{ entry.perspective.name }}
-            </div>
+            <app-perspective-pill 
+              [perspective]="entry.perspective" 
+              size="small"
+              variant="unselected"
+            ></app-perspective-pill>
             <div class="entry-preview" *ngIf="entry.active_draft">
               {{ entry.active_draft.content | slice: 0 : 100
               }}{{ entry.active_draft.content.length > 100 ? "..." : "" }}

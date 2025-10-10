@@ -10,11 +10,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Entry, PaginatedResponse } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
+import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
 
 @Component({
   selector: 'app-entry-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PerspectivePillComponent],
   templateUrl: './entry-picker.component.html',
   styleUrls: ['./entry-picker.component.scss'],
 })

@@ -1,13 +1,14 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReviewDraft } from '../../../models';
+import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
 import { getDraftStatus, getDraftStatusClass, getEligibilityText, getEligibilityClass, canPublish as canPublishUtil } from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
   selector: 'app-draft-list-item',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PerspectivePillComponent],
   templateUrl: './draft-list-item.component.html',
   styleUrl: './draft-list-item.component.scss'
 })

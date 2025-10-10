@@ -7,12 +7,11 @@
           {{ draft.entry.term.text }}
         </h2>
         <div class="flex items-center space-x-2 mt-1">
-          <span 
-            class="px-2 py-1 bg-termageddon-blue text-white text-xs rounded cursor-default"
-            [title]="draft.entry.perspective.description || draft.entry.perspective.name"
-          >
-            {{ draft.entry.perspective.name }}
-          </span>
+          <app-perspective-pill 
+            [perspective]="draft.entry.perspective" 
+            size="medium"
+            variant="selected"
+          ></app-perspective-pill>
           @if (draft.entry.is_official) {
             <span class="px-2 py-1 bg-yellow-400 text-black text-xs rounded font-semibold">
               OFFICIAL

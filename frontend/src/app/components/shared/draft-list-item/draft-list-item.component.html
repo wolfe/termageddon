@@ -8,12 +8,11 @@
       <h3 class="font-semibold text-sm text-termageddon-gray-dark truncate">
         {{ draft.entry.term.text }}
       </h3>
-      <p 
-        class="text-xs opacity-75 mt-1 cursor-default"
-        [title]="draft.entry.perspective.description || draft.entry.perspective.name"
-      >
-        {{ draft.entry.perspective.name }}
-      </p>
+      <app-perspective-pill 
+        [perspective]="draft.entry.perspective" 
+        size="small"
+        [variant]="selected ? 'selected' : 'unselected'"
+      ></app-perspective-pill>
       <div class="flex items-center space-x-2 mt-2">
         @if (showStatus) {
           <span
