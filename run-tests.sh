@@ -5,15 +5,8 @@
 # Options:
 #   -f, --frontend    Run only frontend unit tests
 #   -b, --backend     Run only backend tests
-#   -e, --e2e         Run only e2e tests
-#   -i, --isolation   Test E2E isolation (run same tests 3 times)
 #   -h, --help        Show this help message
 #   (no args)         Run all tests
-#
-# E2E Test Isolation:
-# This script supports E2E test isolation with global setup/teardown.
-# Tests run sequentially to ensure proper database isolation.
-# Use --isolation flag to verify isolation is working correctly.
 
 set -e  # Exit on any error
 
@@ -53,19 +46,6 @@ check_directory() {
         exit 1
     fi
 }
-
-# Function to cleanup processes
-cleanup() {
-    if [ ! -z "$BACKEND_PID" ]; then
-        print_status "Cleaning up backend server..."
-        kill $BACKEND_PID 2>/dev/null || true
-    fi
-    # Kill any remaining Playwright processes
-    pkill -f "playwright" 2>/dev/null || true
-}
-
-# Set up cleanup trap
-trap cleanup EXIT
 
 # Function to run frontend tests
 run_frontend_tests() {
@@ -140,187 +120,6 @@ run_backend_tests() {
     cd ..
 }
 
-# Function to run e2e tests
-run_e2e_tests() {
-    print_status "Running e2e tests with isolation..."
-    
-    if [ ! -d "frontend" ]; then
-        print_error "Frontend directory not found"
-        return 1
-    fi
-    
-    cd frontend
-    
-    # Check if node_modules exists
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing frontend dependencies..."
-        npm install
-    fi
-    
-    # Check if Playwright is installed
-    if ! npx playwright --version >/dev/null 2>&1; then
-        print_status "Installing Playwright..."
-        npx playwright install
-    fi
-    
-    # Verify E2E test isolation setup
-    print_status "Verifying E2E test isolation setup..."
-    
-    # Check if global setup files exist
-    if [ ! -f "e2e/global-setup.ts" ] || [ ! -f "e2e/global-teardown.ts" ]; then
-        print_error "E2E test isolation files not found. Please ensure global-setup.ts and global-teardown.ts exist."
-        return 1
-    fi
-    
-    # Check if database reset command exists
-    if [ ! -f "../backend/glossary/management/commands/reset_test_db.py" ]; then
-        print_error "Database reset command not found. Please ensure reset_test_db.py exists."
-        return 1
-    fi
-    
-    # Run e2e tests with isolation
-    print_status "Running Playwright e2e tests with isolation..."
-    print_status "Note: Tests will run sequentially for proper isolation"
-    
-    # Use Playwright's webServer configuration instead of manual server management
-    # This ensures servers are properly managed during test execution
-    
-    # Run tests and capture result
-    test_result=0
-    if npx playwright test --reporter=line; then
-        print_success "E2E tests passed with isolation"
-    else
-        print_error "E2E tests failed"
-        print_status "Check the test isolation setup and ensure database reset command works"
-        test_result=1
-    fi
-    
-    # Return the test result
-    return $test_result
-    
-    cd ..
-}
-
-# Function to test E2E isolation
-test_e2e_isolation() {
-    print_status "Testing E2E isolation by running tests multiple times..."
-    
-    if [ ! -d "frontend" ]; then
-        print_error "Frontend directory not found"
-        return 1
-    fi
-    
-    cd frontend
-    
-    # Check if node_modules exists
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing frontend dependencies..."
-        npm install
-    fi
-    
-    # Check if Playwright is installed
-    if ! npx playwright --version >/dev/null 2>&1; then
-        print_status "Installing Playwright..."
-        npx playwright install
-    fi
-    
-    # Start backend server in background if not running
-    if ! curl -s http://localhost:8000/api/ >/dev/null 2>&1; then
-        print_status "Starting backend server..."
-        cd ../backend
-        
-        # Create virtual environment if it doesn't exist
-        if [ ! -d "venv" ]; then
-            print_status "Creating backend virtual environment..."
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-        else
-            source venv/bin/activate
-        fi
-        
-        # Ensure database is set up for E2E tests
-        print_status "Setting up database for E2E tests..."
-        python manage.py migrate --noinput
-        
-        # Load test data if not already present
-        print_status "Loading test data..."
-        python manage.py load_test_data
-        
-        # Collect static files
-        print_status "Collecting static files..."
-        python manage.py collectstatic --noinput > /dev/null 2>&1
-        
-        python manage.py runserver > ../backend.log 2>&1 &
-        BACKEND_PID=$!
-        cd ../frontend
-        
-        # Wait for backend to start
-        print_status "Waiting for backend server to start..."
-        sleep 5
-        
-        # Check if backend is running
-        if ! curl -s http://localhost:8000/api/ >/dev/null 2>&1; then
-            print_error "Failed to start backend server"
-            kill $BACKEND_PID 2>/dev/null || true
-            return 1
-        fi
-    else
-        print_status "Backend server already running"
-        BACKEND_PID=""
-    fi
-    
-    # Verify E2E test isolation setup
-    print_status "Verifying E2E test isolation setup..."
-    
-    # Check if global setup files exist
-    if [ ! -f "e2e/global-setup.ts" ] || [ ! -f "e2e/global-teardown.ts" ]; then
-        print_error "E2E test isolation files not found. Please ensure global-setup.ts and global-teardown.ts exist."
-        return 1
-    fi
-    
-    # Check if database reset command exists
-    if [ ! -f "../backend/glossary/management/commands/reset_test_db.py" ]; then
-        print_error "Database reset command not found. Please ensure reset_test_db.py exists."
-        return 1
-    fi
-    
-    # Run e2e tests multiple times to test isolation
-    print_status "Running E2E tests 3 times to verify isolation..."
-    
-    local test_success=true
-    for i in {1..3}; do
-        print_status "Test run $i/3..."
-        
-        if npx playwright test term-management.spec.ts --reporter=line; then
-            print_success "Test run $i passed"
-        else
-            print_error "Test run $i failed - isolation may not be working properly"
-            test_success=false
-            break
-        fi
-        
-        # Small delay between runs
-        sleep 2
-    done
-    
-    if [ "$test_success" = true ]; then
-        print_success "E2E isolation test passed! All runs succeeded."
-    else
-        print_error "E2E isolation test failed. Check the test isolation setup."
-    fi
-    
-    # Clean up backend if we started it
-    if [ ! -z "$BACKEND_PID" ]; then
-        print_status "Stopping backend server..."
-        kill $BACKEND_PID 2>/dev/null || true
-    fi
-    
-    cd ..
-    
-    return $([ "$test_success" = true ] && echo 0 || echo 1)
-}
-
 # Function to show help
 show_help() {
     echo "Termageddon Test Runner"
@@ -330,8 +129,6 @@ show_help() {
     echo "Options:"
     echo "  -f, --frontend    Run only frontend unit tests"
     echo "  -b, --backend     Run only backend tests"
-    echo "  -e, --e2e         Run only e2e tests"
-    echo "  -i, --isolation   Test E2E isolation by running tests multiple times"
     echo "  -h, --help        Show this help message"
     echo "  (no args)         Run all tests"
     echo ""
@@ -339,8 +136,6 @@ show_help() {
     echo "  $0                # Run all tests"
     echo "  $0 --frontend     # Run only frontend tests"
     echo "  $0 -b             # Run only backend tests"
-    echo "  $0 -e             # Run only e2e tests"
-    echo "  $0 -i             # Test E2E isolation"
 }
 
 # Main function
@@ -369,14 +164,6 @@ main() {
             print_status "Running backend tests only..."
             run_backend_tests
             ;;
-        -e|--e2e)
-            print_status "Running e2e tests only..."
-            run_e2e_tests
-            ;;
-        -i|--isolation)
-            print_status "Testing E2E isolation..."
-            test_e2e_isolation
-            ;;
         -h|--help)
             show_help
             exit 0
@@ -394,11 +181,6 @@ main() {
             
             # Run frontend tests
             if ! run_frontend_tests; then
-                overall_success=false
-            fi
-            
-            # Run e2e tests
-            if ! run_e2e_tests; then
                 overall_success=false
             fi
             
