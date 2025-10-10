@@ -11,8 +11,8 @@ export class GlossaryPage extends BasePage {
     return this.getByTestId('term-search-input');
   }
 
-  get domainFilter() {
-    return this.getByTestId('domain-filter-select');
+  get perspectiveFilter() {
+    return this.getByTestId('perspective-filter-select');
   }
 
   get createTermButton() {
@@ -27,8 +27,8 @@ export class GlossaryPage extends BasePage {
     return this.page.locator('[data-testid="term-name"]');
   }
 
-  get domainBubbles() {
-    return this.page.locator('[data-testid="domain-bubble"]');
+  get perspectiveBubbles() {
+    return this.page.locator('[data-testid="perspective-bubble"]');
   }
 
   get endorsedBadges() {
@@ -61,13 +61,13 @@ export class GlossaryPage extends BasePage {
     await this.searchInput.fill('');
   }
 
-  async selectDomain(domainName: string) {
-    await this.domainFilter.selectOption({ label: domainName });
+  async selectPerspective(perspectiveName: string) {
+    await this.perspectiveFilter.selectOption({ label: perspectiveName });
     await this.waitForNavigation();
   }
 
-  async selectAllDomains() {
-    await this.domainFilter.selectOption('');
+  async selectAllPerspectives() {
+    await this.perspectiveFilter.selectOption('');
     await this.waitForNavigation();
   }
 
@@ -77,9 +77,9 @@ export class GlossaryPage extends BasePage {
     await this.waitForNavigation();
   }
 
-  async clickDomainBubble(domainName: string) {
-    const domainElement = this.page.locator(`[data-testid="domain-bubble"]:has-text("${domainName}")`).first();
-    await domainElement.click();
+  async clickPerspectiveBubble(perspectiveName: string) {
+    const perspectiveElement = this.page.locator(`[data-testid="perspective-bubble"]:has-text("${perspectiveName}")`).first();
+    await perspectiveElement.click();
     await this.waitForNavigation();
   }
 
@@ -100,8 +100,8 @@ export class GlossaryPage extends BasePage {
     await this.expectVisibleByTestId('term-search-input');
   }
 
-  async expectDomainFilterVisible() {
-    await this.expectVisibleByTestId('domain-filter-select');
+  async expectPerspectiveFilterVisible() {
+    await this.expectVisibleByTestId('perspective-filter-select');
   }
 
   async expectTermVisible(termName: string) {
@@ -112,8 +112,8 @@ export class GlossaryPage extends BasePage {
     await expect(this.page.locator(`[data-testid="term-name"]:has-text("${termName}")`)).toBeHidden();
   }
 
-  async expectDomainBubbleVisible(domainName: string) {
-    await expect(this.page.locator(`[data-testid="domain-bubble"]:has-text("${domainName}")`)).toBeVisible();
+  async expectPerspectiveBubbleVisible(perspectiveName: string) {
+    await expect(this.page.locator(`[data-testid="perspective-bubble"]:has-text("${perspectiveName}")`)).toBeVisible();
   }
 
   async expectEndorsedBadgeVisible(termName: string) {
@@ -152,8 +152,8 @@ export class GlossaryPage extends BasePage {
     return Promise.all(elements.map(el => el.textContent()));
   }
 
-  async getDomainNames() {
-    const elements = await this.domainBubbles.all();
+  async getPerspectiveNames() {
+    const elements = await this.perspectiveBubbles.all();
     return Promise.all(elements.map(el => el.textContent()));
   }
 
@@ -171,9 +171,9 @@ export class GlossaryPage extends BasePage {
     return classes?.includes('bg-termageddon-gray-light') || false;
   }
 
-  async isDomainSelected(domainName: string) {
-    const domainElement = this.page.locator(`[data-testid="domain-bubble"]:has-text("${domainName}")`);
-    const classes = await domainElement.getAttribute('class');
+  async isPerspectiveSelected(perspectiveName: string) {
+    const perspectiveElement = this.page.locator(`[data-testid="perspective-bubble"]:has-text("${perspectiveName}")`);
+    const classes = await perspectiveElement.getAttribute('class');
     return classes?.includes('bg-termageddon-blue') || false;
   }
 }

@@ -156,7 +156,7 @@ export class TermListComponent implements OnInit {
   }
 
   getFirstEntryForTerm(termEntries: Entry[]): Entry {
-    // Return the first entry (could be sorted by domain priority in the future)
+    // Return the first entry (could be sorted by perspective priority in the future)
     return termEntries[0];
   }
 

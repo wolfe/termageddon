@@ -6,7 +6,7 @@ Angular 17 frontend for the Termageddon glossary management system with Termaged
 
 - **Login & Authentication** with token-based auth
 - **Glossary Browser** with advanced search and filtering
-- **Term List** with search by term, domain filter, approval status, author, and official status
+- **Term List** with search by term, perspective filter, approval status, author, and official status
 - **Term Detail View** with approval status and metadata
 - **Rich Text Editor** using Quill.js for creating/editing definitions
 - **Custom Link Management** for internal term references
@@ -88,7 +88,7 @@ The frontend connects to the Django backend API at `http://localhost:8000/api/`:
   - `/auth/login/` - User login
   - `/auth/logout/` - User logout
   - `/auth/me/` - Current user info
-  - `/domains/` - Domain list
+  - `/perspectives/` - Perspective list
   - `/terms/` - Term list with search
   - `/entries/` - Entry list with advanced filters
   - `/entry-versions/` - Version management
@@ -119,7 +119,7 @@ Test with these credentials from the backend:
 ### Glossary View (30/70 Split)
 - **Left Sidebar (30%):**
   - Search box for terms
-  - Domain filter dropdown
+  - Perspective filter dropdown
   - Approval status filter
   - Author filter
   - Official status filter
@@ -130,7 +130,7 @@ Test with these credentials from the backend:
   - Highlighting for selected term
 
 - **Right Panel (70%):**
-  - Term name and domain
+  - Term name and perspective
   - Official/approval status badges
   - Approver avatars (initials)
   - Rich text content with custom links

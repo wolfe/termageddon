@@ -26,9 +26,9 @@ export class GlossaryViewComponent {
   onTermSelected(termEntries: Entry[]): void {
     console.log('onTermSelected called with entries:', termEntries);
     this.selectedTermEntries = [...termEntries]; // Create new array reference
-    // Only set selectedEntry to first domain if no specific entry is already selected
+    // Only set selectedEntry to first perspective if no specific entry is already selected
     if (!this.selectedEntry || !termEntries.find(e => e.id === this.selectedEntry?.id)) {
-      this.selectedEntry = termEntries[0]; // Select first domain by default
+      this.selectedEntry = termEntries[0]; // Select first perspective by default
     }
     this.isEditMode = false;
   }

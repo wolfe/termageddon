@@ -44,23 +44,23 @@ class Command(BaseCommand):
     def verify_database_state(self):
         """Verify that the database has the expected test data"""
         from django.contrib.auth.models import User
-        from glossary.models import Domain, Entry, EntryVersion
+        from glossary.models import Perspective, Entry, EntryDraft
         
         # Check users
         user_count = User.objects.count()
         self.stdout.write(f"👥 Users: {user_count}")
         
-        # Check domains
-        domain_count = Domain.objects.count()
-        self.stdout.write(f"🏷️  Domains: {domain_count}")
+        # Check perspectives
+        perspective_count = Perspective.objects.count()
+        self.stdout.write(f"🏷️  Perspectives: {perspective_count}")
         
         # Check entries
         entry_count = Entry.objects.count()
         self.stdout.write(f"📝 Entries: {entry_count}")
         
-        # Check versions
-        version_count = EntryVersion.objects.count()
-        self.stdout.write(f"📄 Versions: {version_count}")
+        # Check drafts
+        draft_count = EntryDraft.objects.count()
+        self.stdout.write(f"📄 Drafts: {draft_count}")
         
         # Verify admin user exists
         admin_exists = User.objects.filter(username="admin").exists()

@@ -195,7 +195,7 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
     open -a "Google Chrome" "http://localhost:8000/admin/"
     sleep 2
     
-    # Window 2: Frontend as domain expert (Maria Flores)
+    # Window 2: Frontend as perspective curator (Maria Flores)
     open -a "Google Chrome" "http://localhost:4200"
     sleep 2
     
@@ -244,11 +244,11 @@ echo -e "${YELLOW}Login Credentials:${NC}"
 echo -e "  ${BLUE}Admin:${NC}     admin / admin"
 echo ""
 echo -e "${YELLOW}Test Users (password = username):${NC}"
-echo -e "  ${BLUE}•${NC} mariacarter     (Maria Carter) - ${GREEN}Domain Expert: Physics, Chemistry${NC}"
-echo -e "  ${BLUE}•${NC} bencarter       (Ben Carter) - ${GREEN}Domain Expert: Chemistry, Biology${NC}"
-echo -e "  ${BLUE}•${NC} sofiarossi      (Sofia Rossi) - ${GREEN}Domain Expert: Computer Science, Graph Theory${NC}"
-echo -e "  ${BLUE}•${NC} leoschmidt      (Leo Schmidt) - ${GREEN}Domain Expert: Biology, Geology${NC}"
-echo -e "  ${BLUE}•${NC} kenjitanaka     (Kenji Tanaka) - ${GREEN}Domain Expert: Physics, Geology${NC}"
+echo -e "  ${BLUE}•${NC} mariacarter     (Maria Carter) - ${GREEN}Perspective Curator: Physics, Chemistry${NC}"
+echo -e "  ${BLUE}•${NC} bencarter       (Ben Carter) - ${GREEN}Perspective Curator: Chemistry, Biology${NC}"
+echo -e "  ${BLUE}•${NC} sofiarossi      (Sofia Rossi) - ${GREEN}Perspective Curator: Computer Science, Graph Theory${NC}"
+echo -e "  ${BLUE}•${NC} leoschmidt      (Leo Schmidt) - ${GREEN}Perspective Curator: Biology, Geology${NC}"
+echo -e "  ${BLUE}•${NC} kenjitanaka     (Kenji Tanaka) - ${GREEN}Perspective Curator: Physics, Geology${NC}"
 echo -e "  ${BLUE}•${NC} aishakhan       (Aisha Khan)"
 echo -e "  ${BLUE}•${NC} samuelgreene    (Samuel Greene)"
 echo -e "  ${BLUE}•${NC} ivanpetrov      (Ivan Petrov)"
@@ -260,8 +260,8 @@ echo -e "    ${BLUE}  -${NC} ~20% No approvals (draft state)"
 echo -e "    ${BLUE}  -${NC} ~25% One approval (pending)"
 echo -e "    ${BLUE}  -${NC} ~35% Two approvals (ready to publish)"
 echo -e "    ${BLUE}  -${NC} ~20% Published (active definitions)"
-echo -e "  ${BLUE}•${NC} 9 domains (Physics, Chemistry, Biology, etc.)"
-echo -e "  ${BLUE}•${NC} 10 test users (5 domain experts, 5 regular users)"
+echo -e "  ${BLUE}•${NC} 9 perspectives (Physics, Chemistry, Biology, etc.)"
+echo -e "  ${BLUE}•${NC} 10 test users (5 perspective curators, 5 regular users)"
 echo ""
 echo -e "${RED}Press Ctrl+C to stop the demo${NC}"
 echo ""

@@ -128,7 +128,7 @@ The system uses TinyMCE for rich text editing with:
 #### Review Dashboard
 - Access via the "Review Dashboard" link in navigation
 - Shows all pending definitions requiring approval
-- Filter by domain, author, or date
+- Filter by perspective, author, or date
 
 #### Approving Definitions
 1. **Review the definition** for accuracy and completeness
@@ -275,7 +275,7 @@ From My Drafts, you can:
 - Clear filters and try again
 
 #### Approval Issues
-- Verify you have domain expert or staff role
+- Verify you have perspective curator or staff role
 - Check that definition meets approval criteria
 - Contact administrator if problems persist
 

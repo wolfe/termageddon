@@ -294,10 +294,10 @@ class TestPerspectiveCuratorModel:
 
     def test_perspective_curator_str_representation(self):
         """Test __str__ method"""
-        user = UserFactory(username="expert")
+        user = UserFactory(username="curator")
         perspective = PerspectiveFactory(name="Finance")
-        expert = PerspectiveCuratorFactory(user=user, perspective=perspective)
-        assert str(expert) == "expert - Finance"
+        curator = PerspectiveCuratorFactory(user=user, perspective=perspective)
+        assert str(curator) == "curator - Finance"
 
     def test_perspective_curator_user_perspective_uniqueness(self):
         """Test that user+perspective must be unique"""

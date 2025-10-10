@@ -35,7 +35,7 @@ export class TermDetailPage extends BasePage {
     return this.page.locator('app-definition-form');
   }
 
-  get domainTabs() {
+  get perspectiveTabs() {
     return this.page.locator('.px-3.py-1.text-sm.rounded-t');
   }
 
@@ -108,9 +108,9 @@ export class TermDetailPage extends BasePage {
     await textarea.fill(content);
   }
 
-  async switchToDomain(domainName: string) {
-    const domainTab = this.page.locator(`button:has-text("${domainName}")`);
-    await domainTab.click();
+  async switchToPerspective(perspectiveName: string) {
+    const perspectiveTab = this.page.locator(`button:has-text("${perspectiveName}")`);
+    await perspectiveTab.click();
     await this.waitForNavigation();
   }
 
@@ -216,13 +216,13 @@ export class TermDetailPage extends BasePage {
     await expect(this.noDefinitionMessage).toBeVisible();
   }
 
-  async expectDomainTabVisible(domainName: string) {
-    await expect(this.page.locator(`button:has-text("${domainName}")`)).toBeVisible();
+  async expectPerspectiveTabVisible(perspectiveName: string) {
+    await expect(this.page.locator(`button:has-text("${perspectiveName}")`)).toBeVisible();
   }
 
-  async expectDomainTabActive(domainName: string) {
-    const domainTab = this.page.locator(`button:has-text("${domainName}")`);
-    const classes = await domainTab.getAttribute('class');
+  async expectPerspectiveTabActive(perspectiveName: string) {
+    const perspectiveTab = this.page.locator(`button:has-text("${perspectiveName}")`);
+    const classes = await perspectiveTab.getAttribute('class');
     expect(classes).toContain('bg-green-100');
   }
 
@@ -266,13 +266,13 @@ export class TermDetailPage extends BasePage {
     return await this.contentArea.textContent();
   }
 
-  async hasMultipleDomains() {
-    const domainTabs = await this.domainTabs.count();
-    return domainTabs > 1;
+  async hasMultiplePerspectives() {
+    const perspectiveTabs = await this.perspectiveTabs.count();
+    return perspectiveTabs > 1;
   }
 
-  async getDomainNames() {
-    const tabs = await this.domainTabs.all();
+  async getPerspectiveNames() {
+    const tabs = await this.perspectiveTabs.all();
     return Promise.all(tabs.map(tab => tab.textContent()));
   }
 }

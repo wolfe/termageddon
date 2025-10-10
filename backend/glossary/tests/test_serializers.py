@@ -23,8 +23,8 @@ from glossary.tests.conftest import (
 class TestUserSerializers:
     """Test User serializers"""
 
-    def test_user_detail_serializer_includes_perspective_expert_for(self):
-        """Test that UserDetailSerializer includes perspective_expert_for field"""
+    def test_user_detail_serializer_includes_perspective_curator_for(self):
+        """Test that UserDetailSerializer includes perspective_curator_for field"""
         user = UserFactory()
         perspective = PerspectiveFactory()
         PerspectiveCuratorFactory(user=user, perspective=perspective)
@@ -118,14 +118,14 @@ class TestEntrySerializers:
         assert data.get("can_user_endorse") is True
         assert data.get("can_user_edit") is True
 
-        # Perspective expert (non-staff) -> both true for matching perspective
-        expert_user = UserFactory()
+        # Perspective curator (non-staff) -> both true for matching perspective
+        curator_user = UserFactory()
         from glossary.tests.conftest import PerspectiveCuratorFactory
 
-        PerspectiveCuratorFactory(user=expert_user, perspective=entry.perspective)
-        expert_request = factory.get("/")
-        expert_request.user = expert_user
-        serializer = EntryListSerializer(entry, context={"request": expert_request})
+        PerspectiveCuratorFactory(user=curator_user, perspective=entry.perspective)
+        curator_request = factory.get("/")
+        curator_request.user = curator_user
+        serializer = EntryListSerializer(entry, context={"request": curator_request})
         data = serializer.data
         assert data.get("can_user_endorse") is True
         assert data.get("can_user_edit") is True

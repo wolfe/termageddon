@@ -71,7 +71,7 @@ Authorization: Token <your-token>
   "first_name": "string",
   "last_name": "string",
   "is_staff": false,
-  "is_domain_expert": false
+  "is_perspective_curator": false
 }
 ```
 
@@ -588,9 +588,9 @@ curl -X POST http://localhost:8000/api/auth/login/ \
   -d '{"username": "admin", "password": "admin"}'
 ```
 
-2. **Create a Domain:**
+2. **Create a Perspective:**
 ```bash
-curl -X POST http://localhost:8000/api/domains/ \
+curl -X POST http://localhost:8000/api/perspectives/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Token <your-token>" \
   -d '{"name": "Technology", "description": "Technology-related terms"}'
@@ -609,7 +609,7 @@ curl -X POST http://localhost:8000/api/terms/ \
 curl -X POST http://localhost:8000/api/entries/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Token <your-token>" \
-  -d '{"term": 1, "domain": 1, "is_official": false}'
+  -d '{"term": 1, "perspective": 1, "is_official": false}'
 ```
 
 5. **Create a Version:**

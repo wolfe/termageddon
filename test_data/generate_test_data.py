@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 # Configuration
 OUTPUT_DIR = os.path.dirname(__file__)
 CSV_FILE_PATH = os.path.join(OUTPUT_DIR, "test_data.csv")
-TARGET_ROWS_PER_DOMAIN = 40
+TARGET_ROWS_PER_PERSPECTIVE = 40
 
 GLOSSARIES = {
     "Physics": "https://en.wikipedia.org/wiki/Glossary_of_physics",
@@ -27,9 +27,9 @@ AUTHORS = [
     "Chloe Dubois", "Ivan Petrov"
 ]
 
-def scrape_glossary(domain, url):
+def scrape_glossary(perspective, url):
     """Scrapes a single Wikipedia glossary page for terms and definitions."""
-    print(f"Scraping {domain} glossary from {url}...")
+    print(f"Scraping {perspective} glossary from {url}...")
     try:
         response = requests.get(url, headers={'User-Agent': 'TermageddonTestDataGenerator/1.0'})
         response.raise_for_status()
@@ -37,7 +37,7 @@ def scrape_glossary(domain, url):
         
         content = soup.find('div', {'class': 'mw-parser-output'})
         if not content:
-            print(f"Warning: Could not find content div for {domain}")
+            print(f"Warning: Could not find content div for {perspective}")
             return []
 
         data = []
@@ -56,7 +56,7 @@ def scrape_glossary(domain, url):
                 if definition:
                     data.append({"term": term, "definition": definition})
         
-        print(f"Found {len(data)} terms in {domain} glossary.")
+        print(f"Found {len(data)} terms in {perspective} glossary.")
         return data
     except requests.RequestException as e:
         print(f"Error fetching {url}: {e}")
@@ -69,14 +69,14 @@ def generate_csv():
     all_terms = {}
     total_scraped_count = 0
 
-    for domain, url in GLOSSARIES.items():
-        glossary_data = scrape_glossary(domain, url)
+    for perspective, url in GLOSSARIES.items():
+        glossary_data = scrape_glossary(perspective, url)
         total_scraped_count += len(glossary_data)
         for item in glossary_data:
             term = item['term']
             if term not in all_terms:
                 all_terms[term] = []
-            all_terms[term].append({'domain': domain, 'definition': item['definition']})
+            all_terms[term].append({'perspective': perspective, 'definition': item['definition']})
             
     print(f"\nStep 1 Complete: Scraped {total_scraped_count} total terms from {len(GLOSSARIES)} glossaries.")
     print(f"Found {len(all_terms)} unique terms.")
@@ -89,11 +89,11 @@ def generate_csv():
         if len(definitions) > 1:
             for entry in definitions:
                 author = random.choice(AUTHORS)
-                duplicate_entries.append([entry['domain'], term, entry['definition'], author])
+                duplicate_entries.append([entry['perspective'], term, entry['definition'], author])
         else:
             entry = definitions[0]
             author = random.choice(AUTHORS)
-            unique_entries.append([entry['domain'], term, entry['definition'], author])
+            unique_entries.append([entry['perspective'], term, entry['definition'], author])
             
     print(f"Step 2 Complete: Found {len(duplicate_entries)} entries for duplicate terms.")
     print(f"Found {len(unique_entries)} entries for unique terms.")
@@ -101,7 +101,7 @@ def generate_csv():
     print("\nStep 3: Writing data to CSV...")
     with open(CSV_FILE_PATH, 'w', newline='', encoding='utf-8') as f_csv:
         writer = csv.writer(f_csv)
-        writer.writerow(["domain", "term", "definition", "author"])
+        writer.writerow(["perspective", "term", "definition", "author"])
         
         # Write all duplicate entries first
         for row in duplicate_entries:
@@ -110,7 +110,7 @@ def generate_csv():
         total_rows_written = len(duplicate_entries)
         
         # Calculate how many more rows we need
-        target_total_rows = len(GLOSSARIES) * TARGET_ROWS_PER_DOMAIN
+        target_total_rows = len(GLOSSARIES) * TARGET_ROWS_PER_PERSPECTIVE
         remaining_rows_needed = target_total_rows - total_rows_written
         
         if remaining_rows_needed > 0:

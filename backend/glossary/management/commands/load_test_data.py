@@ -10,7 +10,7 @@ from glossary.models import Perspective, PerspectiveCurator, Entry, EntryDraft, 
 
 
 class Command(BaseCommand):
-    help = "Load test data from CSV file and create users, domains, entries"
+    help = "Load test data from CSV file and create users, perspectives, entries"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -103,7 +103,7 @@ class Command(BaseCommand):
                 users[author_name] = user
 
             # Create perspectives from CSV
-            unique_perspectives = set(row["domain"] for row in data)
+            unique_perspectives = set(row["perspective"] for row in data)
             perspectives = {}
             for perspective_name in unique_perspectives:
                 perspective, created = Perspective.objects.get_or_create(
@@ -158,7 +158,7 @@ class Command(BaseCommand):
             drafts_created = 0
 
             for row in data:
-                perspective = perspectives[row["domain"]]
+                perspective = perspectives[row["perspective"]]
                 author = users[row["author"]]
 
                 # Get or create term

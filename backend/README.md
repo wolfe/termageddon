@@ -4,9 +4,9 @@ A production-ready glossary management REST API built with Django and Django RES
 
 ## Features
 
-- **Complete CRUD operations** for domains, terms, entries, and versions
+- **Complete CRUD operations** for perspectives, terms, entries, and versions
 - **Approval workflow** requiring 2 approvals for entry versions
-- **Domain expert system** for managing specialized knowledge areas
+- **Perspective curator system** for managing specialized knowledge areas
 - **Comment system** with threaded replies
 - **Soft delete** functionality for all models
 - **Token-based authentication**
@@ -82,7 +82,7 @@ A production-ready glossary management REST API built with Django and Django RES
    This creates:
    - Superuser: `admin` / `admin`
    - 10 test users with credentials: `<username>` / `<username>` (e.g., `maria.flores` / `maria.flores`)
-   - 9 domains (Physics, Chemistry, Biology, etc.)
+   - 9 perspectives (Physics, Chemistry, Biology, etc.)
    - 360 entries with approved versions
 
 8. **Run the development server:**
@@ -103,25 +103,25 @@ A production-ready glossary management REST API built with Django and Django RES
 
 ### Core Resources
 
-- `GET/POST /api/domains/` - List/create domains
+- `GET/POST /api/perspectives/` - List/create perspectives
 - `GET/POST /api/terms/` - List/create terms
 - `GET/POST /api/entries/` - List/create entries
 - `GET/POST /api/entry-versions/` - List/create entry versions
 - `GET/POST /api/comments/` - List/create comments
-- `GET/POST /api/domain-experts/` - List/create domain experts (staff only)
+- `GET/POST /api/perspective-curators/` - List/create perspective curators (staff only)
 
 ### Custom Actions
 
-- `POST /api/entries/{id}/mark_official/` - Mark entry as official (requires domain expert or staff)
+- `POST /api/entries/{id}/mark_official/` - Mark entry as official (requires perspective curator or staff)
 - `POST /api/entry-versions/{id}/approve/` - Approve a version
 - `POST /api/comments/{id}/resolve/` - Resolve a comment
 - `POST /api/comments/{id}/unresolve/` - Unresolve a comment
 
 ### Filtering and Search
 
-- **Domains**: Search by name/description
+- **Perspectives**: Search by name/description
 - **Terms**: Filter by `is_official`, search by text
-- **Entries**: Filter by `domain` and `is_official`, search by term text
+- **Entries**: Filter by `perspective` and `is_official`, search by term text
 - **Entry Versions**: Filter by `entry` and `author`
 - **Comments**: Filter by `content_type`, `object_id`, `is_resolved`, `parent`
 
@@ -150,7 +150,7 @@ curl -X POST http://localhost:8000/api/auth/login/ \
     "first_name": "Maria",
     "last_name": "Flores",
     "is_staff": false,
-    "domain_expert_for": [1, 3]
+    "perspective_curator_for": [1, 3]
   }
 }
 
@@ -161,14 +161,14 @@ curl -X GET http://localhost:8000/api/entries/ \
 
 ## Data Models
 
-### Domain
+### Perspective
 Represents a knowledge area (e.g., Physics, Chemistry)
 
 ### Term
 A term in the glossary (globally unique)
 
 ### Entry
-A (term, domain) pair representing a definition
+A (term, perspective) pair representing a definition
 
 ### EntryVersion
 A versioned definition that requires approval
@@ -176,13 +176,13 @@ A versioned definition that requires approval
 ### Comment
 Threaded comments attachable to any model
 
-### DomainExpert
-Tracks which users are experts for which domains
+### PerspectiveCurator
+Tracks which users are curators for which perspectives
 
 ## Permissions
 
 - **Authenticated users**: Can view and create most resources
-- **Domain experts**: Can mark entries as official for their domains
+- **Perspective curators**: Can mark entries as official for their perspectives
 - **Staff users**: Full access to all resources and admin actions
 
 ## Testing
@@ -297,7 +297,7 @@ Nested relationships in read operations:
     "text": "API",
     "is_official": true
   },
-  "domain": {
+  "perspective": {
     "id": 1,
     "name": "Computer Science"
   },
