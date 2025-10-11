@@ -10,7 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { EntryDraft } from '../../../models';
-import { GlossaryService } from '../../../services/glossary.service';
+import { EntryDetailService } from '../../../services/entry-detail.service';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
@@ -33,7 +33,7 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private glossaryService: GlossaryService) {}
+  constructor(private entryDetailService: EntryDetailService) {}
 
   ngOnInit() {
     if (this.entryId) {
@@ -58,7 +58,7 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.glossaryService.getDraftHistory(this.entryId)
+    this.entryDetailService.loadDraftHistory(this.entryId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (drafts: EntryDraft[]) => {

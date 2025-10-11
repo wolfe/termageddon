@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ReviewDraft, Comment, EntryDraft } from '../../../models';
+import { ReviewDraft, Comment, EntryDraft, User } from '../../../models';
 import { CommentThreadComponent } from '../../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
@@ -189,6 +189,16 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
 
   isEditing(): boolean {
     return this.isEditMode;
+  }
+
+  /**
+   * Get the approvers to display - use latest draft approvers if available, otherwise fall back to selected draft
+   */
+  getApprovers(): User[] {
+    if (this.latestDraft?.approvers) {
+      return this.latestDraft.approvers;
+    }
+    return this.draft?.approvers || [];
   }
 
   /**

@@ -6,6 +6,7 @@ import { ReviewService } from '../../services/review.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
+import { PanelCommonService } from '../../services/panel-common.service';
 import { ReviewDraft, User, Comment } from '../../models';
 
 describe('MyDraftsComponent', () => {
@@ -15,6 +16,7 @@ describe('MyDraftsComponent', () => {
   let glossaryService: jasmine.SpyObj<GlossaryService>;
   let permissionService: jasmine.SpyObj<PermissionService>;
   let entryDetailService: jasmine.SpyObj<EntryDetailService>;
+  let panelCommonService: jasmine.SpyObj<PanelCommonService>;
 
   beforeEach(async () => {
     const reviewSpy = jasmine.createSpyObj('ReviewService', [
@@ -37,6 +39,63 @@ describe('MyDraftsComponent', () => {
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
       'loadCommentsWithPositions'
     ]);
+    const panelCommonSpy = jasmine.createSpyObj('PanelCommonService', [
+      'initializePanelState',
+      'loadUsers',
+      'selectDraft',
+      'onEditSaved',
+      'onCommentAdded',
+      'onCommentResolved',
+      'onCommentUnresolved',
+      'getLatestDraftsPerEntry',
+      'filterDraftsBySearch'
+    ]);
+
+    // Setup PanelCommonService mocks BEFORE component creation
+    panelCommonSpy.initializePanelState.and.returnValue({
+      loading: false,
+      error: null,
+      currentUser: null,
+      searchTerm: '',
+      drafts: [],
+      filteredDrafts: [],
+      selectedDraft: null,
+      comments: [],
+      isLoadingComments: false,
+      showReviewerSelector: false,
+      allUsers: [],
+      selectedReviewerIds: [],
+      draftToRequestReview: null,
+      requestingReview: false
+    });
+    panelCommonSpy.loadUsers.and.returnValue();
+    panelCommonSpy.selectDraft.and.returnValue();
+    panelCommonSpy.onEditSaved.and.callFake((state: any, loadDraftsCallback: () => void) => {
+      // Simulate the actual behavior
+      loadDraftsCallback();
+    });
+    panelCommonSpy.onCommentAdded.and.returnValue();
+    panelCommonSpy.onCommentResolved.and.returnValue();
+    panelCommonSpy.onCommentUnresolved.and.returnValue();
+    // Setup default return values for the spies BEFORE component creation
+    reviewSpy.getOwnDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    reviewSpy.searchDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    glossarySpy.getUsers.and.returnValue(of([]));
+    entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
+    panelCommonSpy.getLatestDraftsPerEntry.and.callFake((drafts: ReviewDraft[]) => {
+      // Simulate the actual filtering logic
+      const latestDraftsMap = new Map<number, ReviewDraft>();
+      drafts.forEach(draft => {
+        const entryId = draft.entry.id;
+        const existing = latestDraftsMap.get(entryId);
+        if (!existing || new Date(draft.timestamp) > new Date(existing.timestamp)) {
+          latestDraftsMap.set(entryId, draft);
+        }
+      });
+      return Array.from(latestDraftsMap.values())
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    });
+    panelCommonSpy.filterDraftsBySearch.and.returnValue([]);
 
     await TestBed.configureTestingModule({
       imports: [MyDraftsComponent, HttpClientTestingModule],
@@ -44,7 +103,8 @@ describe('MyDraftsComponent', () => {
         { provide: ReviewService, useValue: reviewSpy },
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
-        { provide: EntryDetailService, useValue: entryDetailSpy }
+        { provide: EntryDetailService, useValue: entryDetailSpy },
+        { provide: PanelCommonService, useValue: panelCommonSpy }
       ]
     }).compileComponents();
 
@@ -54,6 +114,11 @@ describe('MyDraftsComponent', () => {
     glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
     permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
     entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
+    panelCommonService = TestBed.inject(PanelCommonService) as jasmine.SpyObj<PanelCommonService>;
+    
+    // Ensure the component state is initialized
+    fixture.detectChanges();
+    expect(component.state).toBeDefined();
   });
 
   it('should create', () => {
@@ -500,10 +565,10 @@ describe('MyDraftsComponent', () => {
       component.loadMyDrafts();
 
       expect(reviewService.getOwnDrafts).toHaveBeenCalled();
-      expect(component.drafts.length).toBe(2); // Only latest drafts per entry
-      expect(component.drafts[0].id).toBe(1); // Latest draft for entry 1
-      expect(component.drafts[1].id).toBe(3); // Latest draft for entry 2
-      expect(component.filteredDrafts).toEqual(component.drafts);
+      expect(component.state.drafts.length).toBe(2); // Only latest drafts per entry
+      expect(component.state.drafts[0].id).toBe(1); // Latest draft for entry 1
+      expect(component.state.drafts[1].id).toBe(3); // Latest draft for entry 2
+      expect(component.state.filteredDrafts).toEqual(component.state.drafts);
     });
   });
 
@@ -648,12 +713,12 @@ describe('MyDraftsComponent', () => {
       component.loadMyDrafts();
 
       // Should only show 2 drafts (latest per entry), not 3
-      expect(component.drafts.length).toBe(2);
-      expect(component.drafts[0].id).toBe(1); // Latest draft for entry 1
-      expect(component.drafts[1].id).toBe(3); // Latest draft for entry 2
+      expect(component.state.drafts.length).toBe(2);
+      expect(component.state.drafts[0].id).toBe(1); // Latest draft for entry 1
+      expect(component.state.drafts[1].id).toBe(3); // Latest draft for entry 2
       
       // Verify older draft (id: 2) is not included
-      const draftIds = component.drafts.map(d => d.id);
+      const draftIds = component.state.drafts.map((d: ReviewDraft) => d.id);
       expect(draftIds).not.toContain(2);
     });
 
@@ -796,17 +861,17 @@ describe('MyDraftsComponent', () => {
       reviewService.getOwnDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
       glossaryService.getUsers.and.returnValue(of([]));
 
-      component.searchTerm = 'test';
+      component.state.searchTerm = 'test';
       component.ngOnInit(); // Ensure currentUser is initialized
       component.onSearch();
 
       // Should only show 2 drafts (latest per entry), not 3
-      expect(component.filteredDrafts.length).toBe(2);
-      expect(component.filteredDrafts[0].id).toBe(1); // Latest draft for entry 1
-      expect(component.filteredDrafts[1].id).toBe(3); // Latest draft for entry 2
+      expect(component.state.filteredDrafts.length).toBe(2);
+      expect(component.state.filteredDrafts[0].id).toBe(1); // Latest draft for entry 1
+      expect(component.state.filteredDrafts[1].id).toBe(3); // Latest draft for entry 2
       
       // Verify older draft (id: 2) is not included
-      const draftIds = component.filteredDrafts.map(d => d.id);
+      const draftIds = component.state.filteredDrafts.map((d: ReviewDraft) => d.id);
       expect(draftIds).not.toContain(2);
     });
 
@@ -875,7 +940,7 @@ describe('MyDraftsComponent', () => {
         }
       ];
 
-      component.selectedDraft = mockDraft;
+      component.state.selectedDraft = mockDraft;
       
       reviewService.getOwnDrafts.and.returnValue(of({ 
         count: 1, 
@@ -891,7 +956,7 @@ describe('MyDraftsComponent', () => {
 
       expect(reviewService.getOwnDrafts).toHaveBeenCalled();
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
-      expect(component.comments).toEqual(jasmine.arrayContaining(mockComments));
+      expect(component.state.comments).toEqual(jasmine.arrayContaining(mockComments));
     });
   });
 });

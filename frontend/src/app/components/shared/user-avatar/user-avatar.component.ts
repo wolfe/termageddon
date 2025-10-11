@@ -13,7 +13,7 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
       [title]="getUserDisplayName(user)"
       *ngIf="user"
     >
-      {{ getInitials(user) }}
+      {{ getInitials(user) || '?' }}
     </div>
   `,
   styles: []

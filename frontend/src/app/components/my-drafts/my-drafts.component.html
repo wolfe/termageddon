@@ -8,21 +8,21 @@
     <!-- Search -->
     <app-search-filter-bar
       placeholder="Search drafts..."
-      [searchTerm]="searchTerm"
-      [loading]="loading"
+      [searchTerm]="state.searchTerm"
+      [loading]="state.loading"
       (search)="onSearch()"
-      (cleared)="searchTerm = ''; onSearch()"
+      (cleared)="state.searchTerm = ''; onSearch()"
     ></app-search-filter-bar>
 
     <!-- Draft List -->
     <div class="flex-1 overflow-y-auto">
-      @if (loading) {
+      @if (state.loading) {
         <div class="p-4 text-center text-gray-500">
           <p>Loading drafts...</p>
         </div>
-      } @else if (error) {
+      } @else if (state.error) {
         <div class="p-4 text-center text-red-600">
-          <p>{{ error }}</p>
+          <p>{{ state.error }}</p>
           <button
             (click)="loadMyDrafts()"
             class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
@@ -30,9 +30,9 @@
             Retry
           </button>
         </div>
-      } @else if (filteredDrafts.length === 0) {
+      } @else if (state.filteredDrafts.length === 0) {
         <div class="p-4 text-center text-gray-500">
-          @if (searchTerm) {
+          @if (state.searchTerm) {
             <p>No drafts found</p>
           } @else {
             <p>No drafts yet</p>
@@ -41,10 +41,10 @@
         </div>
       } @else {
         <div class="space-y-1 p-2">
-          @for (draft of filteredDrafts; track draft.id) {
+          @for (draft of state.filteredDrafts; track draft.id) {
             <app-draft-list-item
               [draft]="draft"
-              [selected]="selectedDraft?.id === draft.id"
+              [selected]="state.selectedDraft?.id === draft.id"
               [showStatus]="true"
               statusType="draft"
               [showPublishButton]="true"
@@ -60,20 +60,20 @@
   <!-- Detail Panel -->
   <div detail>
     <app-draft-detail-panel
-      [draft]="selectedDraft"
+      [draft]="state.selectedDraft"
       [canEdit]="true"
       [canPublishFlag]="true"
       [canApproveFlag]="false"
       [showPublishButton]="true"
       [showRequestReviewButton]="true"
       [showApproveButton]="false"
-      [isLoadingComments]="isLoadingComments"
-      [comments]="comments"
-      [requestingReview]="false"
-      [entryId]="selectedDraft?.entry?.id"
-      [currentUserId]="currentUser?.id"
+      [isLoadingComments]="state.isLoadingComments"
+      [comments]="state.comments"
+      [requestingReview]="state.requestingReview"
+      [entryId]="state.selectedDraft?.entry?.id"
+      [currentUserId]="state.currentUser?.id"
       (approve)="onApprove()"
-      (publish)="publishDraft(selectedDraft!)"
+      (publish)="publishDraft(state.selectedDraft!)"
       (requestReview)="requestReviewers()"
       (editRequested)="onEditRequested()"
       (editSaved)="onEditSaved()"
@@ -87,9 +87,9 @@
 
 <!-- Reviewer Selector Dialog -->
 <app-reviewer-selector-dialog
-  [isOpen]="showReviewerSelector"
-  [users]="allUsers"
-  [selectedReviewerIds]="selectedReviewerIds"
+  [isOpen]="state.showReviewerSelector"
+  [users]="state.allUsers"
+  [selectedReviewerIds]="state.selectedReviewerIds"
   (close)="onReviewerSelectionCancelled()"
   (confirm)="onReviewerSelectionConfirmed($event)"
 >

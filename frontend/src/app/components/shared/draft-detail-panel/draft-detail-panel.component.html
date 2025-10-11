@@ -70,10 +70,10 @@
     <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
       <span>Author: {{ getUserDisplayName(draft.author) }}</span>
       <span>Created: {{ draft.timestamp | date: "medium" }}</span>
-      @if (draft.approvers.length > 0) {
+      @if (getApprovers().length > 0) {
         <div class="flex items-center space-x-1">
           <span>Approved by:</span>
-          @for (approver of draft.approvers; track approver.id) {
+          @for (approver of getApprovers(); track approver.id) {
             <app-user-avatar [user]="approver" color="green" size="medium"></app-user-avatar>
           }
         </div>
