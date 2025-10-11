@@ -368,6 +368,11 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   onEditSaved(): void {
     // Refresh the drafts list to show the new draft
     this.loadPendingDrafts();
+    
+    // Also reload comments since there might be new draft positions
+    if (this.selectedDraft) {
+      this.loadComments();
+    }
   }
 
   onEditCancelled(): void {

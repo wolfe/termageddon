@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Entry, EntryDraft, ReviewDraft, Comment, User, CreateEntryDraftRequest } from '../models';
 import { GlossaryService } from './glossary.service';
@@ -158,9 +158,63 @@ export class EntryDetailService {
   }
 
   /**
-   * Initialize edit content for ReviewDraft
+   * Initialize edit content for ReviewDraft using draft history
    */
-  initializeEditContentForReviewDraft(reviewDraft: ReviewDraft): string {
+  initializeEditContentForReviewDraft(reviewDraft: ReviewDraft, draftHistory: EntryDraft[]): string {
+    // Use latest draft from history if available
+    if (draftHistory.length > 0) {
+      return draftHistory[0].content;
+    }
+    // Fallback to the ReviewDraft content
     return reviewDraft.content;
+  }
+
+  /**
+   * Initialize edit content from latest draft in history (unified method)
+   */
+  initializeEditContentFromLatest(draftHistory: EntryDraft[], fallbackContent?: string): string {
+    if (draftHistory.length > 0) {
+      return draftHistory[0].content;
+    }
+    return fallbackContent || '';
+  }
+
+  /**
+   * Unified refresh pattern after creating a draft
+   */
+  refreshAfterDraftCreated(entryId: number): Observable<{
+    draftHistory: EntryDraft[];
+    entry?: Entry;
+  }> {
+    return forkJoin({
+      draftHistory: this.loadDraftHistory(entryId),
+      entry: this.glossaryService.getEntry(entryId).pipe(
+        catchError(() => of(undefined))
+      )
+    });
+  }
+
+  /**
+   * Determine what to show in the bottom section
+   */
+  getBottomSectionContent(
+    selectedHistoricalDraft: EntryDraft | null,
+    draftHistory: EntryDraft[],
+    replacesDraft?: EntryDraft
+  ): { type: 'historical' | 'published' | 'none'; draft: EntryDraft | null } {
+    if (selectedHistoricalDraft) {
+      return { type: 'historical', draft: selectedHistoricalDraft };
+    }
+    
+    const publishedDraft = this.getPublishedDraftFromHistory(draftHistory);
+    if (publishedDraft) {
+      return { type: 'published', draft: publishedDraft };
+    }
+    
+    if (replacesDraft) {
+      return { type: 'published', draft: replacesDraft };
+    }
+    
+    return { type: 'none', draft: null };
   }
 }

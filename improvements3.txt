@@ -1,0 +1,3 @@
+On the Review Page, when selecting an Entry, Proposed Definition section should always show the latest version of the Entry, including right after save in that same view.  (At the moment it seems to be showing a version before further edits.)  On "My Drafts" the behaviour is correct.  Perhaps there is an opportunity for shared code there.
+
+My Drafts only needs to show the latest draft of each entry on the left panel, not all drafts, as it does now.  (If I need to see an old draft, I'll use the History functionality.)

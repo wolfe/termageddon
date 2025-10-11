@@ -140,7 +140,7 @@
       <div class="p-6">
         <div class="prose max-w-none">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">Proposed Definition</h3>
-          <div class="bg-gray-50 p-4 rounded-lg" [innerHTML]="draft.content"></div>
+          <div class="bg-gray-50 p-4 rounded-lg" [innerHTML]="getProposedDefinitionContent()"></div>
         </div>
 
         @if (selectedHistoricalDraft) {

@@ -1,7 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ReviewDraft, Comment } from '../../../models';
+import { ReviewDraft, Comment, EntryDraft } from '../../../models';
 import { CommentThreadComponent } from '../../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
@@ -20,7 +20,7 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
   templateUrl: './draft-detail-panel.component.html',
   styleUrl: './draft-detail-panel.component.scss'
 })
-export class DraftDetailPanelComponent implements OnInit {
+export class DraftDetailPanelComponent implements OnInit, OnChanges {
   @Input() draft: ReviewDraft | null = null;
   @Input() canEdit: boolean = false;
   @Input() canPublishFlag: boolean = false;
@@ -50,8 +50,9 @@ export class DraftDetailPanelComponent implements OnInit {
 
   // Version history state
   showVersionHistory: boolean = false;
-  draftHistory: any[] = [];
-  selectedHistoricalDraft: any = null;
+  draftHistory: EntryDraft[] = [];
+  selectedHistoricalDraft: EntryDraft | null = null;
+  latestDraft: EntryDraft | null = null;
 
   constructor(
     private entryDetailService: EntryDetailService,
@@ -66,12 +67,21 @@ export class DraftDetailPanelComponent implements OnInit {
     }
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['draft'] && this.draft) {
+      this.loadDraftHistory();
+      // Reset historical draft selection when switching drafts
+      this.selectedHistoricalDraft = null;
+    }
+  }
+
   loadDraftHistory(): void {
     if (!this.draft?.entry?.id) return;
     
     this.entryDetailService.loadDraftHistory(this.draft.entry.id).subscribe({
       next: (drafts) => {
         this.draftHistory = drafts;
+        this.latestDraft = drafts.length > 0 ? drafts[0] : null;
       },
       error: (error) => {
         console.error('Error loading draft history:', error);
@@ -106,8 +116,12 @@ export class DraftDetailPanelComponent implements OnInit {
   onEdit(): void {
     if (!this.draft) return;
     
-    // Initialize edit content from the draft
-    this.editContent = this.entryDetailService.initializeEditContentForReviewDraft(this.draft);
+    // Use latest draft from history, not the selected draft
+    this.editContent = this.entryDetailService.initializeEditContentFromLatest(
+      this.draftHistory,
+      this.draft.content  // fallback
+    );
+    
     this.isEditMode = true;
     this.editRequested.emit();
   }
@@ -125,7 +139,10 @@ export class DraftDetailPanelComponent implements OnInit {
     ).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
-        this.loadDraftHistory();
+        
+        // Refresh draft history to get latest
+        this.loadDraftHistory();  // This will update latestDraft
+        
         this.isEditMode = false;
         this.editContent = '';
         this.editSaved.emit();
@@ -165,13 +182,24 @@ export class DraftDetailPanelComponent implements OnInit {
     this.showVersionHistory = false;
   }
 
-  onDraftSelected(draft: any): void {
+  onDraftSelected(draft: EntryDraft): void {
     this.selectedHistoricalDraft = draft;
     console.log('Selected draft:', draft);
   }
 
   isEditing(): boolean {
     return this.isEditMode;
+  }
+
+  /**
+   * Get the content to display in the Proposed Definition section
+   * Uses latest draft content if available, otherwise falls back to the ReviewDraft content
+   */
+  getProposedDefinitionContent(): string {
+    if (this.latestDraft) {
+      return this.latestDraft.content;
+    }
+    return this.draft?.content || '';
   }
 
   // Error handling

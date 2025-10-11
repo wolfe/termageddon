@@ -6,6 +6,7 @@ import { Entry, Comment, EntryDraft } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { NotificationService } from '../../services/notification.service';
+import { EntryDetailService } from '../../services/entry-detail.service';
 import { DefinitionFormComponent } from '../definition-form/definition-form.component';
 import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component';
@@ -42,6 +43,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
     public permissionService: PermissionService,
     private glossaryService: GlossaryService,
     private notificationService: NotificationService,
+    private entryDetailService: EntryDetailService,
   ) {}
 
   ngOnInit(): void {
@@ -78,25 +80,15 @@ export class TermDetailComponent implements OnInit, OnChanges {
     if (!this.entry?.id) return;
     
     this.isLoadingComments = true;
-    // Use the new endpoint that includes draft position indicators
-    this.glossaryService.getCommentsWithDraftPositions(this.entry.id).subscribe({
+    // Use EntryDetailService instead of direct glossaryService call
+    this.entryDetailService.loadCommentsWithPositions(this.entry.id).subscribe({
       next: (comments) => {
         this.comments = comments;
         this.isLoadingComments = false;
       },
       error: (error) => {
         console.error('Error loading comments:', error);
-        // Fallback to regular comments endpoint
-        this.glossaryService.getComments(1, this.entry.id).subscribe({
-          next: (response) => {
-            this.comments = response.results;
-            this.isLoadingComments = false;
-          },
-          error: (fallbackError) => {
-            console.error('Error loading comments (fallback):', fallbackError);
-            this.isLoadingComments = false;
-          }
-        });
+        this.isLoadingComments = false;
       }
     });
   }
@@ -105,7 +97,8 @@ export class TermDetailComponent implements OnInit, OnChanges {
     if (!this.entry?.id) return;
     
     this.isLoadingDraftHistory = true;
-    this.glossaryService.getDraftHistory(this.entry.id).subscribe({
+    // Use EntryDetailService instead of direct glossaryService call
+    this.entryDetailService.loadDraftHistory(this.entry.id).subscribe({
       next: (drafts) => {
         this.draftHistory = drafts;
         // Set the latest draft (first in the list since it's ordered by timestamp desc)
@@ -147,14 +140,11 @@ export class TermDetailComponent implements OnInit, OnChanges {
   }
 
   onEditClick(): void {
-    // Initialize edit content with latest draft content (not published content)
-    if (this.latestDraft) {
-      this.editContent = this.latestDraft.content;
-    } else if (this.entry?.active_draft?.content) {
-      this.editContent = this.entry.active_draft.content;
-    } else {
-      this.editContent = '';
-    }
+    // Use unified edit initialization method
+    this.editContent = this.entryDetailService.initializeEditContentFromLatest(
+      this.draftHistory,
+      this.entry?.active_draft?.content
+    );
     this.editRequested.emit();
   }
 
@@ -173,20 +163,39 @@ export class TermDetailComponent implements OnInit, OnChanges {
 
 
   private createNewDraft(): void {
-    const draftData = {
-      entry: this.entry.id,
-      content: this.editContent.trim(),
-      author: this.permissionService.currentUser?.id || 1,
-    };
+    const entryId = this.entry.id;
+    const content = this.editContent.trim();
+    const authorId = this.permissionService.currentUser?.id || 1;
 
-    console.log('Creating new draft:', draftData);
+    console.log('Creating new draft:', { entryId, content, authorId });
 
-    this.glossaryService.createEntryDraft(draftData).subscribe({
+    // Use EntryDetailService instead of direct glossaryService call
+    this.entryDetailService.createNewDraft(entryId, content, authorId).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
-        // Refresh the draft history and entry data
-        this.loadDraftHistory();
-        this.refreshEntryData();
+        
+        // Use unified refresh pattern
+        this.entryDetailService.refreshAfterDraftCreated(entryId).subscribe({
+          next: ({ draftHistory, entry }) => {
+            this.draftHistory = draftHistory;
+            this.latestDraft = draftHistory[0] || null;
+            if (entry) {
+              Object.assign(this.entry, entry);
+            }
+            this.editSaved.emit(this.entry);
+            this.notificationService.success(
+              'Definition saved successfully! It will be visible once approved.',
+            );
+          },
+          error: (error) => {
+            console.error('Failed to refresh:', error);
+            // Still emit success, just log the error
+            this.editSaved.emit(this.entry);
+            this.notificationService.success(
+              'Definition saved successfully! It will be visible once approved.',
+            );
+          }
+        });
       },
       error: (error) => {
         console.error('Failed to create draft:', error);
@@ -196,31 +205,6 @@ export class TermDetailComponent implements OnInit, OnChanges {
   }
 
 
-  private refreshEntryData(): void {
-    // Refresh the entry data to get the updated content
-    this.glossaryService.getEntry(this.entry.id).subscribe({
-      next: (updatedEntry) => {
-        console.log('Refreshed entry data:', updatedEntry);
-        console.log('Updated entry active_draft:', updatedEntry.active_draft);
-        console.log('Updated entry active_draft content:', updatedEntry.active_draft?.content);
-        // Update the local entry object
-        Object.assign(this.entry, updatedEntry);
-        // Emit the updated entry
-        this.editSaved.emit(this.entry);
-        this.notificationService.success(
-          'Definition saved successfully! It will be visible once approved.',
-        );
-      },
-      error: (error) => {
-        console.error('Failed to refresh entry data:', error);
-        // Still emit the original entry as fallback
-        this.editSaved.emit(this.entry);
-        this.notificationService.success(
-          'Definition saved successfully! It will be visible once approved.',
-        );
-      },
-    });
-  }
 
   private handleSaveError(error: any): void {
     // Show specific error message based on the type of error

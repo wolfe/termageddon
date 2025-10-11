@@ -76,7 +76,8 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: PaginatedResponse<ReviewDraft>) => {
-          this.drafts = response.results;
+          // Filter to show only the latest draft per entry
+          this.drafts = this.getLatestDraftsPerEntry(response.results);
           this.filteredDrafts = [...this.drafts];
           // Auto-select first draft if available
           if (this.drafts.length > 0 && !this.selectedDraft) {
@@ -92,6 +93,28 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Filter drafts to show only the latest draft per entry
+   * This ensures we don't show multiple drafts for the same entry
+   */
+  private getLatestDraftsPerEntry(drafts: ReviewDraft[]): ReviewDraft[] {
+    const latestDraftsMap = new Map<number, ReviewDraft>();
+    
+    // Group drafts by entry ID and keep only the latest one
+    drafts.forEach(draft => {
+      const entryId = draft.entry.id;
+      const existingDraft = latestDraftsMap.get(entryId);
+      
+      if (!existingDraft || new Date(draft.timestamp) > new Date(existingDraft.timestamp)) {
+        latestDraftsMap.set(entryId, draft);
+      }
+    });
+    
+    // Convert back to array and sort by timestamp (newest first)
+    return Array.from(latestDraftsMap.values())
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
+
   onSearch(): void {
     if (!this.searchTerm.trim()) {
       this.filteredDrafts = [...this.drafts];
@@ -102,10 +125,11 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.reviewService.searchDrafts(this.searchTerm, false).subscribe({
       next: (response: PaginatedResponse<ReviewDraft>) => {
-        // Filter results to only show own drafts
-        this.filteredDrafts = response.results.filter(draft => 
+        // Filter results to only show own drafts and apply latest-only filtering
+        const ownDrafts = response.results.filter(draft => 
           draft.author.id === this.currentUser?.id
         );
+        this.filteredDrafts = this.getLatestDraftsPerEntry(ownDrafts);
         this.loading = false;
         
         // If current selection is not in filtered results, select first available
@@ -262,6 +286,11 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   onEditSaved(): void {
     // Refresh the drafts list to show the new draft
     this.loadMyDrafts();
+    
+    // Also reload comments
+    if (this.selectedDraft) {
+      this.loadComments();
+    }
   }
 
   onEditCancelled(): void {
