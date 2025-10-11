@@ -266,4 +266,101 @@ describe('GlossaryService', () => {
       req.flush(mockUsers);
     });
   });
+
+  describe('Draft History operations', () => {
+    it('should get draft history for an entry', () => {
+      const mockDrafts: EntryDraft[] = [
+        {
+          id: 1,
+          content: 'Latest draft content',
+          is_approved: false,
+          is_published: false,
+          is_endorsed: false,
+          approval_count: 0,
+          timestamp: '2024-01-02T00:00:00Z',
+          created_at: '2024-01-02T00:00:00Z',
+          updated_at: '2024-01-02T00:00:00Z',
+          author: {
+            id: 1,
+            username: 'testuser',
+            first_name: 'Test',
+            last_name: 'User',
+            is_staff: false,
+            perspective_curator_for: []
+          },
+          entry: 1,
+          approvers: [],
+          requested_reviewers: [],
+          replaces_draft: undefined
+        },
+        {
+          id: 2,
+          content: 'Previous draft content',
+          is_approved: true,
+          is_published: true,
+          is_endorsed: false,
+          approval_count: 2,
+          timestamp: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          author: {
+            id: 1,
+            username: 'testuser',
+            first_name: 'Test',
+            last_name: 'User',
+            is_staff: false,
+            perspective_curator_for: []
+          },
+          entry: 1,
+          approvers: [],
+          requested_reviewers: [],
+          replaces_draft: undefined
+        }
+      ];
+
+      service.getDraftHistory(1).subscribe(drafts => {
+        expect(drafts).toEqual(mockDrafts);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entry-drafts/history/?entry=1');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockDrafts);
+    });
+  });
+
+  describe('Comment operations', () => {
+    it('should get comments with draft positions for an entry', () => {
+      const mockComments = [
+        {
+          id: 1,
+          content_type: 1,
+          object_id: 1,
+          text: 'Test comment',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          is_resolved: false,
+          author: {
+            id: 1,
+            username: 'testuser',
+            first_name: 'Test',
+            last_name: 'User',
+            is_staff: false,
+            perspective_curator_for: []
+          },
+          replies: [],
+          draft_position: 'current draft',
+          draft_id: 1,
+          draft_timestamp: '2024-01-02T00:00:00Z'
+        }
+      ];
+
+      service.getCommentsWithDraftPositions(1).subscribe(comments => {
+        expect(comments).toEqual(mockComments);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/comments/with_draft_positions/?entry=1');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockComments);
+    });
+  });
 });

@@ -185,8 +185,80 @@ class TestEntryDraftSerializers:
         serializer = EntryDraftListSerializer(version, context={"request": request2})
         data = serializer.data
         assert data["can_approve_by_current_user"] is False
-        assert data["approval_status_for_user"] in {"already_approved", "already_approved_by_others"}
+        # User has approved but draft may not be fully approved yet
+        assert data["approval_status_for_user"] in {"can_approve", "already_approved_by_others"}
         assert data["user_has_approved"] is True
+
+    def test_approval_status_for_user_logic(self):
+        """Test the updated approval status logic"""
+        from glossary.serializers import EntryDraftListSerializer
+        
+        author = UserFactory()
+        approver1 = UserFactory()
+        approver2 = UserFactory()
+        entry = EntryFactory()
+        
+        # Create a draft that needs 2 approvals
+        draft = EntryDraftFactory(entry=entry, author=author)
+        
+        factory = APIRequestFactory()
+        
+        # Test 1: User who hasn't approved yet
+        request1 = factory.get("/")
+        request1.user = approver1
+        serializer1 = EntryDraftListSerializer(draft, context={"request": request1})
+        data1 = serializer1.data
+        assert data1["approval_status_for_user"] == "can_approve"
+        
+        # Test 2: User approves but draft still needs more approvals
+        draft.approvers.add(approver1)
+        request2 = factory.get("/")
+        request2.user = approver1
+        serializer2 = EntryDraftListSerializer(draft, context={"request": request2})
+        data2 = serializer2.data
+        assert data2["approval_status_for_user"] == "can_approve"  # Still needs more approvals
+        
+        # Test 3: Draft gets fully approved
+        draft.approvers.add(approver2)
+        request3 = factory.get("/")
+        request3.user = approver1
+        serializer3 = EntryDraftListSerializer(draft, context={"request": request3})
+        data3 = serializer3.data
+        assert data3["approval_status_for_user"] == "already_approved_by_others"  # Now fully approved
+        
+        # Test 4: Different user who hasn't approved
+        request4 = factory.get("/")
+        request4.user = UserFactory()
+        serializer4 = EntryDraftListSerializer(draft, context={"request": request4})
+        data4 = serializer4.data
+        assert data4["approval_status_for_user"] == "already_approved_by_others"  # Draft is fully approved
+
+    def test_replaces_draft_field_in_serializer(self):
+        """Test that replaces_draft field is included in serializers"""
+        from glossary.serializers import EntryDraftListSerializer, EntryDraftReviewSerializer
+        
+        author = UserFactory()
+        entry = EntryFactory()
+        
+        # Create drafts with replacement relationship
+        draft1 = EntryDraftFactory(entry=entry, author=author)
+        draft2 = EntryDraftFactory(entry=entry, author=author, replaces_draft=draft1)
+        
+        factory = APIRequestFactory()
+        request = factory.get("/")
+        request.user = author
+        
+        # Test EntryDraftListSerializer
+        serializer1 = EntryDraftListSerializer(draft2, context={"request": request})
+        data1 = serializer1.data
+        assert "replaces_draft" in data1
+        assert data1["replaces_draft"] == draft1.id
+        
+        # Test EntryDraftReviewSerializer
+        serializer2 = EntryDraftReviewSerializer(draft2, context={"request": request})
+        data2 = serializer2.data
+        assert "replaces_draft" in data2
+        assert data2["replaces_draft"] == draft1.id
 
     def test_entry_version_create_serializer(self):
         """Test EntryDraftCreateSerializer"""

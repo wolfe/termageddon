@@ -195,6 +195,14 @@ class EntryDraft(AuditedModel):
         help_text="Perspective curator who endorsed this draft"
     )
     endorsed_at = models.DateTimeField(null=True, blank=True)
+    replaces_draft = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="replaced_by",
+        help_text="The draft that this draft replaces in the version history"
+    )
 
     class Meta:
         db_table = "glossary_entry_draft"
@@ -219,21 +227,9 @@ class EntryDraft(AuditedModel):
         return self.endorsed_by is not None
 
     def clean(self):
-        """Validate max 1 unpublished draft per author per entry"""
+        """Validate draft data"""
         super().clean()
-        if not self.pk:  # Only check on creation
-            existing_unpublished = EntryDraft.objects.filter(
-                entry=self.entry,
-                author=self.author,
-                is_deleted=False,
-                is_published=False,
-            ).exclude(pk=self.pk)
-
-            if existing_unpublished.exists():
-                raise ValidationError(
-                    f"You already have an unpublished draft for this entry. "
-                    f"Please edit the existing draft or wait for it to be published first."
-                )
+        # Removed max 1 unpublished draft per author validation to support linear draft history
 
     def approve(self, user):
         """Add a user as an approver if valid"""

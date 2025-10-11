@@ -175,4 +175,18 @@ export class GlossaryService extends BaseService {
   getSystemConfig(): Observable<SystemConfig> {
     return this.get<SystemConfig>('/system-config/');
   }
+
+  /**
+   * Get draft history for an entry
+   */
+  getDraftHistory(entryId: number): Observable<EntryDraft[]> {
+    return this.get<EntryDraft[]>(`/entry-drafts/history/?entry=${entryId}`);
+  }
+
+  /**
+   * Get comments with draft position indicators for an entry
+   */
+  getCommentsWithDraftPositions(entryId: number): Observable<Comment[]> {
+    return this.get<Comment[]>(`/comments/with_draft_positions/?entry=${entryId}`);
+  }
 }

@@ -81,6 +81,7 @@ class EntryDraftListSerializer(serializers.ModelSerializer):
     approvers = UserSerializer(many=True, read_only=True)
     requested_reviewers = UserSerializer(many=True, read_only=True)
     endorsed_by = UserSerializer(read_only=True)
+    replaces_draft = serializers.PrimaryKeyRelatedField(read_only=True)
     is_approved = serializers.BooleanField(read_only=True)
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
@@ -103,6 +104,7 @@ class EntryDraftListSerializer(serializers.ModelSerializer):
             "requested_reviewers",
             "endorsed_by",
             "endorsed_at",
+            "replaces_draft",
             "is_approved",
             "approval_count",
             "is_published",
@@ -144,7 +146,11 @@ class EntryDraftListSerializer(serializers.ModelSerializer):
             return 'own_draft'
         
         if obj.approvers.filter(pk=request.user.pk).exists():
-            return 'already_approved'
+            # User has approved this draft
+            if obj.is_approved:
+                return 'already_approved_by_others'  # Draft is fully approved
+            else:
+                return 'can_approve'  # User approved but draft needs more approvals
         
         if obj.is_approved:
             return 'already_approved_by_others'
@@ -315,7 +321,7 @@ class EntryDraftReviewSerializer(serializers.ModelSerializer):
     is_approved = serializers.BooleanField(read_only=True)
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
-    replaces_draft = serializers.SerializerMethodField()
+    replaces_draft = serializers.PrimaryKeyRelatedField(read_only=True)
     can_approve_by_current_user = serializers.SerializerMethodField()
     approval_status_for_user = serializers.SerializerMethodField()
     user_has_approved = serializers.SerializerMethodField()
@@ -346,12 +352,6 @@ class EntryDraftReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
 
-    def get_replaces_draft(self, obj):
-        """Get the currently active draft that this draft would replace"""
-        if obj.entry.active_draft and obj.entry.active_draft.id != obj.id:
-            return EntryDraftListSerializer(obj.entry.active_draft).data
-        return None
-
     def get_can_approve_by_current_user(self, obj):
         """Check if current user can approve this draft"""
         request = self.context.get('request')
@@ -379,7 +379,11 @@ class EntryDraftReviewSerializer(serializers.ModelSerializer):
             return 'own_draft'
         
         if obj.approvers.filter(pk=request.user.pk).exists():
-            return 'already_approved'
+            # User has approved this draft
+            if obj.is_approved:
+                return 'already_approved_by_others'  # Draft is fully approved
+            else:
+                return 'can_approve'  # User approved but draft needs more approvals
         
         if obj.is_approved:
             return 'already_approved_by_others'

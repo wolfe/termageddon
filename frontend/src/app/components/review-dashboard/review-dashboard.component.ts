@@ -6,6 +6,7 @@ import { ReviewService } from '../../services/review.service';
 import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
+import { NotificationService } from '../../services/notification.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 import { SearchFilterBarComponent, FilterConfig } from '../shared/search-filter-bar/search-filter-bar.component';
@@ -81,6 +82,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     private reviewService: ReviewService,
     private permissionService: PermissionService,
     private glossaryService: GlossaryService,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -167,7 +169,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
     this.reviewService.approveDraft(this.selectedDraft.id).subscribe({
       next: (updatedDraft) => {
-        alert(
+        this.notificationService.success(
           `Successfully approved "${this.selectedDraft!.entry.term.text}"`,
         );
 
@@ -185,7 +187,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error approving draft:', error);
-        alert('Failed to approve draft. Please try again.');
+        this.notificationService.error('Failed to approve draft. Please try again.');
         this.loading = false;
       },
     });
@@ -270,7 +272,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error requesting review:', error);
-          alert(
+          this.notificationService.error(
             'Failed to request review: ' +
               (error.error?.detail || 'Unknown error'),
           );
@@ -287,10 +289,11 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   publishDraft(draft: ReviewDraft): void {
     if (!draft.is_approved) {
-      alert('Draft must be approved before publishing');
+      this.notificationService.warning('Draft must be approved before publishing');
       return;
     }
 
+    // TODO: Replace with confirmation dialog
     if (
       confirm(
         'Are you sure you want to publish this draft? This will make it the active draft.',
@@ -298,7 +301,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     ) {
       this.reviewService.publishDraft(draft.id).subscribe({
         next: (updatedDraft) => {
-          alert('Draft published successfully!');
+          this.notificationService.success('Draft published successfully!');
           // Clear the selected draft since it's no longer in the review list
           this.selectedDraft = null;
           // Reload the drafts to get the updated list (published draft will be excluded)
@@ -306,7 +309,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error publishing draft:', error);
-          alert(
+          this.notificationService.error(
             'Failed to publish draft: ' +
               (error.error?.detail || 'Unknown error'),
           );

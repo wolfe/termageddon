@@ -1,0 +1,84 @@
+@if (isOpen) {
+  <div class="version-history-sidebar">
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">Version History</h3>
+      <button class="close-button" (click)="onClose()" aria-label="Close sidebar">
+        ×
+      </button>
+    </div>
+
+    <div class="sidebar-content">
+      @if (loading) {
+        <div class="loading-section">
+          <p>Loading version history...</p>
+        </div>
+      }
+
+      @if (error) {
+        <div class="error-section">
+          <p>{{ error }}</p>
+        </div>
+      }
+
+      @if (!loading && !error) {
+        @if (draftHistory.length === 0) {
+          <div class="no-versions">
+            <p>No version history available.</p>
+          </div>
+        } @else {
+          <div class="versions-list">
+            @for (draft of draftHistory; track draft.id) {
+              <div 
+                class="version-item"
+                [class.selected]="selectedDraft?.id === draft.id"
+                (click)="selectDraft(draft)"
+              >
+                <div class="version-header">
+                  <div class="version-status">
+                    <span class="status-badge" [ngClass]="getDraftStatusClass(draft)">
+                      {{ getDraftStatusText(draft) }}
+                    </span>
+                  </div>
+                  <div class="version-date">
+                    {{ draft.timestamp | date: 'short' }}
+                  </div>
+                </div>
+
+                <div class="version-author">
+                  <div class="author-avatar">
+                    {{ getInitials(draft.author) }}
+                  </div>
+                  <div class="author-info">
+                    <div class="author-name">{{ getUserDisplayName(draft.author) }}</div>
+                    @if (draft.is_endorsed) {
+                      <div class="endorsed-badge">Endorsed</div>
+                    }
+                  </div>
+                </div>
+
+                @if (draft.approvers.length > 0) {
+                  <div class="approvers-section">
+                    <div class="approvers-label">Approved by:</div>
+                    <div class="approvers-list">
+                      @for (approver of draft.approvers; track approver.id) {
+                        <div class="approver-avatar" [title]="getUserDisplayName(approver)">
+                          {{ getInitials(approver) }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (draft.replaces_draft) {
+                  <div class="replaces-info">
+                    <small>Replaces previous version</small>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

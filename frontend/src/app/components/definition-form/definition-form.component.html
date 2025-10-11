@@ -9,11 +9,11 @@
   >
   </quill-editor>
 
-  <!-- Entry Picker Modal -->
-  <app-entry-picker
-    [isOpen]="showEntryPicker"
-    (close)="onEntryPickerClosed()"
+  <!-- Entry Link Selector Dialog -->
+  <app-entry-link-selector-dialog
+    [isOpen]="showEntryLinkSelector"
+    (close)="onEntryLinkSelectorClosed()"
     (entrySelected)="onEntrySelected($event)"
   >
-  </app-entry-picker>
+  </app-entry-link-selector-dialog>
 </div>

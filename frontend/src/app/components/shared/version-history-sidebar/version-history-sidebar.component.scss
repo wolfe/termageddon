@@ -1,0 +1,223 @@
+.version-history-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: white;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 3px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #374151;
+  }
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.loading-section,
+.error-section,
+.no-versions {
+  padding: 2rem 0;
+  text-align: center;
+  color: #6b7280;
+}
+
+.error-section {
+  color: #dc2626;
+}
+
+.versions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.version-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+
+  &:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  &.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 0 0 1px #3b82f6;
+  }
+}
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.version-status {
+  .status-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+
+    &.status-published {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &.status-approved {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &.status-draft {
+      background: #fef3c7;
+      color: #92400e;
+    }
+  }
+}
+
+.version-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.version-author {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.author-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.625rem;
+  flex-shrink: 0;
+}
+
+.author-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.endorsed-badge {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  margin-top: 0.125rem;
+}
+
+.approvers-section {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.approvers-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.approvers-list {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.approver-avatar {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #22c55e;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.5rem;
+}
+
+.replaces-info {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+  color: #6b7280;
+  font-style: italic;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

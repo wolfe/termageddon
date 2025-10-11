@@ -98,17 +98,27 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const searchLower = this.searchTerm.toLowerCase();
-    this.filteredDrafts = this.drafts.filter(draft => 
-      draft.entry.term.text.toLowerCase().includes(searchLower) ||
-      draft.entry.perspective.name.toLowerCase().includes(searchLower) ||
-      draft.content.toLowerCase().includes(searchLower)
-    );
-
-    // If current selection is not in filtered results, select first available
-    if (this.selectedDraft && !this.filteredDrafts.find(d => d.id === this.selectedDraft!.id)) {
-      this.selectedDraft = this.filteredDrafts.length > 0 ? this.filteredDrafts[0] : null;
-    }
+    // Use backend search instead of client-side filtering
+    this.loading = true;
+    this.reviewService.searchDrafts(this.searchTerm, false).subscribe({
+      next: (response: PaginatedResponse<ReviewDraft>) => {
+        // Filter results to only show own drafts
+        this.filteredDrafts = response.results.filter(draft => 
+          draft.author.id === this.currentUser?.id
+        );
+        this.loading = false;
+        
+        // If current selection is not in filtered results, select first available
+        if (this.selectedDraft && !this.filteredDrafts.find(d => d.id === this.selectedDraft!.id)) {
+          this.selectedDraft = this.filteredDrafts.length > 0 ? this.filteredDrafts[0] : null;
+        }
+      },
+      error: (error) => {
+        console.error('Error searching drafts:', error);
+        this.error = 'Failed to search drafts';
+        this.loading = false;
+      },
+    });
   }
 
   selectDraft(draft: ReviewDraft): void {

@@ -1,0 +1,96 @@
+@if (isOpen) {
+  <div class="dialog-backdrop" (click)="onBackdropClick($event)">
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h3 class="dialog-title">Select Entry to Link</h3>
+        <button class="close-button" (click)="onCancel()" aria-label="Close dialog">
+          ×
+        </button>
+      </div>
+      
+      <div class="dialog-body">
+        <!-- Search -->
+        <div class="search-section">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Search entries..."
+            class="search-input"
+          />
+        </div>
+
+        <!-- Loading -->
+        @if (loading) {
+          <div class="loading-section">
+            <p>Loading entries...</p>
+          </div>
+        }
+
+        <!-- Error -->
+        @if (error) {
+          <div class="error-section">
+            <p>{{ error }}</p>
+          </div>
+        }
+
+        <!-- Entries List -->
+        @if (!loading && !error) {
+          <div class="entries-section">
+            @if (filteredEntries.length === 0) {
+              <div class="no-entries">
+                <p>No entries found.</p>
+              </div>
+            } @else {
+              <div class="entries-list">
+                @for (group of filteredEntries; track group.term.id) {
+                  <div class="term-group">
+                    <h4 class="term-title">{{ group.term.text }}</h4>
+                    <div class="entries-grid">
+                      @for (entry of group.entries; track entry.id) {
+                        <div 
+                          class="entry-item"
+                          [class.selected]="selectedEntry?.id === entry.id"
+                          (click)="selectEntry(entry)"
+                        >
+                          <div class="entry-header">
+                            <app-perspective-pill 
+                              [perspective]="entry.perspective"
+                              size="small"
+                               variant="default"
+                            ></app-perspective-pill>
+                          </div>
+                          <div class="entry-preview">
+                            {{ getEntryPreview(entry) }}
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+      
+      <div class="dialog-footer">
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          (click)="onCancel()"
+        >
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          [disabled]="!selectedEntry"
+          (click)="confirmSelection()"
+        >
+          Insert Link
+        </button>
+      </div>
+    </div>
+  </div>
+}

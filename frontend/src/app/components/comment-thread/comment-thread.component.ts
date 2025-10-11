@@ -191,4 +191,30 @@ export class CommentThreadComponent implements OnInit, OnChanges {
   getReplyCount(comment: Comment): number {
     return this.getReplies(comment).length;
   }
+
+  getDraftPositionText(comment: Comment): string {
+    if (!comment.draft_position) return '';
+    
+    switch (comment.draft_position) {
+      case 'current draft':
+        return 'Current Draft';
+      case 'published':
+        return 'Published Version';
+      default:
+        return comment.draft_position;
+    }
+  }
+
+  getDraftPositionClass(comment: Comment): string {
+    if (!comment.draft_position) return '';
+    
+    switch (comment.draft_position) {
+      case 'current draft':
+        return 'bg-blue-100 text-blue-700';
+      case 'published':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  }
 }

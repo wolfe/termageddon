@@ -20,6 +20,7 @@ from glossary.tests.conftest import (
     EntryDraftFactory,
     TermFactory,
     UserFactory,
+    CommentFactory,
 )
 
 
@@ -599,7 +600,7 @@ class TestEntryDraftUpdateWorkflow:
     def test_edit_workflow_with_existing_unpublished_draft(
         self, authenticated_client
     ):
-        """Test that editing creates new draft only if no unpublished draft exists"""
+        """Test that editing with existing unpublished draft creates new draft (linear history)"""
         entry = EntryFactory()
 
         # Create first unpublished draft
@@ -610,7 +611,7 @@ class TestEntryDraftUpdateWorkflow:
             content="Original content",
         )
 
-        # Try to create another draft - should fail
+        # Try to create another draft - should succeed (linear draft history)
         url = reverse("entrydraft-list")
         data = {
             "entry": entry.id,
@@ -619,9 +620,85 @@ class TestEntryDraftUpdateWorkflow:
         }
         response = authenticated_client.post(url, data)
 
+        assert response.status_code == status.HTTP_201_CREATED
+        new_draft_id = response.data["id"]
+        new_draft = EntryDraft.objects.get(id=new_draft_id)
+        
+        # New draft should replace the original draft
+        assert new_draft.replaces_draft == draft1
+        assert new_draft.content == "New content"
+
+    def test_draft_history_endpoint(self, authenticated_client):
+        """Test the draft history endpoint"""
+        entry = EntryFactory()
+        
+        # Create multiple drafts
+        draft1 = EntryDraftFactory(entry=entry, author=authenticated_client.user, content="First draft")
+        draft2 = EntryDraftFactory(entry=entry, author=authenticated_client.user, content="Second draft", replaces_draft=draft1)
+        draft3 = EntryDraftFactory(entry=entry, author=authenticated_client.user, content="Third draft", replaces_draft=draft2)
+        
+        url = reverse("entrydraft-history")
+        response = authenticated_client.get(url, {"entry": entry.id})
+        
+        assert response.status_code == status.HTTP_200_OK
+        drafts = response.data
+        
+        # Should return drafts in reverse chronological order (newest first)
+        assert len(drafts) == 3
+        assert drafts[0]["id"] == draft3.id
+        assert drafts[1]["id"] == draft2.id
+        assert drafts[2]["id"] == draft1.id
+        
+        # Check that replaces_draft field is included
+        assert drafts[0]["replaces_draft"] == draft2.id
+        assert drafts[1]["replaces_draft"] == draft1.id
+        assert drafts[2]["replaces_draft"] is None
+
+    def test_draft_history_endpoint_missing_entry(self, authenticated_client):
+        """Test the draft history endpoint with missing entry parameter"""
+        url = reverse("entrydraft-history")
+        response = authenticated_client.get(url)
+        
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        # The error is in the __all__ field
-        assert "unpublished draft" in str(response.data["__all__"][0])
+        assert "entry parameter is required" in response.data["detail"]
+
+    def test_comments_with_draft_positions_endpoint(self, authenticated_client):
+        """Test the comments with draft positions endpoint"""
+        entry = EntryFactory()
+        
+        # Create drafts
+        published_draft = EntryDraftFactory(entry=entry, author=authenticated_client.user, is_published=True)
+        current_draft = EntryDraftFactory(entry=entry, author=authenticated_client.user, replaces_draft=published_draft)
+        
+        # Create comments on different drafts
+        comment1 = CommentFactory(content_object=published_draft, author=authenticated_client.user)
+        comment2 = CommentFactory(content_object=current_draft, author=authenticated_client.user)
+        
+        url = reverse("comment-with-draft-positions")
+        response = authenticated_client.get(url, {"entry": entry.id})
+        
+        assert response.status_code == status.HTTP_200_OK
+        comments = response.data
+        
+        # Should return comments with draft position information
+        assert len(comments) >= 2
+        
+        # Find our comments
+        comment1_data = next(c for c in comments if c["id"] == comment1.id)
+        comment2_data = next(c for c in comments if c["id"] == comment2.id)
+        
+        assert comment1_data["draft_position"] == "published"
+        assert comment2_data["draft_position"] == "current draft"
+        assert comment1_data["draft_id"] == published_draft.id
+        assert comment2_data["draft_id"] == current_draft.id
+
+    def test_comments_with_draft_positions_missing_entry(self, authenticated_client):
+        """Test the comments with draft positions endpoint with missing entry parameter"""
+        url = reverse("comment-with-draft-positions")
+        response = authenticated_client.get(url)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "entry parameter is required" in response.data["detail"]
 
     def test_edit_workflow_after_publishing(self, authenticated_client):
         """Test that editing after publishing creates new draft"""

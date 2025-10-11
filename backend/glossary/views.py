@@ -422,7 +422,21 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         return EntryDraftListSerializer
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, created_by=self.request.user)
+        # Set replaces_draft to the latest draft for this entry
+        entry = serializer.validated_data['entry']
+        latest_draft = EntryDraft.objects.filter(
+            entry=entry,
+            is_deleted=False
+        ).order_by('-timestamp').first()
+        
+        if latest_draft:
+            serializer.save(
+                author=self.request.user, 
+                created_by=self.request.user,
+                replaces_draft=latest_draft
+            )
+        else:
+            serializer.save(author=self.request.user, created_by=self.request.user)
 
     def update(self, request, *args, **kwargs):
         """Update an unpublished draft (only by author)"""
@@ -504,6 +518,34 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=["get"])
+    def history(self, request):
+        """Get draft history for an entry"""
+        entry_id = request.query_params.get('entry')
+        if not entry_id:
+            return Response(
+                {"detail": "entry parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            drafts = EntryDraft.objects.filter(
+                entry_id=entry_id,
+                is_deleted=False
+            ).select_related(
+                'author', 'entry__term', 'entry__perspective'
+            ).prefetch_related(
+                'approvers', 'requested_reviewers'
+            ).order_by('-timestamp')
+            
+            serializer = self.get_serializer(drafts, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"detail": f"Failed to get draft history: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet for Comment model"""
@@ -579,6 +621,75 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(comment)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def with_draft_positions(self, request):
+        """Get comments with draft position indicators for an entry"""
+        entry_id = request.query_params.get('entry')
+        if not entry_id:
+            return Response(
+                {"detail": "entry parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Get all drafts for this entry ordered by timestamp
+            drafts = EntryDraft.objects.filter(
+                entry_id=entry_id,
+                is_deleted=False
+            ).order_by('-timestamp')
+            
+            # Get the last published draft
+            last_published_draft = drafts.filter(is_published=True).first()
+            
+            # Get comments from drafts created after the last published version
+            if last_published_draft:
+                relevant_drafts = drafts.filter(timestamp__gte=last_published_draft.timestamp)
+            else:
+                relevant_drafts = drafts
+            
+            # Get comments from these drafts
+            from django.contrib.contenttypes.models import ContentType
+            draft_content_type = ContentType.objects.get_for_model(EntryDraft)
+            
+            comments = Comment.objects.filter(
+                content_type=draft_content_type,
+                object_id__in=relevant_drafts.values_list('id', flat=True),
+                is_resolved=False,
+                parent__isnull=True  # Only top-level comments
+            ).select_related('author').prefetch_related('replies')
+            
+            # Calculate draft positions for each comment
+            comments_with_positions = []
+            for comment in comments:
+                comment_draft = drafts.filter(id=comment.object_id).first()
+                if comment_draft:
+                    # Calculate position relative to latest draft
+                    latest_draft = drafts.first()
+                    if latest_draft and comment_draft.id == latest_draft.id:
+                        draft_position = "current draft"
+                    elif comment_draft.is_published:
+                        draft_position = "published"
+                    else:
+                        # Count how many drafts ago this was
+                        drafts_after = drafts.filter(timestamp__gt=comment_draft.timestamp).count()
+                        if drafts_after == 0:
+                            draft_position = "current draft"
+                        else:
+                            draft_position = f"{drafts_after} drafts ago"
+                    
+                    comment_data = self.get_serializer(comment).data
+                    comment_data['draft_position'] = draft_position
+                    comment_data['draft_id'] = comment_draft.id
+                    comment_data['draft_timestamp'] = comment_draft.timestamp
+                    comments_with_positions.append(comment_data)
+            
+            return Response(comments_with_positions)
+        except Exception as e:
+            return Response(
+                {"detail": f"Failed to get comments with draft positions: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PerspectiveCuratorViewSet(viewsets.ModelViewSet):

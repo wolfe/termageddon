@@ -1,11 +1,24 @@
-Repair bug whereby filter box doesn't work on the Review and My Drafts pages.
+As always, read the cursor-guidance.txt for general rules.
 
-If you click edit on an Entry, and you have a draft in progress, load the content of the draft; add a notification that there is a draft in progress
+Repair bug whereby filter box doesn't work on the Review and My Drafts pages.  Make sure that frontend tests cover the functionality.
+
+Draft history for a particular entry should be linear and global (not specific to an individual).  So if you click edit to edit a term in that is published, what you are initially editing is not the published version but the latest draft.  What is shown in the edit window is the latest draft whoever made it.  As in the Review view, also show a section with the Published Verson (if any).  Every click of save (assuming there were changes) should save a new entry draft.
+
+There is then subtlety about what "comments" should be shown.  By default show all comments which are unresolved since the last time published.  Indicate when the comment was made by saying "3 draft ago", or "current draft", or "published".
 
 Reserve a portion of the header for notifications; use that space for alerts that do not need dismissing.  Notification stays up for a fixed amount of time, try 5 seconds.
+For those alerts that require confirmation or cancel, create a confirmation popup widget rather than the native browser alert.  I believe we should need no alerts.
 
-For those alerts that require confirmation or cancel, create a confirmation popup widget rather than the native browser alert
+In the editor we need a selector for entries.
 
-In the dialog we need a selector for entries.
+There is a bug in that after initial load of test data, under Pending Reviews, items with only 1/2 Approvals nontheless show as "Already approved".
 
-Already approved even though 1/2 Approvals
+We need a way to show the version history of a term.  The history widget itself should be showable on any of the three views (Glossary, Review, My Drafts), and in a similar fashion.  When showing the history, an right-side bar opens which is reasonably narrow and scrollable.  The information shown is date saved and the person who saved.  The versions which were published and/or endorsed need an indicator.
+
+Improve the frontend test coverage.  Qualatative is more important than quantatative.
+
+No whitespace at ends of lines.
+
+For any binary operations, I prefer the constant on the left; e.g., if (3 < length) is prefered over if (length > 3).  For any assertions, I prefer the expected value always first.
+
+You are always welcome to wipe the migration history and reset the database as we are not in production.

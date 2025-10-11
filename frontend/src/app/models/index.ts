@@ -34,6 +34,7 @@ export interface EntryDraft {
   requested_reviewers: User[];
   endorsed_by?: User;
   endorsed_at?: string;
+  replaces_draft?: number;
   is_approved: boolean;
   approval_count: number;
   is_published: boolean;
@@ -72,6 +73,10 @@ export interface Comment {
   replies: Comment[];
   created_at: string;
   updated_at: string;
+  // New fields for draft position tracking
+  draft_position?: string;
+  draft_id?: number;
+  draft_timestamp?: string;
 }
 
 export interface PerspectiveCurator {

@@ -2,19 +2,21 @@ import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Entry, Comment } from '../../models';
+import { Entry, Comment, EntryDraft } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
+import { NotificationService } from '../../services/notification.service';
 import { DefinitionFormComponent } from '../definition-form/definition-form.component';
 import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component';
 import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
+import { VersionHistorySidebarComponent } from '../shared/version-history-sidebar/version-history-sidebar.component';
 import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
   selector: 'app-term-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, DefinitionFormComponent, CommentThreadComponent, UserAvatarComponent, PerspectivePillComponent],
+  imports: [CommonModule, FormsModule, DefinitionFormComponent, CommentThreadComponent, UserAvatarComponent, PerspectivePillComponent, VersionHistorySidebarComponent],
   templateUrl: './term-detail.component.html',
   styleUrl: './term-detail.component.scss',
 })
@@ -29,15 +31,21 @@ export class TermDetailComponent implements OnInit, OnChanges {
   editContent: string = '';
   comments: Comment[] = [];
   isLoadingComments: boolean = false;
+  draftHistory: EntryDraft[] = [];
+  latestDraft: EntryDraft | null = null;
+  isLoadingDraftHistory: boolean = false;
+  showVersionHistory: boolean = false;
 
   constructor(
-    private sanitizer: DomSanitizer,
+    public sanitizer: DomSanitizer,
     public permissionService: PermissionService,
     private glossaryService: GlossaryService,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit(): void {
     this.loadComments();
+    this.loadDraftHistory();
     // If we only have a single entry but no termEntries, try to load all entries for this term
     if (this.entry && this.termEntries.length === 0) {
       this.loadAllEntriesForTerm();
@@ -55,9 +63,10 @@ export class TermDetailComponent implements OnInit, OnChanges {
       }
     }
     
-    // When entry changes, load comments and all entries for this term if needed
+    // When entry changes, load comments, draft history and all entries for this term if needed
     if (changes['entry'] && this.entry) {
       this.loadComments();
+      this.loadDraftHistory();
       if (this.termEntries.length === 0) {
         this.loadAllEntriesForTerm();
       }
@@ -68,14 +77,43 @@ export class TermDetailComponent implements OnInit, OnChanges {
     if (!this.entry?.id) return;
     
     this.isLoadingComments = true;
-    this.glossaryService.getComments(1, this.entry.id).subscribe({
-      next: (response) => {
-        this.comments = response.results;
+    // Use the new endpoint that includes draft position indicators
+    this.glossaryService.getCommentsWithDraftPositions(this.entry.id).subscribe({
+      next: (comments) => {
+        this.comments = comments;
         this.isLoadingComments = false;
       },
       error: (error) => {
         console.error('Error loading comments:', error);
-        this.isLoadingComments = false;
+        // Fallback to regular comments endpoint
+        this.glossaryService.getComments(1, this.entry.id).subscribe({
+          next: (response) => {
+            this.comments = response.results;
+            this.isLoadingComments = false;
+          },
+          error: (fallbackError) => {
+            console.error('Error loading comments (fallback):', fallbackError);
+            this.isLoadingComments = false;
+          }
+        });
+      }
+    });
+  }
+
+  loadDraftHistory(): void {
+    if (!this.entry?.id) return;
+    
+    this.isLoadingDraftHistory = true;
+    this.glossaryService.getDraftHistory(this.entry.id).subscribe({
+      next: (drafts) => {
+        this.draftHistory = drafts;
+        // Set the latest draft (first in the list since it's ordered by timestamp desc)
+        this.latestDraft = drafts.length > 0 ? drafts[0] : null;
+        this.isLoadingDraftHistory = false;
+      },
+      error: (error) => {
+        console.error('Error loading draft history:', error);
+        this.isLoadingDraftHistory = false;
       }
     });
   }
@@ -108,8 +146,14 @@ export class TermDetailComponent implements OnInit, OnChanges {
   }
 
   onEditClick(): void {
-    // Initialize edit content with current content
-    this.editContent = this.entry?.active_draft?.content || '';
+    // Initialize edit content with latest draft content (not published content)
+    if (this.latestDraft) {
+      this.editContent = this.latestDraft.content;
+    } else if (this.entry?.active_draft?.content) {
+      this.editContent = this.entry.active_draft.content;
+    } else {
+      this.editContent = '';
+    }
     this.editRequested.emit();
   }
 
@@ -117,59 +161,15 @@ export class TermDetailComponent implements OnInit, OnChanges {
     console.log('Saving definition:', this.editContent.trim());
     console.log('Current user:', this.permissionService.currentUser);
 
-    // First check if there's an existing unpublished version by the current user
-    this.checkForExistingUnpublishedDraft();
-  }
-
-  private checkForExistingUnpublishedDraft(): void {
     if (!this.permissionService.currentUser) {
-      alert('You must be logged in to save definitions.');
+      this.notificationService.error('You must be logged in to save definitions.');
       return;
     }
 
-    // Check for existing unpublished draft
-    this.glossaryService
-      .getUnpublishedDraftForEntry(
-        this.entry.id,
-        this.permissionService.currentUser.id,
-      )
-      .subscribe({
-        next: (existingDraft) => {
-          if (existingDraft) {
-            // Update existing unpublished draft
-            this.updateExistingDraft(existingDraft.id);
-          } else {
-            // Create new draft
-            this.createNewDraft();
-          }
-        },
-        error: (error) => {
-          console.error('Error checking for existing draft:', error);
-          // If there's an error checking, try to create a new draft
-          this.createNewDraft();
-        },
-      });
+    // Always create a new draft (linear draft history)
+    this.createNewDraft();
   }
 
-  private updateExistingDraft(draftId: number): void {
-    const updateData = {
-      content: this.editContent.trim(),
-    };
-
-    console.log('Updating existing draft:', draftId, updateData);
-
-    this.glossaryService.updateEntryDraft(draftId, updateData).subscribe({
-      next: (updatedDraft) => {
-        console.log('Successfully updated draft:', updatedDraft);
-        // Refresh the entry data to get the updated content
-        this.refreshEntryData();
-      },
-      error: (error) => {
-        console.error('Failed to update draft:', error);
-        this.handleSaveError(error);
-      },
-    });
-  }
 
   private createNewDraft(): void {
     const draftData = {
@@ -183,7 +183,8 @@ export class TermDetailComponent implements OnInit, OnChanges {
     this.glossaryService.createEntryDraft(draftData).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
-        // Refresh the entry data to get the updated content
+        // Refresh the draft history and entry data
+        this.loadDraftHistory();
         this.refreshEntryData();
       },
       error: (error) => {
@@ -205,7 +206,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
         Object.assign(this.entry, updatedEntry);
         // Emit the updated entry
         this.editSaved.emit(this.entry);
-        alert(
+        this.notificationService.success(
           'Definition saved successfully! It will be visible once approved.',
         );
       },
@@ -213,7 +214,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
         console.error('Failed to refresh entry data:', error);
         // Still emit the original entry as fallback
         this.editSaved.emit(this.entry);
-        alert(
+        this.notificationService.success(
           'Definition saved successfully! It will be visible once approved.',
         );
       },
@@ -239,7 +240,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
       errorMessage = 'Server error occurred. Please contact support.';
     }
 
-    alert(errorMessage);
+    this.notificationService.error(errorMessage);
     // Note: Don't emit editSaved on error, so we stay in edit mode
   }
 
@@ -270,7 +271,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
     this.glossaryService.endorseEntry(this.entry.id).subscribe({
       next: (updatedEntry) => {
         this.entry = updatedEntry;
-        alert('Definition endorsed successfully!');
+        this.notificationService.success('Definition endorsed successfully!');
       },
       error: (error) => {
         console.error('Failed to endorse definition:', error);
@@ -282,7 +283,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
           errorMessage = 'You do not have permission to endorse definitions.';
         }
         
-        alert(errorMessage);
+        this.notificationService.error(errorMessage);
       }
     });
   }
@@ -290,9 +291,30 @@ export class TermDetailComponent implements OnInit, OnChanges {
   getInitials = getInitialsFromName;
   getUserDisplayName = getUserDisplayName;
 
+  hasUnpublishedDrafts(): boolean {
+    return this.draftHistory.some(draft => !draft.is_published);
+  }
+
+  getPublishedDraft(): EntryDraft | null {
+    return this.draftHistory.find(draft => draft.is_published) || null;
+  }
+
+  getLatestDraftContent(): string {
+    if (this.latestDraft) {
+      return this.latestDraft.content;
+    }
+    return this.entry?.active_draft?.content || '';
+  }
+
+  getPublishedContent(): string {
+    const publishedDraft = this.getPublishedDraft();
+    return publishedDraft?.content || '';
+  }
+
   switchToPerspective(entry: Entry): void {
     this.entry = entry;
     this.loadComments();
+    this.loadDraftHistory();
   }
 
   hasMultiplePerspectives(): boolean {
@@ -318,5 +340,19 @@ export class TermDetailComponent implements OnInit, OnChanges {
         this.termEntries = [this.entry];
       }
     });
+  }
+
+  toggleVersionHistory(): void {
+    this.showVersionHistory = !this.showVersionHistory;
+  }
+
+  onVersionHistoryClosed(): void {
+    this.showVersionHistory = false;
+  }
+
+  onDraftSelected(draft: EntryDraft): void {
+    // Update the view to show the selected draft
+    // This could be implemented to show a read-only view of the selected draft
+    console.log('Selected draft:', draft);
   }
 }

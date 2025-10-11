@@ -10,12 +10,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { Entry } from '../../models';
-import { EntryPickerComponent } from '../entry-picker/entry-picker.component';
+import { EntryLinkSelectorDialogComponent } from '../shared/entry-link-selector-dialog/entry-link-selector-dialog.component';
 
 @Component({
   selector: 'app-definition-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, EntryPickerComponent],
+  imports: [CommonModule, FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
   templateUrl: './definition-form.component.html',
   styleUrls: ['./definition-form.component.scss'],
 })
@@ -26,7 +26,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
   @Output() contentChange = new EventEmitter<string>();
   @Output() editorReady = new EventEmitter<any>();
 
-  showEntryPicker = false;
+  showEntryLinkSelector = false;
 
   editor: any = null;
 
@@ -47,7 +47,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
         ],
         handlers: {
           'custom-link': () => {
-            this.openEntryPicker();
+            this.openEntryLinkSelector();
           }
         }
       }
@@ -72,7 +72,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
     // Add custom link button to toolbar
     const toolbar = editor.getModule('toolbar');
     toolbar.addHandler('custom-link', () => {
-      this.openEntryPicker();
+      this.openEntryLinkSelector();
     });
 
     // Handle content changes
@@ -116,16 +116,16 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  private openEntryPicker() {
-    this.showEntryPicker = true;
+  private openEntryLinkSelector() {
+    this.showEntryLinkSelector = true;
   }
 
   onEntrySelected(entry: Entry) {
     this.insertLink(entry.id, entry.term.text);
-    this.showEntryPicker = false;
+    this.showEntryLinkSelector = false;
   }
 
-  onEntryPickerClosed() {
-    this.showEntryPicker = false;
+  onEntryLinkSelectorClosed() {
+    this.showEntryLinkSelector = false;
   }
 }

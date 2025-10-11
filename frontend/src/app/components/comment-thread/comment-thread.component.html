@@ -38,6 +38,12 @@
             <div class="author-info">
               <span class="author-name">{{ getUserDisplayName(comment.author) }}</span>
               <span class="comment-date">{{ comment.created_at | relativeTime }}</span>
+              <!-- Draft Position Indicator -->
+              <span *ngIf="comment.draft_position" 
+                    class="draft-position-badge"
+                    [ngClass]="getDraftPositionClass(comment)">
+                {{ getDraftPositionText(comment) }}
+              </span>
             </div>
             <div class="reply-count" *ngIf="getReplyCount(comment) > 0">
               <button 

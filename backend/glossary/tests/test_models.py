@@ -199,17 +199,35 @@ class TestEntryDraftModel:
         with pytest.raises(ValidationError, match="already approved"):
             version.approve(approver)
 
-    def test_one_unapproved_version_per_author_per_entry(self):
-        """Test validation that prevents multiple unapproved versions"""
+    def test_multiple_unapproved_versions_per_author_per_entry(self):
+        """Test that multiple unapproved versions are now allowed (linear draft history)"""
         author = UserFactory()
         entry = EntryFactory()
         version1 = EntryDraftFactory(entry=entry, author=author)
 
-        # Should not be able to create second unapproved version
-        with pytest.raises(
-            ValidationError, match="already have an unpublished draft"
-        ):
-            EntryDraftFactory(entry=entry, author=author)
+        # Should be able to create second unapproved version (linear draft history)
+        version2 = EntryDraftFactory(entry=entry, author=author, replaces_draft=version1)
+        
+        # Both versions should exist
+        assert EntryDraft.objects.filter(entry=entry, author=author).count() == 2
+        assert version1.replaces_draft is None  # First version doesn't replace anything
+        assert version2.replaces_draft == version1  # Second version replaces the first
+
+    def test_replaces_draft_field(self):
+        """Test the replaces_draft field functionality"""
+        author = UserFactory()
+        entry = EntryFactory()
+        
+        # Create first draft
+        draft1 = EntryDraftFactory(entry=entry, author=author)
+        assert draft1.replaces_draft is None
+        
+        # Create second draft that replaces the first
+        draft2 = EntryDraftFactory(entry=entry, author=author, replaces_draft=draft1)
+        assert draft2.replaces_draft == draft1
+        
+        # Test reverse relationship
+        assert draft2 in draft1.replaced_by.all()
 
 
 @pytest.mark.django_db
