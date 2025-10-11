@@ -7,6 +7,7 @@ import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { NotificationService } from '../../services/notification.service';
+import { EntryDetailService } from '../../services/entry-detail.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 import { SearchFilterBarComponent, FilterConfig } from '../shared/search-filter-bar/search-filter-bar.component';
@@ -83,6 +84,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private glossaryService: GlossaryService,
     private notificationService: NotificationService,
+    private entryDetailService: EntryDetailService,
   ) {}
 
   ngOnInit(): void {
@@ -322,10 +324,10 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     if (!this.selectedDraft?.entry?.id) return;
     
     this.isLoadingComments = true;
-    this.glossaryService.getComments(1, this.selectedDraft.entry.id)
+    this.entryDetailService.loadCommentsWithPositions(this.selectedDraft.entry.id)
       .subscribe({
-        next: (response: PaginatedResponse<Comment>) => {
-          this.comments = response.results;
+        next: (comments) => {
+          this.comments = comments;
           this.isLoadingComments = false;
         },
         error: (error) => {
@@ -351,5 +353,24 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     if (index !== -1) {
       this.comments[index] = comment;
     }
+  }
+
+  // Edit functionality
+  canEditDraft(): boolean {
+    // Any user can edit the latest version in Review context
+    return !!this.selectedDraft && !!this.currentUser;
+  }
+
+  onEditRequested(): void {
+    // Edit functionality is handled by the draft-detail-panel component
+  }
+
+  onEditSaved(): void {
+    // Refresh the drafts list to show the new draft
+    this.loadPendingDrafts();
+  }
+
+  onEditCancelled(): void {
+    // Edit cancellation is handled by the draft-detail-panel component
   }
 }

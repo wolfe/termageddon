@@ -87,7 +87,7 @@
   <div detail>
     <app-draft-detail-panel
       [draft]="selectedDraft"
-      [canEdit]="false"
+      [canEdit]="canEditDraft()"
       [canPublishFlag]="true"
       [canApproveFlag]="true"
       [showPublishButton]="true"
@@ -96,10 +96,14 @@
       [isLoadingComments]="isLoadingComments"
       [comments]="comments"
       [requestingReview]="requestingReview"
+      [entryId]="selectedDraft?.entry?.id"
       [currentUserId]="currentUser?.id"
       (approve)="approveDraft()"
       (publish)="publishDraft(selectedDraft!)"
       (requestReview)="requestReview(selectedDraft!)"
+      (editRequested)="onEditRequested()"
+      (editSaved)="onEditSaved()"
+      (editCancelled)="onEditCancelled()"
       (commentAdded)="onCommentAdded($event)"
       (commentResolved)="onCommentResolved($event)"
       (commentUnresolved)="onCommentUnresolved($event)"

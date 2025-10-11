@@ -5,6 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { ReviewService } from '../../services/review.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
+import { EntryDetailService } from '../../services/entry-detail.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 import { SearchFilterBarComponent } from '../shared/search-filter-bar/search-filter-bar.component';
@@ -39,8 +40,6 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   error: string | null = null;
   searchTerm = '';
   currentUser: User | null = null;
-  editingDraft: ReviewDraft | null = null;
-  editContent = '';
   
   // Reviewer selection
   showReviewerSelector = false;
@@ -54,7 +53,8 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   constructor(
     private reviewService: ReviewService,
     private glossaryService: GlossaryService,
-    private permissionService: PermissionService
+    private permissionService: PermissionService,
+    private entryDetailService: EntryDetailService
   ) {}
 
   ngOnInit(): void {
@@ -123,7 +123,6 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   selectDraft(draft: ReviewDraft): void {
     this.selectedDraft = draft;
-    this.cancelEdit(); // Cancel any ongoing edit when selecting a new draft
     this.loadComments(); // Load comments for the selected draft
   }
 
@@ -144,11 +143,11 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     if (!this.selectedDraft?.entry?.id) return;
     
     this.isLoadingComments = true;
-    this.glossaryService.getComments(1, this.selectedDraft.entry.id)
+    this.entryDetailService.loadCommentsWithPositions(this.selectedDraft.entry.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: PaginatedResponse<Comment>) => {
-          this.comments = response.results;
+        next: (comments) => {
+          this.comments = comments;
           this.isLoadingComments = false;
         },
         error: (error) => {
@@ -255,63 +254,17 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       });
   }
 
-  toggleEditMode(draft: ReviewDraft): void {
-    if (this.editingDraft?.id === draft.id) {
-      this.cancelEdit();
-    } else {
-      this.editingDraft = draft;
-      this.editContent = draft.content.replace(/<[^>]*>/g, ''); // Strip HTML for editing
-    }
+  onEditRequested(): void {
+    // Edit functionality is now handled by the draft-detail-panel component
+    // This method is called when the edit button is clicked in the panel
   }
 
-  cancelEdit(): void {
-    this.editingDraft = null;
-    this.editContent = '';
+  onEditSaved(): void {
+    // Refresh the drafts list to show the new draft
+    this.loadMyDrafts();
   }
 
-  saveDraft(draft: ReviewDraft): void {
-    if (!this.editingDraft || !this.editContent.trim()) {
-      return;
-    }
-
-    const updateData = {
-      content: `<p>${this.editContent.trim()}</p>`,
-    };
-
-    this.glossaryService.updateEntryDraft(draft.id, updateData)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (updatedDraft) => {
-          // Update the draft properties in the list
-          const index = this.drafts.findIndex(d => d.id === draft.id);
-          if (index !== -1) {
-            // Update properties instead of replacing the whole object
-            this.drafts[index].content = updatedDraft.content;
-            this.drafts[index].approvers = updatedDraft.approvers || [];
-            this.drafts[index].requested_reviewers = updatedDraft.requested_reviewers || [];
-            this.drafts[index].approval_count = updatedDraft.approval_count || 0;
-            this.drafts[index].is_approved = updatedDraft.is_approved || false;
-            this.drafts[index].is_published = updatedDraft.is_published || false;
-            
-            // Update filtered drafts
-            this.filteredDrafts = [...this.drafts];
-            
-            // Update selected draft properties if it's the one being edited
-            if (this.selectedDraft?.id === draft.id) {
-              this.selectedDraft.content = updatedDraft.content;
-              this.selectedDraft.approvers = updatedDraft.approvers || [];
-              this.selectedDraft.requested_reviewers = updatedDraft.requested_reviewers || [];
-              this.selectedDraft.approval_count = updatedDraft.approval_count || 0;
-              this.selectedDraft.is_approved = updatedDraft.is_approved || false;
-              this.selectedDraft.is_published = updatedDraft.is_published || false;
-            }
-          }
-          this.cancelEdit();
-        },
-        error: (error) => {
-          console.error('Error updating draft:', error);
-          this.error = 'Failed to update draft';
-        }
-      });
+  onEditCancelled(): void {
+    // Edit cancellation is handled by the draft-detail-panel component
   }
 }

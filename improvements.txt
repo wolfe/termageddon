@@ -22,3 +22,4 @@ No whitespace at ends of lines.
 For any binary operations, I prefer the constant on the left; e.g., if (3 < length) is prefered over if (length > 3).  For any assertions, I prefer the expected value always first.
 
 You are always welcome to wipe the migration history and reset the database as we are not in production.
+

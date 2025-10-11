@@ -35,6 +35,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
   latestDraft: EntryDraft | null = null;
   isLoadingDraftHistory: boolean = false;
   showVersionHistory: boolean = false;
+  selectedHistoricalDraft: EntryDraft | null = null;
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -352,7 +353,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
 
   onDraftSelected(draft: EntryDraft): void {
     // Update the view to show the selected draft
-    // This could be implemented to show a read-only view of the selected draft
+    this.selectedHistoricalDraft = draft;
     console.log('Selected draft:', draft);
   }
 }
