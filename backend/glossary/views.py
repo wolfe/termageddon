@@ -564,6 +564,20 @@ class CommentViewSet(viewsets.ModelViewSet):
             return CommentCreateSerializer
         return CommentListSerializer
 
+    def create(self, request, *args, **kwargs):
+        """Create comment and return with full author details"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        # Fetch the created comment with related author
+        instance = Comment.objects.select_related('author').get(pk=serializer.instance.pk)
+        
+        # Return using CommentListSerializer to include nested author
+        output_serializer = CommentListSerializer(instance, context={'request': request})
+        headers = self.get_success_headers(output_serializer.data)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, created_by=self.request.user)
 
@@ -678,7 +692,7 @@ class CommentViewSet(viewsets.ModelViewSet):
                         else:
                             draft_position = f"{drafts_after} drafts ago"
                     
-                    comment_data = CommentListSerializer(comment).data
+                    comment_data = self.get_serializer(comment).data
                     comment_data['draft_position'] = draft_position
                     comment_data['draft_id'] = comment_draft.id
                     comment_data['draft_timestamp'] = comment_draft.timestamp

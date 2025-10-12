@@ -25,15 +25,6 @@ cleanup() {
     lsof -ti:8000 | xargs kill -9 2>/dev/null || true
     lsof -ti:4200 | xargs kill -9 2>/dev/null || true
     
-    # Kill Karma test processes and associated Chrome instances
-    echo -e "${BLUE}  → Cleaning up Karma test processes...${NC}"
-    # Kill Node.js processes running Karma servers
-    lsof -ti:9876 -ti:9877 -ti:9878 -ti:9879 -ti:9880 -ti:9881 | xargs kill -9 2>/dev/null || true
-    # Kill Chrome processes with karma user-data-dir
-    pkill -f "karma-.*--user-data-dir" 2>/dev/null || true
-    # Kill any remaining Chrome processes that might be test-related
-    ps aux | grep -E "karma-[0-9]+" | grep -v grep | awk '{print $2}' | xargs kill -9 2>/dev/null || true
-    
     # Kill our tracked processes
     if [ ! -z "$BACKEND_PID" ]; then
         kill $BACKEND_PID 2>/dev/null || true
@@ -67,12 +58,6 @@ echo -e "${YELLOW}[0/5] Cleaning up any existing processes...${NC}"
 echo -e "${BLUE}  → Killing any processes on ports 8000 and 4200...${NC}"
 lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 lsof -ti:4200 | xargs kill -9 2>/dev/null || true
-
-# Clean up Karma test processes
-echo -e "${BLUE}  → Cleaning up Karma test processes...${NC}"
-lsof -ti:9876 -ti:9877 -ti:9878 -ti:9879 -ti:9880 -ti:9881 | xargs kill -9 2>/dev/null || true
-pkill -f "karma-.*--user-data-dir" 2>/dev/null || true
-ps aux | grep -E "karma-[0-9]+" | grep -v grep | awk '{print $2}' | xargs kill -9 2>/dev/null || true
 
 # Clear Angular dev server cache
 echo -e "${BLUE}  → Clearing Angular dev server cache...${NC}"

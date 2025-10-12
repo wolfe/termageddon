@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NotificationService, Notification } from '../../../services/notification.service';
 import { Subject, takeUntil } from 'rxjs';
-import { trigger, transition, style, animate, AnimationEvent } from '@angular/animations';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-inline-notification',
@@ -34,13 +34,6 @@ export class InlineNotificationComponent implements OnInit, OnDestroy {
       .subscribe((notification: Notification | null) => {
         this.notification = notification;
       });
-  }
-
-  onAnimationDone(event: AnimationEvent): void {
-    if (event.toState === 'void') {
-      // Animation completed - clear the notification
-      this.notification = null;
-    }
   }
 
   ngOnDestroy(): void {

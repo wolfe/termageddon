@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, timer, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, timer } from 'rxjs';
 
 export interface Notification {
   id: string;
@@ -15,7 +15,6 @@ export class NotificationService {
   public notification$ = this.notificationSubject.asObservable();
 
   private nextId = 1;
-  private dismissTimer?: Subscription;
 
   constructor() {}
 
@@ -33,16 +32,11 @@ export class NotificationService {
       message
     };
 
-    // Cancel any existing timer
-    if (this.dismissTimer) {
-      this.dismissTimer.unsubscribe();
-    }
-
     // Replace any existing notification
     this.notificationSubject.next(notification);
 
-    // Auto-dismiss after 5 seconds (allowing 3s for fade animation)
-    this.dismissTimer = timer(5000).subscribe(() => {
+    // Auto-dismiss after 8 seconds (5s visible + 3s fade)
+    timer(8000).subscribe(() => {
       this.dismiss();
     });
 

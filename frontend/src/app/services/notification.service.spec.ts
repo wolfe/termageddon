@@ -108,37 +108,14 @@ describe('NotificationService', () => {
       expect(service.getNotification()).toBeNull();
     });
 
-    it('should auto-dismiss notification after 5 seconds', fakeAsync(() => {
+    it('should auto-dismiss notification after 8 seconds', fakeAsync(() => {
       service.success('Test notification');
       
       expect(service.getNotification()).toBeTruthy();
       
-      // Fast-forward 5 seconds
-      tick(5000);
+      // Fast-forward 8 seconds
+      tick(8000);
       
-      expect(service.getNotification()).toBeNull();
-    }));
-
-    it('should reset timer when new notification replaces existing one', fakeAsync(() => {
-      service.success('First notification');
-      
-      expect(service.getNotification()).toBeTruthy();
-      
-      // Fast-forward 3 seconds (notification should still be there)
-      tick(3000);
-      expect(service.getNotification()).toBeTruthy();
-      
-      // Show new notification - should reset timer
-      service.error('Second notification');
-      expect(service.getNotification()!.message).toBe('Second notification');
-      
-      // Fast-forward 3 more seconds (total 6 seconds from first notification)
-      tick(3000);
-      // Should still be visible because timer was reset
-      expect(service.getNotification()).toBeTruthy();
-      
-      // Fast-forward 2 more seconds (5 seconds from second notification)
-      tick(2000);
       expect(service.getNotification()).toBeNull();
     }));
   });
