@@ -678,7 +678,7 @@ class CommentViewSet(viewsets.ModelViewSet):
                         else:
                             draft_position = f"{drafts_after} drafts ago"
                     
-                    comment_data = self.get_serializer(comment).data
+                    comment_data = CommentListSerializer(comment).data
                     comment_data['draft_position'] = draft_position
                     comment_data['draft_id'] = comment_draft.id
                     comment_data['draft_timestamp'] = comment_draft.timestamp

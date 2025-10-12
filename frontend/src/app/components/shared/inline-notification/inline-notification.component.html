@@ -1,6 +1,7 @@
 @if (notification) {
   <div 
     [@fadeInOut]
+    (@fadeInOut.done)="onAnimationDone($event)"
     [class]="getNotificationClass(notification)"
   >
     <span class="notification-icon">{{ getIconClass(notification) }}</span>

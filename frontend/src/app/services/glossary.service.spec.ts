@@ -362,5 +362,93 @@ describe('GlossaryService', () => {
       expect(req.request.method).toBe('GET');
       req.flush(mockComments);
     });
+
+    it('should return comments with complete author data structure', () => {
+      const mockCommentsWithCompleteAuthor = [
+        {
+          id: 1,
+          content_type: 1,
+          object_id: 1,
+          text: 'Test comment',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          is_resolved: false,
+          author: {
+            id: 1,
+            username: 'testuser',
+            first_name: 'John',
+            last_name: 'Doe',
+            is_staff: false
+          },
+          replies: [],
+          draft_position: 'current draft',
+          draft_id: 1,
+          draft_timestamp: '2024-01-02T00:00:00Z'
+        }
+      ];
+
+      service.getCommentsWithDraftPositions(1).subscribe(comments => {
+        expect(comments).toEqual(mockCommentsWithCompleteAuthor);
+        
+        // This test would have failed before the backend fix because
+        // the author data would have been incomplete or missing
+        const comment = comments[0];
+        expect(comment.author).toBeDefined();
+        expect(comment.author.id).toBe(1);
+        expect(comment.author.username).toBe('testuser');
+        expect(comment.author.first_name).toBe('John');
+        expect(comment.author.last_name).toBe('Doe');
+        expect(comment.author.is_staff).toBe(false);
+        
+        // Verify that getUserDisplayName would work correctly
+        const displayName = `${comment.author.first_name} ${comment.author.last_name}`.trim();
+        expect(displayName).toBe('John Doe');
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/comments/with_draft_positions/?entry=1');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockCommentsWithCompleteAuthor);
+    });
+
+    it('should handle comments with missing author data gracefully', () => {
+      const mockCommentsWithIncompleteAuthor = [
+        {
+          id: 1,
+          content_type: 1,
+          object_id: 1,
+          text: 'Test comment',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          is_resolved: false,
+          author: {
+            id: 1,
+            username: 'testuser',
+            first_name: '',
+            last_name: '',
+            is_staff: false
+          },
+          replies: [],
+          draft_position: 'current draft',
+          draft_id: 1,
+          draft_timestamp: '2024-01-02T00:00:00Z'
+        }
+      ];
+
+      service.getCommentsWithDraftPositions(1).subscribe(comments => {
+        const comment = comments[0];
+        expect(comment.author).toBeDefined();
+        expect(comment.author.username).toBe('testuser');
+        
+        // Should fall back to username when first/last name are empty
+        const displayName = comment.author.first_name && comment.author.last_name 
+          ? `${comment.author.first_name} ${comment.author.last_name}`.trim()
+          : comment.author.username;
+        expect(displayName).toBe('testuser');
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/comments/with_draft_positions/?entry=1');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockCommentsWithIncompleteAuthor);
+    });
   });
 });
