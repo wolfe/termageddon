@@ -183,8 +183,52 @@ for i in {1..60}; do
 done
 echo ""
 
-# Step 5: Open Chrome with both tabs
-echo -e "${YELLOW}[5/6] Opening Chrome browser...${NC}"
+# Step 5: Pre-authenticate test users
+echo -e "${YELLOW}[5/7] Pre-authenticating test users...${NC}"
+
+# Function to get auth token for a user
+get_auth_token() {
+    local username="$1"
+    local password="$2"
+    
+    # Login via API and extract token
+    local response=$(curl -s -X POST http://localhost:8000/api/auth/login/ \
+        -H "Content-Type: application/json" \
+        -d "{\"username\": \"$username\", \"password\": \"$password\"}")
+    
+    # Extract token using jq or sed (fallback)
+    if command -v jq &> /dev/null; then
+        echo "$response" | jq -r '.token'
+    else
+        # Fallback: extract token using sed
+        echo "$response" | sed -n 's/.*"token": *"\([^"]*\)".*/\1/p'
+    fi
+}
+
+# Get tokens for test users
+echo -e "${BLUE}  → Getting auth tokens for test users...${NC}"
+MARIA_TOKEN=$(get_auth_token "mariacarter" "mariacarter")
+BEN_TOKEN=$(get_auth_token "bencarter" "bencarter")
+
+if [ -z "$MARIA_TOKEN" ] || [ "$MARIA_TOKEN" = "null" ]; then
+    echo -e "${RED}  ✗ Failed to get token for mariacarter${NC}"
+    MARIA_TOKEN=""
+fi
+
+if [ -z "$BEN_TOKEN" ] || [ "$BEN_TOKEN" = "null" ]; then
+    echo -e "${RED}  ✗ Failed to get token for bencarter${NC}"
+    BEN_TOKEN=""
+fi
+
+if [ -n "$MARIA_TOKEN" ] && [ -n "$BEN_TOKEN" ]; then
+    echo -e "${GREEN}  ✓ Successfully authenticated test users${NC}"
+else
+    echo -e "${YELLOW}  ⚠ Some users failed to authenticate - manual login required${NC}"
+fi
+echo ""
+
+# Step 6: Open Chrome with both tabs
+echo -e "${YELLOW}[6/7] Opening Chrome browser...${NC}"
 
 # Check if Chrome is installed
 if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; then
@@ -195,43 +239,90 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
     open -a "Google Chrome" "http://localhost:8000/admin/"
     sleep 2
     
-    # Window 2: Frontend as perspective curator (Maria Flores)
-    open -a "Google Chrome" "http://localhost:4200"
+    # Window 2: Frontend as Maria Carter (pre-authenticated if token available)
+    if [ -n "$MARIA_TOKEN" ]; then
+        MARIA_URL="http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter"
+        echo -e "${BLUE}  → Opening Maria Carter window (pre-authenticated)...${NC}"
+    else
+        MARIA_URL="http://localhost:4200"
+        echo -e "${BLUE}  → Opening Maria Carter window (manual login required)...${NC}"
+    fi
+    open -a "Google Chrome" "$MARIA_URL"
     sleep 2
     
-    # Window 3: Frontend as regular user (Ben Carter) 
-    open -a "Google Chrome" "http://localhost:4200"
+    # Window 3: Frontend as Ben Carter (pre-authenticated if token available)
+    if [ -n "$BEN_TOKEN" ]; then
+        BEN_URL="http://localhost:4200?token=$BEN_TOKEN&username=bencarter"
+        echo -e "${BLUE}  → Opening Ben Carter window (pre-authenticated)...${NC}"
+    else
+        BEN_URL="http://localhost:4200"
+        echo -e "${BLUE}  → Opening Ben Carter window (manual login required)...${NC}"
+    fi
+    open -a "Google Chrome" "$BEN_URL"
     
     echo -e "${GREEN}  ✓ Chrome opened with 3 windows:${NC}"
     echo -e "    ${BLUE}•${NC} Django Admin (admin/admin)"
-    echo -e "    ${BLUE}•${NC} Frontend Window 1 (login as mariacarter/mariacarter)"
-    echo -e "    ${BLUE}•${NC} Frontend Window 2 (login as bencarter/bencarter)"
+    if [ -n "$MARIA_TOKEN" ]; then
+        echo -e "    ${BLUE}•${NC} Frontend Window 1 (Maria Carter - ${GREEN}pre-authenticated${NC})"
+    else
+        echo -e "    ${BLUE}•${NC} Frontend Window 1 (login as mariacarter/mariacarter)"
+    fi
+    if [ -n "$BEN_TOKEN" ]; then
+        echo -e "    ${BLUE}•${NC} Frontend Window 2 (Ben Carter - ${GREEN}pre-authenticated${NC})"
+    else
+        echo -e "    ${BLUE}•${NC} Frontend Window 2 (login as bencarter/bencarter)"
+    fi
     
 elif command -v google-chrome &> /dev/null; then
     # Linux with google-chrome
     google-chrome "http://localhost:8000/admin/" &
     sleep 2
-    google-chrome "http://localhost:4200" &
+    if [ -n "$MARIA_TOKEN" ]; then
+        google-chrome "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter" &
+    else
+        google-chrome "http://localhost:4200" &
+    fi
     sleep 2  
-    google-chrome "http://localhost:4200" &
+    if [ -n "$BEN_TOKEN" ]; then
+        google-chrome "http://localhost:4200?token=$BEN_TOKEN&username=bencarter" &
+    else
+        google-chrome "http://localhost:4200" &
+    fi
     echo -e "${GREEN}  ✓ Chrome opened with 3 windows${NC}"
 elif command -v chromium-browser &> /dev/null; then
     # Linux with chromium
     chromium-browser "http://localhost:8000/admin/" &
     sleep 2
-    chromium-browser "http://localhost:4200" &
+    if [ -n "$MARIA_TOKEN" ]; then
+        chromium-browser "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter" &
+    else
+        chromium-browser "http://localhost:4200" &
+    fi
     sleep 2
-    chromium-browser "http://localhost:4200" &
+    if [ -n "$BEN_TOKEN" ]; then
+        chromium-browser "http://localhost:4200?token=$BEN_TOKEN&username=bencarter" &
+    else
+        chromium-browser "http://localhost:4200" &
+    fi
     echo -e "${GREEN}  ✓ Chromium opened with 3 windows${NC}"
 else
     echo -e "${YELLOW}  ⚠ Chrome not found. Please open manually:${NC}"
     echo -e "    ${BLUE}http://localhost:8000/admin/${NC}"
-    echo -e "    ${BLUE}http://localhost:4200${NC} (Window 1 - login as mariacarter)"
-    echo -e "    ${BLUE}http://localhost:4200${NC} (Window 2 - login as bencarter)"
+    if [ -n "$MARIA_TOKEN" ]; then
+        echo -e "    ${BLUE}http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter${NC} (Maria Carter - pre-authenticated)"
+    else
+        echo -e "    ${BLUE}http://localhost:4200${NC} (Window 1 - login as mariacarter)"
+    fi
+    if [ -n "$BEN_TOKEN" ]; then
+        echo -e "    ${BLUE}http://localhost:4200?token=$BEN_TOKEN&username=bencarter${NC} (Ben Carter - pre-authenticated)"
+    else
+        echo -e "    ${BLUE}http://localhost:4200${NC} (Window 2 - login as bencarter)"
+    fi
 fi
 echo ""
 
-# Display summary
+# Step 7: Display summary
+echo -e "${YELLOW}[7/7] Displaying summary...${NC}"
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║          Demo is Running!              ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
