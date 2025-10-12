@@ -42,6 +42,9 @@ describe('MyDraftsComponent', () => {
     const panelCommonSpy = jasmine.createSpyObj('PanelCommonService', [
       'initializePanelState',
       'loadUsers',
+      'loadDrafts',
+      'onSearch',
+      'refreshAfterEdit',
       'selectDraft',
       'onEditSaved',
       'onCommentAdded',
@@ -69,6 +72,32 @@ describe('MyDraftsComponent', () => {
       requestingReview: false
     });
     panelCommonSpy.loadUsers.and.returnValue();
+    panelCommonSpy.loadDrafts.and.callFake((loadFn: () => any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
+      const response = loadFn();
+      response.subscribe((result: any) => {
+        state.drafts = postProcessFn ? postProcessFn(result.results) : result.results;
+        state.filteredDrafts = [...state.drafts];
+        state.loading = false;
+      });
+    });
+    panelCommonSpy.onSearch.and.callFake((searchTerm: string, state: any, searchFn: (term: string) => any) => {
+      // Simulate the actual behavior
+      state.searchTerm = searchTerm;
+      const response = searchFn(searchTerm);
+      response.subscribe((result: any) => {
+        state.filteredDrafts = result.results;
+        state.loading = false;
+      });
+    });
+    panelCommonSpy.refreshAfterEdit.and.callFake((state: any, loadDraftsCallback: () => void) => {
+      // Simulate the actual behavior - refresh comments first, then drafts
+      if (state.selectedDraft?.entry?.id) {
+        entryDetailService.loadCommentsWithPositions(state.selectedDraft.entry.id).subscribe((comments) => {
+          state.comments = comments;
+        });
+      }
+      loadDraftsCallback();
+    });
     panelCommonSpy.selectDraft.and.returnValue();
     panelCommonSpy.onEditSaved.and.callFake((state: any, loadDraftsCallback: () => void) => {
       // Simulate the actual behavior
@@ -256,7 +285,7 @@ describe('MyDraftsComponent', () => {
         }
       ];
 
-      const result = component['getLatestDraftsPerEntry'](drafts);
+      const result = panelCommonService.getLatestDraftsPerEntry(drafts);
 
       expect(result.length).toBe(2);
       expect(result[0].id).toBe(1); // Latest draft for entry 1
@@ -353,7 +382,7 @@ describe('MyDraftsComponent', () => {
         }
       ];
 
-      const result = component['getLatestDraftsPerEntry'](drafts);
+      const result = panelCommonService.getLatestDraftsPerEntry(drafts);
 
       expect(result.length).toBe(2);
       expect(result[0].id).toBe(2); // Newer draft should be first
@@ -365,7 +394,7 @@ describe('MyDraftsComponent', () => {
     it('should handle empty array', () => {
       const drafts: ReviewDraft[] = [];
 
-      const result = component['getLatestDraftsPerEntry'](drafts);
+      const result = panelCommonService.getLatestDraftsPerEntry(drafts);
 
       expect(result.length).toBe(0);
     });
@@ -416,7 +445,7 @@ describe('MyDraftsComponent', () => {
         }
       ];
 
-      const result = component['getLatestDraftsPerEntry'](drafts);
+      const result = panelCommonService.getLatestDraftsPerEntry(drafts);
 
       expect(result.length).toBe(1);
       expect(result[0].id).toBe(1);
@@ -956,7 +985,7 @@ describe('MyDraftsComponent', () => {
 
       expect(reviewService.getOwnDrafts).toHaveBeenCalled();
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
-      expect(component.state.comments).toEqual(jasmine.arrayContaining(mockComments));
+      expect(component.state.comments).toEqual(mockComments);
     });
   });
 });

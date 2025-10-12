@@ -6,6 +6,7 @@ import { GlossaryService } from './glossary.service';
 import { EntryDetailService } from './entry-detail.service';
 import { PermissionService } from './permission.service';
 import { NotificationService } from './notification.service';
+import { canPublish } from '../utils/draft-status.util';
 
 export interface PanelState {
   // Common state
@@ -238,19 +239,214 @@ export class PanelCommonService {
   }
 
   /**
-   * Handle search
+   * Handle search with custom backend function
    */
-  onSearch(searchTerm: string, state: PanelState, loadDraftsCallback: () => void): void {
+  onSearch(searchTerm: string, state: PanelState, searchFn: (term: string) => Observable<PaginatedResponse<ReviewDraft>>): void {
     state.searchTerm = searchTerm;
+    
+    if (!searchTerm.trim()) {
+      state.filteredDrafts = [...state.drafts];
+      return;
+    }
+
+    // Use backend search
+    state.loading = true;
+    searchFn(searchTerm)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: PaginatedResponse<ReviewDraft>) => {
+          state.filteredDrafts = response.results;
+          state.loading = false;
+          
+          // If current selection is not in filtered results, select first available
+          if (state.selectedDraft && !state.filteredDrafts.find(d => d.id === state.selectedDraft!.id)) {
+            state.selectedDraft = state.filteredDrafts.length > 0 ? state.filteredDrafts[0] : null;
+          }
+        },
+        error: (error) => {
+          console.error('Error searching drafts:', error);
+          state.error = 'Failed to search drafts';
+          state.loading = false;
+        },
+      });
+  }
+
+  /**
+   * Publish draft with refresh callback
+   */
+  publishDraft(draft: ReviewDraft, state: PanelState, refreshCallback: () => void): void {
+    if (!canPublish(draft)) {
+      return;
+    }
+
+    this.reviewService.publishDraft(draft.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedDraft) => {
+          this.notificationService.success('Draft published successfully!');
+          
+          // Update the draft properties in the list
+          const index = state.drafts.findIndex(d => d.id === draft.id);
+          if (index !== -1) {
+            // Update properties instead of replacing the whole object
+            state.drafts[index].is_published = updatedDraft.is_published || false;
+            state.drafts[index].is_approved = updatedDraft.is_approved || false;
+            
+            // Update filtered drafts
+            state.filteredDrafts = [...state.drafts];
+            
+            // Update selected draft properties if it's the one being published
+            if (state.selectedDraft?.id === draft.id) {
+              state.selectedDraft.is_published = updatedDraft.is_published || false;
+              state.selectedDraft.is_approved = updatedDraft.is_approved || false;
+            }
+          }
+          
+          // Call refresh callback for additional cleanup
+          refreshCallback();
+        },
+        error: (error) => {
+          console.error('Error publishing draft:', error);
+          this.notificationService.error('Failed to publish draft');
+        }
+      });
+  }
+
+  /**
+   * Request review for a draft
+   */
+  requestReview(draftId: number, reviewerIds: number[], state: PanelState, refreshCallback?: () => void): void {
+    state.requestingReview = true;
+    this.reviewService.requestReview(draftId, reviewerIds)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedDraft) => {
+          this.notificationService.success('Review requests sent successfully!');
+          
+          // Update the draft properties in the list
+          const index = state.drafts.findIndex(d => d.id === draftId);
+          if (index !== -1) {
+            state.drafts[index].requested_reviewers = updatedDraft.requested_reviewers || [];
+            state.filteredDrafts = [...state.drafts];
+            
+            // Update selected draft
+            if (state.selectedDraft?.id === draftId) {
+              state.selectedDraft.requested_reviewers = updatedDraft.requested_reviewers || [];
+            }
+          }
+          
+          state.requestingReview = false;
+          this.hideReviewerSelector(state);
+          
+          // Call refresh callback if provided
+          if (refreshCallback) {
+            refreshCallback();
+          }
+        },
+        error: (error) => {
+          console.error('Error requesting review:', error);
+          this.notificationService.error('Failed to send review requests');
+          state.requestingReview = false;
+        }
+      });
+  }
+
+  /**
+   * Show reviewer selector dialog
+   */
+  showReviewerSelector(draft: ReviewDraft, state: PanelState): void {
+    state.draftToRequestReview = draft;
+    state.showReviewerSelector = true;
+    state.selectedReviewerIds = draft.requested_reviewers.map(r => r.id);
+  }
+
+  /**
+   * Hide reviewer selector dialog
+   */
+  hideReviewerSelector(state: PanelState): void {
+    state.showReviewerSelector = false;
+    state.draftToRequestReview = null;
+    state.selectedReviewerIds = [];
+  }
+
+  /**
+   * Generic draft loading with post-processing
+   */
+  loadDrafts(loadFn: () => Observable<PaginatedResponse<ReviewDraft>>, state: PanelState, postProcessFn?: (drafts: ReviewDraft[]) => ReviewDraft[]): void {
+    state.loading = true;
+    state.error = null;
+
+    loadFn()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: PaginatedResponse<ReviewDraft>) => {
+          state.drafts = postProcessFn ? postProcessFn(response.results) : response.results;
+          state.filteredDrafts = this.filterDraftsBySearch(state.searchTerm, state.drafts);
+          state.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading drafts:', error);
+          state.error = 'Failed to load drafts';
+          state.loading = false;
+        },
+      });
+  }
+
+  /**
+   * Centralize post-edit refresh logic
+   */
+  refreshAfterEdit(state: PanelState, loadDraftsCallback: () => void): void {
+    // Refresh comments
+    if (state.selectedDraft?.entry?.id) {
+      this.loadComments(state.selectedDraft.entry.id, state).subscribe({
+        next: (comments) => this.onCommentsLoaded(comments, state),
+        error: (error) => this.onCommentsError(error, state)
+      });
+    }
+    
+    // Refresh drafts
     loadDraftsCallback();
   }
 
   /**
-   * Clear search
+   * Handle post-approval list updates
    */
-  clearSearch(state: PanelState, loadDraftsCallback: () => void): void {
-    state.searchTerm = '';
-    loadDraftsCallback();
+  refreshAfterApproval(draftId: number, state: PanelState): void {
+    // Remove the approved draft from our list
+    state.drafts = state.drafts.filter(d => d.id !== draftId);
+    state.filteredDrafts = state.filteredDrafts.filter(d => d.id !== draftId);
+
+    // Deselect the draft
+    state.selectedDraft = null;
+  }
+
+  /**
+   * Approve draft (Review-specific)
+   */
+  approveDraft(draft: ReviewDraft, state: PanelState, successCallback: () => void): void {
+    state.loading = true;
+
+    this.reviewService.approveDraft(draft.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedDraft) => {
+          this.notificationService.success(
+            `Successfully approved "${draft.entry.term.text}"`,
+          );
+
+          // Use centralized refresh logic
+          this.refreshAfterApproval(draft.id, state);
+          state.loading = false;
+          
+          // Call success callback
+          successCallback();
+        },
+        error: (error) => {
+          console.error('Error approving draft:', error);
+          this.notificationService.error('Failed to approve draft. Please try again.');
+          state.loading = false;
+        },
+      });
   }
 
   /**

@@ -140,7 +140,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         }
       ];
 
-      component.selectedDraft = mockDraft;
+      component.state.selectedDraft = mockDraft;
       entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
       reviewService.getDraftsCanApprove.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
 
@@ -148,7 +148,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       component.onEditSaved();
 
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
-      expect(component.comments).toEqual(jasmine.arrayContaining(mockComments));
+      expect(component.state.comments).toEqual(jasmine.arrayContaining(mockComments));
     });
 
     it('should load pending drafts after edit is saved', () => {
@@ -209,8 +209,8 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       component.onEditSaved();
 
       expect(reviewService.getDraftsCanApprove).toHaveBeenCalledWith(false);
-      expect(component.pendingDrafts).toEqual(mockResponse.results);
-      expect(component.filteredDrafts).toEqual(mockResponse.results);
+      expect(component.state.drafts).toEqual(mockResponse.results);
+      expect(component.state.filteredDrafts).toEqual(mockResponse.results);
     });
   });
 
@@ -284,9 +284,9 @@ describe('ReviewDashboardComponent Integration Tests', () => {
 
       component.selectDraft(mockDraft);
 
-      expect(component.selectedDraft).toBe(mockDraft);
+      expect(component.state.selectedDraft).toBe(mockDraft);
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
-      expect(component.comments).toEqual(jasmine.arrayContaining(mockComments));
+      expect(component.state.comments).toEqual(jasmine.arrayContaining(mockComments));
     });
   });
 });

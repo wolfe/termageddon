@@ -26,16 +26,16 @@
     <!-- Search and Filters -->
     <app-search-filter-bar
       placeholder="Search terms, perspectives, authors..."
-      [searchTerm]="searchTerm"
+      [searchTerm]="state.searchTerm"
       [filters]="filters"
-      [loading]="loading"
+      [loading]="state.loading"
       (search)="onSearch()"
       (filterChanged)="onFilterChanged($event)"
-      (cleared)="searchTerm = ''; onSearch()"
+      (cleared)="state.searchTerm = ''; onSearch()"
     ></app-search-filter-bar>
 
     <!-- Loading State -->
-    <div *ngIf="loading" class="flex-1 flex items-center justify-center">
+    <div *ngIf="state.loading" class="flex-1 flex items-center justify-center">
       <div class="text-center">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-termageddon-accent mx-auto"></div>
         <p class="text-gray-600 mt-2 text-sm">Loading...</p>
@@ -43,9 +43,9 @@
     </div>
 
     <!-- Error State -->
-    <div *ngIf="error && !loading" class="flex-1 flex items-center justify-center">
+    <div *ngIf="state.error && !state.loading" class="flex-1 flex items-center justify-center">
       <div class="text-center text-orange-600">
-        <p class="text-sm">{{ error }}</p>
+        <p class="text-sm">{{ state.error }}</p>
         <button
           (click)="loadPendingDrafts()"
           class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
@@ -56,22 +56,22 @@
     </div>
 
     <!-- Drafts List -->
-    <div *ngIf="!loading && !error" class="flex-1 overflow-y-auto">
-      @if (filteredDrafts.length === 0) {
+    <div *ngIf="!state.loading && !state.error" class="flex-1 overflow-y-auto">
+      @if (state.filteredDrafts.length === 0) {
         <div class="p-4 text-center text-gray-500">
           <p class="text-sm">
-            @if (pendingDrafts.length === 0) {
+            @if (state.drafts.length === 0) {
               No pending reviews found.
             } @else {
-              No matches found for "{{ searchTerm }}".
+              No matches found for "{{ state.searchTerm }}".
             }
           </p>
         </div>
       } @else {
-        @for (draft of filteredDrafts; track draft.id) {
+        @for (draft of state.filteredDrafts; track draft.id) {
           <app-draft-list-item
             [draft]="draft"
-            [selected]="selectedDraft?.id === draft.id"
+            [selected]="state.selectedDraft?.id === draft.id"
             [showStatus]="true"
             statusType="eligibility"
             [showPublishButton]="false"
@@ -86,21 +86,21 @@
   <!-- Detail Panel -->
   <div detail>
     <app-draft-detail-panel
-      [draft]="selectedDraft"
+      [draft]="state.selectedDraft"
       [canEdit]="canEditDraft()"
       [canPublishFlag]="true"
       [canApproveFlag]="true"
       [showPublishButton]="true"
       [showRequestReviewButton]="true"
       [showApproveButton]="true"
-      [isLoadingComments]="isLoadingComments"
-      [comments]="comments"
-      [requestingReview]="requestingReview"
-      [entryId]="selectedDraft?.entry?.id"
-      [currentUserId]="currentUser?.id"
+      [isLoadingComments]="state.isLoadingComments"
+      [comments]="state.comments"
+      [requestingReview]="state.requestingReview"
+      [entryId]="state.selectedDraft?.entry?.id"
+      [currentUserId]="state.currentUser?.id"
       (approve)="approveDraft()"
-      (publish)="publishDraft(selectedDraft!)"
-      (requestReview)="requestReview(selectedDraft!)"
+      (publish)="publishDraft(state.selectedDraft!)"
+      (requestReview)="requestReview(state.selectedDraft!)"
       (editRequested)="onEditRequested()"
       (editSaved)="onEditSaved()"
       (editCancelled)="onEditCancelled()"
@@ -113,9 +113,9 @@
 
 <!-- Reviewer Selector Dialog -->
 <app-reviewer-selector-dialog
-  [isOpen]="showReviewerSelector"
-  [users]="allUsers"
-  [selectedReviewerIds]="selectedReviewerIds"
+  [isOpen]="state.showReviewerSelector"
+  [users]="state.allUsers"
+  [selectedReviewerIds]="state.selectedReviewerIds"
   (close)="onReviewerSelectionCancelled()"
   (confirm)="onReviewerSelectionConfirmed($event)"
 >

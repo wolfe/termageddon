@@ -1,0 +1,9 @@
+@if (notification) {
+  <div 
+    [@fadeInOut]
+    [class]="getNotificationClass(notification)"
+  >
+    <span class="notification-icon">{{ getIconClass(notification) }}</span>
+    <span class="notification-message">{{ notification.message }}</span>
+  </div>
+}

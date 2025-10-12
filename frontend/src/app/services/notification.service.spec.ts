@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NotificationService, Notification } from './notification.service';
 
 describe('NotificationService', () => {
@@ -15,17 +15,17 @@ describe('NotificationService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('Notification methods', () => {
+  describe('Single notification behavior', () => {
     it('should show success notification', () => {
       const message = 'Success message';
       
       service.success(message);
       
-      const notifications = service.getNotifications();
-      expect(notifications.length).toBe(1);
-      expect(notifications[0].message).toBe(message);
-      expect(notifications[0].type).toBe('success');
-      expect(notifications[0].id).toBeDefined();
+      const notification = service.getNotification();
+      expect(notification).toBeTruthy();
+      expect(notification!.message).toBe(message);
+      expect(notification!.type).toBe('success');
+      expect(notification!.id).toBeDefined();
     });
 
     it('should show error notification', () => {
@@ -33,11 +33,11 @@ describe('NotificationService', () => {
       
       service.error(message);
       
-      const notifications = service.getNotifications();
-      expect(notifications.length).toBe(1);
-      expect(notifications[0].message).toBe(message);
-      expect(notifications[0].type).toBe('error');
-      expect(notifications[0].id).toBeDefined();
+      const notification = service.getNotification();
+      expect(notification).toBeTruthy();
+      expect(notification!.message).toBe(message);
+      expect(notification!.type).toBe('error');
+      expect(notification!.id).toBeDefined();
     });
 
     it('should show warning notification', () => {
@@ -45,11 +45,11 @@ describe('NotificationService', () => {
       
       service.warning(message);
       
-      const notifications = service.getNotifications();
-      expect(notifications.length).toBe(1);
-      expect(notifications[0].message).toBe(message);
-      expect(notifications[0].type).toBe('warning');
-      expect(notifications[0].id).toBeDefined();
+      const notification = service.getNotification();
+      expect(notification).toBeTruthy();
+      expect(notification!.message).toBe(message);
+      expect(notification!.type).toBe('warning');
+      expect(notification!.id).toBeDefined();
     });
 
     it('should show info notification', () => {
@@ -57,11 +57,11 @@ describe('NotificationService', () => {
       
       service.info(message);
       
-      const notifications = service.getNotifications();
-      expect(notifications.length).toBe(1);
-      expect(notifications[0].message).toBe(message);
-      expect(notifications[0].type).toBe('info');
-      expect(notifications[0].id).toBeDefined();
+      const notification = service.getNotification();
+      expect(notification).toBeTruthy();
+      expect(notification!.message).toBe(message);
+      expect(notification!.type).toBe('info');
+      expect(notification!.id).toBeDefined();
     });
 
     it('should generate unique IDs for notifications', () => {
@@ -74,25 +74,49 @@ describe('NotificationService', () => {
       expect(id1).not.toBe(id3);
     });
 
-    it('should dismiss notification by ID', () => {
-      const id = service.success('Test notification');
+    it('should replace previous notification with new one', () => {
+      const firstId = service.success('First notification');
+      const firstNotification = service.getNotification();
       
-      expect(service.getNotifications().length).toBe(1);
+      expect(firstNotification!.message).toBe('First notification');
       
-      service.dismiss(id);
+      const secondId = service.error('Second notification');
+      const secondNotification = service.getNotification();
       
-      expect(service.getNotifications().length).toBe(0);
+      expect(secondNotification!.message).toBe('Second notification');
+      expect(secondNotification!.type).toBe('error');
+      expect(secondId).not.toBe(firstId);
     });
 
-    it('should clear all notifications', () => {
-      service.success('First notification');
-      service.error('Second notification');
+    it('should dismiss current notification', () => {
+      service.success('Test notification');
       
-      expect(service.getNotifications().length).toBe(2);
+      expect(service.getNotification()).toBeTruthy();
+      
+      service.dismiss();
+      
+      expect(service.getNotification()).toBeNull();
+    });
+
+    it('should clear current notification', () => {
+      service.success('Test notification');
+      
+      expect(service.getNotification()).toBeTruthy();
       
       service.clear();
       
-      expect(service.getNotifications().length).toBe(0);
+      expect(service.getNotification()).toBeNull();
     });
+
+    it('should auto-dismiss notification after 8 seconds', fakeAsync(() => {
+      service.success('Test notification');
+      
+      expect(service.getNotification()).toBeTruthy();
+      
+      // Fast-forward 8 seconds
+      tick(8000);
+      
+      expect(service.getNotification()).toBeNull();
+    }));
   });
 });

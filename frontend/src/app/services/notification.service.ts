@@ -5,15 +5,14 @@ export interface Notification {
   id: string;
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
-  duration?: number; // Duration in milliseconds, 0 means no auto-dismiss
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  private notificationsSubject = new BehaviorSubject<Notification[]>([]);
-  public notifications$ = this.notificationsSubject.asObservable();
+  private notificationSubject = new BehaviorSubject<Notification | null>(null);
+  public notification$ = this.notificationSubject.asObservable();
 
   private nextId = 1;
 
@@ -23,32 +22,23 @@ export class NotificationService {
    * Show a notification
    * @param type - The type of notification
    * @param message - The message to display
-   * @param duration - Duration in milliseconds (default: 5000 for info, 0 for others)
    */
-  show(type: Notification['type'], message: string, duration?: number): string {
+  show(type: Notification['type'], message: string): string {
     const id = `notification-${this.nextId++}`;
-    
-    // Set default duration based on type
-    if (duration === undefined) {
-      duration = type === 'info' ? 5000 : 0;
-    }
 
     const notification: Notification = {
       id,
       type,
-      message,
-      duration
+      message
     };
 
-    const currentNotifications = this.notificationsSubject.value;
-    this.notificationsSubject.next([...currentNotifications, notification]);
+    // Replace any existing notification
+    this.notificationSubject.next(notification);
 
-    // Auto-dismiss if duration is specified and > 0
-    if (duration > 0) {
-      timer(duration).subscribe(() => {
-        this.dismiss(id);
-      });
-    }
+    // Auto-dismiss after 8 seconds (5s visible + 3s fade)
+    timer(8000).subscribe(() => {
+      this.dismiss();
+    });
 
     return id;
   }
@@ -56,52 +46,49 @@ export class NotificationService {
   /**
    * Show a success notification
    */
-  success(message: string, duration?: number): string {
-    return this.show('success', message, duration);
+  success(message: string): string {
+    return this.show('success', message);
   }
 
   /**
    * Show an error notification
    */
-  error(message: string, duration?: number): string {
-    return this.show('error', message, duration);
+  error(message: string): string {
+    return this.show('error', message);
   }
 
   /**
    * Show an info notification
    */
-  info(message: string, duration?: number): string {
-    return this.show('info', message, duration);
+  info(message: string): string {
+    return this.show('info', message);
   }
 
   /**
    * Show a warning notification
    */
-  warning(message: string, duration?: number): string {
-    return this.show('warning', message, duration);
+  warning(message: string): string {
+    return this.show('warning', message);
   }
 
   /**
-   * Dismiss a notification by ID
+   * Dismiss the current notification
    */
-  dismiss(id: string): void {
-    const currentNotifications = this.notificationsSubject.value;
-    this.notificationsSubject.next(
-      currentNotifications.filter(notification => notification.id !== id)
-    );
+  dismiss(): void {
+    this.notificationSubject.next(null);
   }
 
   /**
-   * Clear all notifications
+   * Clear the current notification
    */
   clear(): void {
-    this.notificationsSubject.next([]);
+    this.notificationSubject.next(null);
   }
 
   /**
-   * Get current notifications
+   * Get current notification
    */
-  getNotifications(): Notification[] {
-    return this.notificationsSubject.value;
+  getNotification(): Notification | null {
+    return this.notificationSubject.value;
   }
 }

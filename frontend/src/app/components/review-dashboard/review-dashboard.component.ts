@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ReviewService } from '../../services/review.service';
 import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { NotificationService } from '../../services/notification.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
+import { PanelCommonService, PanelState } from '../../services/panel-common.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 import { SearchFilterBarComponent, FilterConfig } from '../shared/search-filter-bar/search-filter-bar.component';
@@ -32,26 +33,13 @@ import { getInitials } from '../../utils/user.util';
   styleUrl: './review-dashboard.component.scss',
 })
 export class ReviewDashboardComponent implements OnInit, OnDestroy {
-  pendingDrafts: ReviewDraft[] = [];
-  filteredDrafts: ReviewDraft[] = [];
-
-  searchTerm: string = '';
+  private destroy$ = new Subject<void>();
+  
+  // Use centralized panel state
+  state: PanelState;
+  
+  // Review-specific state
   showAll: boolean = false;
-  loading = false;
-  requestingReview = false; // Separate loading state for request review
-  error: string | null = null;
-  currentUser: User | null = null;
-  selectedDraft: ReviewDraft | null = null;
-  allUsers: User[] = [];
-
-  // Reviewer selector dialog state
-  showReviewerSelector = false;
-  selectedReviewerIds: number[] = [];
-  draftToRequestReview: ReviewDraft | null = null;
-
-  // Comment state
-  comments: Comment[] = [];
-  isLoadingComments = false;
 
   // Filter configuration
   filters: FilterConfig[] = [
@@ -76,122 +64,56 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   getApprovalAccessLevel = getApprovalAccessLevel;
   getInitials = getInitials;
 
-  // Subscription management
-  private userSubscription?: Subscription;
-
   constructor(
     private reviewService: ReviewService,
     private permissionService: PermissionService,
     private glossaryService: GlossaryService,
     private notificationService: NotificationService,
     private entryDetailService: EntryDetailService,
-  ) {}
+    private panelCommonService: PanelCommonService
+  ) {
+    this.state = this.panelCommonService.initializePanelState();
+  }
 
   ngOnInit(): void {
-    // Subscribe to current user changes
-    this.userSubscription = this.permissionService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-    });
-    
+    this.state.currentUser = this.permissionService.currentUser;
     this.loadPendingDrafts();
-    this.loadUsers();
+    this.panelCommonService.loadUsers(this.state);
   }
 
   ngOnDestroy(): void {
-    if (this.userSubscription) {
-      this.userSubscription.unsubscribe();
-    }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadPendingDrafts(callback?: () => void): void {
-    this.loading = true;
-    this.error = null;
-
-    // Use new backend eligibility filtering instead of client-side logic
-    this.reviewService.getDraftsCanApprove(this.showAll).subscribe({
-      next: (response: PaginatedResponse<ReviewDraft>) => {
-        this.pendingDrafts = response.results;
-        this.filteredDrafts = [...this.pendingDrafts];
-        this.loading = false;
-        // Execute callback after data is loaded
-        if (callback) {
-          callback();
-        }
-      },
-      error: (error) => {
-        console.error('Error loading pending drafts:', error);
-        this.error = 'Failed to load review data';
-        this.loading = false;
-      },
-    });
+    this.panelCommonService.loadDrafts(
+      () => this.reviewService.getDraftsCanApprove(this.showAll),
+      this.state
+    );
+    
+    // Execute callback after data is loaded
+    if (callback) {
+      callback();
+    }
   }
 
-  loadUsers(): void {
-    this.glossaryService.getUsers().subscribe({
-      next: (users) => {
-        this.allUsers = users;
-      },
-      error: (error) => {
-        console.error('Error loading users:', error);
-      },
-    });
-  }
 
   onSearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredDrafts = [...this.pendingDrafts];
-      return;
-    }
-
-    // Use backend search instead of client-side filtering
-    this.loading = true;
-    this.reviewService.searchDrafts(this.searchTerm, this.showAll).subscribe({
-      next: (response: PaginatedResponse<ReviewDraft>) => {
-        this.filteredDrafts = response.results;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error searching drafts:', error);
-        this.error = 'Failed to search drafts';
-        this.loading = false;
-      },
+    this.panelCommonService.onSearch(this.state.searchTerm, this.state, (term: string) => {
+      return this.reviewService.searchDrafts(term, this.showAll);
     });
   }
 
   selectDraft(draft: ReviewDraft): void {
-    this.selectedDraft = draft;
-    this.loadComments();
+    this.panelCommonService.selectDraft(draft, this.state);
   }
 
 
   approveDraft(): void {
-    if (!this.selectedDraft) return;
-
-    this.loading = true;
-
-    this.reviewService.approveDraft(this.selectedDraft.id).subscribe({
-      next: (updatedDraft) => {
-        this.notificationService.success(
-          `Successfully approved "${this.selectedDraft!.entry.term.text}"`,
-        );
-
-        // Remove the approved draft from our list
-        this.pendingDrafts = this.pendingDrafts.filter(
-          (d) => d.id !== this.selectedDraft!.id,
-        );
-        this.filteredDrafts = this.filteredDrafts.filter(
-          (d) => d.id !== this.selectedDraft!.id,
-        );
-
-        // Deselect the draft
-        this.selectedDraft = null;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error approving draft:', error);
-        this.notificationService.error('Failed to approve draft. Please try again.');
-        this.loading = false;
-      },
+    if (!this.state.selectedDraft) return;
+    this.panelCommonService.approveDraft(this.state.selectedDraft, this.state, () => {
+      // Additional cleanup specific to ReviewDashboard if needed
     });
   }
 
@@ -200,40 +122,39 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   isOwnDraft(): boolean {
-    return this.selectedDraft?.author.id === this.currentUser?.id;
+    return this.state.selectedDraft?.author.id === this.state.currentUser?.id;
   }
 
   hasAlreadyApproved(): boolean {
-    if (!this.selectedDraft) return false;
+    if (!this.state.selectedDraft) return false;
     // Use backend field instead of client-side logic
-    return this.selectedDraft.user_has_approved ?? false;
+    return this.state.selectedDraft.user_has_approved ?? false;
   }
 
-
   getEligibleCount(): number {
-    return this.filteredDrafts.filter(
+    return this.state.filteredDrafts.filter(
       (d) => d.approval_status_for_user === 'can_approve',
     ).length;
   }
 
   getAlreadyApprovedCount(): number {
-    return this.filteredDrafts.filter(
+    return this.state.filteredDrafts.filter(
       (d) => d.approval_status_for_user === 'already_approved',
     ).length;
   }
 
   getOwnDraftsCount(): number {
-    return this.filteredDrafts.filter(
+    return this.state.filteredDrafts.filter(
       (d) => d.approval_status_for_user === 'own_draft',
     ).length;
   }
 
   onShowAllChange(): void {
     // Store the current search term before reloading
-    const currentSearchTerm = this.searchTerm;
+    const currentSearchTerm = this.state.searchTerm;
     this.loadPendingDrafts(() => {
       // Restore the search term and reapply the filter after data is loaded
-      this.searchTerm = currentSearchTerm;
+      this.state.searchTerm = currentSearchTerm;
       this.onSearch();
     });
   }
@@ -246,47 +167,24 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   requestReview(draft: ReviewDraft): void {
-    this.draftToRequestReview = draft;
-    this.selectedReviewerIds = draft.requested_reviewers.map((r) => r.id);
-    this.showReviewerSelector = true;
+    this.panelCommonService.showReviewerSelector(draft, this.state);
   }
 
   onReviewerSelectionConfirmed(reviewerIds: number[]): void {
-    if (!this.draftToRequestReview) return;
-
-    this.requestingReview = true;
-    this.reviewService
-      .requestReview(this.draftToRequestReview.id, reviewerIds)
-      .subscribe({
-        next: (updatedDraft) => {
-          // Refresh the data from server to get updated state
-          this.loadPendingDrafts();
-          
-          // Update selected draft if it's the same
-          if (this.selectedDraft?.id === this.draftToRequestReview?.id) {
-            this.selectedDraft = updatedDraft as unknown as ReviewDraft;
-          }
-
-          this.requestingReview = false;
-          this.showReviewerSelector = false;
-          this.draftToRequestReview = null;
-          this.selectedReviewerIds = [];
-        },
-        error: (error) => {
-          console.error('Error requesting review:', error);
-          this.notificationService.error(
-            'Failed to request review: ' +
-              (error.error?.detail || 'Unknown error'),
-          );
-          this.requestingReview = false;
-        },
-      });
+    if (!this.state.draftToRequestReview) return;
+    this.panelCommonService.requestReview(this.state.draftToRequestReview.id, reviewerIds, this.state, () => {
+      // Refresh the data from server to get updated state
+      this.loadPendingDrafts();
+      
+      // Update selected draft if it's the same
+      if (this.state.selectedDraft?.id === this.state.draftToRequestReview?.id) {
+        this.state.selectedDraft = this.state.draftToRequestReview;
+      }
+    });
   }
 
   onReviewerSelectionCancelled(): void {
-    this.showReviewerSelector = false;
-    this.draftToRequestReview = null;
-    this.selectedReviewerIds = [];
+    this.panelCommonService.hideReviewerSelector(this.state);
   }
 
   publishDraft(draft: ReviewDraft): void {
@@ -301,64 +199,32 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
         'Are you sure you want to publish this draft? This will make it the active draft.',
       )
     ) {
-      this.reviewService.publishDraft(draft.id).subscribe({
-        next: (updatedDraft) => {
-          this.notificationService.success('Draft published successfully!');
-          // Clear the selected draft since it's no longer in the review list
-          this.selectedDraft = null;
-          // Reload the drafts to get the updated list (published draft will be excluded)
-          this.loadPendingDrafts();
-        },
-        error: (error) => {
-          console.error('Error publishing draft:', error);
-          this.notificationService.error(
-            'Failed to publish draft: ' +
-              (error.error?.detail || 'Unknown error'),
-          );
-        },
+      this.panelCommonService.publishDraft(draft, this.state, () => {
+        // Clear the selected draft since it's no longer in the review list
+        this.state.selectedDraft = null;
+        // Reload the drafts to get the updated list (published draft will be excluded)
+        this.loadPendingDrafts();
       });
     }
   }
 
-  loadComments(): void {
-    if (!this.selectedDraft?.entry?.id) return;
-    
-    this.isLoadingComments = true;
-    this.entryDetailService.loadCommentsWithPositions(this.selectedDraft.entry.id)
-      .subscribe({
-        next: (comments) => {
-          this.comments = comments;
-          this.isLoadingComments = false;
-        },
-        error: (error) => {
-          console.error('Error loading comments:', error);
-          this.isLoadingComments = false;
-        }
-      });
-  }
 
   onCommentAdded(comment: Comment): void {
-    this.comments.push(comment);
+    this.panelCommonService.onCommentAdded(comment, this.state);
   }
 
   onCommentResolved(comment: Comment): void {
-    const index = this.comments.findIndex(c => c.id === comment.id);
-    if (index !== -1) {
-      this.comments[index] = comment;
-    }
+    this.panelCommonService.onCommentResolved(comment, this.state);
   }
 
   onCommentUnresolved(comment: Comment): void {
-    const index = this.comments.findIndex(c => c.id === comment.id);
-    if (index !== -1) {
-      this.comments[index] = comment;
-    }
+    this.panelCommonService.onCommentUnresolved(comment, this.state);
   }
 
   // Edit functionality
   canEditDraft(): boolean {
     // Any user can edit the latest version in Review context
-    return !!this.selectedDraft && !!this.currentUser;
+    return !!this.state.selectedDraft && !!this.state.currentUser;
   }
 
   onEditRequested(): void {
@@ -366,13 +232,9 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   onEditSaved(): void {
-    // Refresh the drafts list to show the new draft
-    this.loadPendingDrafts();
-    
-    // Also reload comments since there might be new draft positions
-    if (this.selectedDraft) {
-      this.loadComments();
-    }
+    this.panelCommonService.refreshAfterEdit(this.state, () => {
+      this.loadPendingDrafts();
+    });
   }
 
   onEditCancelled(): void {

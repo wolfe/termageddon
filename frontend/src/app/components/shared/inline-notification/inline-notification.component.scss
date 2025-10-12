@@ -1,0 +1,45 @@
+.inline-notification {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 16px;
+  border-radius: 6px;
+  max-width: 600px;
+  max-height: 40px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-icon {
+  font-size: 1rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.notification-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.notification-error {
+  background-color: #ef4444;
+  color: white;
+}
+
+.notification-warning {
+  background-color: #f59e0b;
+  color: black;
+}
+
+.notification-info {
+  background-color: #3b82f6;
+  color: white;
+}

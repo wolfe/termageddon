@@ -4,11 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
 import { User } from '../../models';
+import { InlineNotificationComponent } from '../shared/inline-notification/inline-notification.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, InlineNotificationComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
 })
