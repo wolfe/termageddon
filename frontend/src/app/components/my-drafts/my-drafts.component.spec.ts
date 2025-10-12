@@ -951,7 +951,7 @@ describe('MyDraftsComponent', () => {
       const mockComments: Comment[] = [
         {
           id: 1,
-          content_type: 1,
+          content_type: 10,
           object_id: 1,
           text: 'Test comment',
           created_at: '2024-01-01T00:00:00Z',

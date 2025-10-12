@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, forkJoin } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
 import { Entry, EntryDraft, ReviewDraft, Comment, User, CreateEntryDraftRequest } from '../models';
 import { GlossaryService } from './glossary.service';
 import { ReviewService } from './review.service';
@@ -31,10 +31,29 @@ export class EntryDetailService {
    */
   loadCommentsWithPositions(entryId: number): Observable<Comment[]> {
     return this.glossaryService.getCommentsWithDraftPositions(entryId).pipe(
+      switchMap(draftComments => {
+        // Also get regular comments for the entry
+        return this.glossaryService.getComments(10, entryId).pipe(
+          map(response => {
+            const entryComments = response.results;
+            // Combine draft comments and entry comments, removing duplicates
+            const allComments = [...draftComments, ...entryComments];
+            const uniqueComments = allComments.filter((comment, index, self) => 
+              index === self.findIndex(c => c.id === comment.id)
+            );
+            return uniqueComments;
+          }),
+          catchError(error => {
+            console.error('Error loading regular comments:', error);
+            // If regular comments fail, just return draft comments
+            return of(draftComments);
+          })
+        );
+      }),
       catchError(error => {
         console.error('Error loading comments with positions:', error);
-        // Fallback to regular comments endpoint
-        return this.glossaryService.getComments(1, entryId).pipe(
+        // Fallback to regular comments endpoint only
+        return this.glossaryService.getComments(10, entryId).pipe(
           map(response => response.results),
           catchError(fallbackError => {
             console.error('Error loading comments (fallback):', fallbackError);
