@@ -109,7 +109,6 @@ export interface LoginResponse {
 export interface CreateEntryDraftRequest {
   entry: number;
   content: string;
-  author: number;
 }
 
 export interface CreateCommentRequest {
@@ -117,7 +116,6 @@ export interface CreateCommentRequest {
   object_id: number;
   parent?: number;
   text: string;
-  author: number;
 }
 
 // Enhanced EntryDraft with Entry details for review context

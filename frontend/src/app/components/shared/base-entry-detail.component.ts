@@ -114,8 +114,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
 
     this.entryDetailService.createNewDraft(
       entryId,
-      this.editContent,
-      this.permissionService.currentUser.id
+      this.editContent
     ).pipe(takeUntil(this.destroy$))
     .subscribe({
       next: (newDraft) => {

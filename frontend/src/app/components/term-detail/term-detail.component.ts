@@ -165,12 +165,11 @@ export class TermDetailComponent implements OnInit, OnChanges {
   private createNewDraft(): void {
     const entryId = this.entry.id;
     const content = this.editContent.trim();
-    const authorId = this.permissionService.currentUser?.id || 1;
 
-    console.log('Creating new draft:', { entryId, content, authorId });
+    console.log('Creating new draft:', { entryId, content });
 
     // Use EntryDetailService instead of direct glossaryService call
-    this.entryDetailService.createNewDraft(entryId, content, authorId).subscribe({
+    this.entryDetailService.createNewDraft(entryId, content).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
         

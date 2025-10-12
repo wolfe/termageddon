@@ -273,7 +273,6 @@ class TestEntryDraftSerializers:
         data = {
             "entry": entry.id,
             "content": "<p>Test content</p>",
-            "author": author.id,
         }
 
         serializer = EntryDraftCreateSerializer(
@@ -299,7 +298,6 @@ class TestEntryDraftSerializers:
         data = {
             "entry": entry.id,
             "content": "<p><br></p>",
-            "author": author.id,
         }
 
         serializer = EntryDraftCreateSerializer(

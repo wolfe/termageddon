@@ -199,13 +199,12 @@ class EntryDraftCreateSerializer(serializers.Serializer):
         if not normalized:
             raise serializers.ValidationError("Content cannot be empty.")
         return value
-    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     def create(self, validated_data):
-        # Set created_by from request user
+        # Set author from request user
         request = self.context.get("request")
         if request and hasattr(request, "user"):
-            validated_data["created_by"] = request.user
+            validated_data["author"] = request.user
 
         try:
             return EntryDraft.objects.create(**validated_data)
@@ -460,14 +459,13 @@ class CommentCreateSerializer(serializers.ModelSerializer):
             "object_id",
             "parent",
             "text",
-            "author",
             "is_resolved",
         ]
 
     def create(self, validated_data):
         request = self.context.get("request")
         if request and hasattr(request, "user"):
-            validated_data["created_by"] = request.user
+            validated_data["author"] = request.user
         return super().create(validated_data)
 
 

@@ -101,11 +101,10 @@ export class EntryDetailService {
   /**
    * Create a new draft for an entry
    */
-  createNewDraft(entryId: number, content: string, authorId: number): Observable<EntryDraft> {
+  createNewDraft(entryId: number, content: string): Observable<EntryDraft> {
     const draftData: CreateEntryDraftRequest = {
       entry: entryId,
       content: content.trim(),
-      author: authorId,
     };
 
     return this.glossaryService.createEntryDraft(draftData);

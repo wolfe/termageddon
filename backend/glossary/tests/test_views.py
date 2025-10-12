@@ -278,7 +278,6 @@ class TestEntryDraftViewSet:
         data = {
             "entry": entry.id,
             "content": "<p>Test definition</p>",
-            "author": authenticated_client.user.id,
         }
         response = authenticated_client.post(url, data)
 
@@ -358,7 +357,6 @@ class TestCommentViewSet:
             "content_type": content_type.id,
             "object_id": entry.id,
             "text": "Test comment",
-            "author": authenticated_client.user.id,
         }
         response = authenticated_client.post(url, data)
 
@@ -616,7 +614,6 @@ class TestEntryDraftUpdateWorkflow:
         data = {
             "entry": entry.id,
             "content": "New content",
-            "author": authenticated_client.user.id,
         }
         response = authenticated_client.post(url, data)
 
@@ -721,7 +718,6 @@ class TestEntryDraftUpdateWorkflow:
         data = {
             "entry": entry.id,
             "content": "New content after publishing",
-            "author": authenticated_client.user.id,
         }
         response = authenticated_client.post(url, data)
 

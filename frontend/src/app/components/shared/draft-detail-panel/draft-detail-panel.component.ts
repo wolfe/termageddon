@@ -134,8 +134,7 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
 
     this.entryDetailService.createNewDraft(
       this.draft.entry.id,
-      this.editContent,
-      this.permissionService.currentUser.id
+      this.editContent
     ).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);

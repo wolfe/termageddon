@@ -82,7 +82,6 @@ export class CommentThreadComponent implements OnInit, OnChanges {
       object_id: this.objectId,
       parent: this.replyingTo.id,
       text: this.replyText.trim(),
-      author: this.permissionService.currentUser?.id || 0,
     };
 
     this.glossaryService.createComment(commentData).subscribe({
@@ -109,7 +108,6 @@ export class CommentThreadComponent implements OnInit, OnChanges {
       content_type: this.contentType,
       object_id: this.objectId,
       text: this.newCommentText.trim(),
-      author: this.permissionService.currentUser?.id || 0,
     };
 
     this.glossaryService.createComment(commentData).subscribe({
