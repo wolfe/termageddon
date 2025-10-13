@@ -15,36 +15,31 @@
     padding: 4px 8px;
   }
 
-  // Color variants
+  // Color variants - using Tailwind classes
   &--default {
-    background-color: #B7D1DB; // termageddon-blue
-    color: white;
+    @apply bg-termageddon-blue text-white;
   }
 
   &--selected {
-    background-color: #93728F; // termageddon-purple
-    color: white;
+    @apply bg-termageddon-purple text-white;
   }
 
   &--unselected {
-    background-color: #B2B3B0; // termageddon-gray
-    color: #1F2F38; // termageddon-gray-dark (gray-on-gray)
+    @apply bg-termageddon-gray text-termageddon-gray-dark;
   }
 
   // Tab variants (for term-detail component)
   &--tab-selected {
-    background-color: #93728F; // termageddon-purple
-    color: white;
+    @apply bg-termageddon-purple text-white;
     border-radius: 4px 4px 0 0;
-    border: 1px solid #ccc;
+    @apply border border-gray-300;
     border-bottom: none;
   }
 
   &--tab-unselected {
-    background-color: #E5E5E5; // light gray
-    color: #666;
+    @apply bg-gray-50 text-gray-500;
     border-radius: 4px 4px 0 0;
-    border: 1px solid #ccc;
+    @apply border border-gray-300;
     border-bottom: none;
   }
 

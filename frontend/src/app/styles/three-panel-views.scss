@@ -3,7 +3,7 @@
 /* Main container with off-white background */
 .three-panel-container {
   @apply flex;
-  background-color: #fafafa; /* Off-white background */
+  @apply bg-gray-50; /* Off-white background */
   height: calc(100vh - 80px); /* Use viewport height minus navigation */
 }
 
@@ -15,21 +15,21 @@
 /* Detail panel styling */
 .three-panel-detail {
   @apply flex-1 overflow-hidden relative;
-  background-color: #fafafa; /* Off-white background */
+  @apply bg-gray-50; /* Off-white background */
   height: 100%; /* Take full height of parent */
 }
 
 /* Empty state styling - centered with logo */
 .three-panel-empty-state {
   @apply flex-1 flex items-center justify-center text-gray-500;
-  background-color: #fafafa; /* Off-white background */
+  @apply bg-gray-50; /* Off-white background */
   height: 100%; /* Take full height of parent */
 }
 
 /* Detail panel empty state - specific styling for right panel */
 .three-panel-detail-empty-state {
   @apply absolute inset-0 flex items-center justify-center text-gray-500;
-  background-color: #fafafa; /* Off-white background */
+  @apply bg-gray-50; /* Off-white background */
 }
 
 .three-panel-empty-content {
@@ -62,7 +62,7 @@
 }
 
 .three-panel-sidebar-subtitle {
-  @apply text-sm text-gray-600 mt-1;
+  @apply text-sm text-gray-500 mt-1;
 }
 
 /* Sidebar content area */
@@ -73,7 +73,7 @@
 /* Loading state */
 .three-panel-loading {
   @apply flex-1 flex items-center justify-center;
-  background-color: #fafafa;
+  @apply bg-gray-50;
 }
 
 .three-panel-loading-content {
@@ -85,13 +85,13 @@
 }
 
 .three-panel-loading-text {
-  @apply text-gray-600 mt-2 text-sm;
+  @apply text-gray-500 mt-2 text-sm;
 }
 
 /* Error state */
 .three-panel-error {
   @apply flex-1 flex items-center justify-center;
-  background-color: #fafafa;
+  @apply bg-gray-50;
 }
 
 .three-panel-error-content {
@@ -109,7 +109,7 @@
 /* No results state */
 .three-panel-no-results {
   @apply p-4 text-center text-gray-500;
-  background-color: #fafafa;
+  @apply bg-gray-50;
 }
 
 .three-panel-no-results-text {

@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col">
 @if (draft) {
   <!-- Header -->
-  <div class="p-4 border-b border-gray-300">
+  <div class="p-4 border-b border-ui-border-light">
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-xl font-bold text-termageddon-gray-dark">
@@ -14,7 +14,7 @@
             variant="selected"
           ></app-perspective-pill>
           @if (draft.entry.is_official) {
-            <span class="px-2 py-1 bg-yellow-400 text-black text-xs rounded font-semibold">
+            <span class="px-2 py-1 bg-status-ready text-black text-xs rounded font-semibold">
               OFFICIAL
             </span>
           }
@@ -27,7 +27,7 @@
         @if (showPublishButton && canPublishUtil(draft)) {
           <button
             (click)="onPublish()"
-            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+            class="px-4 py-2 bg-action-success text-white rounded hover:bg-action-success-hover text-sm font-medium"
           >
             Publish Draft
           </button>
@@ -36,7 +36,7 @@
           <button
             (click)="onRequestReview()"
             [disabled]="requestingReview"
-            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 text-sm font-medium"
+            class="px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover disabled:bg-action-secondary text-sm font-medium"
           >
             {{ requestingReview ? 'Requesting...' : 'Request Reviewers' }}
           </button>
@@ -44,7 +44,7 @@
         @if (canEdit) {
           <button
             (click)="onEdit()"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium"
+            class="px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover text-sm font-medium"
           >
             {{ isEditing() ? 'Cancel Edit' : 'Edit Draft' }}
           </button>

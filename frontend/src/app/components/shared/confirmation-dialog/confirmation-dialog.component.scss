@@ -23,15 +23,15 @@
   animation: dialogSlideIn 0.2s ease-out;
 
   &.dialog-warning {
-    border-top: 4px solid #f59e0b;
+    @apply border-t-4 border-yellow-500;
   }
 
   &.dialog-danger {
-    border-top: 4px solid #dc2626;
+    @apply border-t-4 border-red-500;
   }
 
   &.dialog-info {
-    border-top: 4px solid #2563eb;
+    @apply border-t-4 border-blue-500;
   }
 }
 
@@ -52,7 +52,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  @apply text-gray-800;
 }
 
 .dialog-body {
@@ -61,7 +61,7 @@
 
 .dialog-message {
   margin: 0;
-  color: #374151;
+  @apply text-gray-700;
   line-height: 1.5;
   font-size: 0.875rem;
 }
@@ -89,46 +89,34 @@
   }
 
   &.btn-secondary {
-    background: white;
-    color: #374151;
-    border-color: #d1d5db;
+    @apply bg-white text-gray-700 border-gray-300;
 
     &:hover:not(:disabled) {
-      background: #f9fafb;
-      border-color: #9ca3af;
+      @apply bg-gray-50 border-gray-400;
     }
   }
 
   &.btn-primary {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
+    @apply bg-blue-600 text-white border-blue-600;
 
     &:hover:not(:disabled) {
-      background: #1d4ed8;
-      border-color: #1d4ed8;
+      @apply bg-blue-700 border-blue-700;
     }
   }
 
   &.btn-warning {
-    background: #f59e0b;
-    color: white;
-    border-color: #f59e0b;
+    @apply bg-yellow-600 text-white border-yellow-600;
 
     &:hover:not(:disabled) {
-      background: #d97706;
-      border-color: #d97706;
+      @apply bg-yellow-700 border-yellow-700;
     }
   }
 
   &.btn-danger {
-    background: #dc2626;
-    color: white;
-    border-color: #dc2626;
+    @apply bg-red-600 text-white border-red-600;
 
     &:hover:not(:disabled) {
-      background: #b91c1c;
-      border-color: #b91c1c;
+      @apply bg-red-700 border-red-700;
     }
   }
 }

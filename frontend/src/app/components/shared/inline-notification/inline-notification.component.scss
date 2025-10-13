@@ -47,21 +47,17 @@
 }
 
 .notification-success {
-  background-color: #10b981;
-  color: white;
+  @apply bg-green-500 text-white;
 }
 
 .notification-error {
-  background-color: #ef4444;
-  color: white;
+  @apply bg-red-500 text-white;
 }
 
 .notification-warning {
-  background-color: #f59e0b;
-  color: black;
+  @apply bg-yellow-500 text-black;
 }
 
 .notification-info {
-  background-color: #3b82f6;
-  color: white;
+  @apply bg-blue-500 text-white;
 }

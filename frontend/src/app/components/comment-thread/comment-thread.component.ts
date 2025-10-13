@@ -208,11 +208,11 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     
     switch (comment.draft_position) {
       case 'current draft':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-status-approved-light text-status-approved';
       case 'published':
-        return 'bg-green-100 text-green-700';
+        return 'bg-status-published-light text-status-published';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-ui-background-elevated text-ui-text-muted';
     }
   }
 }

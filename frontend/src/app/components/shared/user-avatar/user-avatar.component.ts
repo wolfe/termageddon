@@ -36,9 +36,9 @@ export class UserAvatarComponent {
 
     const colorClasses = {
       blue: 'bg-termageddon-blue text-white',
-      green: 'bg-green-500 text-white',
-      purple: 'bg-purple-500 text-white',
-      yellow: 'bg-yellow-500 text-black'
+      green: 'bg-role-approver text-white',
+      purple: 'bg-role-reviewer text-white',
+      yellow: 'bg-role-admin text-black'
     };
 
     const cursorClass = this.clickable ? 'cursor-pointer' : 'cursor-default';

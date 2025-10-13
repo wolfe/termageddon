@@ -256,11 +256,11 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
     const status = this.getApprovalAccessLevel(this.draft);
     switch (status) {
       case 'can_approve':
-        return 'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium';
+        return 'px-4 py-2 bg-action-success text-white rounded hover:bg-action-success-hover disabled:bg-action-secondary text-sm font-medium';
       case 'own_draft':
-        return 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm font-medium';
+        return 'px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover disabled:bg-action-secondary text-sm font-medium';
       default:
-        return 'px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-400 text-sm font-medium';
+        return 'px-4 py-2 bg-action-secondary text-white rounded hover:bg-action-secondary-hover disabled:bg-action-secondary text-sm font-medium';
     }
   }
 }

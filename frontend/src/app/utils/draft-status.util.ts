@@ -51,15 +51,15 @@ export function getEligibilityClass(draft: ReviewDraft): string {
   const status = draft.approval_status_for_user ?? 'unknown';
   switch (status) {
     case 'own_draft':
-      return 'text-gray-500 bg-gray-100';
+      return 'text-ui-text-muted bg-ui-background-elevated';
     case 'already_approved':
-      return 'text-green-600 bg-green-50';
+      return 'text-status-published bg-status-published-light';
     case 'can_approve':
-      return 'text-blue-600 bg-blue-50';
+      return 'text-status-approved bg-status-approved-light';
     case 'already_approved_by_others':
-      return 'text-green-600 bg-green-50';
+      return 'text-status-published bg-status-published-light';
     default:
-      return 'text-gray-500 bg-gray-100';
+      return 'text-ui-text-muted bg-ui-background-elevated';
   }
 }
 
