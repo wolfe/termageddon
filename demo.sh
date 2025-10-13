@@ -241,10 +241,10 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
     
     # Window 2: Frontend as Maria Carter (pre-authenticated if token available)
     if [ -n "$MARIA_TOKEN" ]; then
-        MARIA_URL="http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter"
+        MARIA_URL="http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true"
         echo -e "${BLUE}  → Opening Maria Carter window (pre-authenticated)...${NC}"
     else
-        MARIA_URL="http://localhost:4200"
+        MARIA_URL="http://localhost:4200?demo=true"
         echo -e "${BLUE}  → Opening Maria Carter window (manual login required)...${NC}"
     fi
     open -a "Google Chrome" "$MARIA_URL"
@@ -252,10 +252,10 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
     
     # Window 3: Frontend as Ben Carter (pre-authenticated if token available)
     if [ -n "$BEN_TOKEN" ]; then
-        BEN_URL="http://localhost:4200?token=$BEN_TOKEN&username=bencarter"
+        BEN_URL="http://localhost:4200?token=$BEN_TOKEN&username=bencarter&demo=true"
         echo -e "${BLUE}  → Opening Ben Carter window (pre-authenticated)...${NC}"
     else
-        BEN_URL="http://localhost:4200"
+        BEN_URL="http://localhost:4200?demo=true"
         echo -e "${BLUE}  → Opening Ben Carter window (manual login required)...${NC}"
     fi
     open -a "Google Chrome" "$BEN_URL"
@@ -278,15 +278,15 @@ elif command -v google-chrome &> /dev/null; then
     google-chrome "http://localhost:8000/admin/" &
     sleep 2
     if [ -n "$MARIA_TOKEN" ]; then
-        google-chrome "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter" &
+        google-chrome "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true" &
     else
-        google-chrome "http://localhost:4200" &
+        google-chrome "http://localhost:4200?demo=true" &
     fi
     sleep 2  
     if [ -n "$BEN_TOKEN" ]; then
-        google-chrome "http://localhost:4200?token=$BEN_TOKEN&username=bencarter" &
+        google-chrome "http://localhost:4200?token=$BEN_TOKEN&username=bencarter&demo=true" &
     else
-        google-chrome "http://localhost:4200" &
+        google-chrome "http://localhost:4200?demo=true" &
     fi
     echo -e "${GREEN}  ✓ Chrome opened with 3 windows${NC}"
 elif command -v chromium-browser &> /dev/null; then
@@ -294,15 +294,15 @@ elif command -v chromium-browser &> /dev/null; then
     chromium-browser "http://localhost:8000/admin/" &
     sleep 2
     if [ -n "$MARIA_TOKEN" ]; then
-        chromium-browser "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter" &
+        chromium-browser "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true" &
     else
-        chromium-browser "http://localhost:4200" &
+        chromium-browser "http://localhost:4200?demo=true" &
     fi
     sleep 2
     if [ -n "$BEN_TOKEN" ]; then
-        chromium-browser "http://localhost:4200?token=$BEN_TOKEN&username=bencarter" &
+        chromium-browser "http://localhost:4200?token=$BEN_TOKEN&username=bencarter&demo=true" &
     else
-        chromium-browser "http://localhost:4200" &
+        chromium-browser "http://localhost:4200?demo=true" &
     fi
     echo -e "${GREEN}  ✓ Chromium opened with 3 windows${NC}"
 else
