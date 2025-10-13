@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Entry } from '../../models';
 import { TermListComponent } from '../term-list/term-list.component';
 import { TermDetailComponent } from '../term-detail/term-detail.component';
+import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 
 @Component({
   selector: 'app-glossary-view',
   standalone: true,
-  imports: [CommonModule, TermListComponent, TermDetailComponent],
+  imports: [CommonModule, TermListComponent, TermDetailComponent, MasterDetailLayoutComponent],
   templateUrl: './glossary-view.component.html',
   styleUrl: './glossary-view.component.scss',
 })

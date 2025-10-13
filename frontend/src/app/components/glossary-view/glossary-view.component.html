@@ -1,6 +1,9 @@
-<div class="three-panel-container">
-  <!-- Left Sidebar: Term List (25%) -->
-  <div class="three-panel-sidebar w-[25%]">
+<app-master-detail-layout
+  sidebarTitle="Glossary"
+  sidebarSubtitle="Browse and edit terms"
+>
+  <!-- Sidebar Content -->
+  <div sidebar>
     <app-term-list 
       (entrySelected)="onEntrySelected($event)"
       (termSelected)="onTermSelected($event)"
@@ -8,8 +11,8 @@
     ></app-term-list>
   </div>
 
-  <!-- Right Panel: Term Detail (70%) -->
-  <div class="three-panel-detail">
+  <!-- Detail Panel -->
+  <div detail>
     @if (selectedEntry) {
       <app-term-detail
         [entry]="selectedEntry"
@@ -20,7 +23,7 @@
         (editSaved)="onEditSaved($event)"
       ></app-term-detail>
     } @else {
-      <div class="three-panel-empty-state">
+      <div class="three-panel-detail-empty-state">
         <div class="three-panel-empty-content">
           <div class="three-panel-empty-logo">
             <img src="images/logo.png" alt="Termageddon Logo" />
@@ -33,4 +36,4 @@
       </div>
     }
   </div>
-</div>
+</app-master-detail-layout>
