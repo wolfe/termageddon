@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './master-detail-layout.component.scss'
 })
 export class MasterDetailLayoutComponent {
-  @Input() sidebarWidth: string = 'w-1/3';
+  @Input() sidebarWidth: string = 'w-[25%]';
   @Input() detailWidth: string = 'flex-1';
   @Input() sidebarTitle: string = '';
   @Input() sidebarSubtitle: string = '';

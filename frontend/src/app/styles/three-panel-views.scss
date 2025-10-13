@@ -1,0 +1,117 @@
+/* Shared styles for three-panel views (Glossary, Review, My Drafts) */
+
+/* Main container with off-white background */
+.three-panel-container {
+  @apply flex;
+  background-color: #fafafa; /* Off-white background */
+  height: calc(100vh - 80px); /* Use viewport height minus navigation */
+}
+
+/* Sidebar styling */
+.three-panel-sidebar {
+  @apply border-r border-gray-300 overflow-hidden;
+}
+
+/* Detail panel styling */
+.three-panel-detail {
+  @apply flex-1 overflow-hidden relative;
+  background-color: #fafafa; /* Off-white background */
+  height: 100%; /* Take full height of parent */
+}
+
+/* Empty state styling - centered with logo */
+.three-panel-empty-state {
+  @apply flex-1 flex items-center justify-center text-gray-500;
+  background-color: #fafafa; /* Off-white background */
+  height: 100%; /* Take full height of parent */
+}
+
+/* Detail panel empty state - specific styling for right panel */
+.three-panel-detail-empty-state {
+  @apply absolute inset-0 flex items-center justify-center text-gray-500;
+  background-color: #fafafa; /* Off-white background */
+}
+
+.three-panel-empty-content {
+  @apply text-center max-w-md mx-auto;
+}
+
+.three-panel-empty-logo {
+  @apply mb-6;
+}
+
+.three-panel-empty-logo img {
+  @apply h-32 w-auto mx-auto opacity-60; /* Increased from h-24 to h-32 */
+}
+
+.three-panel-empty-title {
+  @apply text-lg font-medium text-gray-700 mb-2;
+}
+
+.three-panel-empty-subtitle {
+  @apply text-sm text-gray-500;
+}
+
+/* Sidebar header styling */
+.three-panel-sidebar-header {
+  @apply p-4 border-b border-gray-300 bg-white;
+}
+
+.three-panel-sidebar-title {
+  @apply text-xl font-bold text-termageddon-gray-dark;
+}
+
+.three-panel-sidebar-subtitle {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+/* Sidebar content area */
+.three-panel-sidebar-content {
+  @apply flex-1 overflow-y-auto bg-white;
+}
+
+/* Loading state */
+.three-panel-loading {
+  @apply flex-1 flex items-center justify-center;
+  background-color: #fafafa;
+}
+
+.three-panel-loading-content {
+  @apply text-center;
+}
+
+.three-panel-loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-termageddon-accent mx-auto;
+}
+
+.three-panel-loading-text {
+  @apply text-gray-600 mt-2 text-sm;
+}
+
+/* Error state */
+.three-panel-error {
+  @apply flex-1 flex items-center justify-center;
+  background-color: #fafafa;
+}
+
+.three-panel-error-content {
+  @apply text-center text-orange-600;
+}
+
+.three-panel-error-text {
+  @apply text-sm;
+}
+
+.three-panel-error-button {
+  @apply mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm;
+}
+
+/* No results state */
+.three-panel-no-results {
+  @apply p-4 text-center text-gray-500;
+  background-color: #fafafa;
+}
+
+.three-panel-no-results-text {
+  @apply text-sm;
+}

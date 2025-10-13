@@ -1,7 +1,6 @@
 <app-master-detail-layout
   sidebarTitle="Pending Reviews"
   sidebarSubtitle="Definitions waiting for approval"
-  sidebarWidth="w-2/5"
 >
   <!-- Sidebar Content -->
   <div sidebar>
@@ -35,20 +34,20 @@
     ></app-search-filter-bar>
 
     <!-- Loading State -->
-    <div *ngIf="state.loading" class="flex-1 flex items-center justify-center">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-termageddon-accent mx-auto"></div>
-        <p class="text-gray-600 mt-2 text-sm">Loading...</p>
+    <div *ngIf="state.loading" class="three-panel-loading">
+      <div class="three-panel-loading-content">
+        <div class="three-panel-loading-spinner"></div>
+        <p class="three-panel-loading-text">Loading...</p>
       </div>
     </div>
 
     <!-- Error State -->
-    <div *ngIf="state.error && !state.loading" class="flex-1 flex items-center justify-center">
-      <div class="text-center text-orange-600">
-        <p class="text-sm">{{ state.error }}</p>
+    <div *ngIf="state.error && !state.loading" class="three-panel-error">
+      <div class="three-panel-error-content">
+        <p class="three-panel-error-text">{{ state.error }}</p>
         <button
           (click)="loadPendingDrafts()"
-          class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
+          class="three-panel-error-button"
         >
           Retry
         </button>
@@ -58,8 +57,8 @@
     <!-- Drafts List -->
     <div *ngIf="!state.loading && !state.error" class="flex-1 overflow-y-auto">
       @if (state.filteredDrafts.length === 0) {
-        <div class="p-4 text-center text-gray-500">
-          <p class="text-sm">
+        <div class="three-panel-no-results">
+          <p class="three-panel-no-results-text">
             @if (state.drafts.length === 0) {
               No pending reviews found.
             } @else {

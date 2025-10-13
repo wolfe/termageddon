@@ -1,6 +1,6 @@
-<div class="h-full flex">
-  <!-- Left Sidebar: Term List (30%) -->
-  <div class="w-[30%] border-r border-gray-300 overflow-hidden">
+<div class="three-panel-container">
+  <!-- Left Sidebar: Term List (25%) -->
+  <div class="three-panel-sidebar w-[25%]">
     <app-term-list 
       (entrySelected)="onEntrySelected($event)"
       (termSelected)="onTermSelected($event)"
@@ -9,7 +9,7 @@
   </div>
 
   <!-- Right Panel: Term Detail (70%) -->
-  <div class="flex-1 overflow-hidden">
+  <div class="three-panel-detail">
     @if (selectedEntry) {
       <app-term-detail
         [entry]="selectedEntry"
@@ -20,10 +20,13 @@
         (editSaved)="onEditSaved($event)"
       ></app-term-detail>
     } @else {
-      <div class="h-full flex items-center justify-center text-gray-500">
-        <div class="text-center">
-          <p class="text-lg">Select a term to view its definition</p>
-          <p class="text-sm mt-2">
+      <div class="three-panel-empty-state">
+        <div class="three-panel-empty-content">
+          <div class="three-panel-empty-logo">
+            <img src="images/logo.png" alt="Termageddon Logo" />
+          </div>
+          <h2 class="three-panel-empty-title">Select a term to view its definition</h2>
+          <p class="three-panel-empty-subtitle">
             Use the search bar on the left to find terms
           </p>
         </div>

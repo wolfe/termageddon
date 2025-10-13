@@ -1,24 +1,26 @@
-<div class="h-full flex bg-white">
+<div class="three-panel-container">
   <!-- Sidebar -->
-  <div [class]="sidebarWidth + (showBorder ? ' border-r border-gray-300' : '')" class="flex flex-col">
+  <div [class]="sidebarWidth + ' three-panel-sidebar'" class="flex flex-col">
     <!-- Sidebar Header -->
     @if (sidebarTitle || sidebarSubtitle) {
-      <div class="p-4 border-b border-gray-300">
+      <div class="three-panel-sidebar-header">
         @if (sidebarTitle) {
-          <h1 class="text-xl font-bold text-termageddon-gray-dark">{{ sidebarTitle }}</h1>
+          <h1 class="three-panel-sidebar-title">{{ sidebarTitle }}</h1>
         }
         @if (sidebarSubtitle) {
-          <p class="text-sm text-gray-600 mt-1">{{ sidebarSubtitle }}</p>
+          <p class="three-panel-sidebar-subtitle">{{ sidebarSubtitle }}</p>
         }
       </div>
     }
     
     <!-- Sidebar Content -->
-    <ng-content select="[sidebar]"></ng-content>
+    <div class="three-panel-sidebar-content">
+      <ng-content select="[sidebar]"></ng-content>
+    </div>
   </div>
 
   <!-- Detail Panel -->
-  <div [class]="detailWidth" class="flex flex-col">
+  <div class="three-panel-detail h-full flex flex-col">
     <ng-content select="[detail]"></ng-content>
   </div>
 </div>

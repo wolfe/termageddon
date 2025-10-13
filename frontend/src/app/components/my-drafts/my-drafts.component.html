@@ -1,7 +1,6 @@
 <app-master-detail-layout
   sidebarTitle="My Drafts"
   sidebarSubtitle="Your draft definitions"
-  sidebarWidth="w-1/3"
 >
   <!-- Sidebar Content -->
   <div sidebar>
@@ -17,27 +16,38 @@
     <!-- Draft List -->
     <div class="flex-1 overflow-y-auto">
       @if (state.loading) {
-        <div class="p-4 text-center text-gray-500">
-          <p>Loading drafts...</p>
+        <div class="three-panel-loading">
+          <div class="three-panel-loading-content">
+            <div class="three-panel-loading-spinner"></div>
+            <p class="three-panel-loading-text">Loading drafts...</p>
+          </div>
         </div>
       } @else if (state.error) {
-        <div class="p-4 text-center text-red-600">
-          <p>{{ state.error }}</p>
-          <button
-            (click)="loadMyDrafts()"
-            class="mt-2 px-3 py-1 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm"
-          >
-            Retry
-          </button>
+        <div class="three-panel-error">
+          <div class="three-panel-error-content">
+            <p class="three-panel-error-text">{{ state.error }}</p>
+            <button
+              (click)="loadMyDrafts()"
+              class="three-panel-error-button"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       } @else if (state.filteredDrafts.length === 0) {
-        <div class="p-4 text-center text-gray-500">
-          @if (state.searchTerm) {
-            <p>No drafts found</p>
-          } @else {
-            <p>No drafts yet</p>
-            <p class="text-sm mt-1">Create drafts by editing terms</p>
-          }
+        <div class="three-panel-empty-state">
+          <div class="three-panel-empty-content">
+            <div class="three-panel-empty-logo">
+              <img src="images/logo.png" alt="Termageddon Logo" />
+            </div>
+            @if (state.searchTerm) {
+              <h2 class="three-panel-empty-title">No drafts found</h2>
+              <p class="three-panel-empty-subtitle">Try adjusting your search terms</p>
+            } @else {
+              <h2 class="three-panel-empty-title">No drafts yet</h2>
+              <p class="three-panel-empty-subtitle">Create drafts by editing terms</p>
+            }
+          </div>
         </div>
       } @else {
         <div class="space-y-1 p-2">

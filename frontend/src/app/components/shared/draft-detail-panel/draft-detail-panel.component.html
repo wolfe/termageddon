@@ -1,3 +1,4 @@
+<div class="h-full flex flex-col">
 @if (draft) {
   <!-- Header -->
   <div class="p-4 border-b border-gray-300">
@@ -208,10 +209,14 @@
   ></app-version-history-sidebar>
 } @else {
   <!-- No Selection -->
-  <div class="flex-1 flex items-center justify-center">
-    <div class="text-center text-gray-500">
-      <h3 class="text-lg font-medium mb-2">Select a Definition</h3>
-      <p>Choose a definition from the sidebar to review</p>
+  <div class="three-panel-detail-empty-state">
+    <div class="three-panel-empty-content">
+      <div class="three-panel-empty-logo">
+        <img src="images/logo.png" alt="Termageddon Logo" />
+      </div>
+      <h2 class="three-panel-empty-title">Select a Definition</h2>
+      <p class="three-panel-empty-subtitle">Choose a definition from the sidebar to review</p>
     </div>
   </div>
 }
+</div>

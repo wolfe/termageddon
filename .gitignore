@@ -140,7 +140,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Temporary files
+# Temporary files and directories
+tmp/
 *.tmp
 *.temp
 
