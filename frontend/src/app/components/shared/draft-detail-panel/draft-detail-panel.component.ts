@@ -40,6 +40,9 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   @Output() approve = new EventEmitter<void>();
   @Output() publish = new EventEmitter<void>();
   @Output() requestReview = new EventEmitter<void>();
+  @Output() override commentAdded = new EventEmitter<Comment>();
+  @Output() override commentResolved = new EventEmitter<Comment>();
+  @Output() override commentUnresolved = new EventEmitter<Comment>();
 
   // Additional state specific to draft detail panel
   latestDraft: EntryDraft | null = null;
@@ -150,7 +153,22 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
     });
   }
 
-  onVersionHistoryClosed(): void {
+  override onCommentAdded(comment: Comment): void {
+    super.onCommentAdded(comment);
+    this.commentAdded.emit(comment);
+  }
+
+  override onCommentResolved(comment: Comment): void {
+    super.onCommentResolved(comment);
+    this.commentResolved.emit(comment);
+  }
+
+  override onCommentUnresolved(comment: Comment): void {
+    super.onCommentUnresolved(comment);
+    this.commentUnresolved.emit(comment);
+  }
+
+  override onVersionHistoryClosed(): void {
     this.showVersionHistorySidebar = false;
   }
 

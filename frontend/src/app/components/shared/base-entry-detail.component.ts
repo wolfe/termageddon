@@ -184,6 +184,13 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle version history sidebar closed
+   */
+  onVersionHistoryClosed(): void {
+    this.showVersionHistorySidebar = false;
+  }
+
+  /**
    * Handle draft selection from version history
    */
   onDraftSelected(draft: EntryDraft): void {

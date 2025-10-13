@@ -37,7 +37,9 @@ describe('MyDraftsComponent', () => {
       }
     });
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
-      'loadCommentsWithPositions'
+      'loadCommentsWithPositions',
+      'loadDraftHistory',
+      'getEntryId'
     ]);
     const panelCommonSpy = jasmine.createSpyObj('PanelCommonService', [
       'initializePanelState',
@@ -72,22 +74,91 @@ describe('MyDraftsComponent', () => {
       requestingReview: false
     });
     panelCommonSpy.loadUsers.and.returnValue();
-    panelCommonSpy.loadDrafts.and.callFake((loadFn: () => any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
-      const response = loadFn();
-      response.subscribe((result: any) => {
-        state.drafts = postProcessFn ? postProcessFn(result.results) : result.results;
-        state.filteredDrafts = [...state.drafts];
-        state.loading = false;
-      });
+    panelCommonSpy.loadDrafts.and.callFake((options: any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
+      // Simulate loading drafts with the new signature
+      const mockDrafts = [
+        {
+          id: 1,
+          content: 'Test draft 1',
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
+          timestamp: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          entry: { 
+            id: 1, 
+            term: { text: 'Test Term 1' },
+            perspective: {
+              id: 1,
+              name: 'Test Perspective',
+              description: 'Test Description'
+            }
+          },
+          author: { id: 1, username: 'testuser' },
+          approvers: [],
+          requested_reviewers: [],
+          replaces_draft: null
+        },
+        {
+          id: 2,
+          content: 'Test draft 2',
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
+          timestamp: '2024-01-02T00:00:00Z',
+          created_at: '2024-01-02T00:00:00Z',
+          updated_at: '2024-01-02T00:00:00Z',
+          entry: { 
+            id: 2, 
+            term: { text: 'Test Term 2' },
+            perspective: {
+              id: 2,
+              name: 'Test Perspective 2',
+              description: 'Test Description 2'
+            }
+          },
+          author: { id: 1, username: 'testuser' },
+          approvers: [],
+          requested_reviewers: [],
+          replaces_draft: null
+        }
+      ];
+      
+      state.drafts = postProcessFn ? postProcessFn(mockDrafts) : mockDrafts;
+      state.filteredDrafts = [...state.drafts];
+      state.loading = false;
     });
-    panelCommonSpy.onSearch.and.callFake((searchTerm: string, state: any, searchFn: (term: string) => any) => {
+    panelCommonSpy.onSearch.and.callFake((searchTerm: string, state: any, options: any) => {
       // Simulate the actual behavior
       state.searchTerm = searchTerm;
-      const response = searchFn(searchTerm);
-      response.subscribe((result: any) => {
-        state.filteredDrafts = result.results;
-        state.loading = false;
-      });
+      const mockDrafts = [
+        {
+          id: 1,
+          content: 'Test draft 1',
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
+          timestamp: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          entry: { 
+            id: 1, 
+            term: { text: 'Test Term 1' },
+            perspective: {
+              id: 1,
+              name: 'Test Perspective',
+              description: 'Test Description'
+            }
+          },
+          author: { id: 1, username: 'testuser' },
+          approvers: [],
+          requested_reviewers: [],
+          replaces_draft: null
+        }
+      ];
+      state.filteredDrafts = mockDrafts;
+      state.loading = false;
     });
     panelCommonSpy.refreshAfterEdit.and.callFake((state: any, loadDraftsCallback: () => void) => {
       // Simulate the actual behavior - refresh comments first, then drafts
@@ -111,6 +182,8 @@ describe('MyDraftsComponent', () => {
     reviewSpy.searchDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     glossarySpy.getUsers.and.returnValue(of([]));
     entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
+    entryDetailSpy.loadDraftHistory.and.returnValue(of([]));
+    entryDetailSpy.getEntryId.and.returnValue(1);
     panelCommonSpy.getLatestDraftsPerEntry.and.callFake((drafts: ReviewDraft[]) => {
       // Simulate the actual filtering logic
       const latestDraftsMap = new Map<number, ReviewDraft>();

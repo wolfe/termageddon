@@ -32,7 +32,7 @@
             Publish Draft
           </button>
         }
-        @if (showRequestReviewButton) {
+        @if (showRequestReviewButton && !draft.is_published && !draft.is_approved) {
           <button
             (click)="onRequestReview()"
             [disabled]="requestingReview"
@@ -62,7 +62,7 @@
           (click)="toggleVersionHistory()"
           class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium"
         >
-          {{ showVersionHistory ? 'Hide History' : 'Show History' }}
+          {{ showVersionHistorySidebar ? 'Hide History' : 'Version History' }}
         </button>
       </div>
     </div>
@@ -163,10 +163,10 @@
         } @else if (draft.replaces_draft) {
           <div class="mt-8 prose max-w-none">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
-            <div class="bg-gray-100 p-4 rounded-lg" [innerHTML]="draft.replaces_draft.content"></div>
+            <div class="bg-gray-100 p-4 rounded-lg" [innerHTML]="draft.replaces_draft?.content"></div>
             <div class="mt-3 text-sm text-gray-600">
-              <p>Author: {{ draft.replaces_draft.author.first_name }} {{ draft.replaces_draft.author.last_name }}</p>
-              <p>Created: {{ draft.replaces_draft.timestamp | date: "medium" }}</p>
+              <p>Author: {{ draft.replaces_draft?.author?.first_name }} {{ draft.replaces_draft?.author?.last_name }}</p>
+              <p>Created: {{ draft.replaces_draft?.timestamp | date: "medium" }}</p>
             </div>
           </div>
         } @else {
@@ -203,7 +203,7 @@
   <!-- Version History Sidebar -->
   <app-version-history-sidebar
     [entryId]="(draft?.entry?.id) ?? null"
-    [isOpen]="showVersionHistory"
+    [isOpen]="showVersionHistorySidebar"
     (close)="onVersionHistoryClosed()"
     (draftSelected)="onDraftSelected($event)"
   ></app-version-history-sidebar>
