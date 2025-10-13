@@ -11,6 +11,28 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  
+  /* Initial state - hidden */
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+.notification-visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: opacity 200ms ease-out, transform 200ms ease-out !important;
+}
+
+.notification-fading {
+  opacity: 0 !important;
+  transition: opacity 3000ms ease-out !important;
+}
+
+.notification-resetting {
+  opacity: 0 !important;
+  transform: translateY(-10px) !important;
+  transition: none !important;
 }
 
 .notification-icon {

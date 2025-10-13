@@ -145,7 +145,7 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
         this.isEditMode = false;
         this.editContent = '';
         this.editSaved.emit();
-        this.notificationService.success('Definition saved successfully! It will be visible once approved.');
+        this.notificationService.success(`Definition for "${this.draft?.entry?.term?.text}" saved successfully! It will be visible once approved.`);
       },
       error: (error) => {
         console.error('Failed to create draft:', error);

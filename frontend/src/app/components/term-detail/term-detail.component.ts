@@ -183,7 +183,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
             }
             this.editSaved.emit(this.entry);
             this.notificationService.success(
-              'Definition saved successfully! It will be visible once approved.',
+              `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`,
             );
           },
           error: (error) => {
@@ -191,7 +191,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
             // Still emit success, just log the error
             this.editSaved.emit(this.entry);
             this.notificationService.success(
-              'Definition saved successfully! It will be visible once approved.',
+              `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`,
             );
           }
         });
@@ -255,7 +255,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
     this.glossaryService.endorseEntry(this.entry.id).subscribe({
       next: (updatedEntry) => {
         this.entry = updatedEntry;
-        this.notificationService.success('Definition endorsed successfully!');
+        this.notificationService.success(`Definition for "${this.entry.term.text}" endorsed successfully!`);
       },
       error: (error) => {
         console.error('Failed to endorse definition:', error);

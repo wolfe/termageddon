@@ -108,14 +108,19 @@ describe('NotificationService', () => {
       expect(service.getNotification()).toBeNull();
     });
 
-    it('should auto-dismiss notification after 8 seconds', fakeAsync(() => {
+    it('should not auto-dismiss notification (component handles timing)', fakeAsync(() => {
       service.success('Test notification');
       
       expect(service.getNotification()).toBeTruthy();
       
-      // Fast-forward 8 seconds
+      // Fast-forward 8 seconds - notification should still be there
+      // because the component handles the timing, not the service
       tick(8000);
       
+      expect(service.getNotification()).toBeTruthy();
+      
+      // Manually dismiss to clean up
+      service.dismiss();
       expect(service.getNotification()).toBeNull();
     }));
   });

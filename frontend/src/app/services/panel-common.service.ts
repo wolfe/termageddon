@@ -190,7 +190,8 @@ export class PanelCommonService {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.notificationService.success('Review requests sent successfully!');
+          const termName = state.draftToRequestReview?.entry?.term?.text || 'draft';
+          this.notificationService.success(`Review requests for "${termName}" sent successfully!`);
           state.requestingReview = false;
           this.cancelReviewerSelection(state);
         },
@@ -283,7 +284,7 @@ export class PanelCommonService {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedDraft) => {
-          this.notificationService.success('Draft published successfully!');
+          this.notificationService.success(`Draft for "${draft.entry.term.text}" published successfully!`);
           
           // Update the draft properties in the list
           const index = state.drafts.findIndex(d => d.id === draft.id);
@@ -317,11 +318,16 @@ export class PanelCommonService {
    */
   requestReview(draftId: number, reviewerIds: number[], state: PanelState, refreshCallback?: () => void): void {
     state.requestingReview = true;
+    
+    // Find the draft to get term name
+    const draft = state.drafts.find(d => d.id === draftId);
+    const termName = draft?.entry?.term?.text || 'draft';
+    
     this.reviewService.requestReview(draftId, reviewerIds)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedDraft) => {
-          this.notificationService.success('Review requests sent successfully!');
+          this.notificationService.success(`Review requests for "${termName}" sent successfully!`);
           
           // Update the draft properties in the list
           const index = state.drafts.findIndex(d => d.id === draftId);

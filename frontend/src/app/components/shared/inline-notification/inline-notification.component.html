@@ -1,7 +1,9 @@
 @if (notification) {
   <div 
-    [@fadeInOut]
     [class]="getNotificationClass(notification)"
+    [class.notification-visible]="isVisible"
+    [class.notification-fading]="isFading"
+    [class.notification-resetting]="isResetting"
   >
     <span class="notification-icon">{{ getIconClass(notification) }}</span>
     <span class="notification-message">{{ notification.message }}</span>
