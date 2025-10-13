@@ -12,9 +12,7 @@ import { PermissionService } from './permission.service';
  * 
  * To enable: Set window['DEMO_MODE'] = true before bootstrapping the app
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DemoAutoLoginService {
   private isEnabled = false;
 
