@@ -143,7 +143,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
     // Use unified edit initialization method
     this.editContent = this.entryDetailService.initializeEditContentFromLatest(
       this.draftHistory,
-      this.entry?.active_draft?.content
+      this.entry?.active_draft?.content || ''
     );
     this.editRequested.emit();
   }
@@ -169,24 +169,24 @@ export class TermDetailComponent implements OnInit, OnChanges {
     console.log('Creating new draft:', { entryId, content });
 
     // Use EntryDetailService instead of direct glossaryService call
-    this.entryDetailService.createNewDraft(entryId, content).subscribe({
+    this.entryDetailService.createNewDraft(entryId, content, this.permissionService.currentUser?.id || 0).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
         
         // Use unified refresh pattern
         this.entryDetailService.refreshAfterDraftCreated(entryId).subscribe({
-          next: ({ draftHistory, entry }) => {
-            this.draftHistory = draftHistory;
-            this.latestDraft = draftHistory[0] || null;
-            if (entry) {
-              Object.assign(this.entry, entry);
+          next: (response: { draftHistory: EntryDraft[], entry: Entry }) => {
+            this.draftHistory = response.draftHistory;
+            this.latestDraft = response.draftHistory[0] || null;
+            if (response.entry) {
+              Object.assign(this.entry, response.entry);
             }
             this.editSaved.emit(this.entry);
             this.notificationService.success(
               `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`,
             );
           },
-          error: (error) => {
+          error: (error: any) => {
             console.error('Failed to refresh:', error);
             // Still emit success, just log the error
             this.editSaved.emit(this.entry);

@@ -14,6 +14,67 @@ from glossary.models import (
 )
 
 
+class EntryDraftApprovalMixin:
+    """Mixin providing common approval-related serializer methods for EntryDraft serializers"""
+    
+    def get_can_approve_by_current_user(self, obj):
+        """Check if current user can approve this draft"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Cannot approve own drafts
+        if obj.author.id == request.user.id:
+            return False
+        
+        # Cannot approve if already approved this draft
+        if obj.approvers.filter(pk=request.user.pk).exists():
+            return False
+        
+        # Can approve if status is pending
+        return not obj.is_approved
+
+    def get_approval_status_for_user(self, obj):
+        """Get approval status from current user's perspective"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return 'unknown'
+        
+        if obj.author.id == request.user.id:
+            return 'own_draft'
+        
+        if obj.approvers.filter(pk=request.user.pk).exists():
+            # User has approved this draft
+            if obj.is_approved:
+                return 'already_approved_by_others'  # Draft is fully approved
+            else:
+                return 'can_approve'  # User approved but draft needs more approvals
+        
+        if obj.is_approved:
+            return 'already_approved_by_others'
+        
+        return 'can_approve'
+
+    def get_user_has_approved(self, obj):
+        """Check if current user has already approved this draft"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.approvers.filter(pk=request.user.pk).exists()
+
+    def get_remaining_approvals(self, obj):
+        """Calculate remaining approvals needed"""
+        from django.conf import settings
+        return max(0, settings.MIN_APPROVALS - obj.approval_count)
+
+    def get_approval_percentage(self, obj):
+        """Calculate approval percentage for progress indicators"""
+        from django.conf import settings
+        if settings.MIN_APPROVALS == 0:
+            return 100
+        return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
+
+
 # User serializers
 class UserSerializer(serializers.ModelSerializer):
     """Basic user serializer"""
@@ -74,7 +135,7 @@ class TermSerializer(serializers.ModelSerializer):
 
 
 # EntryDraft serializers
-class EntryDraftListSerializer(serializers.ModelSerializer):
+class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSerializer):
     """EntryDraft serializer with nested user data"""
 
     author = UserSerializer(read_only=True)
@@ -118,63 +179,6 @@ class EntryDraftListSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
-
-    def get_can_approve_by_current_user(self, obj):
-        """Check if current user can approve this draft"""
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        
-        # Cannot approve own drafts
-        if obj.author.id == request.user.id:
-            return False
-        
-        # Cannot approve if already approved this draft
-        if obj.approvers.filter(pk=request.user.pk).exists():
-            return False
-        
-        # Can approve if status is pending
-        return not obj.is_approved
-
-    def get_approval_status_for_user(self, obj):
-        """Get approval status from current user's perspective"""
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return 'unknown'
-        
-        if obj.author.id == request.user.id:
-            return 'own_draft'
-        
-        if obj.approvers.filter(pk=request.user.pk).exists():
-            # User has approved this draft
-            if obj.is_approved:
-                return 'already_approved_by_others'  # Draft is fully approved
-            else:
-                return 'can_approve'  # User approved but draft needs more approvals
-        
-        if obj.is_approved:
-            return 'already_approved_by_others'
-        
-        return 'can_approve'
-
-    def get_user_has_approved(self, obj):
-        """Check if current user has already approved this draft"""
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        return obj.approvers.filter(pk=request.user.pk).exists()
-
-    def get_remaining_approvals(self, obj):
-        """Calculate remaining approvals needed"""
-        from django.conf import settings
-        return max(0, settings.MIN_APPROVALS - obj.approval_count)
-
-    def get_approval_percentage(self, obj):
-        """Calculate approval percentage for progress indicators"""
-        from django.conf import settings
-        if settings.MIN_APPROVALS == 0:
-            return 100
-        return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
 
 
 class EntryDraftCreateSerializer(serializers.Serializer):
@@ -310,7 +314,7 @@ class EntryCreateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class EntryDraftReviewSerializer(serializers.ModelSerializer):
+class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSerializer):
     """EntryDraft serializer with expanded entry data for review"""
 
     author = UserSerializer(read_only=True)
@@ -350,63 +354,6 @@ class EntryDraftReviewSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
-
-    def get_can_approve_by_current_user(self, obj):
-        """Check if current user can approve this draft"""
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        
-        # Cannot approve own drafts
-        if obj.author.id == request.user.id:
-            return False
-        
-        # Cannot approve if already approved this draft
-        if obj.approvers.filter(pk=request.user.pk).exists():
-            return False
-        
-        # Can approve if status is pending
-        return not obj.is_approved
-
-    def get_approval_status_for_user(self, obj):
-        """Get approval status from current user's perspective"""
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return 'unknown'
-        
-        if obj.author.id == request.user.id:
-            return 'own_draft'
-        
-        if obj.approvers.filter(pk=request.user.pk).exists():
-            # User has approved this draft
-            if obj.is_approved:
-                return 'already_approved_by_others'  # Draft is fully approved
-            else:
-                return 'can_approve'  # User approved but draft needs more approvals
-        
-        if obj.is_approved:
-            return 'already_approved_by_others'
-        
-        return 'can_approve'
-
-    def get_user_has_approved(self, obj):
-        """Check if current user has already approved this draft"""
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        return obj.approvers.filter(pk=request.user.pk).exists()
-
-    def get_remaining_approvals(self, obj):
-        """Calculate remaining approvals needed"""
-        from django.conf import settings
-        return max(0, settings.MIN_APPROVALS - obj.approval_count)
-
-    def get_approval_percentage(self, obj):
-        """Calculate approval percentage for progress indicators"""
-        from django.conf import settings
-        if settings.MIN_APPROVALS == 0:
-            return 100
-        return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
 
 
 class EntryUpdateSerializer(serializers.ModelSerializer):

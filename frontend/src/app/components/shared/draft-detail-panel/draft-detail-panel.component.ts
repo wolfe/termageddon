@@ -7,6 +7,7 @@ import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
 import { DefinitionFormComponent } from '../../definition-form/definition-form.component';
 import { VersionHistorySidebarComponent } from '../version-history-sidebar/version-history-sidebar.component';
+import { BaseEntryDetailComponent } from '../base-entry-detail.component';
 import { EntryDetailService } from '../../../services/entry-detail.service';
 import { PermissionService } from '../../../services/permission.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -20,62 +21,55 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
   templateUrl: './draft-detail-panel.component.html',
   styleUrl: './draft-detail-panel.component.scss'
 })
-export class DraftDetailPanelComponent implements OnInit, OnChanges {
+export class DraftDetailPanelComponent extends BaseEntryDetailComponent implements OnInit, OnChanges {
   @Input() draft: ReviewDraft | null = null;
-  @Input() canEdit: boolean = false;
+  @Input() override canEdit: boolean = false;
+  @Input() override isLoadingComments: boolean = false;
+  @Input() override comments: Comment[] = [];
+  // Additional inputs specific to draft detail panel
   @Input() canPublishFlag: boolean = false;
   @Input() canApproveFlag: boolean = false;
   @Input() showPublishButton: boolean = true;
   @Input() showRequestReviewButton: boolean = true;
   @Input() showApproveButton: boolean = true;
-  @Input() isLoadingComments: boolean = false;
-  @Input() comments: Comment[] = [];
   @Input() requestingReview: boolean = false;
   @Input() entryId?: number;
   @Input() currentUserId?: number;
 
+  // Additional outputs specific to draft detail panel
   @Output() approve = new EventEmitter<void>();
   @Output() publish = new EventEmitter<void>();
   @Output() requestReview = new EventEmitter<void>();
-  @Output() editRequested = new EventEmitter<void>();
-  @Output() editSaved = new EventEmitter<void>();
-  @Output() editCancelled = new EventEmitter<void>();
-  @Output() commentAdded = new EventEmitter<Comment>();
-  @Output() commentResolved = new EventEmitter<Comment>();
-  @Output() commentUnresolved = new EventEmitter<Comment>();
 
-  // Edit state
-  isEditMode: boolean = false;
-  editContent: string = '';
-
-  // Version history state
-  showVersionHistory: boolean = false;
-  draftHistory: EntryDraft[] = [];
-  selectedHistoricalDraft: EntryDraft | null = null;
+  // Additional state specific to draft detail panel
   latestDraft: EntryDraft | null = null;
 
   constructor(
-    private entryDetailService: EntryDetailService,
-    private permissionService: PermissionService,
+    entryDetailService: EntryDetailService,
+    permissionService: PermissionService,
     private notificationService: NotificationService
-  ) {}
+  ) {
+    super(entryDetailService, permissionService);
+  }
 
-  ngOnInit(): void {
-    // Load draft history when draft is selected
-    if (this.draft?.entry?.id) {
-      this.loadDraftHistory();
-    }
+  override ngOnInit(): void {
+    // Set the entry from the draft for base class
+    this.entry = this.draft;
+    super.ngOnInit();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['draft'] && this.draft) {
-      this.loadDraftHistory();
-      // Reset historical draft selection when switching drafts
-      this.selectedHistoricalDraft = null;
+    if (changes['draft']) {
+      this.entry = this.draft;
+      if (this.draft) {
+        this.loadDraftHistory();
+        // Reset historical draft selection when switching drafts
+        this.selectedHistoricalDraft = null;
+      }
     }
   }
 
-  loadDraftHistory(): void {
+  override loadDraftHistory(): void {
     if (!this.draft?.entry?.id) return;
     
     this.entryDetailService.loadDraftHistory(this.draft.entry.id).subscribe({
@@ -113,6 +107,7 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
     this.requestReview.emit();
   }
 
+  // Override base class methods for draft-specific behavior
   onEdit(): void {
     if (!this.draft) return;
     
@@ -134,7 +129,8 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
 
     this.entryDetailService.createNewDraft(
       this.draft.entry.id,
-      this.editContent
+      this.editContent,
+      this.permissionService.currentUser?.id || 0
     ).subscribe({
       next: (newDraft) => {
         console.log('Successfully created draft:', newDraft);
@@ -154,36 +150,8 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
     });
   }
 
-  onCancelEdit(): void {
-    this.isEditMode = false;
-    this.editContent = '';
-    this.editCancelled.emit();
-  }
-
-  onCommentAdded(comment: Comment): void {
-    this.commentAdded.emit(comment);
-  }
-
-  onCommentResolved(comment: Comment): void {
-    this.commentResolved.emit(comment);
-  }
-
-  onCommentUnresolved(comment: Comment): void {
-    this.commentUnresolved.emit(comment);
-  }
-
-  // Version history methods
-  toggleVersionHistory(): void {
-    this.showVersionHistory = !this.showVersionHistory;
-  }
-
   onVersionHistoryClosed(): void {
-    this.showVersionHistory = false;
-  }
-
-  onDraftSelected(draft: EntryDraft): void {
-    this.selectedHistoricalDraft = draft;
-    console.log('Selected draft:', draft);
+    this.showVersionHistorySidebar = false;
   }
 
   isEditing(): boolean {
@@ -262,5 +230,11 @@ export class DraftDetailPanelComponent implements OnInit, OnChanges {
       default:
         return 'px-4 py-2 bg-action-secondary text-white rounded hover:bg-action-secondary-hover disabled:bg-action-secondary text-sm font-medium';
     }
+  }
+
+  onCancelEdit(): void {
+    this.isEditMode = false;
+    this.editContent = '';
+    this.editModeChanged.emit(false);
   }
 }

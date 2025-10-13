@@ -1,34 +1,48 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { Entry, EntryDraft, ReviewDraft, Comment, User } from '../../models';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
+import { Entry, ReviewDraft, EntryDraft, Comment } from '../../models';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PermissionService } from '../../services/permission.service';
-import { NotificationService } from '../../services/notification.service';
 
+@Component({
+  template: ''
+})
 export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
+  @Input() entry: Entry | ReviewDraft | null = null;
+  @Input() canEdit: boolean = false;
+  @Input() showVersionHistory: boolean = false;
+  @Input() showWorkflowButtons: boolean = false;
+  
+  @Output() editRequested = new EventEmitter<void>();
+  @Output() editSaved = new EventEmitter<Entry>();
+  @Output() editCancelled = new EventEmitter<void>();
+  @Output() editModeChanged = new EventEmitter<boolean>();
+  @Output() commentAdded = new EventEmitter<Comment>();
+  @Output() commentResolved = new EventEmitter<Comment>();
+  @Output() commentUnresolved = new EventEmitter<Comment>();
+  @Output() draftSelected = new EventEmitter<EntryDraft>();
+
   protected destroy$ = new Subject<void>();
 
-  // Shared state
+  // State management
   isEditMode: boolean = false;
   editContent: string = '';
   comments: Comment[] = [];
   isLoadingComments: boolean = false;
   draftHistory: EntryDraft[] = [];
-  latestDraft: EntryDraft | null = null;
   isLoadingDraftHistory: boolean = false;
-  showVersionHistory: boolean = false;
   selectedHistoricalDraft: EntryDraft | null = null;
+  showVersionHistorySidebar: boolean = false;
 
   constructor(
     protected entryDetailService: EntryDetailService,
-    protected permissionService: PermissionService,
-    protected notificationService: NotificationService
+    protected permissionService: PermissionService
   ) {}
 
   ngOnInit(): void {
-    this.loadComments();
-    this.loadDraftHistory();
+    if (this.entry) {
+      this.loadEntryData();
+    }
   }
 
   ngOnDestroy(): void {
@@ -37,22 +51,22 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Abstract method to get the entry ID - must be implemented by subclasses
+   * Load all entry-related data
    */
-  protected abstract getEntryId(): number;
+  protected loadEntryData(): void {
+    if (!this.entry) return;
 
-  /**
-   * Abstract method to get the entry or review draft - must be implemented by subclasses
-   */
-  protected abstract getEntryOrDraft(): Entry | ReviewDraft;
+    const entryId = this.entryDetailService.getEntryId(this.entry);
+    if (!entryId) return;
+
+    this.loadComments(entryId);
+    this.loadDraftHistory(entryId);
+  }
 
   /**
    * Load comments for the entry
    */
-  loadComments(): void {
-    const entryId = this.getEntryId();
-    if (!entryId) return;
-    
+  protected loadComments(entryId: number): void {
     this.isLoadingComments = true;
     this.entryDetailService.loadCommentsWithPositions(entryId)
       .pipe(takeUntil(this.destroy$))
@@ -71,17 +85,13 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   /**
    * Load draft history for the entry
    */
-  loadDraftHistory(): void {
-    const entryId = this.getEntryId();
-    if (!entryId) return;
-    
+  protected loadDraftHistory(entryId: number): void {
     this.isLoadingDraftHistory = true;
     this.entryDetailService.loadDraftHistory(entryId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (drafts) => {
           this.draftHistory = drafts;
-          this.latestDraft = drafts.length > 0 ? drafts[0] : null;
           this.isLoadingDraftHistory = false;
         },
         error: (error) => {
@@ -92,51 +102,54 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle edit click - initialize edit content
+   * Handle edit request
    */
-  onEditClick(): void {
-    const entryOrDraft = this.getEntryOrDraft();
-    this.editContent = this.entryDetailService.initializeEditContent(entryOrDraft);
+  onEditRequested(): void {
+    if (!this.entry || !this.canEdit) return;
+
+    this.editContent = this.entryDetailService.initializeEditContent(this.entry);
     this.isEditMode = true;
+    this.editRequested.emit();
   }
 
   /**
-   * Handle save edit - create new draft
+   * Handle edit save
    */
-  onSaveEdit(): void {
-    if (!this.permissionService.currentUser) {
-      this.notificationService.error('You must be logged in to save definitions.');
-      return;
-    }
+  onEditSaved(): void {
+    if (!this.entry || !this.editContent.trim()) return;
 
-    const entryId = this.getEntryId();
+    const entryId = this.entryDetailService.getEntryId(this.entry);
     if (!entryId) return;
 
-    this.entryDetailService.createNewDraft(
-      entryId,
-      this.editContent
-    ).pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (newDraft) => {
-        console.log('Successfully created draft:', newDraft);
-        this.loadDraftHistory();
-        this.refreshEntryData();
-        this.isEditMode = false;
-        this.editContent = '';
-      },
-      error: (error) => {
-        console.error('Failed to create draft:', error);
-        this.handleSaveError(error);
-      }
-    });
+    const currentUser = this.permissionService.currentUser;
+    if (!currentUser) return;
+
+    this.entryDetailService.createNewDraft(entryId, this.editContent, currentUser.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newDraft) => {
+          this.isEditMode = false;
+          this.editContent = '';
+          
+          // Refresh data
+          this.loadEntryData();
+          
+          // Emit event
+          this.editSaved.emit(this.entry as Entry);
+        },
+        error: (error) => {
+          console.error('Error saving draft:', error);
+        }
+      });
   }
 
   /**
-   * Handle cancel edit
+   * Handle edit cancellation
    */
-  onCancelEdit(): void {
+  onEditCancelled(): void {
     this.isEditMode = false;
     this.editContent = '';
+    this.editCancelled.emit();
   }
 
   /**
@@ -144,6 +157,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    */
   onCommentAdded(comment: Comment): void {
     this.comments = this.entryDetailService.onCommentAdded(this.comments, comment);
+    this.commentAdded.emit(comment);
   }
 
   /**
@@ -151,6 +165,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    */
   onCommentResolved(comment: Comment): void {
     this.comments = this.entryDetailService.onCommentResolved(this.comments, comment);
+    this.commentResolved.emit(comment);
   }
 
   /**
@@ -158,84 +173,73 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    */
   onCommentUnresolved(comment: Comment): void {
     this.comments = this.entryDetailService.onCommentUnresolved(this.comments, comment);
+    this.commentUnresolved.emit(comment);
   }
 
   /**
    * Toggle version history sidebar
    */
   toggleVersionHistory(): void {
-    this.showVersionHistory = !this.showVersionHistory;
+    this.showVersionHistorySidebar = !this.showVersionHistorySidebar;
   }
 
   /**
-   * Handle version history closed
-   */
-  onVersionHistoryClosed(): void {
-    this.showVersionHistory = false;
-  }
-
-  /**
-   * Handle draft selected from version history
+   * Handle draft selection from version history
    */
   onDraftSelected(draft: EntryDraft): void {
     this.selectedHistoricalDraft = draft;
-    console.log('Selected draft:', draft);
+    this.draftSelected.emit(draft);
+  }
+
+  /**
+   * Clear selected historical draft
+   */
+  clearSelectedDraft(): void {
+    this.selectedHistoricalDraft = null;
   }
 
   /**
    * Check if entry has unpublished drafts
    */
   hasUnpublishedDrafts(): boolean {
-    return this.entryDetailService.hasUnpublishedDrafts(this.draftHistory);
-  }
-
-  /**
-   * Get published draft
-   */
-  getPublishedDraft(): EntryDraft | null {
-    return this.entryDetailService.getPublishedDraftFromHistory(this.draftHistory);
-  }
-
-  /**
-   * Get latest draft content
-   */
-  getLatestDraftContent(): string {
-    const entryOrDraft = this.getEntryOrDraft();
-    return this.entryDetailService.getLatestDraftContent(this.draftHistory, 'entry' in entryOrDraft ? undefined : entryOrDraft);
+    if (!this.entry) return false;
+    return this.entryDetailService.hasUnpublishedDrafts(this.entry);
   }
 
   /**
    * Get published content
    */
   getPublishedContent(): string {
-    return this.entryDetailService.getPublishedContent(this.draftHistory);
+    if (!this.entry) return '';
+    return this.entryDetailService.getPublishedContent(this.entry);
   }
 
   /**
-   * Abstract method to refresh entry data - must be implemented by subclasses
+   * Get latest draft content
    */
-  protected abstract refreshEntryData(): void;
+  getLatestDraftContent(): string {
+    if (!this.entry) return '';
+    
+    if ('active_draft' in this.entry && this.entry.active_draft) {
+      return this.entry.active_draft.content;
+    }
+    if ('content' in this.entry) {
+      return this.entry.content;
+    }
+    return '';
+  }
 
   /**
-   * Handle save error
+   * Get current user
    */
-  private handleSaveError(error: any): void {
-    let errorMessage = 'Failed to save definition. Please try again.';
+  getCurrentUser() {
+    return this.permissionService.currentUser;
+  }
 
-    if (error.status === 400) {
-      if (error.error?.detail) {
-        errorMessage = error.error.detail;
-      } else if (error.error?.content) {
-        errorMessage = error.error.content[0];
-      } else {
-        errorMessage = 'Invalid data provided. Please check your input and try again.';
-      }
-    } else if (error.status === 403) {
-      errorMessage = 'You do not have permission to save definitions.';
-    } else if (error.status === 500) {
-      errorMessage = 'Server error occurred. Please contact support.';
-    }
-
-    this.notificationService.error(errorMessage);
+  /**
+   * Check if user can edit
+   */
+  canUserEdit(): boolean {
+    return this.canEdit && !!this.getCurrentUser();
   }
 }

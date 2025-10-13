@@ -2,8 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, map } from 'rxjs';
-import { ReviewService } from '../../services/review.service';
-import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PanelCommonService, PanelState } from '../../services/panel-common.service';
@@ -38,8 +36,6 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   state: PanelState;
 
   constructor(
-    private reviewService: ReviewService,
-    private glossaryService: GlossaryService,
     private permissionService: PermissionService,
     private entryDetailService: EntryDetailService,
     private panelCommonService: PanelCommonService
@@ -60,7 +56,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   loadMyDrafts(): void {
     this.panelCommonService.loadDrafts(
-      () => this.reviewService.getOwnDrafts(),
+      { eligibility: 'own' },
       this.state,
       (drafts) => this.panelCommonService.getLatestDraftsPerEntry(drafts)
     );
@@ -73,16 +69,8 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
 
   onSearch(): void {
-    this.panelCommonService.onSearch(this.state.searchTerm, this.state, (term: string) => {
-      return this.reviewService.searchDrafts(term, false).pipe(
-        // Filter results to only show own drafts and apply latest-only filtering
-        map((response: PaginatedResponse<ReviewDraft>) => ({
-          ...response,
-          results: this.panelCommonService.getLatestDraftsPerEntry(
-            response.results.filter(draft => draft.author.id === this.state.currentUser?.id)
-          )
-        }))
-      );
+    this.panelCommonService.onSearch(this.state.searchTerm, this.state, { 
+      eligibility: 'own' 
     });
   }
 

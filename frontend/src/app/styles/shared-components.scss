@@ -1,0 +1,203 @@
+/* Shared component styles for common patterns */
+
+/* Avatar styles */
+.avatar {
+  @apply rounded-full text-white flex items-center justify-center text-xs font-semibold;
+}
+
+.avatar-small {
+  @apply w-6 h-6;
+}
+
+.avatar-medium {
+  @apply w-8 h-8;
+}
+
+.avatar-large {
+  @apply w-12 h-12;
+}
+
+.avatar-green {
+  @apply bg-green-500;
+}
+
+.avatar-purple {
+  @apply bg-purple-500;
+}
+
+.avatar-blue {
+  @apply bg-blue-500;
+}
+
+.avatar-gray {
+  @apply bg-gray-500;
+}
+
+/* Form styles */
+.form-group {
+  @apply space-y-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.form-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent;
+}
+
+.form-actions {
+  @apply flex space-x-3;
+}
+
+.save-button {
+  @apply px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium;
+}
+
+.cancel-button {
+  @apply px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium;
+}
+
+/* Content section styles */
+.content-section {
+  @apply max-w-none;
+}
+
+.section-title {
+  @apply text-lg font-semibold text-gray-800 mb-4;
+}
+
+.content-box {
+  @apply bg-gray-50 p-4 rounded-lg;
+}
+
+.content-box-published {
+  @apply bg-gray-100 p-4 rounded-lg;
+}
+
+.content-box-historical {
+  @apply bg-purple-50 p-4 rounded-lg;
+}
+
+.content-metadata {
+  @apply mt-3 text-sm text-gray-600;
+}
+
+/* Status indicators */
+.status-ready {
+  @apply bg-status-ready text-black;
+}
+
+.status-pending {
+  @apply bg-status-pending text-white;
+}
+
+.status-approved {
+  @apply bg-status-approved text-white;
+}
+
+.status-published {
+  @apply bg-status-published text-white;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover text-sm font-medium;
+}
+
+.btn-success {
+  @apply px-4 py-2 bg-action-success text-white rounded hover:bg-action-success-hover text-sm font-medium;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-action-secondary text-white rounded hover:bg-action-secondary-hover text-sm font-medium;
+}
+
+.btn-gray {
+  @apply px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium;
+}
+
+/* Loading and error states */
+.loading-state {
+  @apply text-center text-gray-500 py-4;
+}
+
+.error-state {
+  @apply text-center text-orange-600 py-4;
+}
+
+/* Empty state styles */
+.empty-state {
+  @apply flex-1 flex items-center justify-center text-gray-500;
+}
+
+.empty-state-content {
+  @apply text-center max-w-md mx-auto;
+}
+
+.empty-state-logo {
+  @apply mb-6;
+}
+
+.empty-state-logo img {
+  @apply h-32 w-auto mx-auto opacity-60;
+}
+
+.empty-state-title {
+  @apply text-lg font-medium text-gray-700 mb-2;
+}
+
+.empty-state-subtitle {
+  @apply text-sm text-gray-500;
+}
+
+/* Reviewer and approver styles */
+.reviewer-section {
+  @apply mt-3;
+}
+
+.reviewer-info {
+  @apply flex items-center space-x-2;
+}
+
+.reviewer-label {
+  @apply text-sm text-gray-600;
+}
+
+.reviewer-avatars {
+  @apply flex space-x-1;
+}
+
+.approver-avatars {
+  @apply flex space-x-1;
+}
+
+/* Comments section */
+.comments-section {
+  @apply mt-8;
+}
+
+.comments-title {
+  @apply text-lg font-semibold text-gray-800 mb-4;
+}
+
+/* Detail panel specific */
+.detail-content {
+  @apply flex-1 overflow-y-auto;
+}
+
+.edit-form {
+  @apply p-6;
+}
+
+.view-content {
+  @apply p-6;
+}
+
+.published-section {
+  @apply mt-8 max-w-none;
+}
+
+.new-entry-message {
+  @apply bg-gray-100 p-4 rounded-lg text-gray-500 italic;
+}

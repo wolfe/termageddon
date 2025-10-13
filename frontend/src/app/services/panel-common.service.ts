@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, Subject, takeUntil } from 'rxjs';
 import { ReviewDraft, Comment, User, PaginatedResponse, EntryDraft } from '../models';
-import { ReviewService } from './review.service';
-import { GlossaryService } from './glossary.service';
+import { UnifiedDraftService, DraftLoadOptions, DraftActionOptions } from './unified-draft.service';
 import { EntryDetailService } from './entry-detail.service';
 import { PermissionService } from './permission.service';
 import { NotificationService } from './notification.service';
@@ -39,8 +38,7 @@ export class PanelCommonService {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private reviewService: ReviewService,
-    private glossaryService: GlossaryService,
+    private unifiedDraftService: UnifiedDraftService,
     private entryDetailService: EntryDetailService,
     private permissionService: PermissionService,
     private notificationService: NotificationService
@@ -149,7 +147,7 @@ export class PanelCommonService {
    * Load all users for reviewer selection
    */
   loadUsers(state: PanelState): void {
-    this.glossaryService.getUsers()
+    this.unifiedDraftService.getUsers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (users) => {
@@ -186,7 +184,7 @@ export class PanelCommonService {
     if (!state.draftToRequestReview) return;
     
     state.requestingReview = true;
-    this.reviewService.requestReview(state.draftToRequestReview.id, reviewerIds)
+    this.unifiedDraftService.requestReview(state.draftToRequestReview.id, reviewerIds)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -240,9 +238,9 @@ export class PanelCommonService {
   }
 
   /**
-   * Handle search with custom backend function
+   * Handle search with unified draft service
    */
-  onSearch(searchTerm: string, state: PanelState, searchFn: (term: string) => Observable<PaginatedResponse<ReviewDraft>>): void {
+  onSearch(searchTerm: string, state: PanelState, options: DraftLoadOptions = {}): void {
     state.searchTerm = searchTerm;
     
     if (!searchTerm.trim()) {
@@ -250,9 +248,9 @@ export class PanelCommonService {
       return;
     }
 
-    // Use backend search
+    // Use unified draft service for search
     state.loading = true;
-    searchFn(searchTerm)
+    this.unifiedDraftService.loadDrafts({ ...options, searchTerm })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: PaginatedResponse<ReviewDraft>) => {
@@ -280,7 +278,7 @@ export class PanelCommonService {
       return;
     }
 
-    this.reviewService.publishDraft(draft.id)
+    this.unifiedDraftService.publishDraft(draft.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedDraft) => {
@@ -323,7 +321,7 @@ export class PanelCommonService {
     const draft = state.drafts.find(d => d.id === draftId);
     const termName = draft?.entry?.term?.text || 'draft';
     
-    this.reviewService.requestReview(draftId, reviewerIds)
+    this.unifiedDraftService.requestReview(draftId, reviewerIds)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedDraft) => {
@@ -376,13 +374,13 @@ export class PanelCommonService {
   }
 
   /**
-   * Generic draft loading with post-processing
+   * Generic draft loading with unified service
    */
-  loadDrafts(loadFn: () => Observable<PaginatedResponse<ReviewDraft>>, state: PanelState, postProcessFn?: (drafts: ReviewDraft[]) => ReviewDraft[]): void {
+  loadDrafts(options: DraftLoadOptions = {}, state: PanelState, postProcessFn?: (drafts: ReviewDraft[]) => ReviewDraft[]): void {
     state.loading = true;
     state.error = null;
 
-    loadFn()
+    this.unifiedDraftService.loadDrafts(options)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: PaginatedResponse<ReviewDraft>) => {
@@ -432,7 +430,7 @@ export class PanelCommonService {
   approveDraft(draft: ReviewDraft, state: PanelState, successCallback: () => void): void {
     state.loading = true;
 
-    this.reviewService.approveDraft(draft.id)
+    this.unifiedDraftService.approveDraft(draft.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedDraft) => {

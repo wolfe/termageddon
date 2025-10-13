@@ -1,13 +1,21 @@
 GENERAL CURSOR GUIDANCE:
 
-Always maintain working unit and integration tests.
+TESTING:
+    Always maintain working unit and integration tests.  Don't write any e2e tests.
 
-Do not leave whitespace at ends of lines.
+COMMENTS and WHITESPACE:
+     Do not leave whitespace at ends of lines.
+     Use minimal comments which do not read me the code, but help explain confusing or complex logic.
+     Try to put complex business logic in the backend to keep the frontend as simple as possible and focused on presentation.
 
-Use minimal comments which do not read me the code, but help explain confusing or complex logic.
+CODE STYLE:
+     I prefer to put constants before expressions in binary operations.  For example, if (0 < length) is preferred over if (length > 0).
+     When naming colours in SCSS, use semantic naming and have the mapping from semantic colour names to a color palette centralized.
+     Suggest oppportunities to unify code whenever possible.
 
-Try to put complex business logic in the backend to keep the frontend as simple as possible and focused on presentation.
+YOU MAY:
+    Feel free to open a web browser to localhost ports as needed to view the frontend.  If the MCP Server isn't usable, please ask me to enable it for you.
 
-We will not write any e2e tests at this stage.
 
-Feel free to open a web browser to localhost ports as needed to view the frontend.  If the MCP Server isn't usable, please let me know to enable it for you.
+
+

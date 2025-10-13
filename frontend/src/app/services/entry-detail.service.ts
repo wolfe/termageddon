@@ -1,75 +1,43 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, forkJoin } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
-import { Entry, EntryDraft, ReviewDraft, Comment, User, CreateEntryDraftRequest } from '../models';
+import { Observable, of, map, switchMap } from 'rxjs';
+import { EntryDraft, Comment, Entry, ReviewDraft } from '../models';
 import { GlossaryService } from './glossary.service';
-import { ReviewService } from './review.service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class EntryDetailService {
-  constructor(
-    private glossaryService: GlossaryService,
-    private reviewService: ReviewService
-  ) {}
+
+  constructor(private glossaryService: GlossaryService) {}
 
   /**
    * Load draft history for an entry
    */
   loadDraftHistory(entryId: number): Observable<EntryDraft[]> {
-    return this.glossaryService.getDraftHistory(entryId).pipe(
-      catchError(error => {
-        console.error('Error loading draft history:', error);
-        return of([]);
-      })
-    );
+    return this.glossaryService.getDraftHistory(entryId);
   }
 
   /**
    * Load comments with draft position indicators for an entry
    */
   loadCommentsWithPositions(entryId: number): Observable<Comment[]> {
-    return this.glossaryService.getCommentsWithDraftPositions(entryId).pipe(
-      switchMap(draftComments => {
-        // Also get regular comments for the entry
-        return this.glossaryService.getComments(10, entryId).pipe(
-          map(response => {
-            const entryComments = response.results;
-            // Combine draft comments and entry comments, removing duplicates
-            const allComments = [...draftComments, ...entryComments];
-            const uniqueComments = allComments.filter((comment, index, self) => 
-              index === self.findIndex(c => c.id === comment.id)
-            );
-            return uniqueComments;
-          }),
-          catchError(error => {
-            console.error('Error loading regular comments:', error);
-            // If regular comments fail, just return draft comments
-            return of(draftComments);
-          })
-        );
-      }),
-      catchError(error => {
-        console.error('Error loading comments with positions:', error);
-        // Fallback to regular comments endpoint only
-        return this.glossaryService.getComments(10, entryId).pipe(
-          map(response => response.results),
-          catchError(fallbackError => {
-            console.error('Error loading comments (fallback):', fallbackError);
-            return of([]);
-          })
-        );
-      })
-    );
+    return this.glossaryService.getCommentsWithDraftPositions(entryId);
   }
 
   /**
    * Get the latest draft for an entry
    */
   getLatestDraft(entryId: number): Observable<EntryDraft | null> {
-    return this.loadDraftHistory(entryId).pipe(
-      map(drafts => drafts.length > 0 ? drafts[0] : null)
+    return this.glossaryService.getEntryDrafts(entryId).pipe(
+      map(response => {
+        if (response.results.length === 0) return null;
+        
+        // Sort by timestamp descending and return the latest
+        const sortedDrafts = response.results.sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        return sortedDrafts[0];
+      })
     );
   }
 
@@ -77,8 +45,11 @@ export class EntryDetailService {
    * Get the published draft for an entry
    */
   getPublishedDraft(entryId: number): Observable<EntryDraft | null> {
-    return this.loadDraftHistory(entryId).pipe(
-      map(drafts => drafts.find(draft => draft.is_published) || null)
+    return this.glossaryService.getEntryDrafts(entryId).pipe(
+      map(response => {
+        const publishedDraft = response.results.find(draft => draft.is_published);
+        return publishedDraft || null;
+      })
     );
   }
 
@@ -86,153 +57,112 @@ export class EntryDetailService {
    * Initialize edit content from entry or draft
    */
   initializeEditContent(entry: Entry | ReviewDraft): string {
-    if ('entry' in entry) {
-      // ReviewDraft case
-      return entry.content;
-    } else {
-      // Entry case - get latest draft content or published content
-      if (entry.active_draft?.content) {
-        return entry.active_draft.content;
-      }
-      return '';
+    if ('active_draft' in entry && entry.active_draft) {
+      return entry.active_draft.content;
     }
+    if ('content' in entry) {
+      return entry.content;
+    }
+    return '';
   }
 
   /**
    * Create a new draft for an entry
    */
-  createNewDraft(entryId: number, content: string): Observable<EntryDraft> {
-    const draftData: CreateEntryDraftRequest = {
+  createNewDraft(entryId: number, content: string, authorId: number): Observable<EntryDraft> {
+    const draftData = {
       entry: entryId,
-      content: content.trim(),
+      content: content
     };
-
     return this.glossaryService.createEntryDraft(draftData);
   }
 
   /**
-   * Refresh entry data after creating a draft
+   * Handle comment added - update local comments array
    */
-  refreshEntryData(entryId: number): Observable<Entry> {
-    return this.glossaryService.getEntry(entryId);
+  onCommentAdded(comments: Comment[], comment: Comment): Comment[] {
+    return [...comments, comment];
+  }
+
+  /**
+   * Handle comment resolved - update local comments array
+   */
+  onCommentResolved(comments: Comment[], comment: Comment): Comment[] {
+    return comments.map(c => 
+      c.id === comment.id ? { ...c, is_resolved: true } : c
+    );
+  }
+
+  /**
+   * Handle comment unresolved - update local comments array
+   */
+  onCommentUnresolved(comments: Comment[], comment: Comment): Comment[] {
+    return comments.map(c => 
+      c.id === comment.id ? { ...c, is_resolved: false } : c
+    );
+  }
+
+  /**
+   * Get entry ID from entry or draft
+   */
+  getEntryId(entry: Entry | ReviewDraft): number | null {
+    if ('id' in entry && 'term' in entry) {
+      // This is an Entry
+      return entry.id;
+    }
+    if ('entry' in entry && entry.entry) {
+      // This is a ReviewDraft with nested entry
+      return entry.entry.id;
+    }
+    return null;
   }
 
   /**
    * Check if entry has unpublished drafts
    */
-  hasUnpublishedDrafts(draftHistory: EntryDraft[]): boolean {
-    return draftHistory.some(draft => !draft.is_published);
+  hasUnpublishedDrafts(entry: Entry | ReviewDraft): boolean {
+    if ('active_draft' in entry && entry.active_draft) {
+      return !entry.active_draft.is_published;
+    }
+    if ('is_published' in entry) {
+      return !entry.is_published;
+    }
+    return false;
   }
 
   /**
-   * Get published draft from draft history
+   * Get published content from entry or draft
    */
-  getPublishedDraftFromHistory(draftHistory: EntryDraft[]): EntryDraft | null {
-    return draftHistory.find(draft => draft.is_published) || null;
+  getPublishedContent(entry: Entry | ReviewDraft): string {
+    if ('active_draft' in entry && entry.active_draft && entry.active_draft.is_published) {
+      return entry.active_draft.content;
+    }
+    if ('is_published' in entry && entry.is_published) {
+      return entry.content;
+    }
+    return '';
   }
 
   /**
-   * Get latest draft content from draft history
+   * Initialize edit content from latest draft in history
    */
-  getLatestDraftContent(draftHistory: EntryDraft[], entry?: Entry): string {
+  initializeEditContentFromLatest(draftHistory: EntryDraft[], fallbackContent: string): string {
     if (draftHistory.length > 0) {
       return draftHistory[0].content;
     }
-    return entry?.active_draft?.content || '';
+    return fallbackContent;
   }
 
   /**
-   * Get published content from draft history
+   * Refresh entry data after draft creation
    */
-  getPublishedContent(draftHistory: EntryDraft[]): string {
-    const publishedDraft = this.getPublishedDraftFromHistory(draftHistory);
-    return publishedDraft?.content || '';
-  }
-
-  /**
-   * Handle comment operations
-   */
-  onCommentAdded(comments: Comment[], newComment: Comment): Comment[] {
-    return [...comments, newComment];
-  }
-
-  onCommentResolved(comments: Comment[], updatedComment: Comment): Comment[] {
-    return comments.map(comment => 
-      comment.id === updatedComment.id ? updatedComment : comment
-    );
-  }
-
-  onCommentUnresolved(comments: Comment[], updatedComment: Comment): Comment[] {
-    return comments.map(comment => 
-      comment.id === updatedComment.id ? updatedComment : comment
-    );
-  }
-
-  /**
-   * Get draft history for ReviewDraft (from review context)
-   */
-  loadDraftHistoryForReviewDraft(reviewDraft: ReviewDraft): Observable<EntryDraft[]> {
-    return this.loadDraftHistory(reviewDraft.entry.id);
-  }
-
-  /**
-   * Initialize edit content for ReviewDraft using draft history
-   */
-  initializeEditContentForReviewDraft(reviewDraft: ReviewDraft, draftHistory: EntryDraft[]): string {
-    // Use latest draft from history if available
-    if (draftHistory.length > 0) {
-      return draftHistory[0].content;
-    }
-    // Fallback to the ReviewDraft content
-    return reviewDraft.content;
-  }
-
-  /**
-   * Initialize edit content from latest draft in history (unified method)
-   */
-  initializeEditContentFromLatest(draftHistory: EntryDraft[], fallbackContent?: string): string {
-    if (draftHistory.length > 0) {
-      return draftHistory[0].content;
-    }
-    return fallbackContent || '';
-  }
-
-  /**
-   * Unified refresh pattern after creating a draft
-   */
-  refreshAfterDraftCreated(entryId: number): Observable<{
-    draftHistory: EntryDraft[];
-    entry?: Entry;
-  }> {
-    return forkJoin({
-      draftHistory: this.loadDraftHistory(entryId),
-      entry: this.glossaryService.getEntry(entryId).pipe(
-        catchError(() => of(undefined))
+  refreshAfterDraftCreated(entryId: number): Observable<{ draftHistory: EntryDraft[], entry: Entry }> {
+    return this.loadDraftHistory(entryId).pipe(
+      switchMap(draftHistory => 
+        this.glossaryService.getEntry(entryId).pipe(
+          map(entry => ({ draftHistory, entry }))
+        )
       )
-    });
-  }
-
-  /**
-   * Determine what to show in the bottom section
-   */
-  getBottomSectionContent(
-    selectedHistoricalDraft: EntryDraft | null,
-    draftHistory: EntryDraft[],
-    replacesDraft?: EntryDraft
-  ): { type: 'historical' | 'published' | 'none'; draft: EntryDraft | null } {
-    if (selectedHistoricalDraft) {
-      return { type: 'historical', draft: selectedHistoricalDraft };
-    }
-    
-    const publishedDraft = this.getPublishedDraftFromHistory(draftHistory);
-    if (publishedDraft) {
-      return { type: 'published', draft: publishedDraft };
-    }
-    
-    if (replacesDraft) {
-      return { type: 'published', draft: replacesDraft };
-    }
-    
-    return { type: 'none', draft: null };
+    );
   }
 }

@@ -106,7 +106,7 @@ describe('EntryDetailService', () => {
         }
       ];
 
-      const result = service.initializeEditContentFromLatest(draftHistory);
+      const result = service.initializeEditContentFromLatest(draftHistory, 'Fallback content');
       expect(result).toBe('Latest draft content');
     });
 
@@ -121,13 +121,13 @@ describe('EntryDetailService', () => {
     it('should return empty string when draft history is empty and no fallback', () => {
       const draftHistory: EntryDraft[] = [];
 
-      const result = service.initializeEditContentFromLatest(draftHistory);
+      const result = service.initializeEditContentFromLatest(draftHistory, '');
       expect(result).toBe('');
     });
   });
 
-  describe('initializeEditContentForReviewDraft', () => {
-    it('should return latest draft content when draft history is available', () => {
+  describe('initializeEditContent', () => {
+    it('should return ReviewDraft content when no active draft', () => {
       const reviewDraft: ReviewDraft = {
         id: 1,
         content: 'ReviewDraft content',
@@ -171,95 +171,52 @@ describe('EntryDetailService', () => {
         replaces_draft: undefined
       };
 
-      const draftHistory: EntryDraft[] = [
-        {
-          id: 2,
-          content: 'Latest draft content',
-          is_approved: false,
-          is_published: false,
-          is_endorsed: false,
-          approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
-          created_at: '2024-01-02T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-          author: {
-            id: 1,
-            username: 'testuser',
-            first_name: 'Test',
-            last_name: 'User',
-            is_staff: false,
-            perspective_curator_for: []
-          },
-          entry: 1,
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: undefined
-        }
-      ];
-
-      const result = service.initializeEditContentForReviewDraft(reviewDraft, draftHistory);
-      expect(result).toBe('Latest draft content');
+      const result = service.initializeEditContent(reviewDraft);
+      expect(result).toBe('ReviewDraft content');
     });
 
-    it('should return ReviewDraft content when draft history is empty', () => {
-      const reviewDraft: ReviewDraft = {
-        id: 1,
-        content: 'ReviewDraft content',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
-        timestamp: '2024-01-01T00:00:00Z',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        author: {
-          id: 1,
-          username: 'testuser',
-          first_name: 'Test',
-          last_name: 'User',
-          is_staff: false,
-          perspective_curator_for: []
-        },
-        entry: {
-          id: 1,
-          term: {
-            id: 1,
-            text: 'Test Term',
-            text_normalized: 'test term',
-            is_official: false,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          },
-          perspective: {
-            id: 1,
-            name: 'Test Perspective',
-            description: 'Test Description',
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          },
-          is_official: false,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        },
-        approvers: [],
-        requested_reviewers: [],
-        replaces_draft: undefined
-      };
+    it('should return empty string for invalid entry', () => {
+      const invalidEntry = {} as ReviewDraft;
 
-      const draftHistory: EntryDraft[] = [];
-
-      const result = service.initializeEditContentForReviewDraft(reviewDraft, draftHistory);
-      expect(result).toBe('ReviewDraft content');
+      const result = service.initializeEditContent(invalidEntry);
+      expect(result).toBe('');
     });
   });
 
-  describe('getBottomSectionContent', () => {
-    it('should return historical draft when selectedHistoricalDraft is provided', () => {
-      const selectedHistoricalDraft: EntryDraft = {
+  describe('getEntryId', () => {
+    it('should return entry ID for Entry object', () => {
+      const entry: Entry = {
         id: 1,
-        content: 'Historical draft content',
+        term: {
+          id: 1,
+          text: 'Test Term',
+          text_normalized: 'test term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        perspective: {
+          id: 1,
+          name: 'Test Perspective',
+          description: 'Test Description',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        is_official: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      const result = service.getEntryId(entry);
+      expect(result).toBe(1);
+    });
+
+    it('should return entry ID for ReviewDraft object', () => {
+      const reviewDraft: ReviewDraft = {
+        id: 1,
+        content: 'Test content',
         is_approved: false,
         is_published: false,
-        is_endorsed: false,
         approval_count: 0,
         timestamp: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
@@ -272,185 +229,41 @@ describe('EntryDetailService', () => {
           is_staff: false,
           perspective_curator_for: []
         },
-        entry: 1,
-        approvers: [],
-        requested_reviewers: [],
-        replaces_draft: undefined
-      };
-
-      const draftHistory: EntryDraft[] = [];
-      const replacesDraft: EntryDraft = {
-        id: 2,
-        content: 'Replaces draft content',
-        is_approved: true,
-        is_published: true,
-        is_endorsed: false,
-        approval_count: 2,
-        timestamp: '2024-01-01T00:00:00Z',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        author: {
-          id: 1,
-          username: 'testuser',
-          first_name: 'Test',
-          last_name: 'User',
-          is_staff: false,
-          perspective_curator_for: []
-        },
-        entry: 1,
-        approvers: [],
-        requested_reviewers: [],
-        replaces_draft: undefined
-      };
-
-      const result = service.getBottomSectionContent(selectedHistoricalDraft, draftHistory, replacesDraft);
-      expect(result.type).toBe('historical');
-      expect(result.draft).toBe(selectedHistoricalDraft);
-    });
-
-    it('should return published draft when no historical draft is selected but published draft exists', () => {
-      const selectedHistoricalDraft: EntryDraft | null = null;
-      const draftHistory: EntryDraft[] = [
-        {
-          id: 1,
-          content: 'Latest draft content',
-          is_approved: false,
-          is_published: false,
-          is_endorsed: false,
-          approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
-          created_at: '2024-01-02T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-          author: {
-            id: 1,
-            username: 'testuser',
-            first_name: 'Test',
-            last_name: 'User',
-            is_staff: false,
-            perspective_curator_for: []
-          },
-          entry: 1,
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: undefined
-        },
-        {
+        entry: {
           id: 2,
-          content: 'Published draft content',
-          is_approved: true,
-          is_published: true,
-          is_endorsed: false,
-          approval_count: 2,
-          timestamp: '2024-01-01T00:00:00Z',
+          term: {
+            id: 1,
+            text: 'Test Term',
+            text_normalized: 'test term',
+            is_official: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          perspective: {
+            id: 1,
+            name: 'Test Perspective',
+            description: 'Test Description',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
-          author: {
-            id: 1,
-            username: 'testuser',
-            first_name: 'Test',
-            last_name: 'User',
-            is_staff: false,
-            perspective_curator_for: []
-          },
-          entry: 1,
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: undefined
-        }
-      ];
-
-      const result = service.getBottomSectionContent(selectedHistoricalDraft, draftHistory);
-      expect(result.type).toBe('published');
-      expect(result.draft?.content).toBe('Published draft content');
-    });
-
-    it('should return replaces draft when no published draft in history but replaces draft exists', () => {
-      const selectedHistoricalDraft: EntryDraft | null = null;
-      const draftHistory: EntryDraft[] = [
-        {
-          id: 1,
-          content: 'Latest draft content',
-          is_approved: false,
-          is_published: false,
-          is_endorsed: false,
-          approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
-          created_at: '2024-01-02T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-          author: {
-            id: 1,
-            username: 'testuser',
-            first_name: 'Test',
-            last_name: 'User',
-            is_staff: false,
-            perspective_curator_for: []
-          },
-          entry: 1,
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: undefined
-        }
-      ];
-      const replacesDraft: EntryDraft = {
-        id: 2,
-        content: 'Replaces draft content',
-        is_approved: true,
-        is_published: true,
-        is_endorsed: false,
-        approval_count: 2,
-        timestamp: '2024-01-01T00:00:00Z',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        author: {
-          id: 1,
-          username: 'testuser',
-          first_name: 'Test',
-          last_name: 'User',
-          is_staff: false,
-          perspective_curator_for: []
+          updated_at: '2024-01-01T00:00:00Z'
         },
-        entry: 1,
         approvers: [],
         requested_reviewers: [],
         replaces_draft: undefined
       };
 
-      const result = service.getBottomSectionContent(selectedHistoricalDraft, draftHistory, replacesDraft);
-      expect(result.type).toBe('published');
-      expect(result.draft).toBe(replacesDraft);
+      const result = service.getEntryId(reviewDraft);
+      expect(result).toBe(2);
     });
 
-    it('should return none when no historical, published, or replaces draft exists', () => {
-      const selectedHistoricalDraft: EntryDraft | null = null;
-      const draftHistory: EntryDraft[] = [
-        {
-          id: 1,
-          content: 'Latest draft content',
-          is_approved: false,
-          is_published: false,
-          is_endorsed: false,
-          approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
-          created_at: '2024-01-02T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-          author: {
-            id: 1,
-            username: 'testuser',
-            first_name: 'Test',
-            last_name: 'User',
-            is_staff: false,
-            perspective_curator_for: []
-          },
-          entry: 1,
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: undefined
-        }
-      ];
+    it('should return null for invalid object', () => {
+      const invalidObject = {} as ReviewDraft;
 
-      const result = service.getBottomSectionContent(selectedHistoricalDraft, draftHistory);
-      expect(result.type).toBe('none');
-      expect(result.draft).toBeNull();
+      const result = service.getEntryId(invalidObject);
+      expect(result).toBeNull();
     });
   });
 });

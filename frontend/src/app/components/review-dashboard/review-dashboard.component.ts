@@ -2,10 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { ReviewService } from '../../services/review.service';
 import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
-import { GlossaryService } from '../../services/glossary.service';
 import { NotificationService } from '../../services/notification.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PanelCommonService, PanelState } from '../../services/panel-common.service';
@@ -65,9 +63,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   getInitials = getInitials;
 
   constructor(
-    private reviewService: ReviewService,
     private permissionService: PermissionService,
-    private glossaryService: GlossaryService,
     private notificationService: NotificationService,
     private entryDetailService: EntryDetailService,
     private panelCommonService: PanelCommonService
@@ -88,7 +84,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   loadPendingDrafts(callback?: () => void): void {
     this.panelCommonService.loadDrafts(
-      () => this.reviewService.getDraftsCanApprove(this.showAll),
+      { eligibility: 'requested_or_approved', showAll: this.showAll },
       this.state
     );
     
@@ -100,8 +96,9 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
 
   onSearch(): void {
-    this.panelCommonService.onSearch(this.state.searchTerm, this.state, (term: string) => {
-      return this.reviewService.searchDrafts(term, this.showAll);
+    this.panelCommonService.onSearch(this.state.searchTerm, this.state, { 
+      eligibility: 'requested_or_approved', 
+      showAll: this.showAll 
     });
   }
 
