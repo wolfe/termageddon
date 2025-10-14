@@ -71,11 +71,12 @@
           <app-draft-list-item
             [draft]="draft"
             [selected]="state.selectedDraft?.id === draft.id"
-            [showStatus]="true"
+            [showStatus]="false"
             statusType="eligibility"
-            [showPublishButton]="false"
+            [showPublishButton]="true"
             [showApprovalStatus]="true"
             (clicked)="selectDraft($event)"
+            (publishClicked)="publishDraft($event)"
           ></app-draft-list-item>
         }
       }

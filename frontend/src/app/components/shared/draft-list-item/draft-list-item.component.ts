@@ -57,9 +57,21 @@ export class DraftListItemComponent {
 
   getItemClass(): string {
     const baseClass = 'p-3 cursor-pointer transition-colors';
-    const selectedClass = this.selected ? 'bg-termageddon-blue text-white' : 'bg-gray-50 hover:bg-gray-100';
+    const selectedClass = this.selected ? 'bg-blue-50 border-l-4 border-action-primary' : 'bg-ui-background-subtle hover:bg-ui-background-elevated';
     const disabledClass = this.draft.approval_status_for_user === 'own_draft' ? 'opacity-60' : '';
     
     return `${baseClass} ${selectedClass} ${disabledClass}`;
+  }
+
+  getAuthorTooltip(): string {
+    return `${this.getUserDisplayName(this.draft.author)} authored this draft`;
+  }
+
+  getApproverTooltip(approver: any): string {
+    return `${this.getUserDisplayName(approver)} approved`;
+  }
+
+  getReviewerTooltip(reviewer: any): string {
+    return `${this.getUserDisplayName(reviewer)} requested to review`;
   }
 }

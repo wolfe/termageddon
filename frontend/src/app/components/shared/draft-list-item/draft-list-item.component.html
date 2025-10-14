@@ -5,40 +5,63 @@
 >
   <div class="flex items-start justify-between">
     <div class="flex-1 min-w-0">
-      <h3 class="font-semibold text-sm text-termageddon-gray-dark truncate">
-        {{ draft.entry.term.text }}
-      </h3>
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold text-sm text-ui-text-emphasis truncate">
+          {{ draft.entry.term.text }}
+        </h3>
+        @if (showPublishButton && canPublish(draft)) {
+          <button
+            (click)="onPublishClick($event)"
+            class="px-2 py-1 bg-action-success text-white text-xs rounded hover:bg-action-success-hover"
+            title="Ready to publish"
+          >
+            Publish
+          </button>
+        }
+      </div>
       <app-perspective-pill 
         [perspective]="draft.entry.perspective" 
         size="small"
         [variant]="selected ? 'selected' : 'unselected'"
       ></app-perspective-pill>
-      <div class="flex items-center space-x-2 mt-2">
-        @if (showStatus) {
-          <span
-            class="px-2 py-1 text-xs rounded font-semibold"
-            [ngClass]="getStatusClass()"
+      
+      <!-- Author and Approval Status -->
+      <div class="flex items-center justify-between mt-2">
+        <div class="flex items-center space-x-1">
+          <!-- Author Avatar -->
+          <div 
+            class="w-5 h-5 rounded-full bg-action-primary text-white text-xs flex items-center justify-center font-semibold"
+            [title]="getAuthorTooltip()"
           >
-            {{ getStatusText() }}
-          </span>
-        }
+            {{ getInitials(draft.author) }}
+          </div>
+          
+          <!-- Approver Avatars -->
+          @for (approver of draft.approvers; track approver.id) {
+            <div 
+              class="w-5 h-5 rounded-full bg-role-approver text-white text-xs flex items-center justify-center font-semibold"
+              [title]="getApproverTooltip(approver)"
+            >
+              {{ getInitials(approver) }}
+            </div>
+          }
+          
+          <!-- Requested Reviewer Avatars -->
+          @for (reviewer of draft.requested_reviewers; track reviewer.id) {
+            <div 
+              class="w-5 h-5 rounded-full bg-role-reviewer text-white text-xs flex items-center justify-center font-semibold"
+              [title]="getReviewerTooltip(reviewer)"
+            >
+              {{ getInitials(reviewer) }}
+            </div>
+          }
+        </div>
+        
+        <!-- Date (right-justified) -->
         <span class="text-xs opacity-75">
           {{ draft.timestamp | date: "short" }}
         </span>
-        @if (showApprovalStatus) {
-          <span class="text-xs opacity-75">
-            {{ draft.approval_count }}/2 Approvals
-          </span>
-        }
       </div>
     </div>
-    @if (showPublishButton && canPublish(draft)) {
-      <button
-        (click)="onPublishClick($event)"
-        class="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-      >
-        Publish
-      </button>
-    }
   </div>
 </div>
