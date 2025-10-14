@@ -35,7 +35,7 @@ export class UserAvatarComponent {
     };
 
     const colorClasses = {
-      blue: 'bg-termageddon-blue text-white',
+      blue: 'bg-action-primary text-white',
       green: 'bg-role-approver text-white',
       purple: 'bg-role-reviewer text-white',
       yellow: 'bg-role-admin text-black'

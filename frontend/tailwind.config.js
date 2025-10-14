@@ -48,60 +48,60 @@ module.exports = {
         // Action colors - semantic mapping for buttons and interactions
         action: {
           primary: {
-            DEFAULT: 'blue-600',
-            hover: 'blue-700'
+            DEFAULT: '#2563eb',  // blue-600
+            hover: '#1d4ed8'    // blue-700
           },
           success: {
-            DEFAULT: 'green-600',
-            hover: 'green-700'
+            DEFAULT: '#16a34a',  // green-600
+            hover: '#15803d'    // green-700
           },
           warning: {
-            DEFAULT: 'yellow-600',
-            hover: 'yellow-700'
+            DEFAULT: '#ca8a04',  // yellow-600
+            hover: '#a16207'    // yellow-700
           },
           danger: {
-            DEFAULT: 'red-600',
-            hover: 'red-700'
+            DEFAULT: '#dc2626',  // red-600
+            hover: '#b91c1c'    // red-700
           },
           secondary: {
-            DEFAULT: 'gray-500',
-            hover: 'gray-600'
+            DEFAULT: '#6b7280',  // gray-500
+            hover: '#4b5563'    // gray-600
           }
         },
         
         // Role colors - semantic mapping for user roles
         role: {
-          approver: 'green-500',
-          reviewer: 'purple-500',
-          admin: 'yellow-500'
+          approver: '#10b981',  // green-500
+          reviewer: '#8b5cf6',  // purple-500
+          admin: '#eab308'      // yellow-500
         },
         
         // UI element colors - semantic mapping for interface elements
         ui: {
           border: {
-            light: 'gray-300',
-            DEFAULT: 'gray-300',
-            dark: 'gray-400'
+            light: '#d1d5db',  // gray-300
+            DEFAULT: '#d1d5db', // gray-300
+            dark: '#9ca3af'    // gray-400
           },
           text: {
-            muted: 'gray-500',
-            DEFAULT: 'gray-700',
-            emphasis: 'gray-800'
+            muted: '#6b7280',   // gray-500
+            DEFAULT: '#374151', // gray-700
+            emphasis: '#1f2937' // gray-800
           },
           background: {
-            subtle: 'gray-50',
-            DEFAULT: 'white',
-            elevated: 'gray-50'
+            subtle: '#f9fafb',  // gray-50
+            DEFAULT: '#ffffff', // white
+            elevated: '#f9fafb' // gray-50
           },
-          focus: 'termageddon-accent'
+          focus: '#9A706F'      // termageddon-accent
         },
         
         // Notification colors - semantic mapping for alerts and messages
         notification: {
-          success: 'green-500',
-          error: 'red-500',
-          warning: 'yellow-500',
-          info: 'blue-500'
+          success: '#10b981',  // green-500
+          error: '#ef4444',   // red-500
+          warning: '#eab308', // yellow-500
+          info: '#3b82f6'     // blue-500
         }
       },
       fontSize: {

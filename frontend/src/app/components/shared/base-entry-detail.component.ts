@@ -249,4 +249,76 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   canUserEdit(): boolean {
     return this.canEdit && !!this.getCurrentUser();
   }
+
+  /**
+   * Get the draft to use for header metadata display
+   */
+  protected abstract getDisplayDraft(): Entry | ReviewDraft | null;
+  
+  /**
+   * Get author name from a draft or entry - NO FALLBACKS
+   * If author is missing, this will throw an error exposing the backend bug
+   */
+  protected getAuthorName(obj: any): string {
+    if (!obj) {
+      throw new Error('Object is null/undefined - this is a backend data issue');
+    }
+    
+    // Handle Entry with active_draft
+    if ('active_draft' in obj && obj.active_draft) {
+      if (!obj.active_draft.author) {
+        throw new Error('Entry.active_draft.author is missing - backend bug');
+      }
+      return this.getUserDisplayName(obj.active_draft.author);
+    }
+    
+    // Handle ReviewDraft or EntryDraft with author
+    if ('author' in obj) {
+      if (!obj.author) {
+        throw new Error('Draft.author is missing - backend bug');
+      }
+      return this.getUserDisplayName(obj.author);
+    }
+    
+    throw new Error('Object has no author field - backend data structure issue');
+  }
+  
+  /**
+   * Get timestamp from a draft or entry - NO FALLBACKS
+   * If timestamp is missing, this will throw an error exposing the backend bug
+   */
+  protected getTimestamp(obj: any): string {
+    if (!obj) {
+      throw new Error('Object is null/undefined - this is a backend data issue');
+    }
+    
+    if ('active_draft' in obj && obj.active_draft) {
+      if (!obj.active_draft.timestamp) {
+        throw new Error('Entry.active_draft.timestamp is missing - backend bug');
+      }
+      return obj.active_draft.timestamp;
+    }
+    
+    if ('timestamp' in obj) {
+      if (!obj.timestamp) {
+        throw new Error('Draft.timestamp is missing - backend bug');
+      }
+      return obj.timestamp;
+    }
+    
+    throw new Error('Object has no timestamp field - backend data structure issue');
+  }
+
+  /**
+   * Get user display name helper
+   */
+  protected getUserDisplayName(user: any): string {
+    if (!user) {
+      throw new Error('User is null/undefined - backend bug');
+    }
+    if (!user.first_name || !user.last_name) {
+      throw new Error('User missing first_name or last_name - backend bug');
+    }
+    return `${user.first_name} ${user.last_name}`;
+  }
 }

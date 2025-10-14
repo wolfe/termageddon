@@ -32,21 +32,21 @@
             Publish Draft
           </button>
         }
-        @if (showRequestReviewButton && !draft.is_published && !draft.is_approved) {
+        @if (showRequestReviewButton) {
           <button
             (click)="onRequestReview()"
             [disabled]="requestingReview"
             class="px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover disabled:bg-action-secondary text-sm font-medium"
           >
-            {{ requestingReview ? 'Requesting...' : 'Request Reviewers' }}
+            {{ requestingReview ? 'Requesting...' : getRequestReviewButtonText() }}
           </button>
         }
         @if (canEdit) {
           <button
             (click)="onEdit()"
-            class="px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover text-sm font-medium"
+            class="px-4 py-2 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm font-medium"
           >
-            {{ isEditing() ? 'Cancel Edit' : 'Edit Draft' }}
+            {{ isEditing() ? 'Cancel Edit' : 'Edit Definition' }}
           </button>
         }
         @if (showApproveButton && canApproveUtil(draft)) {
@@ -71,10 +71,10 @@
     <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
       <span>Author: {{ getUserDisplayName(draft.author) }}</span>
       <span>Created: {{ draft.timestamp | date: "medium" }}</span>
-      @if (getApprovers().length > 0) {
+      @if (getMainDraftApprovers().length > 0) {
         <div class="flex items-center space-x-1">
           <span>Approved by:</span>
-          @for (approver of getApprovers(); track approver.id) {
+          @for (approver of getMainDraftApprovers(); track approver.id) {
             <app-user-avatar [user]="approver" color="green" size="medium"></app-user-avatar>
           }
         </div>
@@ -82,12 +82,12 @@
     </div>
 
     <!-- Requested Reviewers -->
-    @if (draft.requested_reviewers.length > 0) {
+    @if (getMainDraftRequestedReviewers().length > 0) {
       <div class="mt-3">
         <div class="flex items-center space-x-2">
           <span class="text-sm text-gray-600">Approval Requests:</span>
           <div class="flex space-x-1">
-            @for (reviewer of draft.requested_reviewers; track reviewer.id) {
+            @for (reviewer of getMainDraftRequestedReviewers(); track reviewer.id) {
               <app-user-avatar [user]="reviewer" color="purple" size="medium"></app-user-avatar>
             }
           </div>
@@ -139,40 +139,104 @@
     } @else {
       <!-- View Mode -->
       <div class="p-6">
-        <div class="prose max-w-none">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Proposed Definition</h3>
-          <div class="bg-gray-50 p-4 rounded-lg" [innerHTML]="getProposedDefinitionContent()"></div>
+        <!-- Latest Draft Section -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded mr-2">Latest Draft</span>
+            Current Working Version
+          </h3>
+          <div class="prose max-w-none bg-blue-50 p-4 rounded-lg" data-testid="latest-draft-content">
+            <div [innerHTML]="getLatestDraftContent()"></div>
+          </div>
+          @if (latestDraft) {
+            <div class="mt-3 text-sm text-gray-600">
+              <p>
+                <strong>Author:</strong>
+                {{ latestDraft.author.first_name }} {{ latestDraft.author.last_name }}
+              </p>
+              <p class="mt-1">
+                <strong>Last Updated:</strong>
+                {{ latestDraft.timestamp | date: "medium" }}
+              </p>
+            </div>
+          } @else if (draft) {
+            <div class="mt-3 text-sm text-gray-600">
+              <p>
+                <strong>Author:</strong>
+                {{ draft.author.first_name }} {{ draft.author.last_name }}
+              </p>
+              <p class="mt-1">
+                <strong>Last Updated:</strong>
+                {{ draft.timestamp | date: "medium" }}
+              </p>
+            </div>
+          }
         </div>
 
+        <!-- Published Version Section or Selected Historical Draft -->
         @if (selectedHistoricalDraft) {
-          <div class="mt-8 prose max-w-none">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Historical Draft</h3>
-            <div class="bg-purple-50 p-4 rounded-lg" [innerHTML]="selectedHistoricalDraft.content"></div>
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <span class="px-2 py-1 bg-purple-100 text-purple-700 text-sm rounded mr-2">Historical Draft</span>
+              Selected from Version History
+            </h3>
+            <div class="prose max-w-none bg-purple-50 p-4 rounded-lg" data-testid="historical-draft-content">
+              <div [innerHTML]="selectedHistoricalDraft.content"></div>
+            </div>
             <div class="mt-3 text-sm text-gray-600">
-              <p>Author: {{ selectedHistoricalDraft.author.first_name }} {{ selectedHistoricalDraft.author.last_name }}</p>
-              <p>Created: {{ selectedHistoricalDraft.timestamp | date: "medium" }}</p>
+              <p>
+                <strong>Author:</strong>
+                {{ selectedHistoricalDraft.author.first_name }} {{ selectedHistoricalDraft.author.last_name }}
+              </p>
+              <p class="mt-1">
+                <strong>Created:</strong>
+                {{ selectedHistoricalDraft.timestamp | date: "medium" }}
+              </p>
               @if (selectedHistoricalDraft.is_published) {
-                <p>Status: <span class="text-green-600">Published</span></p>
+                <p class="mt-1">
+                  <strong>Status:</strong>
+                  <span class="text-green-600">Published</span>
+                </p>
               } @else if (selectedHistoricalDraft.is_approved) {
-                <p>Status: <span class="text-blue-600">Approved</span></p>
+                <p class="mt-1">
+                  <strong>Status:</strong>
+                  <span class="text-blue-600">Approved</span>
+                </p>
               } @else {
-                <p>Status: <span class="text-orange-600">Draft ({{ selectedHistoricalDraft.approval_count }}/2)</span></p>
+                <p class="mt-1">
+                  <strong>Status:</strong>
+                  <span class="text-orange-600">Draft ({{ selectedHistoricalDraft.approval_count }}/2)</span>
+                </p>
               }
             </div>
           </div>
-        } @else if (draft.replaces_draft) {
-          <div class="mt-8 prose max-w-none">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
-            <div class="bg-gray-100 p-4 rounded-lg" [innerHTML]="draft.replaces_draft?.content"></div>
+        } @else if (getPublishedDraft()) {
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <span class="px-2 py-1 bg-green-100 text-green-700 text-sm rounded mr-2">Published Version</span>
+              Currently Live
+            </h3>
+            <div class="prose max-w-none bg-green-50 p-4 rounded-lg" data-testid="published-content">
+              <div [innerHTML]="getPublishedDraft()!.content"></div>
+            </div>
             <div class="mt-3 text-sm text-gray-600">
-              <p>Author: {{ draft.replaces_draft?.author?.first_name }} {{ draft.replaces_draft?.author?.last_name }}</p>
-              <p>Created: {{ draft.replaces_draft?.timestamp | date: "medium" }}</p>
+              <p>
+                <strong>Author:</strong>
+                {{ getPublishedDraftAuthor() }}
+              </p>
+              <p class="mt-1">
+                <strong>Published:</strong>
+                {{ getPublishedDraftTimestamp() | date: "medium" }}
+              </p>
             </div>
           </div>
         } @else {
-          <div class="mt-8 prose max-w-none">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Published Version</h3>
-            <div class="bg-gray-100 p-4 rounded-lg text-gray-500 italic">
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <span class="px-2 py-1 bg-green-100 text-green-700 text-sm rounded mr-2">Published Version</span>
+              Currently Live
+            </h3>
+            <div class="prose max-w-none bg-green-50 p-4 rounded-lg text-gray-500 italic">
               This is a new entry - no published version exists yet.
             </div>
           </div>
@@ -202,7 +266,7 @@
 
   <!-- Version History Sidebar -->
   <app-version-history-sidebar
-    [entryId]="(draft?.entry?.id) ?? null"
+    [entryId]="draft.entry.id"
     [isOpen]="showVersionHistorySidebar"
     (close)="onVersionHistoryClosed()"
     (draftSelected)="onDraftSelected($event)"

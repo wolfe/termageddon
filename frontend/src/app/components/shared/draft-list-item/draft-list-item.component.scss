@@ -4,7 +4,7 @@
 }
 
 .draft-list-item.selected {
-  @apply bg-termageddon-blue text-white;
+  @apply bg-action-primary text-white;
 }
 
 .draft-list-item:not(.selected) {
@@ -20,7 +20,7 @@
 }
 
 .draft-title {
-  @apply font-semibold text-sm text-termageddon-gray-dark truncate;
+  @apply font-semibold text-sm text-ui-text-emphasis truncate;
 }
 
 .draft-perspective {

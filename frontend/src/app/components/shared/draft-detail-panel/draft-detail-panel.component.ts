@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ReviewDraft, Comment, EntryDraft, User } from '../../../models';
+import { ReviewDraft, Comment, EntryDraft, User, Entry } from '../../../models';
 import { CommentThreadComponent } from '../../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
@@ -14,6 +14,8 @@ import { NotificationService } from '../../../services/notification.service';
 import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish as canPublishUtil, canApprove as canApproveUtil, getRemainingApprovals, getApprovalAccessLevel } from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
+export type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
+
 @Component({
   selector: 'app-draft-detail-panel',
   standalone: true,
@@ -22,6 +24,7 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
   styleUrl: './draft-detail-panel.component.scss'
 })
 export class DraftDetailPanelComponent extends BaseEntryDetailComponent implements OnInit, OnChanges {
+  @Input() context: DraftDisplayContext = 'review';
   @Input() draft: ReviewDraft | null = null;
   @Input() override canEdit: boolean = false;
   @Input() override isLoadingComments: boolean = false;
@@ -96,7 +99,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   getRemainingApprovals = getRemainingApprovals;
   getApprovalAccessLevel = getApprovalAccessLevel;
   getInitials = getInitials;
-  getUserDisplayName = getUserDisplayName;
+  override getUserDisplayName = getUserDisplayName;
 
   onApprove(): void {
     this.approve.emit();
@@ -254,5 +257,52 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
     this.isEditMode = false;
     this.editContent = '';
     this.editModeChanged.emit(false);
+  }
+
+  // Missing methods that template is calling
+  getRequestReviewButtonText(): string {
+    return 'Request Reviewers';
+  }
+
+  getMainDraftApprovers(): User[] {
+    return this.draft?.approvers || [];
+  }
+
+  getMainDraftRequestedReviewers(): User[] {
+    return this.draft?.requested_reviewers || [];
+  }
+
+  getPublishedDraft(): EntryDraft | null {
+    if (!this.draft) return null;
+    
+    // First check if there's a published draft in history
+    if (this.draftHistory) {
+      const publishedInHistory = this.draftHistory.find(d => d.is_published);
+      if (publishedInHistory) return publishedInHistory;
+    }
+    
+    // Then check replaces_draft
+    if (this.draft.replaces_draft) {
+      return this.draft.replaces_draft;
+    }
+    
+    return null;
+  }
+
+  getPublishedDraftAuthor(): string {
+    const published = this.getPublishedDraft();
+    if (!published?.author) return 'Unknown';
+    return this.getUserDisplayName(published.author);
+  }
+
+  getPublishedDraftTimestamp(): string {
+    const published = this.getPublishedDraft();
+    if (!published?.timestamp) return '';
+    return published.timestamp;
+  }
+
+  // Implementation of abstract method from BaseEntryDetailComponent
+  protected getDisplayDraft(): Entry | ReviewDraft | null {
+    return this.draft;
   }
 }

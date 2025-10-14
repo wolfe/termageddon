@@ -401,9 +401,9 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         if "entry" in expand:
             # Include entry with term and perspective for review
             queryset = queryset.select_related(
-                "entry__term", "entry__perspective", "entry__active_draft"
+                "entry__term", "entry__perspective", "entry__active_draft", "replaces_draft", "replaces_draft__author"
             ).prefetch_related(
-                "entry__active_draft__author", "entry__active_draft__approvers"
+                "entry__active_draft__author", "entry__active_draft__approvers", "replaces_draft__approvers", "replaces_draft__requested_reviewers"
             )
 
         return queryset

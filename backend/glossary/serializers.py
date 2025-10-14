@@ -324,7 +324,7 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
     is_approved = serializers.BooleanField(read_only=True)
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
-    replaces_draft = serializers.PrimaryKeyRelatedField(read_only=True)
+    replaces_draft = EntryDraftListSerializer(read_only=True)
     can_approve_by_current_user = serializers.SerializerMethodField()
     approval_status_for_user = serializers.SerializerMethodField()
     user_has_approved = serializers.SerializerMethodField()

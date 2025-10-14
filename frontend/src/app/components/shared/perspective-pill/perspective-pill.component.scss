@@ -17,22 +17,22 @@
 
   // Color variants - using Tailwind classes
   &--default {
-    @apply bg-termageddon-blue text-white;
+    @apply bg-action-primary text-white;
   }
 
   &--selected {
-    @apply bg-termageddon-purple text-white;
+    @apply bg-action-success text-white;
   }
 
   &--unselected {
-    @apply bg-termageddon-gray text-termageddon-gray-dark;
+    @apply bg-ui-background-subtle text-ui-text-muted;
   }
 
   // Tab variants (for term-detail component)
   &--tab-selected {
-    @apply bg-termageddon-purple text-white;
+    @apply bg-action-success text-white;
     border-radius: 4px 4px 0 0;
-    @apply border border-gray-300;
+    @apply border border-ui-border;
     border-bottom: none;
   }
 
