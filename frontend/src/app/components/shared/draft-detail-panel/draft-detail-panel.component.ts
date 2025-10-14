@@ -90,7 +90,6 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   }
   getDraftStatus = getDraftStatus;
   getDraftStatusClass = getDraftStatusClass;
-  getApprovalStatusText = getApprovalStatusText;
   getEligibilityText = getEligibilityText;
   getEligibilityClass = getEligibilityClass;
   getApprovalReason = getApprovalReason;
@@ -299,6 +298,33 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
     const published = this.getPublishedDraft();
     if (!published?.timestamp) return '';
     return published.timestamp;
+  }
+
+  // Generate compact approval status text
+  getApprovalStatusText(): string {
+    const approvers = this.getMainDraftApprovers();
+    const requestedReviewers = this.getMainDraftRequestedReviewers();
+    const remainingApprovals = this.draft?.remaining_approvals || 0;
+    const approvalCount = this.draft?.approval_count || 0;
+    
+    if (approvers.length === 0 && requestedReviewers.length === 0) {
+      return '';
+    }
+    
+    if (approvers.length > 0 && requestedReviewers.length > 0) {
+      // Both approvals and requests exist
+      return `Approvals | Requests`;
+    } else if (approvers.length > 0) {
+      // Only approvals exist
+      if (remainingApprovals > 0) {
+        return `Approvals (${approvalCount}/${approvalCount + remainingApprovals})`;
+      } else {
+        return `Approvals`;
+      }
+    } else {
+      // Only requests exist
+      return `Approval Requests`;
+    }
   }
 
   // Implementation of abstract method from BaseEntryDetailComponent
