@@ -14,6 +14,7 @@ export class ReviewerSelectorDialogComponent implements OnInit {
   @Input() isOpen = false;
   @Input() users: User[] = [];
   @Input() selectedReviewerIds: number[] = [];
+  @Input() draftAuthorId?: number; // ID of the draft author to exclude
   @Output() close = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<number[]>();
 
@@ -21,26 +22,32 @@ export class ReviewerSelectorDialogComponent implements OnInit {
   filteredUsers: User[] = [];
 
   ngOnInit() {
-    this.filteredUsers = this.users;
+    this.filteredUsers = this.getAvailableUsers();
   }
 
   ngOnChanges() {
-    this.filteredUsers = this.users;
+    this.filteredUsers = this.getAvailableUsers();
     this.searchTerm = '';
   }
 
   onSearchChange() {
+    const availableUsers = this.getAvailableUsers();
     if (!this.searchTerm.trim()) {
-      this.filteredUsers = this.users;
+      this.filteredUsers = availableUsers;
     } else {
       const term = this.searchTerm.toLowerCase();
-      this.filteredUsers = this.users.filter(
+      this.filteredUsers = availableUsers.filter(
         (user) =>
           user.first_name?.toLowerCase().includes(term) ||
           user.last_name?.toLowerCase().includes(term) ||
           user.username.toLowerCase().includes(term),
       );
     }
+  }
+
+  private getAvailableUsers(): User[] {
+    // Filter out the draft author from the list of available reviewers
+    return this.users.filter(user => user.id !== this.draftAuthorId);
   }
 
   isSelected(userId: number): boolean {

@@ -5,7 +5,7 @@ import { ReviewService } from './review.service';
 import { GlossaryService } from './glossary.service';
 
 export interface DraftLoadOptions {
-  eligibility?: 'own' | 'requested_or_approved' | 'already_approved';
+  eligibility?: 'own' | 'requested_or_approved' | 'already_approved' | 'can_approve' | 'all_except_own';
   showAll?: boolean;
   searchTerm?: string;
   authorId?: number;

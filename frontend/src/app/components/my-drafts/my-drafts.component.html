@@ -101,6 +101,7 @@
   [isOpen]="state.showReviewerSelector"
   [users]="state.allUsers"
   [selectedReviewerIds]="state.selectedReviewerIds"
+  [draftAuthorId]="state.selectedDraft?.author?.id"
   (close)="onReviewerSelectionCancelled()"
   (confirm)="onReviewerSelectionConfirmed($event)"
 >

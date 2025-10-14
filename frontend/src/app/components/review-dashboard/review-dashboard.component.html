@@ -9,7 +9,7 @@
       <div class="flex items-center space-x-4 text-xs">
         <span class="flex items-center">
           <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-          {{ getEligibleCount() }} ready to approve
+          {{ getRequestedCount() }} ready to approve
         </span>
         <span class="flex items-center">
           <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
@@ -17,7 +17,7 @@
         </span>
         <span class="flex items-center">
           <span class="w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
-          {{ getOwnDraftsCount() }} your drafts
+          {{ state.filteredDrafts.length }} total drafts
         </span>
       </div>
     </div>
@@ -116,6 +116,7 @@
   [isOpen]="state.showReviewerSelector"
   [users]="state.allUsers"
   [selectedReviewerIds]="state.selectedReviewerIds"
+  [draftAuthorId]="state.selectedDraft?.author?.id"
   (close)="onReviewerSelectionCancelled()"
   (confirm)="onReviewerSelectionConfirmed($event)"
 >

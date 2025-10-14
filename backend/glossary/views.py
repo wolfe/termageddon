@@ -362,6 +362,9 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             elif eligibility == "already_approved":
                 # Drafts already approved by user
                 queryset = queryset.filter(approvers=self.request.user)
+            elif eligibility == "all_except_own":
+                # All drafts except user's own (for review page "show all")
+                queryset = queryset.filter(~Q(author=self.request.user))
 
         # Handle show_all parameter for review filtering
         # Only apply filtering for list actions, not detail actions (like approve)

@@ -249,7 +249,10 @@ class EntryDraft(AuditedModel):
         if self.is_published:
             raise ValidationError("Cannot request reviews for published drafts.")
 
-        self.requested_reviewers.set(reviewers)
+        # Filter out the draft author from reviewers (silently exclude)
+        available_reviewers = [reviewer for reviewer in reviewers if reviewer.id != self.author.id]
+        
+        self.requested_reviewers.set(available_reviewers)
 
     def clear_approvals(self):
         """Clear all approvals (used when content is edited)"""

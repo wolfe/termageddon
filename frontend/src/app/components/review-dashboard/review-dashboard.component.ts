@@ -37,13 +37,13 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   state: PanelState;
   
   // Review-specific state
-  showAll: boolean = false;
+  showAll: boolean = false; // Show all drafts (not just requested ones)
 
   // Filter configuration
   filters: FilterConfig[] = [
     {
       id: 'showAll',
-      label: 'Show all drafts (not just relevant to you)',
+      label: 'Show all drafts (not just requested to review)',
       type: 'checkbox',
       value: false
     }
@@ -83,10 +83,20 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadPendingDrafts(callback?: () => void): void {
-    this.panelCommonService.loadDrafts(
-      { eligibility: 'requested_or_approved', showAll: this.showAll },
-      this.state
-    );
+    // Load drafts based on showAll setting
+    if (this.showAll) {
+      // Show all non-own, non-published drafts
+      this.panelCommonService.loadDrafts(
+        { eligibility: 'all_except_own', showAll: true },
+        this.state
+      );
+    } else {
+      // Show only drafts requested to review or already approved
+      this.panelCommonService.loadDrafts(
+        { eligibility: 'requested_or_approved', showAll: false },
+        this.state
+      );
+    }
     
     // Execute callback after data is loaded
     if (callback) {
@@ -97,7 +107,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   onSearch(): void {
     this.panelCommonService.onSearch(this.state.searchTerm, this.state, { 
-      eligibility: 'requested_or_approved', 
+      eligibility: this.showAll ? 'all_except_own' : 'requested_or_approved', 
       showAll: this.showAll 
     });
   }
@@ -128,21 +138,15 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     return this.state.selectedDraft.user_has_approved ?? false;
   }
 
-  getEligibleCount(): number {
-    return this.state.filteredDrafts.filter(
-      (d) => d.approval_status_for_user === 'can_approve',
-    ).length;
-  }
-
   getAlreadyApprovedCount(): number {
     return this.state.filteredDrafts.filter(
       (d) => d.approval_status_for_user === 'already_approved',
     ).length;
   }
 
-  getOwnDraftsCount(): number {
+  getRequestedCount(): number {
     return this.state.filteredDrafts.filter(
-      (d) => d.approval_status_for_user === 'own_draft',
+      (d) => d.approval_status_for_user === 'can_approve',
     ).length;
   }
 
