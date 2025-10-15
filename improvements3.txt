@@ -1,6 +1,0 @@
-Selecting a Draft from the History sidebar in the Review fails to populate the history section in the main panel.
-When I edit an item in the Review, the latest version is still showing Approved by based on an old version.
-Show history doesn't show any history in the My Drafts
-The avatars on comments are empty and the the name shows as "Unknown User"
-The Post Comment button on comments is messed up on the My Drafts section.  The button doesn't work and the button has no text and is small.
-Again, any time there is a bug in one of the three panels, "Glossary", "Review", and "My Drafts", and the bug does not exist in another panel, it suggests a failure to use common code and rely on copy/pasta.  We should centralize logic in one place to the extent possible.
