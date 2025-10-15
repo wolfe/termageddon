@@ -59,9 +59,8 @@ export class DraftListItemComponent {
   getItemClass(): string {
     const baseClass = 'p-3 cursor-pointer transition-colors';
     const selectedClass = this.selected ? 'bg-blue-50 border-l-4 border-action-primary' : 'bg-white hover:bg-gray-50';
-    const disabledClass = this.draft.approval_status_for_user === 'own_draft' && this.context === 'review' ? 'opacity-60' : '';
     
-    return `${baseClass} ${selectedClass} ${disabledClass}`;
+    return `${baseClass} ${selectedClass}`;
   }
 
   getAuthorTooltip(): string {

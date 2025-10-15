@@ -11,10 +11,6 @@
   @apply bg-white hover:bg-gray-50;
 }
 
-.draft-list-item.disabled {
-  @apply opacity-60;
-}
-
 .draft-content {
   @apply flex-1 min-w-0;
 }
