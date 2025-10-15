@@ -4,6 +4,9 @@
 >
   <!-- Sidebar Content -->
   <div sidebar>
+    <!-- Status Summary (empty for consistency) -->
+    <app-status-summary [items]="[]"></app-status-summary>
+    
     <app-term-list 
       (entrySelected)="onEntrySelected($event)"
       (termSelected)="onTermSelected($event)"

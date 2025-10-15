@@ -4,11 +4,12 @@ import { Entry } from '../../models';
 import { TermListComponent } from '../term-list/term-list.component';
 import { TermDetailComponent } from '../term-detail/term-detail.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
+import { StatusSummaryComponent } from '../shared/status-summary/status-summary.component';
 
 @Component({
   selector: 'app-glossary-view',
   standalone: true,
-  imports: [CommonModule, TermListComponent, TermDetailComponent, MasterDetailLayoutComponent],
+  imports: [CommonModule, TermListComponent, TermDetailComponent, MasterDetailLayoutComponent, StatusSummaryComponent],
   templateUrl: './glossary-view.component.html',
   styleUrl: './glossary-view.component.scss',
 })

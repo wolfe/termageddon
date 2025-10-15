@@ -12,6 +12,7 @@ import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/mast
 import { SearchFilterBarComponent, FilterConfig } from '../shared/search-filter-bar/search-filter-bar.component';
 import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
 import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
+import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
 import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish, canApprove, getRemainingApprovals, getApprovalAccessLevel } from '../../utils/draft-status.util';
 import { getInitials } from '../../utils/user.util';
 
@@ -25,7 +26,8 @@ import { getInitials } from '../../utils/user.util';
     MasterDetailLayoutComponent,
     SearchFilterBarComponent,
     DraftListItemComponent,
-    DraftDetailPanelComponent
+    DraftDetailPanelComponent,
+    StatusSummaryComponent
   ],
   templateUrl: './review-dashboard.component.html',
   styleUrl: './review-dashboard.component.scss',
@@ -240,5 +242,13 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   onEditCancelled(): void {
     // Edit cancellation is handled by the draft-detail-panel component
+  }
+
+  getStatusSummaryItems(): StatusSummaryItem[] {
+    return [
+      { count: this.getRequestedCount(), label: 'ready to approve', color: '#3b82f6' },
+      { count: this.getAlreadyApprovedCount(), label: 'already approved', color: '#10b981' },
+      { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' }
+    ];
   }
 }

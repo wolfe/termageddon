@@ -5,22 +5,7 @@
   <!-- Sidebar Content -->
   <div sidebar>
     <!-- Status Summary -->
-    <div class="p-3 border-b border-gray-300">
-      <div class="flex items-center space-x-4 text-xs">
-        <span class="flex items-center">
-          <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-          {{ getRequestedCount() }} ready to approve
-        </span>
-        <span class="flex items-center">
-          <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-          {{ getAlreadyApprovedCount() }} already approved
-        </span>
-        <span class="flex items-center">
-          <span class="w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
-          {{ state.filteredDrafts.length }} total drafts
-        </span>
-      </div>
-    </div>
+    <app-status-summary [items]="getStatusSummaryItems()"></app-status-summary>
 
     <!-- Search and Filters -->
     <app-search-filter-bar
@@ -75,6 +60,7 @@
             statusType="eligibility"
             [showPublishButton]="true"
             [showApprovalStatus]="true"
+            context="review"
             (clicked)="selectDraft($event)"
             (publishClicked)="publishDraft($event)"
           ></app-draft-list-item>

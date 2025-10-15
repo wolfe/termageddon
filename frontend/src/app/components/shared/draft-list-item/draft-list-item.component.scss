@@ -8,7 +8,7 @@
 }
 
 .draft-list-item:not(.selected) {
-  @apply bg-gray-50 hover:bg-gray-100;
+  @apply bg-white hover:bg-gray-50;
 }
 
 .draft-list-item.disabled {

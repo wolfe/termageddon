@@ -10,6 +10,7 @@ import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/mast
 import { SearchFilterBarComponent } from '../shared/search-filter-bar/search-filter-bar.component';
 import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
 import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
+import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
 import { ReviewDraft, PaginatedResponse, User, Comment } from '../../models';
 import { getDraftStatus, getDraftStatusClass, canPublish } from '../../utils/draft-status.util';
 import { getInitials } from '../../utils/user.util';
@@ -24,7 +25,8 @@ import { getInitials } from '../../utils/user.util';
     MasterDetailLayoutComponent,
     SearchFilterBarComponent,
     DraftListItemComponent,
-    DraftDetailPanelComponent
+    DraftDetailPanelComponent,
+    StatusSummaryComponent
   ],
   templateUrl: './my-drafts.component.html',
   styleUrls: ['./my-drafts.component.scss'],
@@ -128,5 +130,16 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   onEditCancelled(): void {
     // Edit cancellation is handled by the draft-detail-panel component
+  }
+
+  getStatusSummaryItems(): StatusSummaryItem[] {
+    const publishableCount = this.state.filteredDrafts.filter(d => 
+      d.approvers && d.approvers.length > 0
+    ).length;
+    
+    return [
+      { count: publishableCount, label: 'ready to publish', color: '#10b981' },
+      { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' }
+    ];
   }
 }

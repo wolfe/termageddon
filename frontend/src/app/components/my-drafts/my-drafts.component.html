@@ -4,6 +4,9 @@
 >
   <!-- Sidebar Content -->
   <div sidebar>
+    <!-- Status Summary -->
+    <app-status-summary [items]="getStatusSummaryItems()"></app-status-summary>
+
     <!-- Search -->
     <app-search-filter-bar
       placeholder="Search drafts..."
@@ -50,20 +53,19 @@
           </div>
         </div>
       } @else {
-        <div class="space-y-1 p-2">
-          @for (draft of state.filteredDrafts; track draft.id) {
-            <app-draft-list-item
-              [draft]="draft"
-              [selected]="state.selectedDraft?.id === draft.id"
-              [showStatus]="false"
-              statusType="draft"
-              [showPublishButton]="true"
-              [showApprovalStatus]="true"
-              (clicked)="selectDraft($event)"
-              (publishClicked)="publishDraft($event)"
-            ></app-draft-list-item>
-          }
-        </div>
+        @for (draft of state.filteredDrafts; track draft.id) {
+          <app-draft-list-item
+            [draft]="draft"
+            [selected]="state.selectedDraft?.id === draft.id"
+            [showStatus]="false"
+            statusType="draft"
+            [showPublishButton]="true"
+            [showApprovalStatus]="true"
+            context="my-drafts"
+            (clicked)="selectDraft($event)"
+            (publishClicked)="publishDraft($event)"
+          ></app-draft-list-item>
+        }
       }
     </div>
   </div>
