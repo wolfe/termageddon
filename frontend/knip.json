@@ -1,24 +1,8 @@
 {
-  "entry": ["src/main.ts"],
   "project": ["src/**/*.ts"],
   "ignore": [
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
-    "node_modules/**",
-    "dist/**",
-    "coverage/**"
-  ],
-  "ignoreDependencies": [
-    "@angular/core",
-    "@angular/common",
-    "@angular/forms",
-    "@angular/router",
-    "@angular/platform-browser",
-    "rxjs"
-  ],
-  "ignoreExports": [
-    "src/app/app.component.ts",
-    "src/app/app.config.ts",
-    "src/app/app.routes.ts"
+    "src/environments/**"
   ]
 }

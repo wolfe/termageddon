@@ -382,7 +382,7 @@ from django.dispatch import receiver
 
 
 @receiver(m2m_changed, sender=EntryDraft.approvers.through)
-def auto_activate_approved_draft(sender, instance, action, **kwargs):
+def auto_activate_approved_draft(instance, action, **kwargs):
     """
     When an EntryDraft is approved (approval_count >= MIN_APPROVALS),
     check if entry.active_draft is None or older than this draft,

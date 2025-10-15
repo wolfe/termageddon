@@ -117,7 +117,7 @@ run_backend_tests() {
     
     # Run backend tests
     print_status "Running backend tests with pytest..."
-    if python -m pytest; then
+    if python -m pytest --tb=short -q; then
         print_success "Backend tests passed"
     else
         print_error "Backend tests failed"
@@ -151,7 +151,7 @@ run_dead_code_detection() {
             fi
             
             # Run vulture
-            if vulture --config .vulture-config; then
+            if vulture --config .vulture-config glossary/; then
                 print_success "Backend dead code check passed"
             else
                 print_warning "Backend dead code check found issues (see output above)"
@@ -188,7 +188,7 @@ run_dead_code_detection() {
         fi
         
         # Run knip
-        if knip; then
+        if knip --config knip.json; then
             print_success "Frontend dead code check passed"
         else
             print_warning "Frontend dead code check found issues (see output above)"

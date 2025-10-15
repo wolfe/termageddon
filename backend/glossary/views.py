@@ -400,7 +400,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             # 1. Drafts they authored
             # 2. Drafts they were requested to review
             # 3. Drafts for terms they have authored before
-            from django.db.models import Q, Exists, OuterRef
+            from django.db.models import Q
 
             # Get terms the user has authored drafts for
             user_authored_terms = (
