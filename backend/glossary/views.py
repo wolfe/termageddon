@@ -357,8 +357,24 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                     Q(requested_reviewers=self.request.user) | Q(approvers=self.request.user)
                 ).distinct()
             elif eligibility == "own":
-                # User's own drafts
+                # User's own drafts - only show latest draft per entry
+                from django.db.models import Max
                 queryset = queryset.filter(author=self.request.user)
+                
+                # Get the latest timestamp per entry for this user's drafts
+                latest_timestamps = (
+                    queryset.values('entry')
+                    .annotate(latest_timestamp=Max('timestamp'))
+                    .values_list('entry', 'latest_timestamp')
+                )
+                
+                # Filter to only include drafts with the latest timestamp for each entry
+                from django.db.models import Q
+                latest_filter = Q()
+                for entry_id, latest_timestamp in latest_timestamps:
+                    latest_filter |= Q(entry_id=entry_id, timestamp=latest_timestamp)
+                
+                queryset = queryset.filter(latest_filter)
             elif eligibility == "already_approved":
                 # Drafts already approved by user
                 queryset = queryset.filter(approvers=self.request.user)

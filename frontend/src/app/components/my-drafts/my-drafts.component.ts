@@ -59,8 +59,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   loadMyDrafts(): void {
     this.panelCommonService.loadDrafts(
       { eligibility: 'own' },
-      this.state,
-      (drafts) => this.panelCommonService.getLatestDraftsPerEntry(drafts)
+      this.state
     );
     
     // Auto-select first draft if available

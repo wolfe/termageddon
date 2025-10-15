@@ -75,17 +75,17 @@ describe('MyDraftsComponent', () => {
     });
     panelCommonSpy.loadUsers.and.returnValue();
     panelCommonSpy.loadDrafts.and.callFake((options: any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
-      // Simulate loading drafts with the new signature
+      // Backend now handles latest-only filtering for 'own' eligibility
       const mockDrafts = [
         {
           id: 1,
-          content: 'Test draft 1',
+          content: 'Latest draft for entry 1',
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-01T00:00:00Z',
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
+          timestamp: '2024-01-03T00:00:00Z',
+          created_at: '2024-01-03T00:00:00Z',
+          updated_at: '2024-01-03T00:00:00Z',
           entry: { 
             id: 1, 
             term: { text: 'Test Term 1' },
@@ -101,14 +101,14 @@ describe('MyDraftsComponent', () => {
           replaces_draft: null
         },
         {
-          id: 2,
-          content: 'Test draft 2',
+          id: 3,
+          content: 'Latest draft for entry 2',
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
-          created_at: '2024-01-02T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
+          timestamp: '2024-01-02T12:00:00Z',
+          created_at: '2024-01-02T12:00:00Z',
+          updated_at: '2024-01-02T12:00:00Z',
           entry: { 
             id: 2, 
             term: { text: 'Test Term 2' },
@@ -125,31 +125,46 @@ describe('MyDraftsComponent', () => {
         }
       ];
       
-      state.drafts = postProcessFn ? postProcessFn(mockDrafts) : mockDrafts;
+      state.drafts = mockDrafts;
       state.filteredDrafts = [...state.drafts];
       state.loading = false;
     });
     panelCommonSpy.onSearch.and.callFake((searchTerm: string, state: any, options: any) => {
-      // Simulate the actual behavior
+      // Backend now handles latest-only filtering for 'own' eligibility
       state.searchTerm = searchTerm;
       const mockDrafts = [
         {
           id: 1,
-          content: 'Test draft 1',
+          content: 'Latest draft for entry 1',
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-01T00:00:00Z',
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
+          timestamp: '2024-01-03T00:00:00Z',
+          created_at: '2024-01-03T00:00:00Z',
+          updated_at: '2024-01-03T00:00:00Z',
           entry: { 
             id: 1, 
             term: { text: 'Test Term 1' },
-            perspective: {
-              id: 1,
-              name: 'Test Perspective',
-              description: 'Test Description'
-            }
+            perspective: { id: 1, name: 'Test Perspective', description: 'Test Description' }
+          },
+          author: { id: 1, username: 'testuser' },
+          approvers: [],
+          requested_reviewers: [],
+          replaces_draft: null
+        },
+        {
+          id: 3,
+          content: 'Latest draft for entry 2',
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
+          timestamp: '2024-01-02T12:00:00Z',
+          created_at: '2024-01-02T12:00:00Z',
+          updated_at: '2024-01-02T12:00:00Z',
+          entry: { 
+            id: 2, 
+            term: { text: 'Test Term 2' },
+            perspective: { id: 1, name: 'Test Perspective', description: 'Test Description' }
           },
           author: { id: 1, username: 'testuser' },
           approvers: [],
@@ -666,7 +681,7 @@ describe('MyDraftsComponent', () => {
 
       component.loadMyDrafts();
 
-      expect(reviewService.getOwnDrafts).toHaveBeenCalled();
+      expect(panelCommonService.loadDrafts).toHaveBeenCalled();
       expect(component.state.drafts.length).toBe(2); // Only latest drafts per entry
       expect(component.state.drafts[0].id).toBe(1); // Latest draft for entry 1
       expect(component.state.drafts[1].id).toBe(3); // Latest draft for entry 2
@@ -1056,7 +1071,7 @@ describe('MyDraftsComponent', () => {
       // Simulate edit saved event
       component.onEditSaved();
 
-      expect(reviewService.getOwnDrafts).toHaveBeenCalled();
+      expect(panelCommonService.loadDrafts).toHaveBeenCalled();
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
       expect(component.state.comments).toEqual(mockComments);
     });
