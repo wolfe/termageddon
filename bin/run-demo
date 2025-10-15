@@ -5,6 +5,10 @@
 
 set -e  # Exit on error
 
+# Get the directory where this script is located and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -37,10 +41,9 @@ cleanup() {
     
     # Clear Angular dev server cache
     echo -e "${BLUE}  → Clearing Angular dev server cache...${NC}"
-    cd frontend
+    cd "$PROJECT_ROOT/frontend"
     npx ng cache clean 2>/dev/null || true
     rm -rf .angular dist node_modules/.angular 2>/dev/null || true
-    cd ..
     
     echo -e "${GREEN}Demo stopped and cleaned up. Goodbye!${NC}"
 }
@@ -61,16 +64,15 @@ lsof -ti:4200 | xargs kill -9 2>/dev/null || true
 
 # Clear Angular dev server cache
 echo -e "${BLUE}  → Clearing Angular dev server cache...${NC}"
-cd frontend
+cd "$PROJECT_ROOT/frontend"
 npx ng cache clean 2>/dev/null || true
 rm -rf .angular dist node_modules/.angular 2>/dev/null || true
-cd ..
 echo -e "${GREEN}  ✓ Cleanup complete${NC}"
 echo ""
 
 # Step 1: Reset Django Database
 echo -e "${YELLOW}[1/6] Resetting Django database...${NC}"
-cd backend
+cd "$PROJECT_ROOT/backend"
 
 # Delete existing database
 if [ -f "db.sqlite3" ]; then
@@ -109,12 +111,11 @@ echo -e "${BLUE}  → Loading test data...${NC}"
 python manage.py load_test_data > /dev/null 2>&1
 echo -e "${GREEN}  ✓ Test data loaded (360 entries, 10 users)${NC}"
 
-cd ..
 echo ""
 
 # Step 2: Start Backend Server
 echo -e "${YELLOW}[2/6] Starting Django backend server...${NC}"
-cd backend
+cd "$PROJECT_ROOT/backend"
 
 # Check if virtual environment exists, create if not
 if [ ! -d "venv" ]; then
@@ -138,16 +139,14 @@ fi
 
 python manage.py runserver > /dev/null 2>&1 &
 BACKEND_PID=$!
-cd ..
 echo -e "${GREEN}  ✓ Backend started on http://localhost:8000 (PID: $BACKEND_PID)${NC}"
 echo ""
 
 # Step 3: Start Frontend Server
 echo -e "${YELLOW}[3/6] Starting Angular frontend server...${NC}"
-cd frontend
+cd "$PROJECT_ROOT/frontend"
 npm start > /dev/null 2>&1 &
 FRONTEND_PID=$!
-cd ..
 echo -e "${GREEN}  ✓ Frontend building and starting on http://localhost:4200 (PID: $FRONTEND_PID)${NC}"
 echo ""
 

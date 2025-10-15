@@ -5,8 +5,9 @@
 # Options:
 #   -f, --frontend    Run only frontend unit tests
 #   -b, --backend     Run only backend tests
+#   -d, --dead-code   Run only dead code detection
 #   -h, --help        Show this help message
-#   (no args)         Run all tests
+#   (no args)         Run all tests and dead code detection
 
 set -e  # Exit on any error
 
@@ -41,10 +42,17 @@ command_exists() {
 
 # Function to check if we're in the right directory
 check_directory() {
-    if [ ! -d "frontend" ] || [ ! -d "backend" ]; then
+    # Get the directory where this script is located
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    
+    if [ ! -d "$PROJECT_ROOT/frontend" ] || [ ! -d "$PROJECT_ROOT/backend" ]; then
         print_error "This script must be run from the Termageddon project root directory"
         exit 1
     fi
+    
+    # Change to project root directory
+    cd "$PROJECT_ROOT"
 }
 
 # Function to run frontend tests
@@ -120,6 +128,89 @@ run_backend_tests() {
     cd ..
 }
 
+# Function to run dead code detection
+run_dead_code_detection() {
+    print_status "Running dead code detection..."
+    
+    # Track overall success
+    dead_code_success=true
+    
+    # Run backend dead code detection
+    print_status "Checking backend for dead code with Vulture..."
+    if [ -d "backend" ]; then
+        cd backend
+        
+        # Check if virtual environment exists and activate it
+        if [ -d "venv" ]; then
+            source venv/bin/activate
+            
+            # Check if vulture is installed
+            if ! python -c "import vulture" 2>/dev/null; then
+                print_status "Installing Vulture..."
+                pip install vulture
+            fi
+            
+            # Run vulture
+            if vulture --config .vulture-config; then
+                print_success "Backend dead code check passed"
+            else
+                print_warning "Backend dead code check found issues (see output above)"
+                dead_code_success=false
+            fi
+            
+            deactivate
+        else
+            print_warning "Backend virtual environment not found, skipping backend dead code check"
+            dead_code_success=false
+        fi
+        
+        cd ..
+    else
+        print_warning "Backend directory not found, skipping backend dead code check"
+        dead_code_success=false
+    fi
+    
+    # Run frontend dead code detection
+    print_status "Checking frontend for dead code with Knip..."
+    if [ -d "frontend" ]; then
+        cd frontend
+        
+        # Check if node_modules exists
+        if [ ! -d "node_modules" ]; then
+            print_status "Installing frontend dependencies..."
+            npm install
+        fi
+        
+        # Check if knip is installed globally
+        if ! command_exists knip; then
+            print_status "Installing Knip globally..."
+            npm install -g knip
+        fi
+        
+        # Run knip
+        if knip; then
+            print_success "Frontend dead code check passed"
+        else
+            print_warning "Frontend dead code check found issues (see output above)"
+            dead_code_success=false
+        fi
+        
+        cd ..
+    else
+        print_warning "Frontend directory not found, skipping frontend dead code check"
+        dead_code_success=false
+    fi
+    
+    # Report overall result
+    if [ "$dead_code_success" = true ]; then
+        print_success "Dead code detection completed successfully! 🧹"
+        return 0
+    else
+        print_warning "Dead code detection found some issues. Check the output above for details."
+        return 1
+    fi
+}
+
 # Function to show help
 show_help() {
     echo "Termageddon Test Runner"
@@ -129,13 +220,15 @@ show_help() {
     echo "Options:"
     echo "  -f, --frontend    Run only frontend unit tests"
     echo "  -b, --backend     Run only backend tests"
+    echo "  -d, --dead-code   Run only dead code detection"
     echo "  -h, --help        Show this help message"
-    echo "  (no args)         Run all tests"
+    echo "  (no args)         Run all tests and dead code detection"
     echo ""
     echo "Examples:"
-    echo "  $0                # Run all tests"
+    echo "  $0                # Run all tests and dead code detection"
     echo "  $0 --frontend     # Run only frontend tests"
     echo "  $0 -b             # Run only backend tests"
+    echo "  $0 -d             # Run only dead code detection"
 }
 
 # Main function
@@ -164,12 +257,16 @@ main() {
             print_status "Running backend tests only..."
             run_backend_tests
             ;;
+        -d|--dead-code)
+            print_status "Running dead code detection only..."
+            run_dead_code_detection
+            ;;
         -h|--help)
             show_help
             exit 0
             ;;
         "")
-            print_status "Running all tests..."
+            print_status "Running all tests and dead code detection..."
             
             # Track overall success
             overall_success=true
@@ -184,12 +281,17 @@ main() {
                 overall_success=false
             fi
             
+            # Run dead code detection
+            if ! run_dead_code_detection; then
+                overall_success=false
+            fi
+            
             # Report overall result
             if [ "$overall_success" = true ]; then
-                print_success "All tests passed! 🎉"
+                print_success "All tests and dead code detection passed! 🎉"
                 exit 0
             else
-                print_error "Some tests failed. Check the output above for details."
+                print_error "Some tests or dead code detection failed. Check the output above for details."
                 exit 1
             fi
             ;;
