@@ -22,7 +22,6 @@ export class AuthService {
           error: (error) => {
             // Clear any existing token on login failure
             this.clearToken();
-            console.error('Login failed:', error);
           },
         }),
       );
@@ -35,7 +34,6 @@ export class AuthService {
         error: (error) => {
           // Clear token even if logout request fails
           this.clearToken();
-          console.error('Logout failed:', error);
         },
       }),
     );
