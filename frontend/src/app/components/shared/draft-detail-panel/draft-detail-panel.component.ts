@@ -14,7 +14,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish as canPublishUtil, canApprove as canApproveUtil, getRemainingApprovals, getApprovalAccessLevel } from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
-export type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
+type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
 
 @Component({
   selector: 'app-draft-detail-panel',

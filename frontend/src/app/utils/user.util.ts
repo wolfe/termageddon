@@ -24,12 +24,6 @@ export function getInitials(user: User): string {
   return '';
 }
 
-export function formatUserName(user: User): string {
-  const firstName = user.first_name || '';
-  const lastName = user.last_name || '';
-  return `${firstName} ${lastName}`.trim() || user.username || 'Unknown User';
-}
-
 export function getUserDisplayName(user: User | undefined): string {
   if (!user) {
     return 'Unknown User';
@@ -49,12 +43,6 @@ export function getUserDisplayName(user: User | undefined): string {
   }
   
   return 'Unknown User';
-}
-
-export function getUserAvatar(user: User): string {
-  // Return initials as avatar for now
-  // Could be extended to support actual avatar images
-  return getInitials(user);
 }
 
 export function getInitialsFromName(name: string): string {

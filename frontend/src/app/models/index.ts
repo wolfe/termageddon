@@ -79,15 +79,6 @@ export interface Comment {
   draft_timestamp?: string;
 }
 
-export interface PerspectiveCurator {
-  id: number;
-  user: User;
-  user_id?: number;
-  perspective: Perspective;
-  perspective_id?: number;
-  assigned_by?: User;
-  created_at: string;
-}
 
 export interface PaginatedResponse<T> {
   count: number;

@@ -33,7 +33,7 @@ export class EntryDetailService {
         if (response.results.length === 0) return null;
         
         // Sort by timestamp descending and return the latest
-        const sortedDrafts = response.results.sort((a, b) => 
+        const sortedDrafts = response.results.sort((a: EntryDraft, b: EntryDraft) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         return sortedDrafts[0];
@@ -47,7 +47,7 @@ export class EntryDetailService {
   getPublishedDraft(entryId: number): Observable<EntryDraft | null> {
     return this.glossaryService.getEntryDrafts(entryId).pipe(
       map(response => {
-        const publishedDraft = response.results.find(draft => draft.is_published);
+        const publishedDraft = response.results.find((draft: EntryDraft) => draft.is_published);
         return publishedDraft || null;
       })
     );

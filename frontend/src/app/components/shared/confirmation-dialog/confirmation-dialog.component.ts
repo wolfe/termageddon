@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export interface ConfirmationDialogData {
+interface ConfirmationDialogData {
   title: string;
   message: string;
   confirmText?: string;
