@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { of } from 'rxjs';
 import { ReviewDashboardComponent } from './review-dashboard.component';
 import { ReviewService } from '../../services/review.service';
@@ -7,6 +9,7 @@ import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { NotificationService } from '../../services/notification.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
+import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewDraft, User, Comment } from '../../models';
 
 describe('ReviewDashboardComponent Integration Tests', () => {
@@ -17,6 +20,10 @@ describe('ReviewDashboardComponent Integration Tests', () => {
   let permissionService: jasmine.SpyObj<PermissionService>;
   let notificationService: jasmine.SpyObj<NotificationService>;
   let entryDetailService: jasmine.SpyObj<EntryDetailService>;
+  let urlHelperService: jasmine.SpyObj<UrlHelperService>;
+  let router: jasmine.SpyObj<Router>;
+  let location: jasmine.SpyObj<Location>;
+  let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
 
   beforeEach(async () => {
     const reviewSpy = jasmine.createSpyObj('ReviewService', [
@@ -49,6 +56,14 @@ describe('ReviewDashboardComponent Integration Tests', () => {
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
       'loadCommentsWithPositions'
     ]);
+    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', [
+      'buildDraftUrl'
+    ]);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
+    const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
+      queryParams: of({})
+    });
 
     await TestBed.configureTestingModule({
       imports: [ReviewDashboardComponent, HttpClientTestingModule],
@@ -57,7 +72,11 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
         { provide: NotificationService, useValue: notificationSpy },
-        { provide: EntryDetailService, useValue: entryDetailSpy }
+        { provide: EntryDetailService, useValue: entryDetailSpy },
+        { provide: UrlHelperService, useValue: urlHelperSpy },
+        { provide: Router, useValue: routerSpy },
+        { provide: Location, useValue: locationSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteSpy }
       ]
     }).compileComponents();
 
@@ -68,6 +87,10 @@ describe('ReviewDashboardComponent Integration Tests', () => {
     permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
     notificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
     entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
+    urlHelperService = TestBed.inject(UrlHelperService) as jasmine.SpyObj<UrlHelperService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    location = TestBed.inject(Location) as jasmine.SpyObj<Location>;
+    activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
   });
 
   it('should create', () => {

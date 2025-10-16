@@ -29,6 +29,11 @@ export interface PanelState {
   selectedReviewerIds: number[];
   draftToRequestReview: ReviewDraft | null;
   requestingReview: boolean;
+  
+  // New entry state
+  isNewEntryMode: boolean;
+  newEntryId: number | null;
+  newEntry: any | null; // Will be Entry type when imported
 }
 
 @Injectable({
@@ -62,7 +67,10 @@ export class PanelCommonService {
       allUsers: [],
       selectedReviewerIds: [],
       draftToRequestReview: null,
-      requestingReview: false
+      requestingReview: false,
+      isNewEntryMode: false,
+      newEntryId: null,
+      newEntry: null
     };
   }
 

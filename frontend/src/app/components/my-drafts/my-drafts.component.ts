@@ -1,15 +1,20 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { Subject, takeUntil, map } from 'rxjs';
 import { PermissionService } from '../../services/permission.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PanelCommonService, PanelState } from '../../services/panel-common.service';
+import { GlossaryService } from '../../services/glossary.service';
+import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 import { SearchFilterBarComponent } from '../shared/search-filter-bar/search-filter-bar.component';
 import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
 import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
+import { NewEntryDetailPanelComponent } from '../shared/new-entry-detail-panel/new-entry-detail-panel.component';
 import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
 import { ReviewDraft, PaginatedResponse, User, Comment } from '../../models';
 import { getDraftStatus, getDraftStatusClass, canPublish } from '../../utils/draft-status.util';
@@ -26,6 +31,7 @@ import { getInitials } from '../../utils/user.util';
     SearchFilterBarComponent,
     DraftListItemComponent,
     DraftDetailPanelComponent,
+    NewEntryDetailPanelComponent,
     StatusSummaryComponent
   ],
   templateUrl: './my-drafts.component.html',
@@ -36,11 +42,19 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   
   // Use centralized panel state
   state: PanelState;
+  
+  // My Drafts-specific state
+  isEditMode: boolean = false; // Track edit mode for auto-editing
 
   constructor(
     private permissionService: PermissionService,
     private entryDetailService: EntryDetailService,
-    private panelCommonService: PanelCommonService
+    private panelCommonService: PanelCommonService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
+    private glossaryService: GlossaryService,
+    private urlHelper: UrlHelperService
   ) {
     this.state = this.panelCommonService.initializePanelState();
   }
@@ -49,6 +63,20 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     this.state.currentUser = this.permissionService.currentUser;
     this.loadMyDrafts();
     this.panelCommonService.loadUsers(this.state);
+    
+    // Subscribe to route parameters
+    this.route.queryParams.subscribe(params => {
+      const draftId = params['draftId'];
+      const entryId = params['entryId'];
+      const editMode = params['edit'] === 'true';
+      
+      if (draftId) {
+        this.loadDraftById(+draftId, editMode);
+      } else if (entryId) {
+        // Handle new entry case - no draft exists yet
+        this.handleNewEntry(+entryId);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -77,6 +105,38 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   selectDraft(draft: ReviewDraft): void {
     this.panelCommonService.selectDraft(draft, this.state);
+    this.updateUrl(draft);
+  }
+
+  private loadDraftById(draftId: number, editMode: boolean = false): void {
+    this.isEditMode = editMode;
+    this.glossaryService.getDraftById(draftId).subscribe({
+      next: (draft: ReviewDraft) => {
+        this.selectDraft(draft);
+        // If edit mode is requested, trigger edit after a short delay to ensure UI is ready
+        if (editMode) {
+          setTimeout(() => {
+            this.triggerEditMode();
+          }, 100);
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load draft:', error);
+        // Navigate back to my-drafts without specific draft
+        this.router.navigate(['/my-drafts']);
+      }
+    });
+  }
+
+  private triggerEditMode(): void {
+    // This will be handled by the draft-detail-panel component
+    // We just need to set a flag that the panel can check
+    this.isEditMode = true;
+  }
+
+  private updateUrl(draft: ReviewDraft): void {
+    const url = this.urlHelper.buildDraftUrl(draft.id, draft, true);
+    this.location.replaceState(url);
   }
 
   requestReviewers(): void {
@@ -129,6 +189,63 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   onEditCancelled(): void {
     // Edit cancellation is handled by the draft-detail-panel component
+  }
+
+  /**
+   * Handle new entry case - when entryId is provided but no draft exists yet
+   */
+  private handleNewEntry(entryId: number): void {
+    this.state.newEntryId = entryId;
+    this.state.isNewEntryMode = true;
+    
+    // Load the entry details to show in the detail panel
+    this.glossaryService.getEntry(entryId).subscribe({
+      next: (entry) => {
+        this.state.newEntry = entry;
+      },
+      error: (error) => {
+        console.error('Failed to load entry:', error);
+        this.state.error = 'Failed to load entry details';
+      }
+    });
+  }
+
+  /**
+   * Handle creating the first draft for a new entry
+   */
+  onCreateFirstDraft(content: string): void {
+    if (!this.state.newEntryId || !this.state.currentUser) {
+      return;
+    }
+
+    this.entryDetailService.createNewDraft(
+      this.state.newEntryId,
+      content,
+      this.state.currentUser.id
+    ).subscribe({
+      next: (newDraft) => {
+        console.log('Successfully created first draft:', newDraft);
+        
+        // Refresh drafts list to include the new draft
+        this.loadMyDrafts();
+        
+        // Clear new entry mode
+        this.state.isNewEntryMode = false;
+        this.state.newEntryId = null;
+        this.state.newEntry = null;
+        
+        // Update URL to remove entryId parameter
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { entryId: null },
+          queryParamsHandling: 'merge'
+        });
+      },
+      error: (error) => {
+        console.error('Failed to create first draft:', error);
+        this.state.error = 'Failed to create draft: ' + (error.error?.detail || error.message);
+      }
+    });
   }
 
   getStatusSummaryItems(): StatusSummaryItem[] {

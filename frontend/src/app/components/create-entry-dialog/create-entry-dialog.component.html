@@ -1,0 +1,76 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create Entry</h2>
+      <button class="close-button" (click)="onClose()" type="button">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="onSave()" #entryForm="ngForm">
+        <div class="form-group">
+          <label for="termText">Term *</label>
+          <app-term-autocomplete
+            [selectedTermId]="selectedTermId"
+            [isOpen]="isOpen"
+            (termSelected)="onTermSelected($event)"
+          ></app-term-autocomplete>
+        </div>
+
+        <div class="form-group">
+          <label for="perspective">Perspective *</label>
+          <select
+            id="perspective"
+            [(ngModel)]="selectedPerspectiveId"
+            name="selectedPerspectiveId"
+            class="form-control"
+            required
+            [disabled]="isLoading || isLookingUp"
+            (change)="onPerspectiveSelected()"
+          >
+            <option value="">Select a perspective</option>
+            <option *ngFor="let perspective of perspectives" [value]="perspective.id">
+              {{ perspective.name }}
+              <span *ngIf="getPerspectiveStatusIcon(perspective.id)" 
+                    [title]="getPerspectiveStatusTooltip(perspective.id)"
+                    class="status-indicator">
+                {{ getPerspectiveStatusIcon(perspective.id) }}
+              </span>
+            </option>
+          </select>
+        </div>
+
+        <div class="perspective-status" *ngIf="selectedPerspectiveId && perspectiveStatuses[selectedPerspectiveId]">
+          <div class="status-info">
+            <span class="status-icon">{{ getPerspectiveStatusIcon(selectedPerspectiveId) }}</span>
+            <span class="status-text">{{ getPerspectiveStatusTooltip(selectedPerspectiveId) }}</span>
+          </div>
+        </div>
+
+        <div class="error-message" *ngIf="error">
+          {{ error }}
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onClose()"
+            [disabled]="isLoading"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!entryForm.form.valid || isLoading || isLookingUp"
+          >
+            <span *ngIf="isLoading" class="spinner"></span>
+            {{ isLoading ? "Creating..." : getButtonText() }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

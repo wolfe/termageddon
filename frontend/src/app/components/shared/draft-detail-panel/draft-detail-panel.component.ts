@@ -38,6 +38,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   @Input() requestingReview: boolean = false;
   @Input() entryId?: number;
   @Input() currentUserId?: number;
+  @Input() override isEditMode: boolean = false; // Input to trigger edit mode automatically
 
   // Additional outputs specific to draft detail panel
   @Output() approve = new EventEmitter<void>();
@@ -72,6 +73,14 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
         // Reset historical draft selection when switching drafts
         this.selectedHistoricalDraft = null;
       }
+    }
+    
+    // When isEditMode input changes to true, automatically trigger edit mode
+    if (changes['isEditMode'] && this.isEditMode && this.draft && this.canEdit) {
+      // Use a small delay to ensure the component is fully initialized
+      setTimeout(() => {
+        this.onEdit();
+      }, 100);
     }
   }
 

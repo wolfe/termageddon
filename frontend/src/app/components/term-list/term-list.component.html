@@ -75,7 +75,7 @@
         (click)="openCreateDialog()"
         class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
       >
-        + Create Term
+        + Create Entry
       </button>
     </div>
   </div>
@@ -137,10 +137,10 @@
     }
   </div>
 
-  <!-- Term Creation Dialog -->
-  <app-term-dialog
+  <!-- Entry Creation Dialog -->
+  <app-create-entry-dialog
     [isOpen]="showCreateDialog"
     (close)="onDialogClosed()"
-    (termCreated)="onTermCreated($event)"
-  ></app-term-dialog>
+    (entryCreated)="onTermCreated($event)"
+  ></app-create-entry-dialog>
 </div>

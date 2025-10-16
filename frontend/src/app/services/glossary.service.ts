@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
@@ -14,6 +15,9 @@ import {
   GroupedEntry,
   SystemConfig,
   CreateTermAndEntryRequest,
+  EntryLookupResponse,
+  CreateEntryRequest,
+  ReviewDraft,
 } from '../models';
 import { BaseService } from './base.service';
 
@@ -21,6 +25,10 @@ import { BaseService } from './base.service';
   providedIn: 'root',
 })
 export class GlossaryService extends BaseService {
+
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   // Perspective endpoints
   getPerspectives(): Observable<PaginatedResponse<Perspective>> {
@@ -36,7 +44,11 @@ export class GlossaryService extends BaseService {
   }
 
   // Term endpoints
-  getTerms(params?: any): Observable<PaginatedResponse<Term>> {
+  getTerms(search?: string, pageSize: number = 50): Observable<PaginatedResponse<Term>> {
+    const params: any = { page_size: pageSize };
+    if (search && search.trim()) {
+      params.search = search.trim();
+    }
     return this.getPaginated<Term>('/terms/', params);
   }
 
@@ -188,5 +200,46 @@ export class GlossaryService extends BaseService {
    */
   getCommentsWithDraftPositions(entryId: number): Observable<Comment[]> {
     return this.get<Comment[]>(`/comments/with_draft_positions/?entry=${entryId}`);
+  }
+
+  // New methods for entry enhancement
+
+  /**
+   * Look up or create an entry for term+perspective
+   */
+  lookupOrCreateEntry(request: CreateEntryRequest): Observable<EntryLookupResponse> {
+    return this.post<EntryLookupResponse>('/entries/lookup_or_create_entry/', request);
+  }
+
+  /**
+   * Get entry by ID with full draft information
+   */
+  getEntryById(entryId: number): Observable<Entry> {
+    return this.get<Entry>(`/entries/${entryId}/`);
+  }
+
+  /**
+   * Get draft by ID with full entry information
+   */
+  getDraftById(draftId: number): Observable<ReviewDraft> {
+    return this.get<ReviewDraft>(`/entry-drafts/${draftId}/?expand=entry`);
+  }
+
+
+  /**
+   * Get paginated terms from a URL (for load more functionality)
+   */
+  getTermsFromUrl(url: string): Observable<PaginatedResponse<Term>> {
+    return this.http.get<PaginatedResponse<Term>>(url);
+  }
+
+  /**
+   * Get all terms for autocomplete (deprecated - use getTerms instead)
+   */
+  getAllTerms(): Observable<Term[]> {
+    // Request a large page size to get all terms at once
+    return this.getPaginated<Term>('/terms/', { page_size: 1000 }).pipe(
+      map(response => response.results)
+    );
   }
 }

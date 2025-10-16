@@ -85,6 +85,16 @@ class TermViewSet(viewsets.ModelViewSet):
     ordering_fields = ["text", "text_normalized", "created_at"]
     ordering = ["text_normalized"]
 
+    def get_queryset(self):
+        """Override to ensure ALL terms are returned, including those with only drafts"""
+        # Start with all terms
+        queryset = Term.objects.all()
+        
+        # Apply any DRF filtering (search, ordering, etc.)
+        queryset = self.filter_queryset(queryset)
+        
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
@@ -110,7 +120,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-    filterset_fields = ["perspective", "is_official"]
+    filterset_fields = ["term", "perspective", "is_official"]
     search_fields = ["term__text", "term__text_normalized"]
     ordering_fields = ["term__text", "term__text_normalized", "created_at", "updated_at"]
     ordering = ["term__text_normalized"]
@@ -119,11 +129,12 @@ class EntryViewSet(viewsets.ModelViewSet):
         """Override queryset to handle additional filtering"""
         queryset = super().get_queryset()
         
-        # Only show entries with published drafts (approved and published)
-        queryset = queryset.filter(
-            active_draft__isnull=False,
-            active_draft__is_published=True
-        )
+        # For list view, only show entries with published drafts
+        if self.action == 'list':
+            queryset = queryset.filter(
+                active_draft__isnull=False,
+                active_draft__is_published=True
+            )
         
         # Handle author filtering
         author_id = self.request.query_params.get('author')
@@ -153,6 +164,34 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Enhanced retrieve to include all draft information"""
+        instance = self.get_object()
+        
+        # Get all drafts for this entry
+        from glossary.serializers import EntryDraftListSerializer
+        all_drafts = EntryDraft.objects.filter(
+            entry=instance,
+            is_deleted=False
+        ).select_related('author').prefetch_related('approvers').order_by('-timestamp')
+        
+        # Serialize the entry
+        serializer = self.get_serializer(instance)
+        entry_data = serializer.data
+        
+        # Add draft information
+        entry_data['all_drafts'] = EntryDraftListSerializer(all_drafts, many=True).data
+        entry_data['published_drafts'] = [
+            draft for draft in entry_data['all_drafts'] 
+            if draft['is_published']
+        ]
+        entry_data['unpublished_drafts'] = [
+            draft for draft in entry_data['all_drafts'] 
+            if not draft['is_published']
+        ]
+        
+        return Response(entry_data)
 
     @action(detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff])
     def endorse(self, request, pk=None):
@@ -196,10 +235,19 @@ class EntryViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def grouped_by_term(self, request):
         """Get entries grouped by term for simplified frontend display"""
-        queryset = self.get_queryset()
+        # Start with base queryset (no published filter yet)
+        queryset = Entry.objects.select_related(
+            "term", "perspective", "active_draft"
+        ).prefetch_related("active_draft__author", "active_draft__approvers")
         
-        # Apply same filtering as list view
+        # Apply DRF filtering first
         queryset = self.filter_queryset(queryset)
+        
+        # Then apply published-only filter for glossary display
+        queryset = queryset.filter(
+            active_draft__isnull=False,
+            active_draft__is_published=True
+        )
         
         # Group entries by term
         grouped_entries = {}
@@ -272,6 +320,128 @@ class EntryViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response(
                 {"detail": f"Failed to create term and entry: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=False, methods=["post"])
+    def lookup_or_create_entry(self, request):
+        """
+        Look up or create an entry for term+perspective.
+        Returns: {
+            'entry_id': int or None,
+            'has_published_draft': bool,
+            'has_unpublished_draft': bool,
+            'unpublished_draft_author_id': int or None,
+            'is_new': bool,
+            'term': {...},
+            'perspective': {...},
+            'entry': {...} or None
+        }
+        """
+        term_id = request.data.get('term_id')
+        term_text = request.data.get('term_text')
+        perspective_id = request.data.get('perspective_id')
+        
+        if not perspective_id:
+            return Response(
+                {"detail": "perspective_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if not term_id and not term_text:
+            return Response(
+                {"detail": "Either term_id or term_text is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        try:
+            # Get or create term
+            if term_id:
+                try:
+                    term = Term.objects.get(id=term_id)
+                except Term.DoesNotExist:
+                    return Response(
+                        {"detail": "Term not found."},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+            else:
+                # Look up existing term by text, or create new one
+                try:
+                    term = Term.objects.get(text=term_text)
+                except Term.DoesNotExist:
+                    # Create new term
+                    term = Term.objects.create(
+                        text=term_text,
+                        created_by=request.user
+                    )
+            
+            # Get perspective
+            try:
+                perspective = Perspective.objects.get(id=perspective_id)
+            except Perspective.DoesNotExist:
+                return Response(
+                    {"detail": "Perspective not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            
+            # Check if entry exists
+            try:
+                entry = Entry.objects.select_related('term', 'perspective', 'active_draft').get(
+                    term=term,
+                    perspective=perspective
+                )
+                is_new = False
+            except Entry.DoesNotExist:
+                # Create new entry
+                entry = Entry.objects.create(
+                    term=term,
+                    perspective=perspective,
+                    created_by=request.user
+                )
+                is_new = True
+            
+            # Check draft status
+            has_published_draft = False
+            has_unpublished_draft = False
+            unpublished_draft_author_id = None
+            
+            if entry.active_draft:
+                try:
+                    # Verify the active_draft actually exists and is accessible
+                    active_draft = EntryDraft.objects.get(id=entry.active_draft.id)
+                    if active_draft.is_published:
+                        has_published_draft = True
+                    else:
+                        has_unpublished_draft = True
+                        unpublished_draft_author_id = active_draft.author.id
+                except EntryDraft.DoesNotExist:
+                    # The active_draft points to a non-existent draft - fix the data
+                    entry.active_draft = None
+                    entry.save()
+                    # Log this data integrity issue
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Entry {entry.id} had active_draft pointing to non-existent draft. Fixed by setting to NULL.")
+            
+            # Serialize response
+            from glossary.serializers import TermSerializer, PerspectiveSerializer
+            
+            response_data = {
+                'entry_id': entry.id,
+                'has_published_draft': has_published_draft,
+                'has_unpublished_draft': has_unpublished_draft,
+                'unpublished_draft_author_id': unpublished_draft_author_id,
+                'is_new': is_new,
+                'term': TermSerializer(term).data,
+                'perspective': PerspectiveSerializer(perspective).data,
+                'entry': self.get_serializer(entry).data if not is_new else None
+            }
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response(
+                {"detail": f"Failed to lookup or create entry: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -412,6 +582,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(author=self.request.user)  # Own drafts
                 | Q(requested_reviewers=self.request.user)  # Requested to review
+                | Q(approvers=self.request.user)  # Already approved by user
                 | Q(entry__term__in=user_authored_terms)  # Related terms
             ).distinct()
 
@@ -498,6 +669,19 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """Save the updated draft"""
         serializer.save(updated_by=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Enhanced retrieve to include full entry information"""
+        instance = self.get_object()
+        
+        # Use review serializer if expand parameter includes entry
+        expand = request.query_params.get("expand", "")
+        if "entry" in expand:
+            serializer = EntryDraftReviewSerializer(instance)
+        else:
+            serializer = self.get_serializer(instance)
+        
+        return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def approve(self, request, pk=None):

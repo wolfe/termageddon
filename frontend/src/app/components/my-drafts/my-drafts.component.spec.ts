@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { of } from 'rxjs';
 import { MyDraftsComponent } from './my-drafts.component';
 import { ReviewService } from '../../services/review.service';
@@ -7,6 +9,7 @@ import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PanelCommonService } from '../../services/panel-common.service';
+import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewDraft, User, Comment } from '../../models';
 
 describe('MyDraftsComponent', () => {
@@ -17,6 +20,10 @@ describe('MyDraftsComponent', () => {
   let permissionService: jasmine.SpyObj<PermissionService>;
   let entryDetailService: jasmine.SpyObj<EntryDetailService>;
   let panelCommonService: jasmine.SpyObj<PanelCommonService>;
+  let urlHelperService: jasmine.SpyObj<UrlHelperService>;
+  let router: jasmine.SpyObj<Router>;
+  let location: jasmine.SpyObj<Location>;
+  let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
 
   beforeEach(async () => {
     const reviewSpy = jasmine.createSpyObj('ReviewService', [
@@ -55,6 +62,14 @@ describe('MyDraftsComponent', () => {
       'getLatestDraftsPerEntry',
       'filterDraftsBySearch'
     ]);
+    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', [
+      'buildDraftUrl'
+    ]);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
+    const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
+      queryParams: of({})
+    });
 
     // Setup PanelCommonService mocks BEFORE component creation
     panelCommonSpy.initializePanelState.and.returnValue({
@@ -221,7 +236,11 @@ describe('MyDraftsComponent', () => {
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
         { provide: EntryDetailService, useValue: entryDetailSpy },
-        { provide: PanelCommonService, useValue: panelCommonSpy }
+        { provide: PanelCommonService, useValue: panelCommonSpy },
+        { provide: UrlHelperService, useValue: urlHelperSpy },
+        { provide: Router, useValue: routerSpy },
+        { provide: Location, useValue: locationSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteSpy }
       ]
     }).compileComponents();
 
@@ -232,6 +251,10 @@ describe('MyDraftsComponent', () => {
     permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
     entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
     panelCommonService = TestBed.inject(PanelCommonService) as jasmine.SpyObj<PanelCommonService>;
+    urlHelperService = TestBed.inject(UrlHelperService) as jasmine.SpyObj<UrlHelperService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    location = TestBed.inject(Location) as jasmine.SpyObj<Location>;
+    activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
     
     // Ensure the component state is initialized
     fixture.detectChanges();

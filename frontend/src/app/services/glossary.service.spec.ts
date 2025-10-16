@@ -85,7 +85,7 @@ describe('GlossaryService', () => {
   });
 
   describe('Term operations', () => {
-    it('should get terms with filters', () => {
+    it('should get terms with search parameter', () => {
       const mockResponse: PaginatedResponse<Term> = {
         count: 1,
         next: null,
@@ -102,12 +102,11 @@ describe('GlossaryService', () => {
         ]
       };
 
-      const filters = { search: 'test', is_official: 'true' };
-      service.getTerms(filters).subscribe(response => {
+      service.getTerms('test').subscribe(response => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/terms/?search=test&is_official=true');
+      const req = httpMock.expectOne('http://localhost:8000/api/terms/?page_size=50&search=test');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });

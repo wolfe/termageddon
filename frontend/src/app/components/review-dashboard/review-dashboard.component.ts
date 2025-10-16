@@ -1,12 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { NotificationService } from '../../services/notification.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PanelCommonService, PanelState } from '../../services/panel-common.service';
+import { GlossaryService } from '../../services/glossary.service';
+import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
 import { SearchFilterBarComponent, FilterConfig } from '../shared/search-filter-bar/search-filter-bar.component';
@@ -40,6 +44,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   
   // Review-specific state
   showAll: boolean = false; // Show all drafts (not just requested ones)
+  isEditMode: boolean = false; // Track edit mode for auto-editing
 
   // Filter configuration
   filters: FilterConfig[] = [
@@ -68,7 +73,12 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private notificationService: NotificationService,
     private entryDetailService: EntryDetailService,
-    private panelCommonService: PanelCommonService
+    private panelCommonService: PanelCommonService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
+    private glossaryService: GlossaryService,
+    private urlHelper: UrlHelperService
   ) {
     this.state = this.panelCommonService.initializePanelState();
   }
@@ -77,6 +87,20 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     this.state.currentUser = this.permissionService.currentUser;
     this.loadPendingDrafts();
     this.panelCommonService.loadUsers(this.state);
+    
+    // Subscribe to route parameters
+    this.route.queryParams.subscribe(params => {
+      const draftId = params['draftId'];
+      const entryId = params['entryId'];
+      const editMode = params['edit'] === 'true';
+      
+      if (draftId) {
+        this.loadDraftById(+draftId);
+      } else if (entryId) {
+        // Handle entry-based navigation (for existing entries)
+        this.loadEntryById(+entryId, editMode);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -116,6 +140,51 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   selectDraft(draft: ReviewDraft): void {
     this.panelCommonService.selectDraft(draft, this.state);
+    this.updateUrl(draft);
+  }
+
+  private loadDraftById(draftId: number, editMode: boolean = false): void {
+    this.isEditMode = editMode;
+    this.glossaryService.getDraftById(draftId).subscribe({
+      next: (draft) => {
+        this.selectDraft(draft);
+        // If edit mode is requested, trigger edit after a short delay to ensure UI is ready
+        if (editMode) {
+          setTimeout(() => {
+            this.triggerEditMode();
+          }, 100);
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load draft:', error);
+        // If we get a 404, the draft doesn't exist - redirect to My Drafts to create one
+        if (error.status === 404) {
+          console.log('Draft not found, redirecting to My Drafts to create new draft');
+          this.router.navigate(['/my-drafts'], { 
+            queryParams: { entryId: this.getEntryIdFromUrl(), edit: 'true' } 
+          });
+        } else {
+          // For other errors, navigate back to review without specific draft
+          this.router.navigate(['/review']);
+        }
+      }
+    });
+  }
+
+  private triggerEditMode(): void {
+    // This will be handled by the draft-detail-panel component
+    // We just need to set a flag that the panel can check
+    this.isEditMode = true;
+  }
+
+  private getEntryIdFromUrl(): number | null {
+    const entryId = this.route.snapshot.queryParams['entryId'];
+    return entryId ? parseInt(entryId, 10) : null;
+  }
+
+  private updateUrl(draft: ReviewDraft): void {
+    const url = this.urlHelper.buildDraftUrl(draft.id, draft, true);
+    this.location.replaceState(url);
   }
 
 
@@ -242,6 +311,31 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   onEditCancelled(): void {
     // Edit cancellation is handled by the draft-detail-panel component
+  }
+
+  /**
+   * Load entry by ID and find the appropriate draft to show
+   */
+  private loadEntryById(entryId: number, editMode: boolean = false): void {
+    this.glossaryService.getEntry(entryId).subscribe({
+      next: (entry) => {
+        // Find the appropriate draft for this entry
+        if (entry.active_draft) {
+          // Load the active draft
+          this.loadDraftById(entry.active_draft.id, editMode);
+        } else {
+          // No active draft - redirect to My Drafts to create one
+          console.log('No active draft found, redirecting to My Drafts to create draft');
+          this.router.navigate(['/my-drafts'], { 
+            queryParams: { entryId, edit: 'true' } 
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load entry:', error);
+        this.state.error = 'Failed to load entry details';
+      }
+    });
   }
 
   getStatusSummaryItems(): StatusSummaryItem[] {

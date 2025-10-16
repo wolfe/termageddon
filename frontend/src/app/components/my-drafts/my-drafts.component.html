@@ -72,30 +72,41 @@
 
   <!-- Detail Panel -->
   <div detail>
-    <app-draft-detail-panel
-      [context]="'my-drafts'"
-      [draft]="state.selectedDraft"
-      [canEdit]="true"
-      [canPublishFlag]="true"
-      [canApproveFlag]="false"
-      [showPublishButton]="true"
-      [showRequestReviewButton]="true"
-      [showApproveButton]="false"
-      [isLoadingComments]="state.isLoadingComments"
-      [comments]="state.comments"
-      [requestingReview]="state.requestingReview"
-      [entryId]="state.selectedDraft?.entry?.id"
-      [currentUserId]="state.currentUser?.id"
-      (approve)="onApprove()"
-      (publish)="publishDraft(state.selectedDraft!)"
-      (requestReview)="requestReviewers()"
-      (editRequested)="onEditRequested()"
-      (editSaved)="onEditSaved()"
-      (editCancelled)="onEditCancelled()"
-      (commentAdded)="onCommentAdded($event)"
-      (commentResolved)="onCommentResolved($event)"
-      (commentUnresolved)="onCommentUnresolved($event)"
-    ></app-draft-detail-panel>
+    @if (state.isNewEntryMode && state.newEntry) {
+      <!-- New Entry Mode - Show fresh textbox for first draft -->
+      <app-new-entry-detail-panel
+        [entry]="state.newEntry"
+        [currentUserId]="state.currentUser?.id || null"
+        (createFirstDraft)="onCreateFirstDraft($event)"
+      ></app-new-entry-detail-panel>
+    } @else {
+      <!-- Normal Draft Mode -->
+      <app-draft-detail-panel
+        [context]="'my-drafts'"
+        [draft]="state.selectedDraft"
+        [canEdit]="true"
+        [canPublishFlag]="true"
+        [canApproveFlag]="false"
+        [showPublishButton]="true"
+        [showRequestReviewButton]="true"
+        [showApproveButton]="false"
+        [isLoadingComments]="state.isLoadingComments"
+        [comments]="state.comments"
+        [requestingReview]="state.requestingReview"
+        [entryId]="state.selectedDraft?.entry?.id"
+        [currentUserId]="state.currentUser?.id"
+        [isEditMode]="isEditMode"
+        (approve)="onApprove()"
+        (publish)="publishDraft(state.selectedDraft!)"
+        (requestReview)="requestReviewers()"
+        (editRequested)="onEditRequested()"
+        (editSaved)="onEditSaved()"
+        (editCancelled)="onEditCancelled()"
+        (commentAdded)="onCommentAdded($event)"
+        (commentResolved)="onCommentResolved($event)"
+        (commentUnresolved)="onCommentUnresolved($event)"
+      ></app-draft-detail-panel>
+    }
   </div>
 </app-master-detail-layout>
 

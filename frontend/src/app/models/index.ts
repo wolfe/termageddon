@@ -148,3 +148,21 @@ export interface CreateTermAndEntryRequest {
   perspective_id: number;
   is_official?: boolean;
 }
+
+export interface EntryLookupResponse {
+  entry_id: number | null;
+  has_published_draft: boolean;
+  has_unpublished_draft: boolean;
+  unpublished_draft_author_id: number | null;
+  is_new: boolean;
+  term: Term;
+  perspective: Perspective;
+  entry?: Entry;
+}
+
+export interface CreateEntryRequest {
+  term_id?: number;
+  term_text?: string;
+  perspective_id: number;
+  is_official?: boolean;
+}

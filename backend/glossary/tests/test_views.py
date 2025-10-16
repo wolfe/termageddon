@@ -925,3 +925,190 @@ class TestEntryDraftEligibilityFiltering:
         assert draft2.id not in result_ids  # Not related
         assert draft3.id in result_ids  # Requested reviewer
         assert draft4.id in result_ids  # Related term
+
+
+@pytest.mark.django_db
+class TestEntryLookupOrCreate:
+    """Test the lookup_or_create_entry endpoint"""
+
+    def test_lookup_existing_entry_with_term_id(self, authenticated_client):
+        """Test looking up existing entry with term_id"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["entry_id"] == entry.id
+        assert response.data["is_new"] is False
+        assert response.data["term"]["id"] == term.id
+        assert response.data["perspective"]["id"] == perspective.id
+        assert response.data["entry"] is not None
+
+    def test_lookup_existing_entry_with_term_text(self, authenticated_client):
+        """Test looking up existing entry with term_text"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_text": term.text,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["entry_id"] == entry.id
+        assert response.data["is_new"] is False
+        assert response.data["term"]["id"] == term.id
+        assert response.data["perspective"]["id"] == perspective.id
+        assert response.data["entry"] is not None
+
+    def test_create_new_entry_with_existing_term(self, authenticated_client):
+        """Test creating new entry with existing term"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["entry_id"] is not None
+        assert response.data["is_new"] is True
+        assert response.data["term"]["id"] == term.id
+        assert response.data["perspective"]["id"] == perspective.id
+        assert response.data["entry"] is None
+
+    def test_create_new_entry_with_new_term(self, authenticated_client):
+        """Test creating new entry with new term"""
+        perspective = PerspectiveFactory()
+        term_text = "New Term"
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_text": term_text,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["entry_id"] is not None
+        assert response.data["is_new"] is True
+        assert response.data["term"]["text"] == term_text
+        assert response.data["perspective"]["id"] == perspective.id
+        assert response.data["entry"] is None
+
+    def test_entry_with_published_draft(self, authenticated_client):
+        """Test entry with published draft"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        draft = EntryDraftFactory(entry=entry, is_published=True)
+        entry.active_draft = draft
+        entry.save()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["has_published_draft"] is True
+        assert response.data["has_unpublished_draft"] is False
+        assert response.data["unpublished_draft_author_id"] is None
+
+    def test_entry_with_unpublished_draft(self, authenticated_client):
+        """Test entry with unpublished draft"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        draft = EntryDraftFactory(entry=entry, is_published=False, author=authenticated_client.user)
+        entry.active_draft = draft
+        entry.save()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["has_published_draft"] is False
+        assert response.data["has_unpublished_draft"] is True
+        assert response.data["unpublished_draft_author_id"] == authenticated_client.user.id
+
+    def test_missing_perspective_id(self, authenticated_client):
+        """Test error when perspective_id is missing"""
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_text": "Test Term"
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "perspective_id is required" in response.data["detail"]
+
+    def test_missing_term_id_and_text(self, authenticated_client):
+        """Test error when both term_id and term_text are missing"""
+        perspective = PerspectiveFactory()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Either term_id or term_text is required" in response.data["detail"]
+
+    def test_term_not_found(self, authenticated_client):
+        """Test error when term_id references non-existent term"""
+        perspective = PerspectiveFactory()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": 99999,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "Term not found" in response.data["detail"]
+
+    def test_perspective_not_found(self, authenticated_client):
+        """Test error when perspective_id references non-existent perspective"""
+        term = TermFactory()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": 99999
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "Perspective not found" in response.data["detail"]

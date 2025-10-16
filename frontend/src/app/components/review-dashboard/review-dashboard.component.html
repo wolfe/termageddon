@@ -85,6 +85,7 @@
       [requestingReview]="state.requestingReview"
       [entryId]="state.selectedDraft?.entry?.id"
       [currentUserId]="state.currentUser?.id"
+      [isEditMode]="isEditMode"
       (approve)="approveDraft()"
       (publish)="publishDraft(state.selectedDraft!)"
       (requestReview)="requestReview(state.selectedDraft!)"

@@ -37,6 +37,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
   isLoadingDraftHistory: boolean = false;
   showVersionHistory: boolean = false;
   selectedHistoricalDraft: EntryDraft | null = null;
+  private shouldLoadEntries: boolean = true;
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -49,20 +50,27 @@ export class TermDetailComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.loadComments();
     this.loadDraftHistory();
-    // If we only have a single entry but no termEntries, try to load all entries for this term
-    if (this.entry && this.termEntries.length === 0) {
+    // Only load entries if we don't have any termEntries provided by parent
+    if (this.entry && this.termEntries.length === 0 && this.shouldLoadEntries) {
       this.loadAllEntriesForTerm();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     // When termEntries changes, update the selected entry to the first one if needed
-    if (changes['termEntries'] && this.termEntries.length > 0) {
-      // If the current entry is not in the new termEntries, switch to the first one
-      const currentEntryInNewTerm = this.termEntries.find(e => e.id === this.entry?.id);
-      if (!currentEntryInNewTerm) {
-        this.entry = this.termEntries[0];
-        this.loadComments();
+    if (changes['termEntries']) {
+      if (this.termEntries.length > 0) {
+        // If the current entry is not in the new termEntries, switch to the first one
+        const currentEntryInNewTerm = this.termEntries.find(e => e.id === this.entry?.id);
+        if (!currentEntryInNewTerm) {
+          this.entry = this.termEntries[0];
+          this.loadComments();
+        }
+        // If parent provided termEntries, don't load our own
+        this.shouldLoadEntries = false;
+      } else {
+        // If termEntries is empty, we can load our own
+        this.shouldLoadEntries = true;
       }
     }
     
@@ -70,9 +78,15 @@ export class TermDetailComponent implements OnInit, OnChanges {
     if (changes['entry'] && this.entry) {
       this.loadComments();
       this.loadDraftHistory();
-      if (this.termEntries.length === 0) {
+      // Only load entries if we don't have any termEntries provided by parent
+      if (this.termEntries.length === 0 && this.shouldLoadEntries) {
         this.loadAllEntriesForTerm();
       }
+    }
+
+    // When isEditMode changes to true, automatically initialize edit content
+    if (changes['isEditMode'] && this.isEditMode && this.entry) {
+      this.initializeEditContent();
     }
   }
 
@@ -140,12 +154,16 @@ export class TermDetailComponent implements OnInit, OnChanges {
   }
 
   onEditClick(): void {
+    this.initializeEditContent();
+    this.editRequested.emit();
+  }
+
+  private initializeEditContent(): void {
     // Use unified edit initialization method
     this.editContent = this.entryDetailService.initializeEditContentFromLatest(
       this.draftHistory,
       this.entry?.active_draft?.content || ''
     );
-    this.editRequested.emit();
   }
 
   onSaveEdit(): void {
