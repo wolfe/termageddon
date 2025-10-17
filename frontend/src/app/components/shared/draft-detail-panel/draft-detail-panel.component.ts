@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
 import { ReviewDraft, Comment, EntryDraft, User, Entry } from '../../../models';
 import { CommentThreadComponent } from '../../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
@@ -11,6 +12,7 @@ import { BaseEntryDetailComponent } from '../base-entry-detail.component';
 import { EntryDetailService } from '../../../services/entry-detail.service';
 import { PermissionService } from '../../../services/permission.service';
 import { NotificationService } from '../../../services/notification.service';
+import { NavigationService } from '../../../services/navigation.service';
 import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish as canPublishUtil, canApprove as canApproveUtil, getRemainingApprovals, getApprovalAccessLevel } from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
@@ -23,7 +25,7 @@ type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
   templateUrl: './draft-detail-panel.component.html',
   styleUrl: './draft-detail-panel.component.scss'
 })
-export class DraftDetailPanelComponent extends BaseEntryDetailComponent implements OnInit, OnChanges {
+export class DraftDetailPanelComponent extends BaseEntryDetailComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() context: DraftDisplayContext = 'review';
   @Input() draft: ReviewDraft | null = null;
   @Input() override canEdit: boolean = false;
@@ -40,6 +42,8 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   @Input() currentUserId?: number;
   @Input() override isEditMode: boolean = false; // Input to trigger edit mode automatically
 
+  @ViewChild('contentContainer') contentContainer?: ElementRef;
+
   // Additional outputs specific to draft detail panel
   @Output() approve = new EventEmitter<void>();
   @Output() publish = new EventEmitter<void>();
@@ -54,7 +58,8 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   constructor(
     entryDetailService: EntryDetailService,
     permissionService: PermissionService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private navigationService: NavigationService
   ) {
     super(entryDetailService, permissionService);
   }
@@ -63,6 +68,15 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
     // Set the entry from the draft for base class
     this.entry = this.draft;
     super.ngOnInit();
+  }
+
+  ngAfterViewInit(): void {
+    this.setupEntryLinkHandlers();
+  }
+
+  override ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -339,5 +353,27 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   // Implementation of abstract method from BaseEntryDetailComponent
   protected getDisplayDraft(): Entry | ReviewDraft | null {
     return this.draft;
+  }
+
+  private setupEntryLinkHandlers(): void {
+    // Add click listener to handle entry links
+    const handleLinkClick = (event: Event) => {
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'A' && target.hasAttribute('data-entry-id')) {
+        event.preventDefault();
+        const entryId = parseInt(target.getAttribute('data-entry-id') || '0', 10);
+        if (entryId) {
+          this.navigationService.navigateToEntry(entryId);
+        }
+      }
+    };
+
+    // Use native click handler on content area
+    document.addEventListener('click', handleLinkClick);
+    
+    // Clean up on destroy
+    this.destroy$.subscribe(() => {
+      document.removeEventListener('click', handleLinkClick);
+    });
   }
 }

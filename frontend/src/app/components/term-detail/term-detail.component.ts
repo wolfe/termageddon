@@ -1,12 +1,14 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Subject } from 'rxjs';
 import { Entry, Comment, EntryDraft } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { NotificationService } from '../../services/notification.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
+import { NavigationService } from '../../services/navigation.service';
 import { DefinitionFormComponent } from '../definition-form/definition-form.component';
 import { CommentThreadComponent } from '../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component';
@@ -21,13 +23,15 @@ import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
   templateUrl: './term-detail.component.html',
   styleUrl: './term-detail.component.scss',
 })
-export class TermDetailComponent implements OnInit, OnChanges {
+export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() entry!: Entry;
   @Input() termEntries: Entry[] = [];
   @Input() isEditMode: boolean = false;
   @Output() editRequested = new EventEmitter<void>();
   @Output() editCancelled = new EventEmitter<void>();
   @Output() editSaved = new EventEmitter<Entry>();
+
+  @ViewChild('contentContainer') contentContainer?: ElementRef;
 
   editContent: string = '';
   comments: Comment[] = [];
@@ -38,6 +42,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
   showVersionHistory: boolean = false;
   selectedHistoricalDraft: EntryDraft | null = null;
   private shouldLoadEntries: boolean = true;
+  private destroy$ = new Subject<void>();
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -45,6 +50,7 @@ export class TermDetailComponent implements OnInit, OnChanges {
     private glossaryService: GlossaryService,
     private notificationService: NotificationService,
     private entryDetailService: EntryDetailService,
+    private navigationService: NavigationService,
   ) {}
 
   ngOnInit(): void {
@@ -54,6 +60,15 @@ export class TermDetailComponent implements OnInit, OnChanges {
     if (this.entry && this.termEntries.length === 0 && this.shouldLoadEntries) {
       this.loadAllEntriesForTerm();
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.setupEntryLinkHandlers();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -356,5 +371,27 @@ export class TermDetailComponent implements OnInit, OnChanges {
     // Update the view to show the selected draft
     this.selectedHistoricalDraft = draft;
     console.log('Selected draft:', draft);
+  }
+
+  private setupEntryLinkHandlers(): void {
+    // Add click listener to handle entry links
+    const handleLinkClick = (event: Event) => {
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'A' && target.hasAttribute('data-entry-id')) {
+        event.preventDefault();
+        const entryId = parseInt(target.getAttribute('data-entry-id') || '0', 10);
+        if (entryId) {
+          this.navigationService.navigateToEntry(entryId);
+        }
+      }
+    };
+
+    // Use native click handler on content area
+    document.addEventListener('click', handleLinkClick);
+    
+    // Clean up on destroy
+    this.destroy$.subscribe(() => {
+      document.removeEventListener('click', handleLinkClick);
+    });
   }
 }

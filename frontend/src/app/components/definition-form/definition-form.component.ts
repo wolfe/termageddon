@@ -42,11 +42,12 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
           [{ 'list': 'ordered'}, { 'list': 'bullet' }],
           [{ 'indent': '-1'}, { 'indent': '+1' }],
           [{ 'align': [] }],
-          ['link', 'custom-link'],
+          ['link', 'custom-link'], // ✅ Keep custom-link in toolbar
           ['clean']
         ],
         handlers: {
           'custom-link': () => {
+            // Quill automatically preserves selection here!
             this.openEntryLinkSelector();
           }
         }
@@ -68,12 +69,6 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
   onEditorCreated(editor: any) {
     this.editor = editor;
     this.editorReady.emit(editor);
-
-    // Add custom link button to toolbar
-    const toolbar = editor.getModule('toolbar');
-    toolbar.addHandler('custom-link', () => {
-      this.openEntryLinkSelector();
-    });
 
     // Handle content changes
     editor.on('text-change', () => {
@@ -106,13 +101,33 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
   }
 
   insertLink(entryId: number, entryText: string) {
-    if (this.editor) {
-      const range = this.editor.getSelection();
-      if (range) {
-        this.editor.insertText(range.index, entryText, 'user');
-        this.editor.formatText(range.index, entryText.length, 'link', `#entry-${entryId}`);
-        this.editor.formatText(range.index, entryText.length, 'data-entry-id', entryId.toString());
-      }
+    if (!this.editor) return;
+    
+    const range = this.editor.getSelection(true); // true = force focus if needed
+    
+    if (range) {
+      // Insert link text with book icon
+      const linkText = `${entryText} 📖`;
+      this.editor.insertText(range.index, linkText, 'user');
+      this.editor.formatText(
+        range.index, 
+        linkText.length, 
+        'link', 
+        `/entry/${entryId}`
+      );
+      
+      // Add custom data attribute for navigation
+      setTimeout(() => {
+        const links = this.editor.root.querySelectorAll('a[href^="/entry/"]');
+        const lastLink = links[links.length - 1] as HTMLAnchorElement;
+        if (lastLink) {
+          lastLink.setAttribute('data-entry-id', entryId.toString());
+          lastLink.classList.add('entry-link');
+        }
+      }, 0);
+      
+      // Move cursor after inserted link
+      this.editor.setSelection(range.index + linkText.length);
     }
   }
 
@@ -121,6 +136,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
   }
 
   onEntrySelected(entry: Entry) {
+    console.log('onEntrySelected called with:', entry);
     this.insertLink(entry.id, entry.term.text);
     this.showEntryLinkSelector = false;
   }

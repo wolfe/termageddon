@@ -137,7 +137,7 @@
             Current Working Version
           </h3>
           <div class="prose max-w-none bg-blue-50 p-4 rounded-lg" data-testid="latest-draft-content">
-            <div [innerHTML]="getLatestDraftContent()"></div>
+            <div #contentContainer [innerHTML]="getLatestDraftContent()"></div>
           </div>
           @if (latestDraft) {
             <div class="mt-3 text-sm text-gray-600">
@@ -172,7 +172,7 @@
               Selected from Version History
             </h3>
             <div class="prose max-w-none bg-purple-50 p-4 rounded-lg" data-testid="historical-draft-content">
-              <div [innerHTML]="selectedHistoricalDraft.content"></div>
+              <div #contentContainer [innerHTML]="selectedHistoricalDraft.content"></div>
             </div>
             <div class="mt-3 text-sm text-gray-600">
               <p>
@@ -208,7 +208,7 @@
               Currently Live
             </h3>
             <div class="prose max-w-none bg-green-50 p-4 rounded-lg" data-testid="published-content">
-              <div [innerHTML]="getPublishedDraft()!.content"></div>
+              <div #contentContainer [innerHTML]="getPublishedDraft()!.content"></div>
             </div>
             <div class="mt-3 text-sm text-gray-600">
               <p>

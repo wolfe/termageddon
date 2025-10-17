@@ -106,13 +106,19 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
   }
 
   selectEntry(entry: Entry) {
+    console.log('selectEntry called with:', entry);
     this.selectedEntry = entry;
+    console.log('selectedEntry set to:', this.selectedEntry);
   }
 
   confirmSelection() {
+    console.log('confirmSelection called, selectedEntry:', this.selectedEntry);
     if (this.selectedEntry) {
+      console.log('Emitting entrySelected event with:', this.selectedEntry);
       this.entrySelected.emit(this.selectedEntry);
       this.close.emit();
+    } else {
+      console.log('No entry selected, cannot confirm');
     }
   }
 

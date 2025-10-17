@@ -77,6 +77,38 @@
   font-family: inherit;
 }
 
+/* Custom toolbar button for entry links */
+.ql-custom-link {
+  width: auto !important;
+  padding: 5px 8px !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  
+  &::before {
+    content: '📖';
+  }
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* Entry link styling in rendered content */
+.entry-link,
+a[data-entry-id] {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+}
+
 /* Scrollbar styling for Chrome */
 ::-webkit-scrollbar {
   width: 8px;
