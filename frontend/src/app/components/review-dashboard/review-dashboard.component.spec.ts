@@ -63,7 +63,10 @@ describe('ReviewDashboardComponent Integration Tests', () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
-      queryParams: of({})
+      queryParams: of({}),
+      snapshot: {
+        queryParams: {}
+      }
     });
 
     await TestBed.configureTestingModule({

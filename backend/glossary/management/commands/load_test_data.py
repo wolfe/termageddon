@@ -1,6 +1,6 @@
 import csv
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 from django.contrib.auth.models import User
@@ -227,7 +227,7 @@ class Command(BaseCommand):
             help="Path to CSV file (relative to project root)",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, **options):
         csv_path = options["csv_path"]
 
         # Navigate up from backend directory to project root

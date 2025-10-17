@@ -69,7 +69,10 @@ describe('MyDraftsComponent', () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
-      queryParams: of({})
+      queryParams: of({}),
+      snapshot: {
+        queryParams: {}
+      }
     });
 
     // Setup PanelCommonService mocks BEFORE component creation

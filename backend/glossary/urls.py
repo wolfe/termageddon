@@ -1,7 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from glossary import views
 from glossary.views import (
     CommentViewSet,
     CustomAuthToken,

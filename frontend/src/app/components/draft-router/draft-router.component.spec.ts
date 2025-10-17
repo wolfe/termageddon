@@ -27,7 +27,10 @@ describe('DraftRouterComponent', () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     mockActivatedRoute = {
-      params: of({ draftId: '1' })
+      params: of({ draftId: '1' }),
+      snapshot: {
+        queryParams: {}
+      }
     };
 
     await TestBed.configureTestingModule({

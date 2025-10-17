@@ -29,7 +29,8 @@ describe('EntryRouterComponent', () => {
     mockActivatedRoute = {
       params: of({ entryId: '1' }),
       snapshot: {
-        url: [{ path: 'entry' }, { path: '1' }]
+        url: [{ path: 'entry' }, { path: '1' }],
+        queryParams: {}
       }
     };
 
