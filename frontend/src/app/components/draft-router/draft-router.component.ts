@@ -37,9 +37,13 @@ export class DraftRouterComponent implements OnInit {
             // Determine target panel based on draft state and user
             const targetPanel = this.determineDraftPanel(draft, currentUser);
             
-            // Navigate to appropriate panel with draft selected
+            // Preserve original query parameters and add draftId
+            const currentQueryParams = this.route.snapshot.queryParams;
+            const queryParams = { ...currentQueryParams, draftId: draftId };
+            
+            // Navigate to appropriate panel with draft selected and original query params preserved
             this.router.navigate([targetPanel], {
-              queryParams: { draftId: draftId }
+              queryParams: queryParams
             });
           },
           error: (error) => {

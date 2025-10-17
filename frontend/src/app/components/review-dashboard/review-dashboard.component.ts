@@ -54,6 +54,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   selectedPerspectiveId: number | null = null;
   selectedAuthorId: number | null = null;
   selectedSortBy: string = '-published_at'; // Default to newest published first
+  pendingPerspectiveId: number | null = null; // Store perspective ID from URL if perspectives not loaded yet
   
   // Sort options
   sortOptions: SortOption[] = [
@@ -103,15 +104,21 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.state.currentUser = this.permissionService.currentUser;
     this.loadPerspectives();
-    this.loadPendingDrafts();
     this.panelCommonService.loadUsers(this.state);
     
-    // Subscribe to route parameters
+    // Subscribe to route parameters first
     this.route.queryParams.subscribe(params => {
       const draftId = params['draftId'];
       const entryId = params['entryId'];
       const editMode = params['edit'] === 'true';
       
+      // Handle filter parameters from URL
+      this.handleUrlFilterParams(params);
+      
+      // Always load the draft list first (for the left panel)
+      this.loadPendingDrafts();
+      
+      // Then handle specific draft/entry selection
       if (draftId) {
         this.loadDraftById(+draftId);
       } else if (entryId) {
@@ -132,6 +139,12 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (perspectives) => {
           this.perspectives = perspectives.results.map((p: any) => ({ id: p.id, name: p.name }));
+          
+          // Apply pending perspective ID from URL if available
+          if (this.pendingPerspectiveId) {
+            this.selectedPerspectiveId = this.pendingPerspectiveId;
+            this.pendingPerspectiveId = null;
+          }
         },
         error: (error) => {
           console.error('Error loading perspectives:', error);
@@ -148,11 +161,29 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       sortBy: this.selectedSortBy
     };
     
-    this.panelCommonService.loadDrafts(options, this.state);
+    this.panelCommonService.loadDrafts(options, this.state, this.route);
     
     // Execute callback after data is loaded
     if (callback) {
       callback();
+    }
+  }
+
+  private hasRelevantUrlParams(): boolean {
+    return this.panelCommonService.hasRelevantUrlParams(this.route);
+  }
+
+  private handleUrlFilterParams(params: any): void {
+    // Handle perspective filter parameter
+    if (params['perspective']) {
+      const perspectiveId = +params['perspective'];
+      if (this.perspectives.length > 0) {
+        // Perspectives already loaded, set filter
+        this.selectedPerspectiveId = perspectiveId;
+      } else {
+        // Perspectives not loaded yet, store for later
+        this.pendingPerspectiveId = perspectiveId;
+      }
     }
   }
 

@@ -53,6 +53,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   perspectives: Perspective[] = [];
   selectedPerspectiveId: number | null = null;
   selectedSortBy: string = '-timestamp'; // Default to newest edits first
+  pendingPerspectiveId: number | null = null; // Store perspective ID from URL if perspectives not loaded yet
   
   // Sort options
   sortOptions: SortOption[] = [
@@ -78,15 +79,21 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.state.currentUser = this.permissionService.currentUser;
     this.loadPerspectives();
-    this.loadMyDrafts();
     this.panelCommonService.loadUsers(this.state);
     
-    // Subscribe to route parameters
+    // Subscribe to route parameters first
     this.route.queryParams.subscribe(params => {
       const draftId = params['draftId'];
       const entryId = params['entryId'];
       const editMode = params['edit'] === 'true';
       
+      // Handle filter parameters from URL
+      this.handleUrlFilterParams(params);
+      
+      // Always load the draft list first (for the left panel)
+      this.loadMyDrafts();
+      
+      // Then handle specific draft/entry selection
       if (draftId) {
         this.loadDraftById(+draftId, editMode);
       } else if (entryId) {
@@ -107,6 +114,12 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (perspectives) => {
           this.perspectives = perspectives.results.map((p: any) => ({ id: p.id, name: p.name }));
+          
+          // Apply pending perspective ID from URL if available
+          if (this.pendingPerspectiveId) {
+            this.selectedPerspectiveId = this.pendingPerspectiveId;
+            this.pendingPerspectiveId = null;
+          }
         },
         error: (error) => {
           console.error('Error loading perspectives:', error);
@@ -121,12 +134,26 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
         perspectiveId: this.selectedPerspectiveId || undefined,
         sortBy: this.selectedSortBy
       },
-      this.state
+      this.state,
+      this.route
     );
-    
-    // Auto-select first draft if available
-    if (this.state.drafts.length > 0 && !this.state.selectedDraft) {
-      this.state.selectedDraft = this.state.drafts[0];
+  }
+
+  private hasRelevantUrlParams(): boolean {
+    return this.panelCommonService.hasRelevantUrlParams(this.route);
+  }
+
+  private handleUrlFilterParams(params: any): void {
+    // Handle perspective filter parameter
+    if (params['perspective']) {
+      const perspectiveId = +params['perspective'];
+      if (this.perspectives.length > 0) {
+        // Perspectives already loaded, set filter
+        this.selectedPerspectiveId = perspectiveId;
+      } else {
+        // Perspectives not loaded yet, store for later
+        this.pendingPerspectiveId = perspectiveId;
+      }
     }
   }
 

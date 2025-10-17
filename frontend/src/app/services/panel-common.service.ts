@@ -1,5 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, of, Subject, takeUntil, switchMap } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { ReviewDraft, Comment, User, PaginatedResponse, EntryDraft } from '../models';
 import { UnifiedDraftService, DraftLoadOptions, DraftActionOptions } from './unified-draft.service';
 import { EntryDetailService } from './entry-detail.service';
@@ -384,11 +385,14 @@ export class PanelCommonService implements OnDestroy {
   }
 
   /**
-   * Generic draft loading with unified service
+   * Generic draft loading with unified service and centralized selection preservation
    */
-  loadDrafts(options: DraftLoadOptions = {}, state: PanelState, postProcessFn?: (drafts: ReviewDraft[]) => ReviewDraft[]): void {
+  loadDrafts(options: DraftLoadOptions = {}, state: PanelState, route: ActivatedRoute, postProcessFn?: (drafts: ReviewDraft[]) => ReviewDraft[]): void {
     state.loading = true;
     state.error = null;
+
+    // Store current selection before loading
+    const currentSelectedDraftId = state.selectedDraft?.id;
 
     this.unifiedDraftService.loadDrafts(options)
       .pipe(takeUntil(this.destroy$))
@@ -397,6 +401,9 @@ export class PanelCommonService implements OnDestroy {
           state.drafts = postProcessFn ? postProcessFn(response.results) : response.results;
           state.filteredDrafts = [...state.drafts];
           state.loading = false;
+          
+          // Apply centralized selection preservation logic
+          this.preserveSelectionAfterLoad(state, currentSelectedDraftId, route);
         },
         error: (error) => {
           console.error('Error loading drafts:', error);
@@ -404,6 +411,45 @@ export class PanelCommonService implements OnDestroy {
           state.loading = false;
         },
       });
+  }
+
+  /**
+   * Centralized selection preservation logic
+   */
+  private preserveSelectionAfterLoad(state: PanelState, currentSelectedDraftId: number | undefined, route: ActivatedRoute): void {
+    // Check if we have a specific draftId in URL that we should preserve
+    const urlParams = route.snapshot.queryParams;
+    const urlDraftId = urlParams['draftId'] ? +urlParams['draftId'] : null;
+    
+    if (currentSelectedDraftId && state.drafts.length > 0) {
+      const stillExists = state.drafts.some(draft => draft.id === currentSelectedDraftId);
+      if (stillExists) {
+        // Keep the current selection
+        state.selectedDraft = state.drafts.find(draft => draft.id === currentSelectedDraftId) || null;
+      } else if (urlDraftId && currentSelectedDraftId === urlDraftId) {
+        // The specific draft from URL is not in the filtered results
+        // This can happen when filters exclude it - keep the selection anyway
+        // The draft was already loaded by loadDraftById, so keep it selected
+        // Don't change the selection
+      } else {
+        // Current selection no longer exists and it's not the URL draft - clear selection
+        state.selectedDraft = null;
+      }
+    } else if (state.drafts.length > 0 && !state.selectedDraft && urlDraftId) {
+      // No previous selection but we have a specific draftId in URL - don't auto-select
+      // The loadDraftById will handle the selection
+    } else if (state.drafts.length > 0 && !state.selectedDraft && !urlDraftId) {
+      // No previous selection and no specific draftId - auto-select first draft
+      state.selectedDraft = state.drafts[0];
+    }
+  }
+
+  /**
+   * Check if URL has parameters that indicate specific selection intent
+   */
+  hasRelevantUrlParams(route: ActivatedRoute): boolean {
+    const params = route.snapshot.queryParams;
+    return !!(params['draftId'] || params['entryId'] || params['edit']);
   }
 
   /**
