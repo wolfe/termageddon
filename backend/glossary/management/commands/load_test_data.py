@@ -213,12 +213,10 @@ class Command(BaseCommand):
                     approvers = random.sample(potential_approvers, 2)
                     draft.approvers.add(*approvers)
                     
-                    # If published, mark as published and set as active draft
+                    # If published, mark as published
                     if approval_state == 'published':
                         draft.is_published = True
                         draft.save()
-                        entry.active_draft = draft
-                        entry.save()
 
             self.stdout.write(self.style.SUCCESS(f"\nData loading complete!"))
             self.stdout.write(self.style.SUCCESS(f"Created {len(users)} users"))

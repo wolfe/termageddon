@@ -150,11 +150,10 @@ class EntryAdmin(admin.ModelAdmin):
     actions = [soft_delete_selected, undelete_selected, mark_official_selected]
 
     def active_draft_display(self, obj):
-        if obj.active_draft:
-            return format_html(
-                '<span style="color: green;">draft{}</span>', obj.active_draft.id
-            )
-        return format_html('<span style="color: red;">None</span>')
+        draft = obj.get_latest_draft()
+        if draft:
+            return format_html('<span style="color: green;">draft{}</span>', draft.id)
+        return format_html('<span style="color: gray;">No drafts</span>')
 
     active_draft_display.short_description = "Active Draft"
 

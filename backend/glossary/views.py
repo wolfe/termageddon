@@ -112,8 +112,8 @@ class EntryViewSet(viewsets.ModelViewSet):
     """ViewSet for Entry model"""
 
     queryset = Entry.objects.select_related(
-        "term", "perspective", "active_draft"
-    ).prefetch_related("active_draft__author", "active_draft__approvers")
+        "term", "perspective"
+    )
     permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
@@ -132,14 +132,13 @@ class EntryViewSet(viewsets.ModelViewSet):
         # For list view, only show entries with published drafts
         if self.action == 'list':
             queryset = queryset.filter(
-                active_draft__isnull=False,
-                active_draft__is_published=True
-            )
+                drafts__is_published=True
+            ).distinct()
         
         # Handle author filtering
         author_id = self.request.query_params.get('author')
         if author_id:
-            queryset = queryset.filter(active_draft__author_id=author_id)
+            queryset = queryset.filter(drafts__author_id=author_id).distinct()
         
         # Handle date range filtering
         created_after = self.request.query_params.get('created_after')
@@ -209,15 +208,16 @@ class EntryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Check if there's an active draft to endorse
-        if not entry.active_draft:
+        # Check if there's a published draft to endorse
+        published_draft = entry.get_latest_published_draft()
+        if not published_draft:
             return Response(
-                {"detail": "No active draft to endorse."},
+                {"detail": "No published draft to endorse."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Check if already endorsed
-        if entry.active_draft.is_endorsed:
+        if published_draft.is_endorsed:
             return Response(
                 {"detail": "This draft is already endorsed."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -225,9 +225,9 @@ class EntryViewSet(viewsets.ModelViewSet):
 
         # Endorse the draft
         from django.utils import timezone
-        entry.active_draft.endorsed_by = request.user
-        entry.active_draft.endorsed_at = timezone.now()
-        entry.active_draft.save()
+        published_draft.endorsed_by = request.user
+        published_draft.endorsed_at = timezone.now()
+        published_draft.save()
 
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
@@ -237,17 +237,16 @@ class EntryViewSet(viewsets.ModelViewSet):
         """Get entries grouped by term for simplified frontend display"""
         # Start with base queryset (no published filter yet)
         queryset = Entry.objects.select_related(
-            "term", "perspective", "active_draft"
-        ).prefetch_related("active_draft__author", "active_draft__approvers")
+            "term", "perspective"
+        )
         
         # Apply DRF filtering first
         queryset = self.filter_queryset(queryset)
         
         # Then apply published-only filter for glossary display
         queryset = queryset.filter(
-            active_draft__isnull=False,
-            active_draft__is_published=True
-        )
+            drafts__is_published=True
+        ).distinct()
         
         # Group entries by term
         grouped_entries = {}
@@ -386,7 +385,7 @@ class EntryViewSet(viewsets.ModelViewSet):
             
             # Check if entry exists
             try:
-                entry = Entry.objects.select_related('term', 'perspective', 'active_draft').get(
+                entry = Entry.objects.select_related('term', 'perspective').get(
                     term=term,
                     perspective=perspective
                 )
@@ -405,23 +404,13 @@ class EntryViewSet(viewsets.ModelViewSet):
             has_unpublished_draft = False
             unpublished_draft_author_id = None
             
-            if entry.active_draft:
-                try:
-                    # Verify the active_draft actually exists and is accessible
-                    active_draft = EntryDraft.objects.get(id=entry.active_draft.id)
-                    if active_draft.is_published:
-                        has_published_draft = True
-                    else:
-                        has_unpublished_draft = True
-                        unpublished_draft_author_id = active_draft.author.id
-                except EntryDraft.DoesNotExist:
-                    # The active_draft points to a non-existent draft - fix the data
-                    entry.active_draft = None
-                    entry.save()
-                    # Log this data integrity issue
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.warning(f"Entry {entry.id} had active_draft pointing to non-existent draft. Fixed by setting to NULL.")
+            latest_draft = entry.get_latest_draft()
+            if latest_draft:
+                if latest_draft.is_published:
+                    has_published_draft = True
+                else:
+                    has_unpublished_draft = True
+                    unpublished_draft_author_id = latest_draft.author.id
             
             # Serialize response
             from glossary.serializers import TermSerializer, PerspectiveSerializer
@@ -591,9 +580,9 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         if "entry" in expand:
             # Include entry with term and perspective for review
             queryset = queryset.select_related(
-                "entry__term", "entry__perspective", "entry__active_draft", "replaces_draft", "replaces_draft__author"
+                "entry__term", "entry__perspective", "replaces_draft", "replaces_draft__author"
             ).prefetch_related(
-                "entry__active_draft__author", "entry__active_draft__approvers", "replaces_draft__approvers", "replaces_draft__requested_reviewers"
+                "replaces_draft__approvers", "replaces_draft__requested_reviewers"
             )
 
         return queryset

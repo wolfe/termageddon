@@ -171,9 +171,7 @@ class TestEntryViewSet:
         # Create entries with published versions
         entries = EntryFactory.create_batch(3)
         for entry in entries:
-            version = EntryDraftFactory(entry=entry, is_published=True)
-            entry.active_draft = version
-            entry.save()
+            EntryDraftFactory(entry=entry, is_published=True)
             
         url = reverse("entry-list")
         response = authenticated_client.get(url)
@@ -189,12 +187,8 @@ class TestEntryViewSet:
         entry2 = EntryFactory(perspective=perspective2)
         
         # Create published versions
-        version1 = EntryDraftFactory(entry=entry1, is_published=True)
-        version2 = EntryDraftFactory(entry=entry2, is_published=True)
-        entry1.active_draft = version1
-        entry2.active_draft = version2
-        entry1.save()
-        entry2.save()
+        EntryDraftFactory(entry=entry1, is_published=True)
+        EntryDraftFactory(entry=entry2, is_published=True)
 
         url = reverse("entry-list")
         response = authenticated_client.get(url, {"perspective": perspective1.id})
@@ -212,10 +206,6 @@ class TestEntryViewSet:
         e2 = EntryFactory(term=term, perspective=perspective2)
         v1 = EntryDraftFactory(entry=e1, is_published=True)
         v2 = EntryDraftFactory(entry=e2, is_published=True)
-        e1.active_draft = v1
-        e2.active_draft = v2
-        e1.save()
-        e2.save()
 
         url = reverse("entry-grouped-by-term")
         response = authenticated_client.get(url)
@@ -241,8 +231,6 @@ class TestEntryViewSet:
         entry = EntryFactory(perspective=perspective)
         # Create a published version
         version = EntryDraftFactory(entry=entry, is_published=True)
-        entry.active_draft = version
-        entry.save()
         PerspectiveCuratorFactory(user=authenticated_client.user, perspective=perspective)
 
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
@@ -258,8 +246,6 @@ class TestEntryViewSet:
         entry = EntryFactory()
         # Create a published version
         version = EntryDraftFactory(entry=entry, is_published=True)
-        entry.active_draft = version
-        entry.save()
         
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
         response = authenticated_client.post(url)
@@ -328,19 +314,6 @@ class TestEntryDraftViewSet:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "cannot approve their own" in response.data["detail"]
-
-    def test_approved_draft_becomes_active(self, authenticated_client):
-        """Test that draft becomes active when approved"""
-        entry = EntryFactory()
-        draft = EntryDraftFactory(entry=entry)
-
-        # Add 2 approvals (MIN_APPROVALS = 2)
-        user1 = UserFactory()
-        user2 = UserFactory()
-        draft.approvers.add(user1, user2)
-
-        entry.refresh_from_db()
-        assert entry.active_draft == draft
 
 
 @pytest.mark.django_db
@@ -563,7 +536,6 @@ class TestEntryDraftUpdateWorkflow:
         draft.refresh_from_db()
         entry.refresh_from_db()
         assert draft.is_published is True
-        assert entry.active_draft == draft
 
     def test_publish_unapproved_draft_fails(self, authenticated_client):
         """Test publishing an unapproved draft fails"""
@@ -1018,9 +990,7 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        draft = EntryDraftFactory(entry=entry, is_published=True)
-        entry.active_draft = draft
-        entry.save()
+        EntryDraftFactory(entry=entry, is_published=True)
         
         url = reverse("entry-lookup-or-create-entry")
         data = {
@@ -1040,9 +1010,7 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        draft = EntryDraftFactory(entry=entry, is_published=False, author=authenticated_client.user)
-        entry.active_draft = draft
-        entry.save()
+        EntryDraftFactory(entry=entry, is_published=False, author=authenticated_client.user)
         
         url = reverse("entry-lookup-or-create-entry")
         data = {

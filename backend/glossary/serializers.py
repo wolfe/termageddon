@@ -254,7 +254,7 @@ class EntryListSerializer(serializers.ModelSerializer):
 
     term = TermSerializer(read_only=True)
     perspective = PerspectiveSerializer(read_only=True)
-    active_draft = EntryDraftListSerializer(read_only=True)
+    active_draft = serializers.SerializerMethodField()
     can_user_endorse = serializers.SerializerMethodField()
     can_user_edit = serializers.SerializerMethodField()
 
@@ -285,6 +285,13 @@ class EntryListSerializer(serializers.ModelSerializer):
         
         # Perspective curators can endorse entries in their perspective
         return request.user.is_perspective_curator_for(obj.perspective.id)
+
+    def get_active_draft(self, obj):
+        """Get the latest draft for this entry"""
+        draft = obj.get_latest_draft()
+        if draft:
+            return EntryDraftListSerializer(draft).data
+        return None
 
     def get_can_user_edit(self, obj):
         """Check if current user can edit this entry"""

@@ -231,47 +231,6 @@ class TestEntryDraftModel:
 
 
 @pytest.mark.django_db
-class TestEntryDraftSignal:
-    """Test the auto-activation signal for EntryDraft"""
-
-    def test_approved_version_becomes_active(self):
-        """Test that approved versions automatically become active"""
-        entry = EntryFactory()
-        version = EntryDraftFactory(entry=entry)
-
-        # Add 2 approvers to meet MIN_APPROVALS=2
-        user1 = UserFactory()
-        user2 = UserFactory()
-        version.approvers.add(user1, user2)
-
-        # Refresh entry from DB
-        entry.refresh_from_db()
-        assert entry.active_draft == version
-
-    def test_newer_approved_version_replaces_older(self):
-        """Test that newer approved versions replace older ones"""
-        entry = EntryFactory()
-        version1 = EntryDraftFactory(entry=entry)
-
-        # Approve version1
-        user1 = UserFactory()
-        user2 = UserFactory()
-        version1.approvers.add(user1, user2)
-        entry.refresh_from_db()
-        assert entry.active_draft == version1
-
-        # Create and approve version2
-        # Need different author since only 1 unapproved version per author
-        different_author = UserFactory()
-        version2 = EntryDraftFactory(entry=entry, author=different_author)
-        user3 = UserFactory()
-        version2.approvers.add(user1, user3)
-
-        entry.refresh_from_db()
-        assert entry.active_draft == version2
-
-
-@pytest.mark.django_db
 class TestCommentModel:
     """Test the Comment model"""
 

@@ -127,13 +127,6 @@ class Entry(AuditedModel):
 
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="entries")
     perspective = models.ForeignKey(Perspective, on_delete=models.CASCADE, related_name="entries")
-    active_draft = models.ForeignKey(
-        "EntryDraft",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="active_entries",
-    )
     is_official = models.BooleanField(
         default=False,
         help_text="Indicates this is the official definition for this term in this perspective",
@@ -159,6 +152,14 @@ class Entry(AuditedModel):
             raise ValidationError(
                 "An entry for this term and perspective combination already exists."
             )
+
+    def get_latest_draft(self):
+        """Get the most recent draft by timestamp (any state)"""
+        return self.drafts.order_by('-timestamp').first()
+
+    def get_latest_published_draft(self):
+        """Get the most recent published draft"""
+        return self.drafts.filter(is_published=True).order_by('-timestamp').first()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -266,10 +267,6 @@ class EntryDraft(AuditedModel):
         if self.is_published:
             raise ValidationError("Draft is already published.")
 
-        # Set this draft as the active draft
-        self.entry.active_draft = self
-        self.entry.save()
-
         # Mark as published
         self.is_published = True
         self.save()
@@ -374,27 +371,3 @@ def is_perspective_curator_for(user, perspective_id):
 
 # Monkey-patch the User model to add the helper method
 User.add_to_class("is_perspective_curator_for", is_perspective_curator_for)
-
-
-# Signal to auto-activate approved drafts
-from django.db.models.signals import m2m_changed
-from django.dispatch import receiver
-
-
-@receiver(m2m_changed, sender=EntryDraft.approvers.through)
-def auto_activate_approved_draft(instance, action, **kwargs):
-    """
-    When an EntryDraft is approved (approval_count >= MIN_APPROVALS),
-    check if entry.active_draft is None or older than this draft,
-    and if so, set this as entry.active_draft
-    """
-    if action == "post_add":
-        if instance.is_approved:
-            entry = instance.entry
-            # Check if this should become the active draft
-            if entry.active_draft is None or (
-                entry.active_draft
-                and instance.timestamp > entry.active_draft.timestamp
-            ):
-                # Use update() to avoid triggering save signal loops
-                Entry.objects.filter(pk=entry.pk).update(active_draft=instance)
