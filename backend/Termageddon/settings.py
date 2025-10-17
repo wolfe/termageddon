@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "django_filters",
+    "drf_spectacular",
     # Local apps
     "glossary",
 ]
@@ -166,6 +167,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # Temporarily disable rate limiting for testing
     # "DEFAULT_THROTTLE_CLASSES": [
     #     "rest_framework.throttling.AnonRateThrottle",
@@ -179,3 +181,13 @@ REST_FRAMEWORK = {
 
 # Custom Settings
 MIN_APPROVALS = 2  # For EntryVersion approval workflow
+
+# drf-spectacular Settings
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Termageddon API",
+    "DESCRIPTION": "API for managing glossary terms, entries, and drafts with approval workflow",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
+}

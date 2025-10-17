@@ -229,6 +229,18 @@ class EntryDraft(AuditedModel):
         """Check if this draft has been endorsed by a perspective curator"""
         return self.endorsed_by is not None
 
+    @property
+    def status(self):
+        """Return human-readable status string for this draft"""
+        if self.is_published:
+            return 'Published'
+        elif self.is_approved:
+            return 'Approved'
+        elif self.approval_count >= settings.MIN_APPROVALS:
+            return 'Ready to Publish'
+        else:
+            return f'Pending ({self.approval_count}/{settings.MIN_APPROVALS})'
+
     def clean(self):
         """Validate draft data"""
         super().clean()

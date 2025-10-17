@@ -147,6 +147,7 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
     is_endorsed = serializers.BooleanField(read_only=True)
+    status = serializers.CharField(read_only=True)
     can_approve_by_current_user = serializers.SerializerMethodField()
     approval_status_for_user = serializers.SerializerMethodField()
     user_has_approved = serializers.SerializerMethodField()
@@ -171,6 +172,7 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
             "approval_count",
             "is_published",
             "is_endorsed",
+            "status",
             "can_approve_by_current_user",
             "approval_status_for_user",
             "user_has_approved",
@@ -332,6 +334,7 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
     is_approved = serializers.BooleanField(read_only=True)
     approval_count = serializers.IntegerField(read_only=True)
     is_published = serializers.BooleanField(read_only=True)
+    status = serializers.CharField(read_only=True)
     replaces_draft = serializers.PrimaryKeyRelatedField(read_only=True)
     can_approve_by_current_user = serializers.SerializerMethodField()
     approval_status_for_user = serializers.SerializerMethodField()
@@ -353,6 +356,7 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
             "approval_count",
             "is_published",
             "published_at",
+            "status",
             "replaces_draft",
             "can_approve_by_current_user",
             "approval_status_for_user",
@@ -363,6 +367,89 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
             "updated_at",
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
+
+
+class EntryDetailSerializer(serializers.ModelSerializer):
+    """Entry serializer for detailed retrieve operations with draft information"""
+
+    term = TermSerializer(read_only=True)
+    perspective = PerspectiveSerializer(read_only=True)
+    active_draft = serializers.SerializerMethodField()
+    all_drafts = serializers.SerializerMethodField()
+    published_drafts = serializers.SerializerMethodField()
+    unpublished_drafts = serializers.SerializerMethodField()
+    can_user_endorse = serializers.SerializerMethodField()
+    can_user_edit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Entry
+        fields = [
+            "id",
+            "term",
+            "perspective",
+            "active_draft",
+            "all_drafts",
+            "published_drafts",
+            "unpublished_drafts",
+            "is_official",
+            "can_user_endorse",
+            "can_user_edit",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def get_can_user_endorse(self, obj):
+        """Check if current user can endorse this entry"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Staff can always endorse
+        if request.user.is_staff:
+            return True
+        
+        # Perspective curators can endorse entries in their perspective
+        return request.user.is_perspective_curator_for(obj.perspective.id)
+
+    def get_active_draft(self, obj):
+        """Get the latest draft for this entry"""
+        draft = obj.get_latest_draft()
+        if draft:
+            return EntryDraftListSerializer(draft, context=self.context).data
+        return None
+
+    def get_all_drafts(self, obj):
+        """Get all drafts for this entry"""
+        from glossary.models import EntryDraft
+        drafts = EntryDraft.objects.filter(
+            entry=obj,
+            is_deleted=False
+        ).select_related('author').prefetch_related('approvers').order_by('-timestamp')
+        return EntryDraftListSerializer(drafts, many=True, context=self.context).data
+
+    def get_published_drafts(self, obj):
+        """Get published drafts for this entry"""
+        all_drafts = self.get_all_drafts(obj)
+        return [draft for draft in all_drafts if draft['is_published']]
+
+    def get_unpublished_drafts(self, obj):
+        """Get unpublished drafts for this entry"""
+        all_drafts = self.get_all_drafts(obj)
+        return [draft for draft in all_drafts if not draft['is_published']]
+
+    def get_can_user_edit(self, obj):
+        """Check if current user can edit this entry"""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Staff can always edit
+        if request.user.is_staff:
+            return True
+        
+        # Perspective curators can edit entries in their perspective
+        return request.user.is_perspective_curator_for(obj.perspective.id)
 
 
 class EntryUpdateSerializer(serializers.ModelSerializer):

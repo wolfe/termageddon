@@ -171,14 +171,14 @@ export class GlossaryService extends BaseService {
    * Get entries grouped by term for simplified glossary display
    */
   getEntriesGroupedByTerm(filters?: any): Observable<GroupedEntry[]> {
-    return this.get<GroupedEntry[]>('/entries/grouped_by_term/', filters);
+    return this.get<GroupedEntry[]>('/entries/grouped-by-term/', filters);
   }
 
   /**
    * Create a term and entry atomically in a single request
    */
   createTermAndEntry(request: CreateTermAndEntryRequest): Observable<Entry> {
-    return this.post<Entry>('/entries/create_with_term/', request);
+    return this.post<Entry>('/entries/create-with-term/', request);
   }
 
   /**
@@ -208,7 +208,7 @@ export class GlossaryService extends BaseService {
    * Look up or create an entry for term+perspective
    */
   lookupOrCreateEntry(request: CreateEntryRequest): Observable<EntryLookupResponse> {
-    return this.post<EntryLookupResponse>('/entries/lookup_or_create_entry/', request);
+    return this.post<EntryLookupResponse>('/entries/lookup-or-create-entry/', request);
   }
 
   /**

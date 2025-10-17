@@ -1,6 +1,12 @@
 import { ReviewDraft } from '../models';
 
 export function getDraftStatus(draft: ReviewDraft): string {
+  // Use backend-provided status if available, otherwise fall back to calculation
+  if (draft.status) {
+    return draft.status;
+  }
+  
+  // Fallback calculation for backward compatibility
   if (draft.is_published) {
     return 'Published';
   } else if (draft.is_approved) {
@@ -13,6 +19,21 @@ export function getDraftStatus(draft: ReviewDraft): string {
 }
 
 export function getDraftStatusClass(draft: ReviewDraft): string {
+  // Use backend status to determine CSS class if available
+  if (draft.status) {
+    const status = draft.status.toLowerCase();
+    if (status.includes('published')) {
+      return 'status-published';
+    } else if (status.includes('approved')) {
+      return 'status-approved';
+    } else if (status.includes('ready')) {
+      return 'status-ready';
+    } else {
+      return 'status-pending';
+    }
+  }
+  
+  // Fallback calculation
   if (draft.is_published) {
     return 'status-published';
   } else if (draft.is_approved) {
@@ -28,7 +49,11 @@ export function getApprovalStatusText(draft: ReviewDraft): string {
   if (draft.is_approved) {
     return 'Approved';
   }
-  return `${draft.approval_count}/2 Approvals`;
+  
+  // Use backend remaining_approvals if available, otherwise fall back to hardcoded value
+  const totalApprovals = draft.remaining_approvals ? 
+    draft.remaining_approvals + draft.approval_count : 2;
+  return `${draft.approval_count}/${totalApprovals} Approvals`;
 }
 
 export function getEligibilityText(draft: ReviewDraft): string {
@@ -85,6 +110,12 @@ export function getApprovalReason(draft: ReviewDraft, currentUserId?: number): s
 }
 
 export function canPublish(draft: ReviewDraft): boolean {
+  // Use backend status to determine if draft can be published if available
+  if (draft.status) {
+    return draft.status.includes('Ready to Publish') || draft.status.includes('Approved');
+  }
+  
+  // Fallback calculation
   return draft.is_approved && !draft.is_published;
 }
 

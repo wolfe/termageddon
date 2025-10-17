@@ -75,7 +75,7 @@ export class ReviewService {
     reviewerIds: number[],
   ): Observable<EntryDraft> {
     return this.http.post<EntryDraft>(
-      `${this.API_URL}/entry-drafts/${draftId}/request_review/`,
+      `${this.API_URL}/entry-drafts/${draftId}/request-review/`,
       {
         reviewer_ids: reviewerIds,
       },

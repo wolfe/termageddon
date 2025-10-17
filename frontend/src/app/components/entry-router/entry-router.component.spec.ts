@@ -325,4 +325,172 @@ describe('EntryRouterComponent', () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/glossary']);
     });
   });
+
+  describe('new entry route handling', () => {
+    beforeEach(() => {
+      mockActivatedRoute.snapshot.url = [{ path: 'entry' }, { path: 'new' }];
+      mockActivatedRoute.queryParams = of({ term: 'New Test Term', perspective: '1' });
+      
+      const glossaryServiceExtended = mockGlossaryService as any;
+      glossaryServiceExtended.getTerms = jasmine.createSpy('getTerms');
+      glossaryServiceExtended.getEntries = jasmine.createSpy('getEntries');
+    });
+
+    it('should handle new entry route with existing term', () => {
+      const mockTermsResponse = {
+        count: 1,
+        results: [{
+          id: 5,
+          text: 'New Test Term',
+          text_normalized: 'new test term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        }]
+      };
+
+      const mockEntriesResponse = {
+        count: 0,
+        results: []
+      };
+
+      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+
+      component.ngOnInit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/my-drafts'], {
+        queryParams: {
+          newEntryTerm: 'New Test Term',
+          newEntryPerspective: 1,
+          edit: 'true'
+        }
+      });
+    });
+
+    it('should handle new entry route with brand new term', () => {
+      const mockTermsResponse = {
+        count: 0,
+        results: []
+      };
+
+      const mockEntriesResponse = {
+        count: 0,
+        results: []
+      };
+
+      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+
+      component.ngOnInit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/my-drafts'], {
+        queryParams: {
+          newEntryTerm: 'New Test Term',
+          newEntryPerspective: 1,
+          edit: 'true'
+        }
+      });
+    });
+
+    it('should redirect to existing entry when duplicate detected', () => {
+      const mockTermsResponse = {
+        count: 1,
+        results: [{
+          id: 5,
+          text: 'New Test Term',
+          text_normalized: 'new test term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        }]
+      };
+
+      const mockEntriesResponse = {
+        count: 1,
+        results: [{
+          id: 10,
+          term: mockTermsResponse.results[0],
+          perspective: {
+            id: 1,
+            name: 'Test Perspective',
+            description: '',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        }]
+      };
+
+      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+
+      component.ngOnInit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/entry', 10]);
+    });
+
+    it('should navigate to glossary when missing required query params', () => {
+      mockActivatedRoute.queryParams = of({ term: 'New Test Term' }); // Missing perspective
+
+      component.ngOnInit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/glossary']);
+    });
+
+    it('should use term_text parameter when term ID is not available', () => {
+      const mockTermsResponse = {
+        count: 0,
+        results: []
+      };
+
+      const mockEntriesResponse = {
+        count: 0,
+        results: []
+      };
+
+      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+
+      component.ngOnInit();
+
+      // Verify that getEntries was called with term_text instead of term ID
+      expect((mockGlossaryService as any).getEntries).toHaveBeenCalledWith({
+        perspective: 1,
+        term_text: 'New Test Term'
+      });
+    });
+
+    it('should use term ID parameter when term exists', () => {
+      const mockTermsResponse = {
+        count: 1,
+        results: [{
+          id: 5,
+          text: 'New Test Term',
+          text_normalized: 'new test term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        }]
+      };
+
+      const mockEntriesResponse = {
+        count: 0,
+        results: []
+      };
+
+      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+
+      component.ngOnInit();
+
+      // Verify that getEntries was called with term ID
+      expect((mockGlossaryService as any).getEntries).toHaveBeenCalledWith({
+        perspective: 1,
+        term: 5
+      });
+    });
+  });
 });

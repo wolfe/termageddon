@@ -276,6 +276,7 @@ describe('GlossaryService', () => {
           is_published: false,
           is_endorsed: false,
           approval_count: 0,
+          status: 'Pending (0/2)',
           timestamp: '2024-01-02T00:00:00Z',
           created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
@@ -299,6 +300,7 @@ describe('GlossaryService', () => {
           is_published: true,
           is_endorsed: false,
           approval_count: 2,
+          status: 'Published',
           timestamp: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -418,7 +420,7 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup_or_create_entry/');
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(request);
       req.flush(mockResponse);
@@ -460,7 +462,7 @@ describe('GlossaryService', () => {
         expect(response.entry).toBeUndefined();
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup_or_create_entry/');
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(request);
       req.flush(mockResponse);
@@ -479,7 +481,7 @@ describe('GlossaryService', () => {
         }
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup_or_create_entry/');
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
       expect(req.request.method).toBe('POST');
       req.flush({ detail: 'Invalid request' }, { status: 400, statusText: 'Bad Request' });
     });
@@ -524,6 +526,7 @@ describe('GlossaryService', () => {
         is_published: false,
         is_endorsed: false,
         approval_count: 0,
+        status: 'Pending (0/2)',
         timestamp: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',

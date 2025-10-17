@@ -1323,3 +1323,67 @@ class TestEntryTermTextFiltering:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
         assert response.data["results"][0]["id"] == entry1.id
+
+    def test_filter_entries_by_term_text_partial_match_not_supported(self, authenticated_client):
+        """Test that term_text only matches exact text, not partial"""
+        term = TermFactory(text="Complete Term Name")
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        EntryDraftFactory(entry=entry, is_published=True)
+        
+        url = reverse("entry-list")
+        
+        # Partial match should return nothing (use search parameter for partial matching)
+        response = authenticated_client.get(url, {"term_text": "Complete"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 0
+        
+        # Exact match should work
+        response = authenticated_client.get(url, {"term_text": "Complete Term Name"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+
+    def test_filter_entries_term_text_vs_search_parameter(self, authenticated_client):
+        """Test that term_text (exact) and search (partial) work differently"""
+        term1 = TermFactory(text="API Gateway")
+        term2 = TermFactory(text="API")
+        perspective = PerspectiveFactory()
+        
+        entry1 = EntryFactory(term=term1, perspective=perspective)
+        entry2 = EntryFactory(term=term2, perspective=perspective)
+        
+        EntryDraftFactory(entry=entry1, is_published=True)
+        EntryDraftFactory(entry=entry2, is_published=True)
+        
+        url = reverse("entry-list")
+        
+        # search parameter should find both (partial match)
+        response = authenticated_client.get(url, {"search": "API"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 2
+        
+        # term_text should find only exact match
+        response = authenticated_client.get(url, {"term_text": "API"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["term"]["text"] == "API"
+
+    def test_filter_entries_by_term_text_unicode_normalized(self, authenticated_client):
+        """Test that term_text handles unicode normalization properly"""
+        # Create term with accented characters
+        term = TermFactory(text="Café")
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        EntryDraftFactory(entry=entry, is_published=True)
+        
+        url = reverse("entry-list")
+        
+        # Search with normalized version (no accents)
+        response = authenticated_client.get(url, {"term_text": "cafe"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        
+        # Search with accented version
+        response = authenticated_client.get(url, {"term_text": "Café"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1

@@ -24,6 +24,7 @@ from glossary.serializers import (
     PerspectiveSerializer,
     EntryCreateSerializer,
     EntryListSerializer,
+    EntryDetailSerializer,
     EntryUpdateSerializer,
     EntryDraftCreateSerializer,
     EntryDraftListSerializer,
@@ -114,6 +115,7 @@ class EntryViewSet(viewsets.ModelViewSet):
     queryset = Entry.objects.select_related(
         "term", "perspective"
     )
+    serializer_class = EntryListSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
@@ -171,33 +173,17 @@ class EntryViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
 
+    def get_serializer_class(self):
+        """Use EntryDetailSerializer for retrieve operations"""
+        if self.action == 'retrieve':
+            return EntryDetailSerializer
+        return super().get_serializer_class()
+
     def retrieve(self, request, *args, **kwargs):
         """Enhanced retrieve to include all draft information"""
         instance = self.get_object()
-        
-        # Get all drafts for this entry
-        from glossary.serializers import EntryDraftListSerializer
-        all_drafts = EntryDraft.objects.filter(
-            entry=instance,
-            is_deleted=False
-        ).select_related('author').prefetch_related('approvers').order_by('-timestamp')
-        
-        # Serialize the entry
         serializer = self.get_serializer(instance)
-        entry_data = serializer.data
-        
-        # Add draft information
-        entry_data['all_drafts'] = EntryDraftListSerializer(all_drafts, many=True).data
-        entry_data['published_drafts'] = [
-            draft for draft in entry_data['all_drafts'] 
-            if draft['is_published']
-        ]
-        entry_data['unpublished_drafts'] = [
-            draft for draft in entry_data['all_drafts'] 
-            if not draft['is_published']
-        ]
-        
-        return Response(entry_data)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff])
     def endorse(self, request, pk=None):
@@ -239,7 +225,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], url_path="grouped-by-term")
     def grouped_by_term(self, request):
         """Get entries grouped by term for simplified frontend display"""
         # Start with base queryset (no published filter yet)
@@ -282,7 +268,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         
         return Response(result)
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="create-with-term")
     def create_with_term(self, request):
         """Create a term and entry atomically in a single request"""
         from django.db import transaction
@@ -336,7 +322,7 @@ class EntryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="lookup-or-create-entry")
     def lookup_or_create_entry(self, request):
         """
         Look up or create an entry for term+perspective.
@@ -717,7 +703,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], url_path="request-review")
     def request_review(self, request, pk=None):
         """Request specific users to review this draft"""
         draft = self.get_object()
