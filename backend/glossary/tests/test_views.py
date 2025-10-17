@@ -288,7 +288,7 @@ class TestEntryDraftViewSet:
     def test_list_with_eligibility_and_search(self, authenticated_client):
         """Test eligibility and search filters"""
         other_user = UserFactory()
-        # Create drafts: one by other user with specific content, one by current user
+        # Create drafts: one by other user with specific term, one by current user
         draft1 = EntryDraftFactory(author=other_user, content="absorption of energy")
         draft2 = EntryDraftFactory(author=authenticated_client.user, content="other term")
 
@@ -300,9 +300,9 @@ class TestEntryDraftViewSet:
         assert draft1.id in ids
         assert draft2.id not in ids
 
-        # search should find by content substring
+        # search should find by term name (not content)
         # include show_all=true so relevance filter does not hide results
-        resp2 = authenticated_client.get(url, {"search": "absorption", "show_all": "true"})
+        resp2 = authenticated_client.get(url, {"search": draft1.entry.term.text, "show_all": "true"})
         assert resp2.status_code == status.HTTP_200_OK
         ids2 = [v["id"] for v in resp2.data["results"]]
         assert draft1.id in ids2

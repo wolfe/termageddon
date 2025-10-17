@@ -8,16 +8,40 @@
     <app-status-summary [items]="getStatusSummaryItems()"></app-status-summary>
 
     <!-- Search and Filters -->
-    <app-search-filter-bar
-      placeholder="Search terms, perspectives, authors..."
-      [searchTerm]="state.searchTerm"
-      [filters]="filters"
-      [loading]="state.loading"
-      (searchTermChange)="state.searchTerm = $event"
-      (search)="onSearch()"
-      (filterChanged)="onFilterChanged($event)"
-      (cleared)="state.searchTerm = ''; onSearch()"
-    ></app-search-filter-bar>
+    <div class="mb-4">
+      <app-search-filter-bar
+        placeholder="Search terms..."
+        [searchTerm]="state.searchTerm"
+        [filters]="filters"
+        [loading]="state.loading"
+        [showPerspectiveFilter]="true"
+        [perspectives]="perspectives"
+        [selectedPerspectiveId]="selectedPerspectiveId"
+        [showAuthorFilter]="true"
+        [authors]="state.allUsers"
+        [selectedAuthorId]="selectedAuthorId"
+        [showSortOptions]="true"
+        [sortOptions]="sortOptions"
+        [selectedSortBy]="selectedSortBy"
+        (searchTermChange)="state.searchTerm = $event"
+        (search)="onSearch()"
+        (filterChanged)="onFilterChanged($event)"
+        (perspectiveChanged)="onPerspectiveChanged($event)"
+        (authorChanged)="onAuthorChanged($event)"
+        (sortChanged)="onSortChanged($event)"
+        (cleared)="state.searchTerm = ''; onSearch()"
+      ></app-search-filter-bar>
+      
+      <!-- Create Entry Button -->
+      <div class="mt-3">
+        <button
+          (click)="openCreateDialog()"
+          class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
+        >
+          + Create Entry
+        </button>
+      </div>
+    </div>
 
     <!-- Loading State -->
     <div *ngIf="state.loading" class="three-panel-loading">
@@ -110,3 +134,10 @@
   (confirm)="onReviewerSelectionConfirmed($event)"
 >
 </app-reviewer-selector-dialog>
+
+<!-- Create Entry Dialog -->
+<app-create-entry-dialog
+  [isOpen]="showCreateDialog"
+  (close)="onDialogClosed()"
+  (entryCreated)="onTermCreated($event)"
+></app-create-entry-dialog>

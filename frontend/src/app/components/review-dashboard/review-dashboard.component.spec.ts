@@ -34,7 +34,8 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       'publishDraft'
     ]);
     const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'getUsers'
+      'getUsers',
+      'getPerspectives'
     ]);
     const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
       currentUser$: {
@@ -166,6 +167,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       component.state.selectedDraft = mockDraft;
       entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
       reviewService.getDraftsCanApprove.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+      glossaryService.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
 
       // Simulate edit saved event
       component.onEditSaved();
@@ -227,11 +229,12 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       };
 
       reviewService.getDraftsCanApprove.and.returnValue(of(mockResponse));
+      glossaryService.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
 
       // Simulate edit saved event
       component.onEditSaved();
 
-      expect(reviewService.getDraftsCanApprove).toHaveBeenCalledWith(false);
+      expect(reviewService.getDraftsCanApprove).toHaveBeenCalledWith(false, undefined, '-published_at');
       expect(component.state.drafts).toEqual(mockResponse.results);
       expect(component.state.filteredDrafts).toEqual(mockResponse.results);
     });

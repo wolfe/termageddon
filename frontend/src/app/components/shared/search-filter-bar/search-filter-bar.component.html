@@ -1,6 +1,6 @@
-<div class="search-filter-bar">
+<div class="search-filter-bar space-y-3">
   <!-- Search Input -->
-  <div class="relative mb-3">
+  <div class="relative">
     <input
       type="text"
       [(ngModel)]="searchTerm"
@@ -24,7 +24,54 @@
     }
   </div>
 
-  <!-- Filters -->
+  <!-- Unified Filters -->
+  <div class="filters-container space-y-3">
+    <!-- Perspective Filter -->
+    @if (showPerspectiveFilter) {
+      <select
+        [value]="selectedPerspectiveId || ''"
+        (change)="onPerspectiveChange($event)"
+        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+      >
+        <option value="">All Perspectives</option>
+        @for (perspective of perspectives; track perspective.id) {
+          <option [value]="perspective.id">{{ perspective.name }}</option>
+        }
+      </select>
+    }
+
+    <!-- Author Filter -->
+    @if (showAuthorFilter) {
+      <select
+        [value]="selectedAuthorId || ''"
+        (change)="onAuthorChange($event)"
+        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+      >
+        <option value="">All Authors</option>
+        @for (author of authors; track author.id) {
+          <option [value]="author.id">{{ author.username }}</option>
+        }
+      </select>
+    }
+
+    <!-- Sort Options -->
+    @if (showSortOptions) {
+      <div class="flex items-center space-x-2">
+        <label class="text-sm text-gray-600">Sort by:</label>
+        <select
+          [value]="selectedSortBy"
+          (change)="onSortChange($event)"
+          class="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
+        >
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  <!-- Legacy Filters -->
   @if (filters.length > 0) {
     <div class="filters-container">
       @for (filter of filters; track filter.id) {

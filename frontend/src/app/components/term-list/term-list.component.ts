@@ -31,7 +31,7 @@ export class TermListComponent implements OnInit {
   searchControl = new FormControl('');
   perspectiveControl = new FormControl('');
   authorControl = new FormControl('');
-  sortControl = new FormControl('term__text_normalized');
+  sortControl = new FormControl('-published_at'); // Default to newest published first
 
   constructor(private glossaryService: GlossaryService) {}
 
@@ -127,7 +127,7 @@ export class TermListComponent implements OnInit {
     this.searchControl.setValue('');
     this.perspectiveControl.setValue('');
     this.authorControl.setValue('');
-    this.sortControl.setValue('term__text_normalized');
+    this.sortControl.setValue('-published_at');
   }
 
   getFilterCount(): number {

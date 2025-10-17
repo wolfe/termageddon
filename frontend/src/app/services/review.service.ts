@@ -42,9 +42,18 @@ export class ReviewService {
   /**
    * Get pending drafts (unapproved) only
    */
-  getPendingDrafts(): Observable<PaginatedResponse<ReviewDraft>> {
+  getPendingDrafts(perspectiveId?: number, sortBy?: string): Observable<PaginatedResponse<ReviewDraft>> {
+    const params = new URLSearchParams();
+    params.set('is_approved', 'false');
+    params.set('expand', 'entry,entry.term,entry.perspective');
+    if (perspectiveId) {
+      params.set('perspective', perspectiveId.toString());
+    }
+    if (sortBy) {
+      params.set('ordering', sortBy);
+    }
     return this.http.get<PaginatedResponse<ReviewDraft>>(
-      `${this.API_URL}/entry-drafts/?is_approved=false&expand=entry,entry.term,entry.perspective`,
+      `${this.API_URL}/entry-drafts/?${params.toString()}`,
     );
   }
 
@@ -115,12 +124,18 @@ export class ReviewService {
   /**
    * Get drafts that the current user can approve
    */
-  getDraftsCanApprove(showAll: boolean = false): Observable<PaginatedResponse<ReviewDraft>> {
+  getDraftsCanApprove(showAll: boolean = false, perspectiveId?: number, sortBy?: string): Observable<PaginatedResponse<ReviewDraft>> {
     const params = new URLSearchParams();
     params.set('eligibility', 'requested_or_approved');
     params.set('expand', 'entry,entry.term,entry.perspective');
     if (showAll) {
       params.set('show_all', 'true');
+    }
+    if (perspectiveId) {
+      params.set('perspective', perspectiveId.toString());
+    }
+    if (sortBy) {
+      params.set('ordering', sortBy);
     }
     
     return this.http.get<PaginatedResponse<ReviewDraft>>(
@@ -131,25 +146,43 @@ export class ReviewService {
   /**
    * Get user's own drafts
    */
-  getOwnDrafts(): Observable<PaginatedResponse<ReviewDraft>> {
+  getOwnDrafts(perspectiveId?: number, sortBy?: string): Observable<PaginatedResponse<ReviewDraft>> {
+    const params = new URLSearchParams();
+    params.set('eligibility', 'own');
+    params.set('expand', 'entry,entry.term,entry.perspective');
+    if (perspectiveId) {
+      params.set('perspective', perspectiveId.toString());
+    }
+    if (sortBy) {
+      params.set('ordering', sortBy);
+    }
     return this.http.get<PaginatedResponse<ReviewDraft>>(
-      `${this.API_URL}/entry-drafts/?eligibility=own&expand=entry,entry.term,entry.perspective`,
+      `${this.API_URL}/entry-drafts/?${params.toString()}`,
     );
   }
 
   /**
    * Get drafts already approved by current user
    */
-  getApprovedDrafts(): Observable<PaginatedResponse<ReviewDraft>> {
+  getApprovedDrafts(perspectiveId?: number, sortBy?: string): Observable<PaginatedResponse<ReviewDraft>> {
+    const params = new URLSearchParams();
+    params.set('eligibility', 'already_approved');
+    params.set('expand', 'entry,entry.term,entry.perspective');
+    if (perspectiveId) {
+      params.set('perspective', perspectiveId.toString());
+    }
+    if (sortBy) {
+      params.set('ordering', sortBy);
+    }
     return this.http.get<PaginatedResponse<ReviewDraft>>(
-      `${this.API_URL}/entry-drafts/?eligibility=already_approved&expand=entry,entry.term,entry.perspective`,
+      `${this.API_URL}/entry-drafts/?${params.toString()}`,
     );
   }
 
   /**
    * Search drafts with full-text search
    */
-  searchDrafts(searchTerm: string, showAll: boolean = false, eligibility?: string): Observable<PaginatedResponse<ReviewDraft>> {
+  searchDrafts(searchTerm: string, showAll: boolean = false, eligibility?: string, perspectiveId?: number, sortBy?: string): Observable<PaginatedResponse<ReviewDraft>> {
     const params = new URLSearchParams();
     params.set('search', searchTerm);
     params.set('expand', 'entry,entry.term,entry.perspective');
@@ -158,6 +191,12 @@ export class ReviewService {
     }
     if (eligibility) {
       params.set('eligibility', eligibility);
+    }
+    if (perspectiveId) {
+      params.set('perspective', perspectiveId.toString());
+    }
+    if (sortBy) {
+      params.set('ordering', sortBy);
     }
     return this.http.get<PaginatedResponse<ReviewDraft>>(
       `${this.API_URL}/entry-drafts/?${params.toString()}`,

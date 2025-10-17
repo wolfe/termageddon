@@ -10,6 +10,8 @@ export interface DraftLoadOptions {
   searchTerm?: string;
   authorId?: number;
   entryId?: number;
+  perspectiveId?: number;
+  sortBy?: string;
 }
 
 export interface DraftActionOptions {
@@ -32,11 +34,11 @@ export class UnifiedDraftService {
    * Unified method to load drafts based on context and options
    */
   loadDrafts(options: DraftLoadOptions = {}): Observable<PaginatedResponse<ReviewDraft>> {
-    const { eligibility, showAll = false, searchTerm, authorId, entryId } = options;
+    const { eligibility, showAll = false, searchTerm, authorId, entryId, perspectiveId, sortBy } = options;
 
     // Handle search requests
     if (searchTerm) {
-      return this.reviewService.searchDrafts(searchTerm, showAll, eligibility);
+      return this.reviewService.searchDrafts(searchTerm, showAll, eligibility, perspectiveId, sortBy);
     }
 
     // Handle specific entry drafts
@@ -49,16 +51,16 @@ export class UnifiedDraftService {
       return this.reviewService.getDraftsByAuthor(authorId);
     }
 
-    // Handle eligibility-based loading
+    // Handle eligibility-based loading with new filters
     switch (eligibility) {
       case 'own':
-        return this.reviewService.getOwnDrafts();
+        return this.reviewService.getOwnDrafts(perspectiveId, sortBy);
       case 'requested_or_approved':
-        return this.reviewService.getDraftsCanApprove(showAll);
+        return this.reviewService.getDraftsCanApprove(showAll, perspectiveId, sortBy);
       case 'already_approved':
-        return this.reviewService.getApprovedDrafts();
+        return this.reviewService.getApprovedDrafts(perspectiveId, sortBy);
       default:
-        return this.reviewService.getPendingDrafts();
+        return this.reviewService.getPendingDrafts(perspectiveId, sortBy);
     }
   }
 

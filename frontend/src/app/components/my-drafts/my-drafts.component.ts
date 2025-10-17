@@ -11,11 +11,12 @@ import { GlossaryService } from '../../services/glossary.service';
 import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
-import { SearchFilterBarComponent } from '../shared/search-filter-bar/search-filter-bar.component';
+import { SearchFilterBarComponent, Perspective, SortOption } from '../shared/search-filter-bar/search-filter-bar.component';
 import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
 import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
 import { NewEntryDetailPanelComponent } from '../shared/new-entry-detail-panel/new-entry-detail-panel.component';
 import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
+import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
 import { ReviewDraft, PaginatedResponse, User, Comment } from '../../models';
 import { getDraftStatus, getDraftStatusClass, canPublish } from '../../utils/draft-status.util';
 import { getInitials } from '../../utils/user.util';
@@ -32,7 +33,8 @@ import { getInitials } from '../../utils/user.util';
     DraftListItemComponent,
     DraftDetailPanelComponent,
     NewEntryDetailPanelComponent,
-    StatusSummaryComponent
+    StatusSummaryComponent,
+    CreateEntryDialogComponent
   ],
   templateUrl: './my-drafts.component.html',
   styleUrls: ['./my-drafts.component.scss'],
@@ -45,6 +47,20 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   
   // My Drafts-specific state
   isEditMode: boolean = false; // Track edit mode for auto-editing
+  showCreateDialog: boolean = false;
+
+  // Unified filter state
+  perspectives: Perspective[] = [];
+  selectedPerspectiveId: number | null = null;
+  selectedSortBy: string = '-timestamp'; // Default to newest edits first
+  
+  // Sort options
+  sortOptions: SortOption[] = [
+    { value: '-published_at', label: 'Newest Published' },
+    { value: '-timestamp', label: 'Newest Edits' },
+    { value: 'entry__term__text_normalized', label: 'Term A-Z' },
+    { value: '-entry__term__text_normalized', label: 'Term Z-A' }
+  ];
 
   constructor(
     private permissionService: PermissionService,
@@ -61,6 +77,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.state.currentUser = this.permissionService.currentUser;
+    this.loadPerspectives();
     this.loadMyDrafts();
     this.panelCommonService.loadUsers(this.state);
     
@@ -84,9 +101,26 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  loadPerspectives(): void {
+    this.glossaryService.getPerspectives()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (perspectives) => {
+          this.perspectives = perspectives.results.map((p: any) => ({ id: p.id, name: p.name }));
+        },
+        error: (error) => {
+          console.error('Error loading perspectives:', error);
+        }
+      });
+  }
+
   loadMyDrafts(): void {
     this.panelCommonService.loadDrafts(
-      { eligibility: 'own' },
+      { 
+        eligibility: 'own',
+        perspectiveId: this.selectedPerspectiveId || undefined,
+        sortBy: this.selectedSortBy
+      },
       this.state
     );
     
@@ -99,7 +133,9 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   onSearch(): void {
     this.panelCommonService.onSearch(this.state.searchTerm, this.state, { 
-      eligibility: 'own' 
+      eligibility: 'own',
+      perspectiveId: this.selectedPerspectiveId || undefined,
+      sortBy: this.selectedSortBy
     });
   }
 
@@ -257,5 +293,35 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       { count: publishableCount, label: 'ready to publish', color: '#10b981' },
       { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' }
     ];
+  }
+
+  // Filter handlers
+  onPerspectiveChanged(perspectiveId: number | null): void {
+    this.selectedPerspectiveId = perspectiveId;
+    this.loadMyDrafts();
+  }
+
+  onSortChanged(sortBy: string): void {
+    this.selectedSortBy = sortBy;
+    this.loadMyDrafts();
+  }
+
+  // Create Entry functionality
+  openCreateDialog(): void {
+    this.showCreateDialog = true;
+  }
+
+  onDialogClosed(): void {
+    this.showCreateDialog = false;
+  }
+
+  onTermCreated(entry: any): void {
+    this.showCreateDialog = false;
+    // Refresh the drafts list to show the new entry
+    this.loadMyDrafts();
+  }
+
+  navigateToGlossary(): void {
+    this.router.navigate(['/glossary']);
   }
 }

@@ -9,14 +9,18 @@
 #   -h, --help        Show this help message
 #   (no args)         Run all tests and dead code detection
 
-set -e  # Exit on any error
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Global variables for absolute paths
+SCRIPT_DIR=""
+PROJECT_ROOT=""
+FRONTEND_DIR=""
+BACKEND_DIR=""
 
 # Function to print colored output
 print_status() {
@@ -40,31 +44,45 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to check if we're in the right directory
-check_directory() {
+# Function to setup absolute paths
+setup_paths() {
     # Get the directory where this script is located
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    FRONTEND_DIR="$PROJECT_ROOT/frontend"
+    BACKEND_DIR="$PROJECT_ROOT/backend"
     
-    if [ ! -d "$PROJECT_ROOT/frontend" ] || [ ! -d "$PROJECT_ROOT/backend" ]; then
-        print_error "This script must be run from the Termageddon project root directory"
+    print_status "Script directory: $SCRIPT_DIR"
+    print_status "Project root: $PROJECT_ROOT"
+    print_status "Frontend directory: $FRONTEND_DIR"
+    print_status "Backend directory: $BACKEND_DIR"
+    
+    # Verify directories exist
+    if [ ! -d "$FRONTEND_DIR" ]; then
+        print_error "Frontend directory not found at: $FRONTEND_DIR"
         exit 1
     fi
     
-    # Change to project root directory
-    cd "$PROJECT_ROOT"
+    if [ ! -d "$BACKEND_DIR" ]; then
+        print_error "Backend directory not found at: $BACKEND_DIR"
+        exit 1
+    fi
 }
 
 # Function to run frontend tests
 run_frontend_tests() {
     print_status "Running frontend unit tests..."
     
-    if [ ! -d "frontend" ]; then
-        print_error "Frontend directory not found"
+    if [ ! -d "$FRONTEND_DIR" ]; then
+        print_error "Frontend directory not found at: $FRONTEND_DIR"
         return 1
     fi
     
-    cd frontend
+    # Store current directory
+    local original_dir="$(pwd)"
+    
+    # Change to frontend directory
+    cd "$FRONTEND_DIR"
     
     # Check if node_modules exists
     if [ ! -d "node_modules" ]; then
@@ -74,29 +92,40 @@ run_frontend_tests() {
     
     # Run frontend tests
     print_status "Running Angular unit tests..."
+    local frontend_success=true
     if npm run test -- --watch=false --browsers=ChromeHeadless; then
         print_success "Frontend unit tests passed"
     else
         print_error "Frontend unit tests failed"
-        return 1
+        frontend_success=false
     fi
     
-    cd ..
+    # Return to original directory
+    cd "$original_dir"
+    
+    if [ "$frontend_success" = true ]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 # Function to run backend tests
 run_backend_tests() {
     print_status "Running backend tests..."
     
-    if [ ! -d "backend" ]; then
-        print_error "Backend directory not found"
+    if [ ! -d "$BACKEND_DIR" ]; then
+        print_error "Backend directory not found at: $BACKEND_DIR"
         return 1
     fi
     
-    cd backend
+    # Store current directory
+    local original_dir="$(pwd)"
+    
+    # Change to backend directory
+    cd "$BACKEND_DIR"
     
     # Check if virtual environment exists
-    # Create virtual environment if it doesn't exist
     if [ ! -d "venv" ]; then
         print_status "Creating backend virtual environment..."
         python3 -m venv venv
@@ -117,15 +146,24 @@ run_backend_tests() {
     
     # Run backend tests
     print_status "Running backend tests with pytest..."
+    local backend_success=true
     if python -m pytest --tb=short -q; then
         print_success "Backend tests passed"
     else
         print_error "Backend tests failed"
-        return 1
+        backend_success=false
     fi
     
     deactivate
-    cd ..
+    
+    # Return to original directory
+    cd "$original_dir"
+    
+    if [ "$backend_success" = true ]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 # Function to run dead code detection
@@ -133,12 +171,15 @@ run_dead_code_detection() {
     print_status "Running dead code detection..."
     
     # Track overall success
-    dead_code_success=true
+    local dead_code_success=true
+    
+    # Store current directory
+    local original_dir="$(pwd)"
     
     # Run backend dead code detection
     print_status "Checking backend for dead code with Vulture..."
-    if [ -d "backend" ]; then
-        cd backend
+    if [ -d "$BACKEND_DIR" ]; then
+        cd "$BACKEND_DIR"
         
         # Check if virtual environment exists and activate it
         if [ -d "venv" ]; then
@@ -163,8 +204,6 @@ run_dead_code_detection() {
             print_warning "Backend virtual environment not found, skipping backend dead code check"
             dead_code_success=false
         fi
-        
-        cd ..
     else
         print_warning "Backend directory not found, skipping backend dead code check"
         dead_code_success=false
@@ -172,8 +211,8 @@ run_dead_code_detection() {
     
     # Run frontend dead code detection
     print_status "Checking frontend for dead code with Knip..."
-    if [ -d "frontend" ]; then
-        cd frontend
+    if [ -d "$FRONTEND_DIR" ]; then
+        cd "$FRONTEND_DIR"
         
         # Check if node_modules exists
         if [ ! -d "node_modules" ]; then
@@ -194,12 +233,13 @@ run_dead_code_detection() {
             print_warning "Frontend dead code check found issues (see output above)"
             dead_code_success=false
         fi
-        
-        cd ..
     else
         print_warning "Frontend directory not found, skipping frontend dead code check"
         dead_code_success=false
     fi
+    
+    # Return to original directory
+    cd "$original_dir"
     
     # Report overall result
     if [ "$dead_code_success" = true ]; then
@@ -233,8 +273,8 @@ show_help() {
 
 # Main function
 main() {
-    # Check if we're in the right directory
-    check_directory
+    # Setup absolute paths first
+    setup_paths
     
     # Check for required commands
     if ! command_exists node; then
@@ -269,20 +309,23 @@ main() {
             print_status "Running all tests and dead code detection..."
             
             # Track overall success
-            overall_success=true
+            local overall_success=true
             
             # Run backend tests first
             if ! run_backend_tests; then
+                print_warning "Backend tests failed, but continuing with frontend tests..."
                 overall_success=false
             fi
             
             # Run frontend tests
             if ! run_frontend_tests; then
+                print_warning "Frontend tests failed..."
                 overall_success=false
             fi
             
             # Run dead code detection
             if ! run_dead_code_detection; then
+                print_warning "Dead code detection found issues..."
                 overall_success=false
             fi
             

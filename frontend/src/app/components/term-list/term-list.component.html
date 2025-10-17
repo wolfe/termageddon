@@ -50,11 +50,10 @@
         [formControl]="sortControl"
         class="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-termageddon-accent text-sm"
       >
-        <option value="term__text_normalized">Term Name (A-Z)</option>
-        <option value="-term__text_normalized">Term Name (Z-A)</option>
-        <option value="-created_at">Newest First</option>
-        <option value="created_at">Oldest First</option>
-        <option value="-updated_at">Recently Updated</option>
+        <option value="-published_at">Newest Published</option>
+        <option value="-timestamp">Newest Edits</option>
+        <option value="term__text_normalized">Term A-Z</option>
+        <option value="-term__text_normalized">Term Z-A</option>
       </select>
     </div>
 

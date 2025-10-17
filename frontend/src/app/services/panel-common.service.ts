@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, Subject, takeUntil } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Observable, of, Subject, takeUntil, switchMap } from 'rxjs';
 import { ReviewDraft, Comment, User, PaginatedResponse, EntryDraft } from '../models';
 import { UnifiedDraftService, DraftLoadOptions, DraftActionOptions } from './unified-draft.service';
 import { EntryDetailService } from './entry-detail.service';
@@ -39,8 +39,9 @@ export interface PanelState {
 @Injectable({
   providedIn: 'root'
 })
-export class PanelCommonService {
+export class PanelCommonService implements OnDestroy {
   private destroy$ = new Subject<void>();
+  private searchSubjects = new Map<PanelState, Subject<{ searchTerm: string; options: DraftLoadOptions }>>();
 
   constructor(
     private unifiedDraftService: UnifiedDraftService,
@@ -209,21 +210,6 @@ export class PanelCommonService {
       });
   }
 
-  /**
-   * Filter drafts by search term
-   */
-  filterDraftsBySearch(searchTerm: string, drafts: ReviewDraft[]): ReviewDraft[] {
-    if (!searchTerm.trim()) {
-      return drafts;
-    }
-    
-    const term = searchTerm.toLowerCase();
-    return drafts.filter(draft => 
-      draft.entry.term.text.toLowerCase().includes(term) ||
-      draft.content.toLowerCase().includes(term) ||
-      draft.entry.perspective.name.toLowerCase().includes(term)
-    );
-  }
 
   /**
    * Get latest drafts per entry (for My Drafts)
@@ -246,7 +232,7 @@ export class PanelCommonService {
   }
 
   /**
-   * Handle search with unified draft service
+   * Handle search with unified draft service and request cancellation
    */
   onSearch(searchTerm: string, state: PanelState, options: DraftLoadOptions = {}): void {
     state.searchTerm = searchTerm;
@@ -256,26 +242,42 @@ export class PanelCommonService {
       return;
     }
 
-    // Use unified draft service for search
+    // Get or create search subject for this state
+    if (!this.searchSubjects.has(state)) {
+      const searchSubject = new Subject<{ searchTerm: string; options: DraftLoadOptions }>();
+      
+      // Set up the search stream with request cancellation
+      searchSubject
+        .pipe(
+          switchMap(({ searchTerm, options }) => {
+            // This will cancel the previous request when a new one starts
+            return this.unifiedDraftService.loadDrafts({ ...options, searchTerm });
+          }),
+          takeUntil(this.destroy$)
+        )
+        .subscribe({
+          next: (response: PaginatedResponse<ReviewDraft>) => {
+            state.filteredDrafts = response.results;
+            state.loading = false;
+            
+            // If current selection is not in filtered results, select first available
+            if (state.selectedDraft && !state.filteredDrafts.find(d => d.id === state.selectedDraft!.id)) {
+              state.selectedDraft = state.filteredDrafts.length > 0 ? state.filteredDrafts[0] : null;
+            }
+          },
+          error: (error) => {
+            console.error('Error searching drafts:', error);
+            state.error = 'Failed to search drafts';
+            state.loading = false;
+          },
+        });
+      
+      this.searchSubjects.set(state, searchSubject);
+    }
+
+    // Trigger the search
     state.loading = true;
-    this.unifiedDraftService.loadDrafts({ ...options, searchTerm })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: PaginatedResponse<ReviewDraft>) => {
-          state.filteredDrafts = response.results;
-          state.loading = false;
-          
-          // If current selection is not in filtered results, select first available
-          if (state.selectedDraft && !state.filteredDrafts.find(d => d.id === state.selectedDraft!.id)) {
-            state.selectedDraft = state.filteredDrafts.length > 0 ? state.filteredDrafts[0] : null;
-          }
-        },
-        error: (error) => {
-          console.error('Error searching drafts:', error);
-          state.error = 'Failed to search drafts';
-          state.loading = false;
-        },
-      });
+    this.searchSubjects.get(state)!.next({ searchTerm, options });
   }
 
   /**
@@ -393,7 +395,7 @@ export class PanelCommonService {
       .subscribe({
         next: (response: PaginatedResponse<ReviewDraft>) => {
           state.drafts = postProcessFn ? postProcessFn(response.results) : response.results;
-          state.filteredDrafts = this.filterDraftsBySearch(state.searchTerm, state.drafts);
+          state.filteredDrafts = [...state.drafts];
           state.loading = false;
         },
         error: (error) => {
@@ -467,5 +469,11 @@ export class PanelCommonService {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Clean up search subjects
+    this.searchSubjects.forEach(subject => {
+      subject.complete();
+    });
+    this.searchSubjects.clear();
   }
 }

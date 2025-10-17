@@ -31,7 +31,8 @@ describe('MyDraftsComponent', () => {
       'searchDrafts'
     ]);
     const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'getUsers'
+      'getUsers',
+      'getPerspectives'
     ]);
     const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
       currentUser: {
@@ -211,6 +212,7 @@ describe('MyDraftsComponent', () => {
     reviewSpy.getOwnDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     reviewSpy.searchDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     glossarySpy.getUsers.and.returnValue(of([]));
+    glossarySpy.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
     entryDetailSpy.loadDraftHistory.and.returnValue(of([]));
     entryDetailSpy.getEntryId.and.returnValue(1);

@@ -15,8 +15,13 @@ describe('DraftRouterComponent', () => {
   let mockAuthService: jasmine.SpyObj<AuthService>;
   let mockRouter: jasmine.SpyObj<Router>;
   let mockActivatedRoute: any;
+  let originalConsoleError: any;
 
   beforeEach(async () => {
+    // Suppress console.error during tests
+    originalConsoleError = console.error;
+    console.error = jasmine.createSpy('console.error');
+    
     const glossaryServiceSpy = jasmine.createSpyObj('GlossaryService', ['getEntryDraft']);
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -40,6 +45,11 @@ describe('DraftRouterComponent', () => {
     mockGlossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
     mockAuthService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
     mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+  });
+
+  afterEach(() => {
+    // Restore console.error after each test
+    console.error = originalConsoleError;
   });
 
   it('should create', () => {

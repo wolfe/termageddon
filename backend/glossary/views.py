@@ -458,7 +458,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["entry", "author"]
-    ordering_fields = ["timestamp"]
+    ordering_fields = ["entry__term__text_normalized", "timestamp", "updated_at", "published_at"]
     ordering = ["-timestamp"]
     http_method_names = [
         "get",
@@ -491,20 +491,19 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                     approval_count_annotated=Count("approvers")
                 ).filter(approval_count_annotated__lt=settings.MIN_APPROVALS)
 
-        # Handle search parameter for full-text search
+        # Handle search parameter - only search terms
         search = self.request.query_params.get("search")
         if search:
             from django.db.models import Q
             queryset = queryset.filter(
                 Q(entry__term__text__icontains=search) |
-                Q(entry__term__text_normalized__icontains=search) |
-                Q(entry__perspective__name__icontains=search) |
-                Q(entry__perspective__name_normalized__icontains=search) |
-                Q(author__username__icontains=search) |
-                Q(author__first_name__icontains=search) |
-                Q(author__last_name__icontains=search) |
-                Q(content__icontains=search)
+                Q(entry__term__text_normalized__icontains=search)
             )
+
+        # Handle perspective filtering
+        perspective_id = self.request.query_params.get("perspective")
+        if perspective_id:
+            queryset = queryset.filter(entry__perspective_id=perspective_id)
 
         # Handle eligibility filtering for current user
         eligibility = self.request.query_params.get("eligibility")
@@ -559,14 +558,16 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         # Only apply filtering for list actions, not detail actions (like approve)
         
         # Always exclude published drafts from review (they're not drafts anymore)
-        if self.action in ["list", "retrieve"]:
+        # Only apply this filter for list actions, not for individual draft retrieval
+        if self.action == "list":
             queryset = queryset.filter(is_published=False)
         
         # Apply additional filtering when show_all is false, but respect eligibility parameter
+        # Only apply default filtering for list actions, not for individual draft retrieval
         if (
             not show_all
             and self.request.user.is_authenticated
-            and self.action in ["list", "retrieve"]
+            and self.action == "list"
             and not eligibility  # Only apply default filtering if no specific eligibility is requested
         ):
             # Show only drafts the user should see:
@@ -598,6 +599,17 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             ).prefetch_related(
                 "replaces_draft__approvers", "replaces_draft__requested_reviewers"
             )
+
+        # Handle custom ordering for published_at with nulls last
+        ordering = self.request.query_params.get("ordering")
+        if ordering and "published_at" in ordering:
+            from django.db.models import F
+            if ordering.startswith("-"):
+                # Descending: published drafts first, then unpublished
+                queryset = queryset.order_by(F("published_at").desc(nulls_last=True))
+            else:
+                # Ascending: unpublished drafts first, then published
+                queryset = queryset.order_by(F("published_at").asc(nulls_last=False))
 
         return queryset
 

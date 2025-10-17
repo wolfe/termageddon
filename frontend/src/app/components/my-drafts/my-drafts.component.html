@@ -7,15 +7,35 @@
     <!-- Status Summary -->
     <app-status-summary [items]="getStatusSummaryItems()"></app-status-summary>
 
-    <!-- Search -->
-    <app-search-filter-bar
-      placeholder="Search drafts..."
-      [searchTerm]="state.searchTerm"
-      [loading]="state.loading"
-      (searchTermChange)="state.searchTerm = $event"
-      (search)="onSearch()"
-      (cleared)="state.searchTerm = ''; onSearch()"
-    ></app-search-filter-bar>
+    <!-- Search and Filters -->
+    <div class="mb-4">
+      <app-search-filter-bar
+        placeholder="Search terms..."
+        [searchTerm]="state.searchTerm"
+        [loading]="state.loading"
+        [showPerspectiveFilter]="true"
+        [perspectives]="perspectives"
+        [selectedPerspectiveId]="selectedPerspectiveId"
+        [showSortOptions]="true"
+        [sortOptions]="sortOptions"
+        [selectedSortBy]="selectedSortBy"
+        (searchTermChange)="state.searchTerm = $event"
+        (search)="onSearch()"
+        (perspectiveChanged)="onPerspectiveChanged($event)"
+        (sortChanged)="onSortChanged($event)"
+        (cleared)="state.searchTerm = ''; onSearch()"
+      ></app-search-filter-bar>
+      
+      <!-- Create Entry Button -->
+      <div class="mt-3">
+        <button
+          (click)="openCreateDialog()"
+          class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
+        >
+          + Create Entry
+        </button>
+      </div>
+    </div>
 
     <!-- Draft List -->
     <div class="flex-1 overflow-y-auto">
@@ -121,3 +141,10 @@
   (confirm)="onReviewerSelectionConfirmed($event)"
 >
 </app-reviewer-selector-dialog>
+
+<!-- Create Entry Dialog -->
+<app-create-entry-dialog
+  [isOpen]="showCreateDialog"
+  (close)="onDialogClosed()"
+  (entryCreated)="onTermCreated($event)"
+></app-create-entry-dialog>

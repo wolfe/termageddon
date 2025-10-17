@@ -4,6 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from unidecode import unidecode
 
 
@@ -196,6 +197,7 @@ class EntryDraft(AuditedModel):
         help_text="Perspective curator who endorsed this draft"
     )
     endorsed_at = models.DateTimeField(null=True, blank=True)
+    published_at = models.DateTimeField(null=True, blank=True)
     replaces_draft = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -267,8 +269,9 @@ class EntryDraft(AuditedModel):
         if self.is_published:
             raise ValidationError("Draft is already published.")
 
-        # Mark as published
+        # Mark as published and set published_at timestamp
         self.is_published = True
+        self.published_at = timezone.now()
         self.save()
 
     def save(self, *args, **kwargs):
