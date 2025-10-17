@@ -11,7 +11,6 @@
     <div class="mb-4">
       <app-search-filter-bar
         placeholder="Search terms..."
-        [searchTerm]="state.searchTerm"
         [filters]="filters"
         [loading]="state.loading"
         [showPerspectiveFilter]="true"
@@ -23,24 +22,17 @@
         [showSortOptions]="true"
         [sortOptions]="sortOptions"
         [selectedSortBy]="selectedSortBy"
+        [showClearFiltersButton]="true"
+        [showCreateButton]="true"
         (searchTermChange)="state.searchTerm = $event"
         (search)="onSearch()"
         (filterChanged)="onFilterChanged($event)"
         (perspectiveChanged)="onPerspectiveChanged($event)"
         (authorChanged)="onAuthorChanged($event)"
         (sortChanged)="onSortChanged($event)"
-        (cleared)="state.searchTerm = ''; onSearch()"
+        (clearFilters)="onClearFilters()"
+        (createClicked)="openCreateDialog()"
       ></app-search-filter-bar>
-      
-      <!-- Create Entry Button -->
-      <div class="mt-3">
-        <button
-          (click)="openCreateDialog()"
-          class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
-        >
-          + Create Entry
-        </button>
-      </div>
     </div>
 
     <!-- Loading State -->

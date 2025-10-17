@@ -53,6 +53,10 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Input() sortOptions: SortOption[] = [];
   @Input() selectedSortBy: string = '';
 
+  // Action button inputs
+  @Input() showClearFiltersButton: boolean = true;
+  @Input() showCreateButton: boolean = true;
+
   @Output() search = new EventEmitter<string>();
   @Output() searchTermChange = new EventEmitter<string>();
   @Output() filterChanged = new EventEmitter<{ filterId: string; value: any }>();
@@ -62,6 +66,10 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Output() perspectiveChanged = new EventEmitter<number | null>();
   @Output() authorChanged = new EventEmitter<number | null>();
   @Output() sortChanged = new EventEmitter<string>();
+  
+  // Action button outputs
+  @Output() createClicked = new EventEmitter<void>();
+  @Output() clearFilters = new EventEmitter<void>();
 
   ngOnInit(): void {
     // Set up debounced search
@@ -133,5 +141,29 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLSelectElement;
     this.selectedSortBy = target.value;
     this.sortChanged.emit(target.value);
+  }
+
+  getActiveFilterCount(): number {
+    let count = 0;
+    if (this.searchTerm) count++;
+    if (this.selectedPerspectiveId) count++;
+    if (this.selectedAuthorId) count++;
+    // Don't count sort as a filter
+    return count;
+  }
+
+  onClearFilters(): void {
+    this.searchTerm = '';
+    this.selectedPerspectiveId = null;
+    this.selectedAuthorId = null;
+    // Don't reset sort - it's not a filter
+    this.searchTermChange.emit(this.searchTerm);
+    this.perspectiveChanged.emit(null);
+    this.authorChanged.emit(null);
+    this.clearFilters.emit();
+  }
+
+  onCreateClick(): void {
+    this.createClicked.emit();
   }
 }

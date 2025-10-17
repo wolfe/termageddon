@@ -333,6 +333,12 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     this.loadMyDrafts();
   }
 
+  onClearFilters(): void {
+    this.state.searchTerm = '';
+    this.selectedPerspectiveId = null;
+    this.loadMyDrafts();
+  }
+
   // Create Entry functionality
   openCreateDialog(): void {
     this.showCreateDialog = true;

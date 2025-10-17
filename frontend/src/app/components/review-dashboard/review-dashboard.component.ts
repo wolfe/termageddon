@@ -312,6 +312,14 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     this.loadPendingDrafts();
   }
 
+  onClearFilters(): void {
+    this.state.searchTerm = '';
+    this.selectedPerspectiveId = null;
+    this.selectedAuthorId = null;
+    // Keep showAll filter as-is (it's in the filters array, not in the unified filters)
+    this.loadPendingDrafts();
+  }
+
   requestReview(draft: ReviewDraft): void {
     this.panelCommonService.showReviewerSelector(draft, this.state);
   }

@@ -127,4 +127,27 @@
       }
     </div>
   }
+
+  <!-- Action Buttons -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      @if (showClearFiltersButton && getActiveFilterCount() > 0) {
+        <button
+          (click)="onClearFilters()"
+          class="px-3 py-1 text-sm text-termageddon-accent hover:text-termageddon-primary border border-termageddon-accent rounded hover:bg-termageddon-accent hover:text-white transition-colors"
+        >
+          Clear Filters ({{ getActiveFilterCount() }})
+        </button>
+      }
+    </div>
+    
+    @if (showCreateButton) {
+      <button
+        (click)="onCreateClick()"
+        class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
+      >
+        + Create Entry
+      </button>
+    }
+  </div>
 </div>

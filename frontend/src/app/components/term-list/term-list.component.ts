@@ -7,11 +7,12 @@ import { GlossaryService } from '../../services/glossary.service';
 import { TermDialogComponent } from '../term-dialog/term-dialog.component';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
 import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
+import { SearchFilterBarComponent, SortOption } from '../shared/search-filter-bar/search-filter-bar.component';
 
 @Component({
   selector: 'app-term-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TermDialogComponent, CreateEntryDialogComponent, PerspectivePillComponent],
+  imports: [CommonModule, ReactiveFormsModule, TermDialogComponent, CreateEntryDialogComponent, PerspectivePillComponent, SearchFilterBarComponent],
   templateUrl: './term-list.component.html',
   styleUrl: './term-list.component.scss',
 })
@@ -32,6 +33,14 @@ export class TermListComponent implements OnInit {
   perspectiveControl = new FormControl('');
   authorControl = new FormControl('');
   sortControl = new FormControl('-published_at'); // Default to newest published first
+
+  // Sort options for SearchFilterBarComponent
+  sortOptions: SortOption[] = [
+    { value: '-published_at', label: 'Newest Published' },
+    { value: '-timestamp', label: 'Newest Edits' },
+    { value: 'term__text_normalized', label: 'Term A-Z' },
+    { value: '-term__text_normalized', label: 'Term Z-A' }
+  ];
 
   constructor(private glossaryService: GlossaryService) {}
 
@@ -128,6 +137,7 @@ export class TermListComponent implements OnInit {
     this.perspectiveControl.setValue('');
     this.authorControl.setValue('');
     this.sortControl.setValue('-published_at');
+    // The FormControl valueChanges observers will trigger loadEntries()
   }
 
   getFilterCount(): number {
@@ -172,5 +182,18 @@ export class TermListComponent implements OnInit {
 
   hasAnyEndorsedEntry(termEntries: Entry[]): boolean {
     return termEntries.some(entry => entry.active_draft?.is_endorsed);
+  }
+
+  // Change handlers for SearchFilterBarComponent
+  onPerspectiveChanged(perspectiveId: number | null): void {
+    this.perspectiveControl.setValue(perspectiveId?.toString() || '');
+  }
+
+  onAuthorChanged(authorId: number | null): void {
+    this.authorControl.setValue(authorId?.toString() || '');
+  }
+
+  onSortChanged(sortBy: string): void {
+    this.sortControl.setValue(sortBy);
   }
 }

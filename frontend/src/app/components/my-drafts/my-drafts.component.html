@@ -16,25 +16,19 @@
         [showPerspectiveFilter]="true"
         [perspectives]="perspectives"
         [selectedPerspectiveId]="selectedPerspectiveId"
+        [showAuthorFilter]="false"
         [showSortOptions]="true"
         [sortOptions]="sortOptions"
         [selectedSortBy]="selectedSortBy"
+        [showClearFiltersButton]="true"
+        [showCreateButton]="true"
         (searchTermChange)="state.searchTerm = $event"
         (search)="onSearch()"
         (perspectiveChanged)="onPerspectiveChanged($event)"
         (sortChanged)="onSortChanged($event)"
-        (cleared)="state.searchTerm = ''; onSearch()"
+        (clearFilters)="onClearFilters()"
+        (createClicked)="openCreateDialog()"
       ></app-search-filter-bar>
-      
-      <!-- Create Entry Button -->
-      <div class="mt-3">
-        <button
-          (click)="openCreateDialog()"
-          class="px-3 py-1 text-sm bg-termageddon-accent text-white rounded hover:bg-termageddon-primary transition-colors"
-        >
-          + Create Entry
-        </button>
-      </div>
     </div>
 
     <!-- Draft List -->
