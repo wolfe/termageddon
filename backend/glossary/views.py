@@ -135,6 +135,13 @@ class EntryViewSet(viewsets.ModelViewSet):
                 drafts__is_published=True
             ).distinct()
         
+        # Handle term_text filtering (exact match, case-insensitive)
+        term_text = self.request.query_params.get('term_text')
+        if term_text:
+            from unidecode import unidecode
+            term_text_normalized = unidecode(term_text.lower())
+            queryset = queryset.filter(term__text_normalized=term_text_normalized)
+        
         # Handle author filtering
         author_id = self.request.query_params.get('author')
         if author_id:

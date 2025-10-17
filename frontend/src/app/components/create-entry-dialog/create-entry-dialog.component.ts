@@ -204,30 +204,46 @@ export class CreateEntryDialogComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    const request: CreateEntryRequest = {
-      term_id: this.selectedTermId || undefined,
-      term_text: this.selectedTermText.trim(),
-      perspective_id: this.selectedPerspectiveId
-    };
+    // Check if this is a "View Entry" action for existing entries
+    const status = this.perspectiveStatuses[this.selectedPerspectiveId];
+    if (status && (status.hasPublishedDraft || status.hasUnpublishedDraft)) {
+      // This is viewing an existing entry, use the existing logic
+      const request: CreateEntryRequest = {
+        term_id: this.selectedTermId || undefined,
+        term_text: this.selectedTermText.trim(),
+        perspective_id: this.selectedPerspectiveId
+      };
 
-    this.glossaryService.lookupOrCreateEntry(request).subscribe({
-      next: (response: EntryLookupResponse) => {
-        this.isLoading = false;
-        
-        if (response.entry) {
-          this.entryCreated.emit(response.entry);
+      this.glossaryService.lookupOrCreateEntry(request).subscribe({
+        next: (response: EntryLookupResponse) => {
+          this.isLoading = false;
+          
+          if (response.entry) {
+            this.entryCreated.emit(response.entry);
+          }
+          
+          // Navigate using smart routing
+          this.navigateAfterCreation(response);
+          this.resetForm();
+          this.close.emit();
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.error = 'Failed to create entry: ' + (error.error?.detail || error.message);
+        },
+      });
+    } else {
+      // This is creating a new entry, navigate to /entry/new
+      this.isLoading = false;
+      this.router.navigate(['/entry/new'], {
+        queryParams: {
+          term: this.selectedTermText.trim(),
+          perspective: this.selectedPerspectiveId
         }
-        
-        // Navigate using smart routing
-        this.navigateAfterCreation(response);
-        this.resetForm();
-        this.close.emit();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.error = 'Failed to create entry: ' + (error.error?.detail || error.message);
-      },
-    });
+      });
+      this.resetForm();
+      this.close.emit();
+    }
   }
 
   private navigateAfterCreation(response: EntryLookupResponse) {

@@ -21,11 +21,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
-        path: 'entry/:entryId',
+        path: 'entry/new',
         component: EntryRouterComponent,
       },
       {
         path: 'entry/:entryId/edit',
+        component: EntryRouterComponent,
+      },
+      {
+        path: 'entry/:entryId',
         component: EntryRouterComponent,
       },
       {

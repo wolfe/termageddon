@@ -86,6 +86,8 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       const draftId = params['draftId'];
       const entryId = params['entryId'];
       const editMode = params['edit'] === 'true';
+      const newEntryTerm = params['newEntryTerm'];
+      const newEntryPerspective = params['newEntryPerspective'];
       
       // Handle filter parameters from URL
       this.handleUrlFilterParams(params);
@@ -99,6 +101,9 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       } else if (entryId) {
         // Handle new entry case - no draft exists yet
         this.handleNewEntry(+entryId);
+      } else if (newEntryTerm && newEntryPerspective) {
+        // Handle new entry creation flow from /entry/new route
+        this.handleNewEntryCreation(newEntryTerm, +newEntryPerspective);
       }
     });
   }
@@ -274,9 +279,87 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle new entry creation flow from /entry/new route
+   */
+  private handleNewEntryCreation(termText: string, perspectiveId: number): void {
+    this.state.newEntryTerm = termText;
+    this.state.newEntryPerspectiveId = perspectiveId;
+    this.state.isNewEntryCreationMode = true;
+    
+    // Find the perspective object for display
+    const perspective = this.perspectives.find(p => p.id === perspectiveId);
+    if (perspective) {
+      this.state.newEntryPerspective = perspective;
+    }
+  }
+
+  /**
    * Handle creating the first draft for a new entry
    */
   onCreateFirstDraft(content: string): void {
+    if (!this.state.currentUser) {
+      return;
+    }
+
+    // Check if we're in new entry creation mode (no entry exists yet)
+    if (this.state.isNewEntryCreationMode && this.state.newEntryTerm && this.state.newEntryPerspectiveId) {
+      this.createEntryAndDraft(content);
+    } else if (this.state.newEntryId) {
+      // Existing entry, just create draft
+      this.createDraftForExistingEntry(content);
+    }
+  }
+
+  private createEntryAndDraft(content: string): void {
+    if (!this.state.newEntryTerm || !this.state.newEntryPerspectiveId || !this.state.currentUser) {
+      return;
+    }
+
+    // First create the entry
+    const createEntryRequest = {
+      term_text: this.state.newEntryTerm,
+      perspective_id: this.state.newEntryPerspectiveId
+    };
+
+    this.glossaryService.lookupOrCreateEntry(createEntryRequest).subscribe({
+      next: (response) => {
+        if (response.entry_id) {
+          // Now create the draft
+          this.entryDetailService.createNewDraft(
+            response.entry_id,
+            content,
+            this.state.currentUser!.id
+          ).subscribe({
+            next: (newDraft) => {
+              console.log('Successfully created entry and first draft:', newDraft);
+              
+              // Refresh drafts list to include the new draft
+              this.loadMyDrafts();
+              
+              // Clear new entry creation mode
+              this.state.isNewEntryCreationMode = false;
+              this.state.newEntryTerm = null;
+              this.state.newEntryPerspectiveId = null;
+              this.state.newEntryPerspective = null;
+              
+              // Navigate to the newly created draft
+              this.navigateToNewDraft(newDraft);
+            },
+            error: (error) => {
+              console.error('Failed to create first draft:', error);
+              this.state.error = 'Failed to create draft: ' + (error.error?.detail || error.message);
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Failed to create entry:', error);
+        this.state.error = 'Failed to create entry: ' + (error.error?.detail || error.message);
+      }
+    });
+  }
+
+  private createDraftForExistingEntry(content: string): void {
     if (!this.state.newEntryId || !this.state.currentUser) {
       return;
     }
@@ -297,12 +380,8 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
         this.state.newEntryId = null;
         this.state.newEntry = null;
         
-        // Update URL to remove entryId parameter
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { entryId: null },
-          queryParamsHandling: 'merge'
-        });
+        // Navigate to the newly created draft
+        this.navigateToNewDraft(newDraft);
       },
       error: (error) => {
         console.error('Failed to create first draft:', error);
@@ -356,5 +435,21 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   navigateToGlossary(): void {
     this.router.navigate(['/glossary']);
+  }
+
+  /**
+   * Navigate to the newly created draft
+   */
+  private navigateToNewDraft(newDraft: any): void {
+    // Build the draft URL with term and perspective information
+    const termText = this.state.newEntryTerm || this.state.newEntry?.term?.text || '';
+    const perspectiveName = this.state.newEntryPerspective?.name || this.state.newEntry?.perspective?.name || '';
+    
+    // Use the UrlHelperService to build the proper draft URL
+    const draftUrl = this.urlHelper.buildDraftUrl(newDraft.id, undefined, false);
+    const queryParams = `?term=${encodeURIComponent(termText)}&perspective=${encodeURIComponent(perspectiveName)}`;
+    
+    // Navigate to the draft URL
+    this.router.navigateByUrl(draftUrl + queryParams);
   }
 }

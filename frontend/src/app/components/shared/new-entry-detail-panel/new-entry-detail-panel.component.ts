@@ -16,10 +16,10 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-xl font-semibold text-gray-900">
-              {{ entry?.term?.text }}
+              {{ displayTermText }}
             </h2>
             <div class="flex items-center space-x-2 mt-1">
-              <app-perspective-pill [perspective]="entry?.perspective!" *ngIf="entry?.perspective"></app-perspective-pill>
+              <app-perspective-pill [perspective]="displayPerspective" *ngIf="displayPerspective"></app-perspective-pill>
             </div>
           </div>
         </div>
@@ -65,6 +65,8 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
 export class NewEntryDetailPanelComponent implements OnInit {
   @Input() entry: Entry | null = null;
   @Input() currentUserId: number | null = null;
+  @Input() termText: string | null = null;
+  @Input() perspective: any | null = null;
   @Output() createFirstDraft = new EventEmitter<string>();
 
   editContent = '';
@@ -72,6 +74,14 @@ export class NewEntryDetailPanelComponent implements OnInit {
   ngOnInit(): void {
     // Initialize with empty content for new entry
     this.editContent = '';
+  }
+
+  get displayTermText(): string {
+    return this.termText || this.entry?.term?.text || '';
+  }
+
+  get displayPerspective(): any {
+    return this.perspective || this.entry?.perspective;
   }
 
   onSave(): void {

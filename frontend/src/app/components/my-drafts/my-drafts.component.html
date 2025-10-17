@@ -87,7 +87,15 @@
 
   <!-- Detail Panel -->
   <div detail>
-    @if (state.isNewEntryMode && state.newEntry) {
+    @if (state.isNewEntryCreationMode) {
+      <!-- New Entry Creation Mode - Show fresh textbox for creating entry and first draft -->
+      <app-new-entry-detail-panel
+        [termText]="state.newEntryTerm"
+        [perspective]="state.newEntryPerspective"
+        [currentUserId]="state.currentUser?.id || null"
+        (createFirstDraft)="onCreateFirstDraft($event)"
+      ></app-new-entry-detail-panel>
+    } @else if (state.isNewEntryMode && state.newEntry) {
       <!-- New Entry Mode - Show fresh textbox for first draft -->
       <app-new-entry-detail-panel
         [entry]="state.newEntry"

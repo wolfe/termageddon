@@ -21,8 +21,11 @@ export class EntryRouterComponent implements OnInit {
     this.route.params.subscribe(params => {
       const entryId = +params['entryId'];
       const isEditMode = this.route.snapshot.url.some(segment => segment.path === 'edit');
+      const isNewEntry = this.route.snapshot.url.some(segment => segment.path === 'new');
       
-      if (entryId) {
+      if (isNewEntry) {
+        this.handleNewEntryRoute();
+      } else if (entryId) {
         this.loadEntryAndRoute(entryId, isEditMode);
       } else {
         this.router.navigate(['/glossary']);
@@ -52,6 +55,86 @@ export class EntryRouterComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load entry:', error);
         this.router.navigate(['/glossary']);
+      }
+    });
+  }
+
+  private handleNewEntryRoute(): void {
+    this.route.queryParams.subscribe(queryParams => {
+      const termText = queryParams['term'];
+      const perspectiveId = queryParams['perspective'];
+      
+      if (!termText || !perspectiveId) {
+        console.error('Missing required parameters: term and perspective');
+        this.router.navigate(['/glossary']);
+        return;
+      }
+      
+      const perspectiveIdNum = +perspectiveId;
+      
+      // Look up term by text to get term ID
+      this.glossaryService.getTerms(termText).subscribe({
+        next: (termsResponse) => {
+          let termId: number | null = null;
+          
+          // Find exact match for the term text
+          const matchingTerm = termsResponse.results.find(term => 
+            term.text.toLowerCase() === termText.toLowerCase()
+          );
+          
+          if (matchingTerm) {
+            termId = matchingTerm.id;
+          }
+          
+          // Check if entry already exists for term+perspective combination
+          this.checkEntryExists(termId, termText, perspectiveIdNum);
+        },
+        error: (error) => {
+          console.error('Failed to lookup term:', error);
+          // If term lookup fails, still proceed with entry check using term text
+          this.checkEntryExists(null, termText, perspectiveIdNum);
+        }
+      });
+    });
+  }
+  
+  private checkEntryExists(termId: number | null, termText: string, perspectiveId: number): void {
+    const searchParams: any = { perspective: perspectiveId };
+    
+    if (termId) {
+      searchParams.term = termId;
+    } else {
+      searchParams.term_text = termText;
+    }
+    
+    this.glossaryService.getEntries(searchParams).subscribe({
+      next: (entriesResponse) => {
+        if (entriesResponse.results.length > 0) {
+          // Entry already exists, show error and provide link to view it
+          const existingEntry = entriesResponse.results[0];
+          console.error('Entry already exists for this term and perspective');
+          this.router.navigate(['/entry', existingEntry.id]);
+        } else {
+          // Entry doesn't exist, navigate to My Drafts for creation
+          this.router.navigate(['/my-drafts'], {
+            queryParams: {
+              newEntryTerm: termText,
+              newEntryPerspective: perspectiveId,
+              edit: 'true'
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Failed to check if entry exists:', error);
+        // On error, proceed with creation flow
+        this.router.navigate(['/my-drafts'], {
+          queryParams: {
+            newEntryTerm: termText,
+            newEntryPerspective: perspectiveId,
+            edit: 'true'
+          }
+        });
       }
     });
   }

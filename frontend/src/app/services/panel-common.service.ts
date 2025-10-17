@@ -35,6 +35,12 @@ export interface PanelState {
   isNewEntryMode: boolean;
   newEntryId: number | null;
   newEntry: any | null; // Will be Entry type when imported
+  
+  // New entry creation state (for /entry/new flow)
+  isNewEntryCreationMode: boolean;
+  newEntryTerm: string | null;
+  newEntryPerspectiveId: number | null;
+  newEntryPerspective: any | null; // Will be Perspective type when imported
 }
 
 @Injectable({
@@ -72,7 +78,11 @@ export class PanelCommonService implements OnDestroy {
       requestingReview: false,
       isNewEntryMode: false,
       newEntryId: null,
-      newEntry: null
+      newEntry: null,
+      isNewEntryCreationMode: false,
+      newEntryTerm: null,
+      newEntryPerspectiveId: null,
+      newEntryPerspective: null
     };
   }
 

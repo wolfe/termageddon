@@ -1220,3 +1220,106 @@ class TestEntryLookupOrCreate:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["is_new"] is True
         assert response.data["term"]["text"] == max_length_text
+
+
+@pytest.mark.django_db
+class TestEntryTermTextFiltering:
+    """Test term_text filtering functionality"""
+
+    def test_filter_entries_by_term_text_exact_match(self, authenticated_client):
+        """Test filtering entries by exact term text"""
+        term1 = TermFactory(text="Exact Term")
+        term2 = TermFactory(text="Other Term") 
+        perspective = PerspectiveFactory()
+        
+        entry1 = EntryFactory(term=term1, perspective=perspective)
+        entry2 = EntryFactory(term=term2, perspective=perspective)
+        
+        # Create published drafts so entries appear in results
+        EntryDraftFactory(entry=entry1, is_published=True)
+        EntryDraftFactory(entry=entry2, is_published=True)
+        
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {"term_text": "Exact Term"})
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["id"] == entry1.id
+
+    def test_filter_entries_by_term_text_no_match(self, authenticated_client):
+        """Test filtering entries by term text with no matches"""
+        perspective = PerspectiveFactory()
+        
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {
+            "term_text": "Nonexistent Term",
+            "perspective": perspective.id
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 0
+
+    def test_filter_entries_by_term_text_case_insensitive(self, authenticated_client):
+        """Test that term_text filtering is case-insensitive"""
+        term = TermFactory(text="Case Sensitive Term")
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        
+        # Create published draft so entry appears in results
+        EntryDraftFactory(entry=entry, is_published=True)
+        
+        url = reverse("entry-list")
+        
+        # Test different case variations
+        test_cases = [
+            "case sensitive term",
+            "CASE SENSITIVE TERM", 
+            "Case Sensitive Term",
+            "cAsE sEnSiTiVe TeRm"
+        ]
+        
+        for test_case in test_cases:
+            response = authenticated_client.get(url, {"term_text": test_case})
+            assert response.status_code == status.HTTP_200_OK
+            assert response.data["count"] == 1
+            assert response.data["results"][0]["id"] == entry.id
+
+    def test_filter_entries_by_term_text_with_special_characters(self, authenticated_client):
+        """Test filtering entries by term text with special characters"""
+        term = TermFactory(text="Café & Résumé")
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        
+        # Create published draft so entry appears in results
+        EntryDraftFactory(entry=entry, is_published=True)
+        
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {"term_text": "Café & Résumé"})
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["id"] == entry.id
+
+    def test_filter_entries_by_term_text_combined_with_perspective(self, authenticated_client):
+        """Test filtering entries by term_text combined with perspective filter"""
+        term1 = TermFactory(text="Same Term One")
+        term2 = TermFactory(text="Same Term Two")
+        perspective1 = PerspectiveFactory()
+        perspective2 = PerspectiveFactory()
+        
+        entry1 = EntryFactory(term=term1, perspective=perspective1)
+        entry2 = EntryFactory(term=term2, perspective=perspective2)
+        
+        # Create published drafts so entries appear in results
+        EntryDraftFactory(entry=entry1, is_published=True)
+        EntryDraftFactory(entry=entry2, is_published=True)
+        
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {
+            "term_text": "Same Term One",
+            "perspective": perspective1.id
+        })
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["id"] == entry1.id
