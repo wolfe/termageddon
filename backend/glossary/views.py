@@ -290,6 +290,13 @@ class EntryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         
+        # Validate term text length
+        if len(term_text) > 255:
+            return Response(
+                {"detail": "Term text cannot exceed 255 characters."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         try:
             with transaction.atomic():
                 # Create the term
@@ -364,6 +371,13 @@ class EntryViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_404_NOT_FOUND,
                     )
             else:
+                # Validate term text length
+                if len(term_text) > 255:
+                    return Response(
+                        {"detail": "Term text cannot exceed 255 characters."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                
                 # Look up existing term by text, or create new one
                 try:
                     term = Term.objects.get(text=term_text)

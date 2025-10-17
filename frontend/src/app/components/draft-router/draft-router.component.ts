@@ -32,18 +32,20 @@ export class DraftRouterComponent implements OnInit {
   private loadDraftAndRoute(draftId: number): void {
     this.glossaryService.getEntryDraft(draftId).subscribe({
       next: (draft) => {
-        const currentUser = this.authService.getCurrentUser();
-        if (!currentUser) {
-          this.router.navigate(['/login']);
-          return;
-        }
-
-        // Determine target panel based on draft state and user
-        const targetPanel = this.determineDraftPanel(draft, currentUser);
-        
-        // Navigate to appropriate panel with draft selected
-        this.router.navigate([targetPanel], {
-          queryParams: { draftId: draftId }
+        this.authService.getCurrentUser().subscribe({
+          next: (currentUser) => {
+            // Determine target panel based on draft state and user
+            const targetPanel = this.determineDraftPanel(draft, currentUser);
+            
+            // Navigate to appropriate panel with draft selected
+            this.router.navigate([targetPanel], {
+              queryParams: { draftId: draftId }
+            });
+          },
+          error: (error) => {
+            console.error('Failed to get current user:', error);
+            this.router.navigate(['/login']);
+          }
         });
       },
       error: (error) => {

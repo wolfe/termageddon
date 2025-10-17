@@ -33,18 +33,20 @@ export class EntryRouterComponent implements OnInit {
   private loadEntryAndRoute(entryId: number, isEditMode: boolean): void {
     this.glossaryService.getEntry(entryId).subscribe({
       next: (entry) => {
-        const currentUser = this.authService.getCurrentUser();
-        if (!currentUser) {
-          this.router.navigate(['/login']);
-          return;
-        }
-
-        // Determine target panel based on entry state and user
-        const targetPanel = this.determineTargetPanel(entry, currentUser, isEditMode);
-        
-        // Navigate to appropriate panel with entry selected
-        this.router.navigate([targetPanel], {
-          queryParams: { entryId: entryId, edit: isEditMode ? 'true' : undefined }
+        this.authService.getCurrentUser().subscribe({
+          next: (currentUser) => {
+            // Determine target panel based on entry state and user
+            const targetPanel = this.determineTargetPanel(entry, currentUser, isEditMode);
+            
+            // Navigate to appropriate panel with entry selected
+            this.router.navigate([targetPanel], {
+              queryParams: { entryId: entryId, edit: isEditMode ? 'true' : undefined }
+            });
+          },
+          error: (error) => {
+            console.error('Failed to get current user:', error);
+            this.router.navigate(['/login']);
+          }
         });
       },
       error: (error) => {

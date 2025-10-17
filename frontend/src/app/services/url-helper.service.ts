@@ -91,11 +91,11 @@ export class UrlHelperService {
   parseQueryParams(queryParams: any): { term?: string; perspective?: string } {
     const result: { term?: string; perspective?: string } = {};
     
-    if (queryParams['term']) {
+    if (queryParams && queryParams['term']) {
       result.term = decodeURIComponent(queryParams['term']);
     }
     
-    if (queryParams['perspective']) {
+    if (queryParams && queryParams['perspective']) {
       result.perspective = decodeURIComponent(queryParams['perspective']);
     }
     

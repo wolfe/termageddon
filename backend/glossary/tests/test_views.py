@@ -225,6 +225,21 @@ class TestEntryViewSet:
         assert response.status_code == status.HTTP_201_CREATED
         assert Entry.objects.filter(term__text="New Term", perspective=perspective).exists()
 
+    def test_create_with_term_long_text(self, authenticated_client):
+        """Test creating a term with text exceeding length limit"""
+        perspective = PerspectiveFactory()
+        
+        url = reverse("entry-create-with-term")
+        data = {
+            "term_text": "x" * 1000,  # Very long term text
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Term text cannot exceed 255 characters" in response.data["detail"]
+
     def test_endorse_as_perspective_curator(self, authenticated_client):
         """Test endorsing entry as perspective curator"""
         perspective = PerspectiveFactory()
@@ -1080,3 +1095,128 @@ class TestEntryLookupOrCreate:
         
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Perspective not found" in response.data["detail"]
+
+    def test_concurrent_entry_creation_race_condition(self, authenticated_client):
+        """Test handling of concurrent entry creation attempts"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        
+        # Simulate concurrent creation by creating entry before lookup
+        entry = EntryFactory(term=term, perspective=perspective)
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        # Should find existing entry, not create duplicate
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["entry_id"] == entry.id
+        assert response.data["is_new"] is False
+
+    def test_lookup_with_deleted_term(self, authenticated_client):
+        """Test lookup when term exists but is soft-deleted"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        term.delete()  # Soft delete the term
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "Term not found" in response.data["detail"]
+
+    def test_lookup_with_deleted_perspective(self, authenticated_client):
+        """Test lookup when perspective exists but is soft-deleted"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        perspective.delete()  # Soft delete the perspective
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "Perspective not found" in response.data["detail"]
+
+    def test_lookup_with_deleted_entry(self, authenticated_client):
+        """Test lookup when entry exists but is soft-deleted"""
+        term = TermFactory()
+        perspective = PerspectiveFactory()
+        entry = EntryFactory(term=term, perspective=perspective)
+        entry.delete()  # Soft delete the entry
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_id": term.id,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        # Should create new entry since old one is deleted
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["is_new"] is True
+        assert response.data["entry_id"] != entry.id
+
+    def test_create_entry_with_invalid_term_text(self, authenticated_client):
+        """Test creation with empty or invalid term text"""
+        perspective = PerspectiveFactory()
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_text": "",  # Empty term text
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Either term_id or term_text is required" in response.data["detail"]
+
+    def test_create_entry_with_very_long_term_text(self, authenticated_client):
+        """Test creation with term text exceeding reasonable limits"""
+        perspective = PerspectiveFactory()
+        very_long_text = "x" * 1000  # Very long term text (exceeds 255 char limit)
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_text": very_long_text,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        # Should return 400 Bad Request with proper validation message
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Term text cannot exceed 255 characters" in response.data["detail"]
+
+    def test_create_entry_with_maximum_length_term_text(self, authenticated_client):
+        """Test creation with term text at the maximum allowed length (255 chars)"""
+        perspective = PerspectiveFactory()
+        max_length_text = "x" * 255  # Exactly 255 characters
+        
+        url = reverse("entry-lookup-or-create-entry")
+        data = {
+            "term_text": max_length_text,
+            "perspective_id": perspective.id
+        }
+        
+        response = authenticated_client.post(url, data)
+        
+        # Should succeed with maximum length text
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["is_new"] is True
+        assert response.data["term"]["text"] == max_length_text

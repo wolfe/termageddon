@@ -362,4 +362,215 @@ describe('GlossaryService', () => {
       req.flush(mockComments);
     });
   });
+
+  describe('New Entry Enhancement Methods', () => {
+    it('should lookup or create entry successfully', () => {
+      const mockResponse = {
+        entry_id: 1,
+        is_new: false,
+        term: {
+          id: 1,
+          text: 'Test Term',
+          text_normalized: 'test term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        perspective: {
+          id: 1,
+          name: 'Test Perspective',
+          description: 'Test Description',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        entry: {
+          id: 1,
+          term: {
+            id: 1,
+            text: 'Test Term',
+            text_normalized: 'test term',
+            is_official: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          perspective: {
+            id: 1,
+            name: 'Test Perspective',
+            description: 'Test Description',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        has_published_draft: true,
+        has_unpublished_draft: false,
+        unpublished_draft_author_id: null
+      };
+
+      const request = {
+        term_id: 1,
+        perspective_id: 1
+      };
+
+      service.lookupOrCreateEntry(request).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup_or_create_entry/');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(request);
+      req.flush(mockResponse);
+    });
+
+    it('should handle lookup or create entry with new term', () => {
+      const mockResponse = {
+        entry_id: 1,
+        is_new: true,
+        term: {
+          id: 1,
+          text: 'New Term',
+          text_normalized: 'new term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        perspective: {
+          id: 1,
+          name: 'Test Perspective',
+          description: 'Test Description',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        entry: undefined,
+        has_published_draft: false,
+        has_unpublished_draft: false,
+        unpublished_draft_author_id: null
+      };
+
+      const request = {
+        term_text: 'New Term',
+        perspective_id: 1
+      };
+
+      service.lookupOrCreateEntry(request).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+        expect(response.is_new).toBe(true);
+        expect(response.entry).toBeUndefined();
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup_or_create_entry/');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(request);
+      req.flush(mockResponse);
+    });
+
+    it('should handle server errors gracefully in lookup or create entry', () => {
+      const request = {
+        term_id: 1,
+        perspective_id: 1
+      };
+
+      service.lookupOrCreateEntry(request).subscribe({
+        next: () => fail('Should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(400);
+        }
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup_or_create_entry/');
+      expect(req.request.method).toBe('POST');
+      req.flush({ detail: 'Invalid request' }, { status: 400, statusText: 'Bad Request' });
+    });
+
+    it('should get entry by ID with full draft information', () => {
+      const mockEntry: Entry = {
+        id: 1,
+        term: {
+          id: 1,
+          text: 'Test Term',
+          text_normalized: 'test term',
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        perspective: {
+          id: 1,
+          name: 'Test Perspective',
+          description: 'Test Description',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        is_official: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      service.getEntryById(1).subscribe(entry => {
+        expect(entry).toEqual(mockEntry);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/1/');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockEntry);
+    });
+
+    it('should get draft by ID with full entry information', () => {
+      const mockDraft = {
+        id: 1,
+        content: 'Test draft content',
+        is_approved: false,
+        is_published: false,
+        is_endorsed: false,
+        approval_count: 0,
+        timestamp: '2024-01-01T00:00:00Z',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+        author: {
+          id: 1,
+          username: 'testuser',
+          first_name: 'Test',
+          last_name: 'User',
+          is_staff: false,
+          perspective_curator_for: []
+        },
+        entry: {
+          id: 1,
+          term: {
+            id: 1,
+            text: 'Test Term',
+            text_normalized: 'test term',
+            is_official: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          perspective: {
+            id: 1,
+            name: 'Test Perspective',
+            description: 'Test Description',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          is_official: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        },
+        approvers: [],
+        requested_reviewers: [],
+        replaces_draft: undefined
+      };
+
+      service.getDraftById(1).subscribe(draft => {
+        expect(draft).toEqual(mockDraft);
+        expect(draft.entry).toBeDefined();
+        expect(draft.entry.term).toBeDefined();
+        expect(draft.entry.perspective).toBeDefined();
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entry-drafts/1/?expand=entry');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockDraft);
+    });
+  });
 });

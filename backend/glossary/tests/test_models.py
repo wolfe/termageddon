@@ -295,3 +295,77 @@ class TestPerspectiveCuratorModel:
 
         other_perspective = PerspectiveFactory()
         assert user.is_perspective_curator_for(other_perspective.id) is False
+
+
+@pytest.mark.django_db
+class TestEntryModelEdgeCases:
+    """Test Entry model edge cases and soft delete scenarios"""
+
+    def test_get_latest_draft_with_deleted_drafts(self):
+        """Test get_latest_draft excludes soft-deleted drafts"""
+        entry = EntryFactory()
+        user = UserFactory()
+        
+        # Create multiple drafts
+        draft1 = EntryDraftFactory(entry=entry, author=user, content="First draft")
+        draft2 = EntryDraftFactory(entry=entry, author=user, content="Second draft")
+        
+        # Soft delete the latest draft
+        draft2.delete()
+        
+        # Should return the first draft as latest
+        latest_draft = entry.get_latest_draft()
+        assert latest_draft == draft1
+        assert latest_draft.content == "First draft"
+
+    def test_get_latest_published_draft_with_deleted_drafts(self):
+        """Test get_latest_published_draft excludes soft-deleted drafts"""
+        entry = EntryFactory()
+        user = UserFactory()
+        
+        # Create published drafts
+        published_draft1 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="First published")
+        published_draft2 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="Second published")
+        
+        # Soft delete the latest published draft
+        published_draft2.delete()
+        
+        # Should return the first published draft as latest
+        latest_published = entry.get_latest_published_draft()
+        assert latest_published == published_draft1
+        assert latest_published.content == "First published"
+
+    def test_entry_with_multiple_published_drafts(self):
+        """Test behavior when entry has multiple published drafts (edge case)"""
+        entry = EntryFactory()
+        user = UserFactory()
+        
+        # Create multiple published drafts (shouldn't normally happen but test edge case)
+        published_draft1 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="First published")
+        published_draft2 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="Second published")
+        
+        # Should return the most recent published draft
+        latest_published = entry.get_latest_published_draft()
+        assert latest_published == published_draft2
+        assert latest_published.content == "Second published"
+
+    def test_entry_with_no_drafts(self):
+        """Test entry with no drafts returns None for draft methods"""
+        entry = EntryFactory()
+        
+        # Should return None when no drafts exist
+        assert entry.get_latest_draft() is None
+        assert entry.get_latest_published_draft() is None
+
+    def test_entry_with_only_deleted_drafts(self):
+        """Test entry with only soft-deleted drafts"""
+        entry = EntryFactory()
+        user = UserFactory()
+        
+        # Create and delete all drafts
+        draft = EntryDraftFactory(entry=entry, author=user, content="Deleted draft")
+        draft.delete()
+        
+        # Should return None since all drafts are deleted
+        assert entry.get_latest_draft() is None
+        assert entry.get_latest_published_draft() is None
