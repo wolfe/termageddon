@@ -13,6 +13,7 @@
       [searchTerm]="state.searchTerm"
       [filters]="filters"
       [loading]="state.loading"
+      (searchTermChange)="state.searchTerm = $event"
       (search)="onSearch()"
       (filterChanged)="onFilterChanged($event)"
       (cleared)="state.searchTerm = ''; onSearch()"

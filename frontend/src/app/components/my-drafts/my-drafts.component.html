@@ -12,6 +12,7 @@
       placeholder="Search drafts..."
       [searchTerm]="state.searchTerm"
       [loading]="state.loading"
+      (searchTermChange)="state.searchTerm = $event"
       (search)="onSearch()"
       (cleared)="state.searchTerm = ''; onSearch()"
     ></app-search-filter-bar>

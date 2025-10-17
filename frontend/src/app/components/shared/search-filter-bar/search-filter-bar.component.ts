@@ -25,10 +25,12 @@ export class SearchFilterBarComponent {
   @Input() loading: boolean = false;
 
   @Output() search = new EventEmitter<string>();
+  @Output() searchTermChange = new EventEmitter<string>();
   @Output() filterChanged = new EventEmitter<{ filterId: string; value: any }>();
   @Output() cleared = new EventEmitter<void>();
 
   onSearchInput(): void {
+    this.searchTermChange.emit(this.searchTerm);
     this.search.emit(this.searchTerm);
   }
 

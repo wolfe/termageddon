@@ -149,12 +149,15 @@ export class ReviewService {
   /**
    * Search drafts with full-text search
    */
-  searchDrafts(searchTerm: string, showAll: boolean = false): Observable<PaginatedResponse<ReviewDraft>> {
+  searchDrafts(searchTerm: string, showAll: boolean = false, eligibility?: string): Observable<PaginatedResponse<ReviewDraft>> {
     const params = new URLSearchParams();
     params.set('search', searchTerm);
     params.set('expand', 'entry,entry.term,entry.perspective');
     if (showAll) {
       params.set('show_all', 'true');
+    }
+    if (eligibility) {
+      params.set('eligibility', eligibility);
     }
     return this.http.get<PaginatedResponse<ReviewDraft>>(
       `${this.API_URL}/entry-drafts/?${params.toString()}`,

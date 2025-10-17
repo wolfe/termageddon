@@ -36,7 +36,7 @@ export class UnifiedDraftService {
 
     // Handle search requests
     if (searchTerm) {
-      return this.reviewService.searchDrafts(searchTerm, showAll);
+      return this.reviewService.searchDrafts(searchTerm, showAll, eligibility);
     }
 
     // Handle specific entry drafts
