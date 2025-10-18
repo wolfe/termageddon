@@ -161,7 +161,6 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
       this.permissionService.currentUser?.id || 0
     ).subscribe({
       next: (newDraft) => {
-        console.log('Successfully created draft:', newDraft);
         
         // Refresh draft history to get latest
         this.loadDraftHistory();  // This will update latestDraft

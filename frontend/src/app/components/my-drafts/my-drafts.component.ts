@@ -235,7 +235,6 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   onApprove(): void {
     // My Drafts doesn't support approval - this is just a placeholder
-    console.log('Approval not supported in My Drafts');
   }
 
   publishDraft(draft: ReviewDraft): void {
@@ -331,7 +330,6 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
             this.state.currentUser!.id
           ).subscribe({
             next: (newDraft) => {
-              console.log('Successfully created entry and first draft:', newDraft);
               
               // Refresh drafts list to include the new draft
               this.loadMyDrafts();
@@ -370,7 +368,6 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       this.state.currentUser.id
     ).subscribe({
       next: (newDraft) => {
-        console.log('Successfully created first draft:', newDraft);
         
         // Refresh drafts list to include the new draft
         this.loadMyDrafts();

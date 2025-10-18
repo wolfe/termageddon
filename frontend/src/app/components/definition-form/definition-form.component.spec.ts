@@ -26,11 +26,12 @@ describe('DefinitionFormComponent', () => {
       // Mock editor with required methods
       const mockEditor = {
         getSelection: jasmine.createSpy('getSelection').and.returnValue({ index: 0, length: 0 }),
-        clipboard: {
-          convert: jasmine.createSpy('convert').and.returnValue({ ops: [{ insert: 'Test Entry' }] })
-        },
-        updateContents: jasmine.createSpy('updateContents'),
-        setSelection: jasmine.createSpy('setSelection')
+        insertText: jasmine.createSpy('insertText'),
+        formatText: jasmine.createSpy('formatText'),
+        setSelection: jasmine.createSpy('setSelection'),
+        root: {
+          querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([])
+        }
       };
 
       component.editor = mockEditor;
@@ -40,16 +41,14 @@ describe('DefinitionFormComponent', () => {
 
       component.insertLink(entryId, entryText);
 
-      // Verify that clipboard.convert was called with proper HTML
-      expect(mockEditor.clipboard.convert).toHaveBeenCalledWith(
-        `<a href="#entry-${entryId}" class="entry-link" data-entry-id="${entryId}">${entryText}</a>`
-      );
+      // Verify that insertText was called with proper parameters
+      expect(mockEditor.insertText).toHaveBeenCalledWith(0, `${entryText} 📖`, 'user');
 
-      // Verify that updateContents was called
-      expect(mockEditor.updateContents).toHaveBeenCalled();
+      // Verify that formatText was called
+      expect(mockEditor.formatText).toHaveBeenCalledWith(0, `${entryText} 📖`.length, 'link', `/entry/${entryId}`);
 
       // Verify that setSelection was called
-      expect(mockEditor.setSelection).toHaveBeenCalledWith(entryText.length);
+      expect(mockEditor.setSelection).toHaveBeenCalledWith(`${entryText} 📖`.length);
     });
 
     it('should not insert link if editor is not available', () => {
@@ -65,10 +64,8 @@ describe('DefinitionFormComponent', () => {
     it('should not insert link if no selection is available', () => {
       const mockEditor = {
         getSelection: jasmine.createSpy('getSelection').and.returnValue(null),
-        clipboard: {
-          convert: jasmine.createSpy('convert')
-        },
-        updateContents: jasmine.createSpy('updateContents'),
+        insertText: jasmine.createSpy('insertText'),
+        formatText: jasmine.createSpy('formatText'),
         setSelection: jasmine.createSpy('setSelection')
       };
 
@@ -79,9 +76,9 @@ describe('DefinitionFormComponent', () => {
 
       component.insertLink(entryId, entryText);
 
-      // Verify that clipboard.convert was not called
-      expect(mockEditor.clipboard.convert).not.toHaveBeenCalled();
-      expect(mockEditor.updateContents).not.toHaveBeenCalled();
+      // Verify that insertText was not called
+      expect(mockEditor.insertText).not.toHaveBeenCalled();
+      expect(mockEditor.formatText).not.toHaveBeenCalled();
       expect(mockEditor.setSelection).not.toHaveBeenCalled();
     });
   });

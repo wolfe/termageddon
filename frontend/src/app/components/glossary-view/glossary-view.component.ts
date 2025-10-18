@@ -78,17 +78,14 @@ export class GlossaryViewComponent implements OnInit {
   }
 
   onEntrySelected(entry: Entry): void {
-    console.log('onEntrySelected called with entry:', entry);
     this.selectedEntry = entry;
     this.isEditMode = false;
     this.updateUrl(entry);
     // Load all entries for this term to show correct perspective pills
     this.loadTermEntries(entry.term.id);
-    console.log('selectedEntry set to:', this.selectedEntry);
   }
 
   onTermSelected(termEntries: Entry[]): void {
-    console.log('onTermSelected called with entries:', termEntries);
     this.selectedTermEntries = [...termEntries]; // Create new array reference
     // Only set selectedEntry to first perspective if no specific entry is already selected
     if (!this.selectedEntry || !termEntries.find(e => e.id === this.selectedEntry?.id)) {
@@ -107,11 +104,8 @@ export class GlossaryViewComponent implements OnInit {
   }
 
   onEditSaved(entry: Entry): void {
-    console.log('onEditSaved called with entry:', entry);
-    console.log('Setting isEditMode to false');
     this.isEditMode = false;
     this.selectedEntry = entry;
-    console.log('isEditMode is now:', this.isEditMode);
   }
 
   onTermCreated(entry: Entry): void {

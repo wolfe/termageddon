@@ -17,13 +17,15 @@ describe('TermDetailComponent', () => {
   beforeEach(async () => {
     const navigationSpy = jasmine.createSpyObj('NavigationService', ['navigateToEntry']);
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', ['loadCommentsWithPositions', 'loadDraftHistory', 'initializeEditContentFromLatest', 'createNewDraft', 'refreshAfterDraftCreated']);
-    const permissionSpy = jasmine.createSpyObj('PermissionService', [], { currentUser: { id: 1, username: 'testuser', first_name: 'Test', last_name: 'User', is_staff: false, perspective_curator_for: [] } });
+    const permissionSpy = jasmine.createSpyObj('PermissionService', ['canMarkOfficial'], { currentUser: { id: 1, username: 'testuser', first_name: 'Test', last_name: 'User', is_staff: false, perspective_curator_for: [] } });
+    permissionSpy.canMarkOfficial.and.returnValue(false);
     const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
     const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getEntries', 'endorseEntry']);
 
     // Mock the service methods to return observables
     entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
     entryDetailSpy.loadDraftHistory.and.returnValue(of([]));
+    glossarySpy.getEntries.and.returnValue(of({ results: [] }));
 
     await TestBed.configureTestingModule({
       imports: [TermDetailComponent, HttpClientTestingModule],

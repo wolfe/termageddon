@@ -182,9 +182,6 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   onSaveEdit(): void {
-    console.log('Saving definition:', this.editContent.trim());
-    console.log('Current user:', this.permissionService.currentUser);
-
     if (!this.permissionService.currentUser) {
       this.notificationService.error('You must be logged in to save definitions.');
       return;
@@ -199,12 +196,9 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     const entryId = this.entry.id;
     const content = this.editContent.trim();
 
-    console.log('Creating new draft:', { entryId, content });
-
     // Use EntryDetailService instead of direct glossaryService call
     this.entryDetailService.createNewDraft(entryId, content, this.permissionService.currentUser?.id || 0).subscribe({
       next: (newDraft) => {
-        console.log('Successfully created draft:', newDraft);
         
         // Use unified refresh pattern
         this.entryDetailService.refreshAfterDraftCreated(entryId).subscribe({
@@ -370,7 +364,6 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   onDraftSelected(draft: EntryDraft): void {
     // Update the view to show the selected draft
     this.selectedHistoricalDraft = draft;
-    console.log('Selected draft:', draft);
   }
 
   private setupEntryLinkHandlers(): void {

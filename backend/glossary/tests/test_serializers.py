@@ -84,7 +84,7 @@ class TestEntrySerializers:
     def test_entry_list_serializer_includes_active_version(self):
         """Test that EntryListSerializer includes active_version"""
         entry = EntryFactory()
-        version = EntryDraftFactory(entry=entry)
+        version = EntryDraftFactory(entry=entry, is_published=True)
 
         serializer = EntryListSerializer(entry)
         data = serializer.data

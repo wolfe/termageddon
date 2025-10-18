@@ -218,7 +218,6 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
         console.error('Failed to load draft:', error);
         // If we get a 404, the draft doesn't exist - redirect to My Drafts to create one
         if (error.status === 404) {
-          console.log('Draft not found, redirecting to My Drafts to create new draft');
           this.router.navigate(['/my-drafts'], { 
             queryParams: { entryId: this.getEntryIdFromUrl(), edit: 'true' } 
           });
@@ -407,7 +406,6 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
           this.loadDraftById(entry.active_draft.id, editMode);
         } else {
           // No active draft - redirect to My Drafts to create one
-          console.log('No active draft found, redirecting to My Drafts to create draft');
           this.router.navigate(['/my-drafts'], { 
             queryParams: { entryId, edit: 'true' } 
           });

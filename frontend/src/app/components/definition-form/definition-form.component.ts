@@ -42,7 +42,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
           [{ 'list': 'ordered'}, { 'list': 'bullet' }],
           [{ 'indent': '-1'}, { 'indent': '+1' }],
           [{ 'align': [] }],
-          ['link', 'custom-link'], // ✅ Keep custom-link in toolbar
+          ['link'], // custom-link is added dynamically
           ['clean']
         ],
         handlers: {
@@ -136,7 +136,6 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
   }
 
   onEntrySelected(entry: Entry) {
-    console.log('onEntrySelected called with:', entry);
     this.insertLink(entry.id, entry.term.text);
     this.showEntryLinkSelector = false;
   }
