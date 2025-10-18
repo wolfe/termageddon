@@ -458,6 +458,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         "post",
         "patch",
         "put",
+        "delete",
         "head",
         "options",
     ]  # Allow updates
@@ -677,6 +678,21 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """Save the updated draft"""
         serializer.save(updated_by=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a draft (only author can delete their own drafts)"""
+        draft = self.get_object()
+        
+        # Check if user is the author of the draft
+        if draft.author != request.user:
+            return Response(
+                {"detail": "You can only delete your own drafts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        
+        # Delete the draft
+        self.perform_destroy(draft)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def retrieve(self, request, *args, **kwargs):
         """Enhanced retrieve to include full entry information"""

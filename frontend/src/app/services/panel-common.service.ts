@@ -479,6 +479,21 @@ export class PanelCommonService implements OnDestroy {
   }
 
   /**
+   * Centralize post-delete refresh logic
+   */
+  refreshAfterDelete(state: PanelState, loadDraftsCallback: () => void): void {
+    // Clear selected draft since it was deleted
+    state.selectedDraft = null;
+    
+    // Clear comments since the draft no longer exists
+    state.comments = [];
+    state.isLoadingComments = false;
+    
+    // Refresh drafts list
+    loadDraftsCallback();
+  }
+
+  /**
    * Handle post-approval list updates
    */
   refreshAfterApproval(draftId: number, state: PanelState): void {

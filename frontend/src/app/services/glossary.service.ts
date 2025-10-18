@@ -99,6 +99,10 @@ export class GlossaryService extends BaseService {
     return this.postAction<EntryDraft>(`/entry-drafts/${draftId}/approve/`);
   }
 
+  deleteDraft(draftId: number): Observable<void> {
+    return this.delete<void>(`/entry-drafts/${draftId}/`);
+  }
+
   // Search entries
   searchEntries(
     searchTerm: string,

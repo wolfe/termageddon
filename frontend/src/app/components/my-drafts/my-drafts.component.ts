@@ -17,6 +17,7 @@ import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-de
 import { NewEntryDetailPanelComponent } from '../shared/new-entry-detail-panel/new-entry-detail-panel.component';
 import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
+import { ConfirmationDialogComponent } from '../shared/confirmation-dialog/confirmation-dialog.component';
 import { ReviewDraft, PaginatedResponse, User, Comment } from '../../models';
 import { getDraftStatus, getDraftStatusClass, canPublish } from '../../utils/draft-status.util';
 import { getInitials } from '../../utils/user.util';
@@ -34,7 +35,8 @@ import { getInitials } from '../../utils/user.util';
     DraftDetailPanelComponent,
     NewEntryDetailPanelComponent,
     StatusSummaryComponent,
-    CreateEntryDialogComponent
+    CreateEntryDialogComponent,
+    ConfirmationDialogComponent
   ],
   templateUrl: './my-drafts.component.html',
   styleUrls: ['./my-drafts.component.scss'],
@@ -48,6 +50,10 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   // My Drafts-specific state
   isEditMode: boolean = false; // Track edit mode for auto-editing
   showCreateDialog: boolean = false;
+
+  // Delete confirmation dialog state
+  showDeleteConfirmation: boolean = false;
+  draftToDelete: ReviewDraft | null = null;
 
   // Unified filter state
   perspectives: Perspective[] = [];
@@ -256,6 +262,44 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   onEditCancelled(): void {
     // Edit cancellation is handled by the draft-detail-panel component
+  }
+
+  onDeleteDraft(): void {
+    if (!this.state.selectedDraft) return;
+    
+    this.draftToDelete = this.state.selectedDraft;
+    this.showDeleteConfirmation = true;
+  }
+
+  onDeleteConfirmed(): void {
+    if (!this.draftToDelete) return;
+
+    this.glossaryService.deleteDraft(this.draftToDelete.id).subscribe({
+      next: () => {
+        // Close confirmation dialog
+        this.showDeleteConfirmation = false;
+        this.draftToDelete = null;
+        
+        // Use centralized refresh logic
+        this.panelCommonService.refreshAfterDelete(this.state, () => {
+          this.loadMyDrafts();
+        });
+        
+        // Navigate back to my-drafts without specific draft
+        this.router.navigate(['/my-drafts']);
+      },
+      error: (error) => {
+        console.error('Failed to delete draft:', error);
+        this.showDeleteConfirmation = false;
+        this.draftToDelete = null;
+        // You might want to show an error notification here
+      }
+    });
+  }
+
+  onDeleteCancelled(): void {
+    this.showDeleteConfirmation = false;
+    this.draftToDelete = null;
   }
 
   /**

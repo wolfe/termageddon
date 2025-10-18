@@ -41,6 +41,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   @Input() entryId?: number;
   @Input() currentUserId?: number;
   @Input() override isEditMode: boolean = false; // Input to trigger edit mode automatically
+  @Input() canDiscard: boolean = false; // Whether the delete button should be shown
 
   @ViewChild('contentContainer') contentContainer?: ElementRef;
 
@@ -48,6 +49,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   @Output() approve = new EventEmitter<void>();
   @Output() publish = new EventEmitter<void>();
   @Output() requestReview = new EventEmitter<void>();
+  @Output() deleteDraft = new EventEmitter<void>();
   @Output() override commentAdded = new EventEmitter<Comment>();
   @Output() override commentResolved = new EventEmitter<Comment>();
   @Output() override commentUnresolved = new EventEmitter<Comment>();
@@ -133,6 +135,10 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
 
   onRequestReview(): void {
     this.requestReview.emit();
+  }
+
+  onDelete(): void {
+    this.deleteDraft.emit();
   }
 
   // Override base class methods for draft-specific behavior

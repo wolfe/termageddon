@@ -113,6 +113,7 @@
         [showPublishButton]="true"
         [showRequestReviewButton]="true"
         [showApproveButton]="false"
+        [canDiscard]="true"
         [isLoadingComments]="state.isLoadingComments"
         [comments]="state.comments"
         [requestingReview]="state.requestingReview"
@@ -122,6 +123,7 @@
         (approve)="onApprove()"
         (publish)="publishDraft(state.selectedDraft!)"
         (requestReview)="requestReviewers()"
+        (deleteDraft)="onDeleteDraft()"
         (editRequested)="onEditRequested()"
         (editSaved)="onEditSaved()"
         (editCancelled)="onEditCancelled()"
@@ -150,3 +152,17 @@
   (close)="onDialogClosed()"
   (entryCreated)="onTermCreated($event)"
 ></app-create-entry-dialog>
+
+<!-- Discard Confirmation Dialog -->
+<app-confirmation-dialog
+  [isOpen]="showDeleteConfirmation"
+  [data]="{
+    title: 'Discard Draft',
+    message: 'Discard this draft and revert to previous?',
+    confirmText: 'Discard',
+    cancelText: 'Cancel',
+    type: 'warning'
+  }"
+  (confirmed)="onDeleteConfirmed()"
+  (cancelled)="onDeleteCancelled()"
+></app-confirmation-dialog>

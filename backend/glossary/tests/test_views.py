@@ -330,6 +330,109 @@ class TestEntryDraftViewSet:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "cannot approve their own" in response.data["detail"]
 
+    def test_delete_draft_by_author(self, authenticated_client):
+        """Test deleting a draft by its author"""
+        entry = EntryFactory()
+        draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=False
+        )
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not EntryDraft.objects.filter(id=draft.id).exists()
+
+    def test_delete_draft_by_non_author_fails(self, authenticated_client):
+        """Test deleting a draft by non-author fails"""
+        other_user = UserFactory()
+        entry = EntryFactory()
+        draft = EntryDraftFactory(
+            entry=entry, author=other_user, is_published=False
+        )
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert "You can only delete your own drafts" in response.data["detail"]
+        assert EntryDraft.objects.filter(id=draft.id).exists()
+
+    def test_delete_published_draft_by_author(self, authenticated_client):
+        """Test deleting a published draft by its author"""
+        entry = EntryFactory()
+        draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=True
+        )
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not EntryDraft.objects.filter(id=draft.id).exists()
+
+    def test_delete_nonexistent_draft(self, authenticated_client):
+        """Test deleting a nonexistent draft returns 404"""
+        url = reverse("entrydraft-detail", kwargs={"pk": 99999})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_draft_with_approvals(self, authenticated_client):
+        """Test deleting a draft that has approvals"""
+        approver = UserFactory()
+        entry = EntryFactory()
+        draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=False
+        )
+        draft.approvers.add(approver)
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not EntryDraft.objects.filter(id=draft.id).exists()
+
+    def test_delete_draft_with_requested_reviewers(self, authenticated_client):
+        """Test deleting a draft that has requested reviewers"""
+        reviewer = UserFactory()
+        entry = EntryFactory()
+        draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=False
+        )
+        draft.requested_reviewers.add(reviewer)
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not EntryDraft.objects.filter(id=draft.id).exists()
+
+    def test_delete_draft_with_comments(self, authenticated_client):
+        """Test deleting a draft that has comments"""
+        entry = EntryFactory()
+        draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=False
+        )
+        CommentFactory(content_object=draft, author=authenticated_client.user)
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = authenticated_client.delete(url)
+        
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not EntryDraft.objects.filter(id=draft.id).exists()
+
+    def test_delete_draft_unauthenticated_fails(self, api_client):
+        """Test deleting a draft without authentication fails"""
+        entry = EntryFactory()
+        draft = EntryDraftFactory(entry=entry, is_published=False)
+        
+        url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
+        response = api_client.delete(url)
+        
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert EntryDraft.objects.filter(id=draft.id).exists()
+
 
 @pytest.mark.django_db
 class TestCommentViewSet:
