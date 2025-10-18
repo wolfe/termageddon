@@ -384,5 +384,36 @@ def is_perspective_curator_for(user, perspective_id):
     return PerspectiveCurator.objects.filter(user=user, perspective_id=perspective_id).exists()
 
 
+class UserProfile(AuditedModel):
+    """User profile extending Django's built-in User model"""
+    
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile"
+    )
+    is_test_user = models.BooleanField(
+        default=False,
+        help_text="Indicates this is a test user for easy switching"
+    )
+    
+    class Meta:
+        db_table = "glossary_user_profile"
+    
+    def __str__(self):
+        return f"{self.user.username} profile"
+
+
 # Monkey-patch the User model to add the helper method
 User.add_to_class("is_perspective_curator_for", is_perspective_curator_for)
+
+
+# Signal to auto-create UserProfile when User is created
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Create UserProfile when User is created"""
+    if created:
+        UserProfile.objects.create(user=instance)

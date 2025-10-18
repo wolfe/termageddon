@@ -309,7 +309,10 @@ class Command(BaseCommand):
                 "Chloe Dubois": ("chloedubois", "Chloe", "Dubois"),
             }
             
-            for author_name in unique_authors:
+            # Convert to list to get the last user
+            author_list = list(unique_authors)
+            
+            for i, author_name in enumerate(author_list):
                 if author_name in user_mappings:
                     username, first_name, last_name = user_mappings[author_name]
                 else:
@@ -326,11 +329,21 @@ class Command(BaseCommand):
                     },
                 )
                 if created:
-                    user.set_password(username)  # Password = username
+                    user.set_password("ImABird")  # Shared password for test users
                     user.save()
-                    self.stdout.write(
-                        self.style.SUCCESS(f"Created user: {username} / {username}")
-                    )
+                    # Mark as test user (all but the last one)
+                    is_test_user = i < len(author_list) - 1
+                    user.profile.is_test_user = is_test_user
+                    user.profile.save()
+                    
+                    if is_test_user:
+                        self.stdout.write(
+                            self.style.SUCCESS(f"Created test user: {username} / ImABird")
+                        )
+                    else:
+                        self.stdout.write(
+                            self.style.SUCCESS(f"Created regular user: {username} / ImABird")
+                        )
                 users[author_name] = user
 
             # Create perspectives from CSV
@@ -531,6 +544,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"  Superuser: admin / admin"))
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Test users: <username> / <username> (e.g., maria.flores / maria.flores)"
+                    f"  Test users: <username> / ImABird (most users, all but the last one)"
                 )
             )

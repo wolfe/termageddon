@@ -989,6 +989,69 @@ def current_user_view(request):
     return Response(serializer.data)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def switch_test_user_view(request):
+    """Switch to a test user account"""
+    from glossary.serializers import UserDetailSerializer
+    
+    user_id = request.data.get('user_id')
+    if not user_id:
+        return Response(
+            {"detail": "user_id is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    
+    try:
+        target_user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {"detail": "Target user not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    
+    # Validate current user is a test user
+    try:
+        if not request.user.profile.is_test_user:
+            return Response(
+                {"detail": "Only test users can switch accounts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+    except:
+        return Response(
+            {"detail": "User profile not found."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    
+    # Validate target user is a test user
+    try:
+        if not target_user.profile.is_test_user:
+            return Response(
+                {"detail": "Can only switch to test users."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+    except:
+        return Response(
+            {"detail": "Target user profile not found."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    
+    # Delete current user's token
+    try:
+        request.user.auth_token.delete()
+    except:
+        pass  # Token might not exist
+    
+    # Create/retrieve token for target user
+    token, created = Token.objects.get_or_create(user=target_user)
+    
+    # Return new token and user data (same format as login)
+    return Response({
+        "token": token.key, 
+        "user": UserDetailSerializer(target_user).data
+    })
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def users_list_view(request):
@@ -996,6 +1059,12 @@ def users_list_view(request):
     from glossary.serializers import UserSerializer
 
     users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
+    
+    # Filter for test users only if requested
+    test_users_only = request.query_params.get('test_users_only')
+    if test_users_only and test_users_only.lower() == 'true':
+        users = users.filter(profile__is_test_user=True)
+    
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 

@@ -5,6 +5,7 @@ export interface User {
   last_name: string;
   is_staff: boolean;
   perspective_curator_for?: number[];
+  is_test_user?: boolean;
 }
 
 export interface Perspective {

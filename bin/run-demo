@@ -206,7 +206,7 @@ get_auth_token() {
 
 # Get token for Maria Carter (demo user)
 echo -e "${BLUE}  → Getting auth token for Maria Carter...${NC}"
-MARIA_TOKEN=$(get_auth_token "mariacarter" "mariacarter")
+MARIA_TOKEN=$(get_auth_token "mariacarter" "ImABird")
 
 if [ -z "$MARIA_TOKEN" ] || [ "$MARIA_TOKEN" = "null" ]; then
     echo -e "${RED}  ✗ Failed to get token for mariacarter${NC}"
@@ -243,7 +243,7 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
     if [ -n "$MARIA_TOKEN" ]; then
         echo -e "    ${BLUE}•${NC} Frontend Window (Maria Carter - ${GREEN}pre-authenticated${NC})"
     else
-        echo -e "    ${BLUE}•${NC} Frontend Window (login as mariacarter/mariacarter)"
+        echo -e "    ${BLUE}•${NC} Frontend Window (login as mariacarter/ImABird)"
     fi
     
 elif command -v google-chrome &> /dev/null; then
@@ -272,7 +272,7 @@ else
     if [ -n "$MARIA_TOKEN" ]; then
         echo -e "    ${BLUE}http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter${NC} (Maria Carter - pre-authenticated)"
     else
-        echo -e "    ${BLUE}http://localhost:4200${NC} (login as mariacarter)"
+        echo -e "    ${BLUE}http://localhost:4200${NC} (login as mariacarter/ImABird)"
     fi
 fi
 echo ""
@@ -290,7 +290,7 @@ echo ""
 echo -e "${YELLOW}Login Credentials:${NC}"
 echo -e "  ${BLUE}Admin:${NC}     admin / admin"
 echo ""
-echo -e "${YELLOW}Test Users (password = username):${NC}"
+echo -e "${YELLOW}Test Users (password = ImABird, most users):${NC}"
 echo -e "  ${BLUE}•${NC} mariacarter     (Maria Carter) - ${GREEN}Perspective Curator: Physics, Chemistry${NC}"
 echo -e "  ${BLUE}•${NC} bencarter       (Ben Carter) - ${GREEN}Perspective Curator: Chemistry, Biology${NC}"
 echo -e "  ${BLUE}•${NC} sofiarossi      (Sofia Rossi) - ${GREEN}Perspective Curator: Computer Science, Graph Theory${NC}"
@@ -300,6 +300,7 @@ echo -e "  ${BLUE}•${NC} aishakhan       (Aisha Khan)"
 echo -e "  ${BLUE}•${NC} samuelgreene    (Samuel Greene)"
 echo -e "  ${BLUE}•${NC} ivanpetrov      (Ivan Petrov)"
 echo -e "  ${BLUE}•${NC} chloedubois     (Chloe Dubois)"
+echo -e "  ${BLUE}•${NC} evelynreed      (Evelyn Reed) - ${YELLOW}Regular user (not test user)${NC}"
 echo ""
 echo -e "${YELLOW}Test Data:${NC}"
 echo -e "  ${BLUE}•${NC} 360 glossary entries with realistic approval states:"

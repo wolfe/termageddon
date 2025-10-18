@@ -78,16 +78,25 @@ class EntryDraftApprovalMixin:
 # User serializers
 class UserSerializer(serializers.ModelSerializer):
     """Basic user serializer"""
+    is_test_user = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "first_name", "last_name", "is_staff"]
+        fields = ["id", "username", "first_name", "last_name", "is_staff", "is_test_user"]
+    
+    def get_is_test_user(self, obj):
+        """Get is_test_user from profile"""
+        try:
+            return obj.profile.is_test_user
+        except:
+            return False
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
     """Detailed user serializer with perspective curator info"""
 
     perspective_curator_for = serializers.SerializerMethodField()
+    is_test_user = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -98,6 +107,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "last_name",
             "is_staff",
             "perspective_curator_for",
+            "is_test_user",
         ]
 
     def get_perspective_curator_for(self, obj):
@@ -105,6 +115,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
         return list(
             PerspectiveCurator.objects.filter(user=obj).values_list("perspective_id", flat=True)
         )
+    
+    def get_is_test_user(self, obj):
+        """Get is_test_user from profile"""
+        try:
+            return obj.profile.is_test_user
+        except:
+            return False
 
 
 # Perspective serializers

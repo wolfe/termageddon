@@ -12,6 +12,7 @@ from glossary.views import (
     current_user_view,
     logout_view,
     reset_test_database,
+    switch_test_user_view,
     system_config_view,
     users_list_view,
 )
@@ -30,6 +31,7 @@ urlpatterns = [
     path("auth/login/", CustomAuthToken.as_view(), name="auth-login"),
     path("auth/logout/", logout_view, name="auth-logout"),
     path("auth/me/", current_user_view, name="auth-me"),
+    path("auth/switch-test-user/", switch_test_user_view, name="switch-test-user"),
     # API endpoints
     path("users/", users_list_view, name="users-list"),
     path("system-config/", system_config_view, name="system-config"),

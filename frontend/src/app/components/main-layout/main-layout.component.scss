@@ -1,1 +1,22 @@
 // Component-specific styles for main-layout
+
+// User switcher dropdown styles
+.user-switcher-dropdown {
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Ensure dropdown appears above other elements
+.dropdown-menu {
+  z-index: 1000;
+}

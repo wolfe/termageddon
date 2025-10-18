@@ -77,4 +77,22 @@ export class AuthService {
     const token = this.getToken();
     return token !== null && token.trim() !== '';
   }
+
+  switchTestUser(userId: number): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.API_URL}/auth/switch-test-user/`, { user_id: userId })
+      .pipe(
+        tap({
+          next: (response) => this.setToken(response.token),
+          error: (error) => {
+            // Clear any existing token on switch failure
+            this.clearToken();
+          },
+        }),
+      );
+  }
+
+  getTestUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.API_URL}/users/?test_users_only=true`);
+  }
 }
