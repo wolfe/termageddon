@@ -290,8 +290,8 @@ class EntryListSerializer(serializers.ModelSerializer):
         return request.user.is_perspective_curator_for(obj.perspective.id)
 
     def get_active_draft(self, obj):
-        """Get the latest draft for this entry"""
-        draft = obj.get_latest_draft()
+        """Get the latest published draft for this entry"""
+        draft = obj.get_latest_published_draft()
         if draft:
             return EntryDraftListSerializer(draft).data
         return None

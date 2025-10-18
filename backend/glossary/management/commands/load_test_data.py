@@ -95,22 +95,20 @@ class Command(BaseCommand):
             drafts.append(draft)
         
         # Assign approval states to the chain
-        # Earlier drafts are more likely to be published
+        # Ensure at most one published draft per entry, and it can appear at any position
+        published_draft_index = None
+        if random.random() < 0.6:  # 60% chance of having a published draft in the chain
+            published_draft_index = random.randint(0, len(drafts) - 1)
+        
         for i, draft in enumerate(drafts):
-            if i == 0:  # First draft - most likely to be published
-                approval_state = random.choices(
-                    ['two_approvals', 'published'],
-                    weights=[30, 70]
-                )[0]
-            elif i == len(drafts) - 1:  # Last draft - least likely to be published
+            if i == published_draft_index:
+                # This draft will be published
+                approval_state = 'published'
+            else:
+                # This draft will not be published
                 approval_state = random.choices(
                     ['no_approvals', 'one_approval', 'two_approvals'],
-                    weights=[40, 40, 20]
-                )[0]
-            else:  # Middle drafts
-                approval_state = random.choices(
-                    ['one_approval', 'two_approvals', 'published'],
-                    weights=[30, 50, 20]
+                    weights=[30, 40, 30]  # More balanced distribution for unpublished drafts
                 )[0]
             
             # Assign approvers based on state
@@ -216,6 +214,26 @@ class Command(BaseCommand):
         newest_draft = EntryDraft.objects.order_by('-timestamp').first()
         if oldest_draft and newest_draft:
             metrics['timestamp_span_days'] = (newest_draft.timestamp - oldest_draft.timestamp).days
+        
+        # Entry-level validation metrics
+        entries_with_only_unpublished = 0
+        entries_with_published = 0
+        entries_with_both_states = 0
+        
+        for entry in Entry.objects.all():
+            has_published = entry.drafts.filter(is_published=True).exists()
+            has_unpublished = entry.drafts.filter(is_published=False).exists()
+            
+            if has_published and has_unpublished:
+                entries_with_both_states += 1
+            elif has_published:
+                entries_with_published += 1
+            elif has_unpublished:
+                entries_with_only_unpublished += 1
+        
+        metrics['entries_with_only_unpublished'] = entries_with_only_unpublished
+        metrics['entries_with_published'] = entries_with_published
+        metrics['entries_with_both_states'] = entries_with_both_states
         
         return metrics
 
@@ -426,7 +444,7 @@ class Command(BaseCommand):
                 potential_approvers = [u for u in all_users if u != author]
                 approval_state = random.choices(
                     ['no_approvals', 'one_approval', 'two_approvals', 'published'],
-                    weights=[20, 25, 35, 20]  # Most entries have 2 approvals, some published
+                    weights=[15, 20, 25, 40]  # More realistic: 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
                 )[0]
                 
                 # Determine if this will be published (affects timestamp)
@@ -501,6 +519,13 @@ class Command(BaseCommand):
             for key, count in metrics['approval_distribution'].items():
                 percentage = count/metrics['total_drafts']*100 if metrics['total_drafts'] > 0 else 0
                 self.stdout.write(self.style.SUCCESS(f"  {key.replace('_', ' ').title()}: {count} ({percentage:.1f}%)"))
+            
+            # Entry-level validation metrics
+            total_entries = metrics['entries_with_only_unpublished'] + metrics['entries_with_published'] + metrics['entries_with_both_states']
+            self.stdout.write(self.style.SUCCESS(f"\nEntry State Distribution:"))
+            self.stdout.write(self.style.SUCCESS(f"  Entries with only unpublished drafts: {metrics['entries_with_only_unpublished']} (should not appear in glossary)"))
+            self.stdout.write(self.style.SUCCESS(f"  Entries with published drafts: {metrics['entries_with_published']} (should appear in glossary)"))
+            self.stdout.write(self.style.SUCCESS(f"  Entries with both published and unpublished: {metrics['entries_with_both_states']} (should show published draft in glossary)"))
             
             self.stdout.write(self.style.SUCCESS(f"\nLogin credentials:"))
             self.stdout.write(self.style.SUCCESS(f"  Superuser: admin / admin"))
