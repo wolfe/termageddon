@@ -1,0 +1,95 @@
+---
+description: Testing guidelines and best practices for both Django backend and Angular frontend
+globs: **/*test*.py, **/*.spec.ts, **/test_*.py, **/tests.py
+alwaysApply: false
+---
+
+# Testing Rules for Termageddon
+
+## General Testing Principles
+- Always maintain working unit and integration tests
+- Don't write e2e tests (as per user preference)
+- Ensure existing tests pass before making changes
+- Write tests for new features and bug fixes
+
+## Django Backend Testing
+- Use pytest with pytest-django
+- Write tests in `glossary/tests/` directory
+- Use factory-boy for test data generation
+- Test models, views, serializers, and API endpoints
+- Aim for 90%+ test coverage
+- Use descriptive test names that explain the scenario
+
+### Test Structure
+```python
+def test_model_creation_with_valid_data():
+    """Test that model can be created with valid data"""
+    pass
+
+def test_api_endpoint_returns_correct_data():
+    """Test that API endpoint returns expected data structure"""
+    pass
+```
+
+### Test Data
+- Use factories for consistent test data
+- Create test fixtures in `conftest.py`
+- Use `@pytest.mark.django_db` for database tests
+- Clean up test data after each test
+
+### API Testing
+- Test authentication requirements
+- Test permission checks
+- Test data validation
+- Test error handling
+- Test pagination and filtering
+
+## Angular Frontend Testing
+- Use Jasmine and Karma for unit tests
+- Test components, services, and pipes
+- Mock external dependencies
+- Test user interactions and error scenarios
+
+### Component Testing
+```typescript
+describe('ComponentName', () => {
+  let component: ComponentName;
+  let fixture: ComponentFixture<ComponentName>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [ComponentName]
+    });
+    fixture = TestBed.createComponent(ComponentName);
+    component = fixture.componentInstance;
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+```
+
+### Service Testing
+- Mock HTTP calls with HttpClientTestingModule
+- Test error handling
+- Test data transformation
+- Test observable streams
+
+## Test Organization
+- Group related tests in describe blocks
+- Use beforeEach/afterEach for setup/cleanup
+- Keep tests independent and isolated
+- Use meaningful test descriptions
+
+## Running Tests
+- Backend: `pytest` or `python -m pytest`
+- Frontend: `ng test` or `npm test`
+- Run tests before committing changes
+- Fix failing tests immediately
+
+## Test Data Management
+- Use realistic test data that matches production scenarios
+- Avoid hardcoded values in tests
+- Use factories for complex object creation
+- Clean up test data to avoid test pollution

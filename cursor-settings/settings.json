@@ -1,0 +1,31 @@
+{
+  "rules": [
+    "django",
+    "angular", 
+    "testing",
+    "code-style"
+  ],
+  "commands": [
+    "run-tests",
+    "format-code", 
+    "start-dev",
+    "database-ops",
+    "build-prod"
+  ],
+  "preferences": {
+    "formatOnSave": true,
+    "useBlack": true,
+    "testBeforeCommit": true,
+    "noE2ETests": true,
+    "constantFirstInBinaryOps": true,
+    "semanticColorNaming": true,
+    "minimalComments": true,
+    "unifyCodeOpportunities": true
+  },
+  "projectStructure": {
+    "backend": "Django 5.1.4 with DRF",
+    "frontend": "Angular 17 with Tailwind",
+    "database": "SQLite with test data",
+    "testing": "pytest + Jasmine/Karma"
+  }
+}

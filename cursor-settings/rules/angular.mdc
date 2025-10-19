@@ -1,0 +1,61 @@
+---
+description: Angular 17 development rules and best practices for the Termageddon frontend
+globs: frontend/**/*.{ts,html,scss}
+alwaysApply: false
+---
+
+# Angular 17 Rules for Termageddon
+
+## Architecture & Structure
+- Use standalone components (Angular 17 architecture)
+- Keep components focused on presentation, business logic in services
+- Use SCSS for styling with semantic color naming
+- Follow the established component structure: components/, services/, guards/, models/, pipes/, utils/
+
+## Code Style
+- Use constants before expressions in binary operations: `if (0 < length)` not `if (length > 0)`
+- Use minimal comments that explain complex logic, not obvious code
+- No trailing whitespace on lines
+- Use semantic naming for colors in SCSS with centralized color palette mapping
+
+## Component Guidelines
+- Use OnPush change detection strategy where possible
+- Implement proper lifecycle hooks (OnInit, OnDestroy, etc.)
+- Use reactive forms with proper validation
+- Handle errors gracefully with user-friendly messages
+
+## Services
+- Use BehaviorSubject for state management
+- Implement proper error handling in HTTP calls
+- Use RxJS operators for data transformation
+- Keep services focused on single responsibilities
+
+## Styling
+- Use Tailwind CSS classes with custom Termageddon theme
+- Follow the established color system (termageddon-primary, termageddon-accent, etc.)
+- Use semantic color naming: status-*, action-*, role-*, ui-*, notification-*
+- Maintain Slack-like density with 14px base font size and tight spacing
+
+## Testing
+- Write unit tests for components and services
+- Use Angular testing utilities (TestBed, ComponentFixture)
+- Mock external dependencies properly
+- Test user interactions and error scenarios
+
+## Performance
+- Use trackBy functions in *ngFor loops
+- Implement lazy loading for routes
+- Use OnPush change detection where appropriate
+- Optimize bundle size with tree shaking
+
+## Security
+- Sanitize HTML content with DomSanitizer
+- Validate all user inputs
+- Use HTTP interceptors for authentication
+- Store tokens securely in localStorage
+
+## API Integration
+- Use consistent error handling across all API calls
+- Implement proper loading states
+- Handle network failures gracefully
+- Use proper TypeScript interfaces for API responses

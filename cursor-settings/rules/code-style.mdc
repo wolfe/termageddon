@@ -1,0 +1,92 @@
+---
+description: Code style and formatting guidelines for the Termageddon project
+globs: **/*.{py,ts,html,scss,json}
+alwaysApply: true
+---
+
+# Code Style Rules for Termageddon
+
+## General Style Guidelines
+- No trailing whitespace on lines
+- Use minimal comments that explain complex logic, not obvious code
+- Suggest opportunities to unify code whenever possible
+- Put complex business logic in the backend to keep frontend simple and focused on presentation
+
+## Python/Django Style
+- Format using Black (as per user preference)
+- Use meaningful variable and function names
+- Follow PEP 8 guidelines
+- Use type hints where appropriate
+- Keep functions small and focused
+
+### Binary Operations
+- Put constants before expressions: `if (0 < length)` preferred over `if (length > 0)`
+- This improves readability and prevents accidental assignment
+
+### Comments
+- Use docstrings for functions and classes
+- Add comments for complex business logic
+- Avoid obvious comments like `# increment counter`
+- Explain the "why" not the "what"
+
+## TypeScript/Angular Style
+- Use meaningful component and service names
+- Follow Angular naming conventions
+- Use interfaces for type safety
+- Prefer composition over inheritance
+
+### Binary Operations
+- Apply same constant-first rule: `if (0 < length)` over `if (length > 0)`
+
+### Comments
+- Use JSDoc for public methods
+- Comment complex business logic
+- Avoid obvious comments
+- Explain architectural decisions
+
+## SCSS/CSS Style
+- Use semantic naming for colors with centralized mapping
+- Follow BEM methodology for CSS classes
+- Use variables for repeated values
+- Keep selectors shallow and specific
+
+### Color Naming
+```scss
+// Good - semantic naming
+$status-published: #10b981;
+$action-primary: #2563eb;
+
+// Bad - color-based naming
+$green: #10b981;
+$blue: #2563eb;
+```
+
+## HTML Style
+- Use semantic HTML elements
+- Include proper ARIA attributes
+- Keep markup clean and readable
+- Use Angular directives appropriately
+
+## File Organization
+- Group related functionality together
+- Use consistent file naming conventions
+- Keep files focused on single responsibilities
+- Use barrel exports (index.ts) for clean imports
+
+## Code Unification Opportunities
+- Look for repeated patterns that can be abstracted
+- Create reusable components and services
+- Use shared utilities for common operations
+- Consolidate similar functionality
+
+## Formatting Tools
+- Python: Use Black for formatting
+- TypeScript: Use Prettier for formatting
+- SCSS: Use Prettier for formatting
+- Run formatting before committing changes
+
+## Error Handling
+- Use consistent error handling patterns
+- Provide meaningful error messages
+- Log errors appropriately
+- Handle edge cases gracefully
