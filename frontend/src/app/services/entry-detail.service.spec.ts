@@ -18,7 +18,7 @@ describe('EntryDetailService', () => {
       'getCommentsWithDraftPositions',
       'getComments',
       'getEntry',
-      'createEntryDraft'
+      'createEntryDraft',
     ]);
     const reviewSpy = jasmine.createSpyObj('ReviewService', ['getDraftsCanApprove']);
 
@@ -34,8 +34,8 @@ describe('EntryDetailService', () => {
       providers: [
         EntryDetailService,
         { provide: GlossaryService, useValue: glossarySpy },
-        { provide: ReviewService, useValue: reviewSpy }
-      ]
+        { provide: ReviewService, useValue: reviewSpy },
+      ],
     });
 
     service = TestBed.inject(EntryDetailService);
@@ -74,12 +74,12 @@ describe('EntryDetailService', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
+          replaces_draft: undefined,
         },
         {
           id: 2,
@@ -97,13 +97,13 @@ describe('EntryDetailService', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       const result = service.initializeEditContentFromLatest(draftHistory, 'Fallback content');
@@ -143,7 +143,7 @@ describe('EntryDetailService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -153,22 +153,22 @@ describe('EntryDetailService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const result = service.initializeEditContent(reviewDraft);
@@ -193,18 +193,18 @@ describe('EntryDetailService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       const result = service.getEntryId(entry);
@@ -227,7 +227,7 @@ describe('EntryDetailService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 2,
@@ -237,22 +237,22 @@ describe('EntryDetailService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const result = service.getEntryId(reviewDraft);

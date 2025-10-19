@@ -1,8 +1,4 @@
-<div
-  (click)="onItemClick()"
-  [class]="getItemClass()"
-  data-testid="draft-item"
->
+<div (click)="onItemClick()" [class]="getItemClass()" data-testid="draft-item">
   <div class="flex items-start justify-between">
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between">
@@ -19,36 +15,36 @@
           </button>
         }
       </div>
-      <app-perspective-pill 
-        [perspective]="draft.entry.perspective" 
+      <app-perspective-pill
+        [perspective]="draft.entry.perspective"
         size="small"
         [variant]="selected ? 'selected' : 'unselected'"
       ></app-perspective-pill>
-      
+
       <!-- Author and Approval Status -->
       <div class="flex items-center justify-between mt-2">
         <div class="flex items-center space-x-1">
           <!-- Author Avatar -->
-          <div 
+          <div
             class="w-5 h-5 rounded-full bg-action-primary text-white text-xs flex items-center justify-center font-semibold"
             [title]="getAuthorTooltip()"
           >
             {{ getInitials(draft.author) }}
           </div>
-          
+
           <!-- Approver Avatars -->
           @for (approver of draft.approvers; track approver.id) {
-            <div 
+            <div
               class="w-5 h-5 rounded-full bg-role-approver text-white text-xs flex items-center justify-center font-semibold"
               [title]="getApproverTooltip(approver)"
             >
               {{ getInitials(approver) }}
             </div>
           }
-          
+
           <!-- Requested Reviewer Avatars -->
           @for (reviewer of draft.requested_reviewers; track reviewer.id) {
-            <div 
+            <div
               class="w-5 h-5 rounded-full bg-role-reviewer text-white text-xs flex items-center justify-center font-semibold"
               [title]="getReviewerTooltip(reviewer)"
             >
@@ -56,10 +52,10 @@
             </div>
           }
         </div>
-        
+
         <!-- Date (right-justified) -->
         <span class="text-xs opacity-75">
-          {{ draft.timestamp | date: "short" }}
+          {{ draft.timestamp | date: 'short' }}
         </span>
       </div>
     </div>

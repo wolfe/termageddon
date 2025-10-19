@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './master-detail-layout.component.html',
-  styleUrl: './master-detail-layout.component.scss'
+  styleUrl: './master-detail-layout.component.scss',
 })
 export class MasterDetailLayoutComponent {
   @Input() sidebarWidth: string = 'w-[25%]';

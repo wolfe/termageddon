@@ -7,7 +7,6 @@ import { UrlHelperService } from './url-helper.service';
   providedIn: 'root',
 })
 export class NavigationService {
-
   constructor(
     private router: Router,
     private urlHelper: UrlHelperService
@@ -87,13 +86,13 @@ export class NavigationService {
     if (entry.active_draft && entry.active_draft.is_published) {
       return '/glossary'; // Published entry - show in glossary
     }
-    
+
     // If no published draft, check for unpublished drafts
     if (entry.active_draft && !entry.active_draft.is_published) {
       // Use draft-based routing instead of panel-based routing
       return `/draft/${entry.active_draft.id}`;
     }
-    
+
     // No active draft, show in glossary
     return '/glossary';
   }

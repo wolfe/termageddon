@@ -13,37 +13,56 @@ import { GlossaryService } from '../../services/glossary.service';
 import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
-import { SearchFilterBarComponent, FilterConfig, Perspective, SortOption } from '../shared/search-filter-bar/search-filter-bar.component';
+import {
+  SearchFilterBarComponent,
+  FilterConfig,
+  Perspective,
+  SortOption,
+} from '../shared/search-filter-bar/search-filter-bar.component';
 import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
 import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
-import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
+import {
+  StatusSummaryComponent,
+  StatusSummaryItem,
+} from '../shared/status-summary/status-summary.component';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
-import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish, canApprove, getRemainingApprovals, getApprovalAccessLevel } from '../../utils/draft-status.util';
+import {
+  getDraftStatus,
+  getDraftStatusClass,
+  getApprovalStatusText,
+  getEligibilityText,
+  getEligibilityClass,
+  getApprovalReason,
+  canPublish,
+  canApprove,
+  getRemainingApprovals,
+  getApprovalAccessLevel,
+} from '../../utils/draft-status.util';
 import { getInitials } from '../../utils/user.util';
 
 @Component({
   selector: 'app-review-dashboard',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     ReviewerSelectorDialogComponent,
     MasterDetailLayoutComponent,
     SearchFilterBarComponent,
     DraftListItemComponent,
     DraftDetailPanelComponent,
     StatusSummaryComponent,
-    CreateEntryDialogComponent
+    CreateEntryDialogComponent,
   ],
   templateUrl: './review-dashboard.component.html',
   styleUrl: './review-dashboard.component.scss',
 })
 export class ReviewDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   // Use centralized panel state
   state: PanelState;
-  
+
   // Review-specific state
   showAll: boolean = false; // Show all drafts (not just requested ones)
   isEditMode: boolean = false; // Track edit mode for auto-editing
@@ -55,13 +74,13 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   selectedAuthorId: number | null = null;
   selectedSortBy: string = '-published_at'; // Default to newest published first
   pendingPerspectiveId: number | null = null; // Store perspective ID from URL if perspectives not loaded yet
-  
+
   // Sort options
   sortOptions: SortOption[] = [
     { value: '-published_at', label: 'Newest Published' },
     { value: '-timestamp', label: 'Newest Edits' },
     { value: 'entry__term__text_normalized', label: 'Term A-Z' },
-    { value: '-entry__term__text_normalized', label: 'Term Z-A' }
+    { value: '-entry__term__text_normalized', label: 'Term Z-A' },
   ];
 
   // Filter configuration
@@ -70,8 +89,8 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       id: 'showAll',
       label: 'Show all drafts (not just requested to review)',
       type: 'checkbox',
-      value: false
-    }
+      value: false,
+    },
   ];
 
   // Utility functions
@@ -105,19 +124,19 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     this.state.currentUser = this.permissionService.currentUser;
     this.loadPerspectives();
     this.panelCommonService.loadUsers(this.state);
-    
+
     // Subscribe to route parameters first
     this.route.queryParams.subscribe(params => {
       const draftId = params['draftId'];
       const entryId = params['entryId'];
       const editMode = params['edit'] === 'true';
-      
+
       // Handle filter parameters from URL
       this.handleUrlFilterParams(params);
-      
+
       // Always load the draft list first (for the left panel)
       this.loadPendingDrafts();
-      
+
       // Then handle specific draft/entry selection
       if (draftId) {
         this.loadDraftById(+draftId);
@@ -134,35 +153,38 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadPerspectives(): void {
-    this.glossaryService.getPerspectives()
+    this.glossaryService
+      .getPerspectives()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (perspectives) => {
+        next: perspectives => {
           this.perspectives = perspectives.results.map((p: any) => ({ id: p.id, name: p.name }));
-          
+
           // Apply pending perspective ID from URL if available
           if (this.pendingPerspectiveId) {
             this.selectedPerspectiveId = this.pendingPerspectiveId;
             this.pendingPerspectiveId = null;
           }
         },
-        error: (error) => {
+        error: error => {
           console.error('Error loading perspectives:', error);
-        }
+        },
       });
   }
 
   loadPendingDrafts(callback?: () => void): void {
     // Load drafts based on showAll setting with new filters
     const options = {
-      eligibility: (this.showAll ? 'all_except_own' : 'requested_or_approved') as 'all_except_own' | 'requested_or_approved',
+      eligibility: (this.showAll ? 'all_except_own' : 'requested_or_approved') as
+        | 'all_except_own'
+        | 'requested_or_approved',
       showAll: this.showAll,
       perspectiveId: this.selectedPerspectiveId || undefined,
-      sortBy: this.selectedSortBy
+      sortBy: this.selectedSortBy,
     };
-    
+
     this.panelCommonService.loadDrafts(options, this.state, this.route);
-    
+
     // Execute callback after data is loaded
     if (callback) {
       callback();
@@ -187,13 +209,14 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-
   onSearch(): void {
-    this.panelCommonService.onSearch(this.state.searchTerm, this.state, { 
-      eligibility: (this.showAll ? 'all_except_own' : 'requested_or_approved') as 'all_except_own' | 'requested_or_approved', 
+    this.panelCommonService.onSearch(this.state.searchTerm, this.state, {
+      eligibility: (this.showAll ? 'all_except_own' : 'requested_or_approved') as
+        | 'all_except_own'
+        | 'requested_or_approved',
       showAll: this.showAll,
       perspectiveId: this.selectedPerspectiveId || undefined,
-      sortBy: this.selectedSortBy
+      sortBy: this.selectedSortBy,
     });
   }
 
@@ -205,7 +228,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   private loadDraftById(draftId: number, editMode: boolean = false): void {
     this.isEditMode = editMode;
     this.glossaryService.getDraftById(draftId).subscribe({
-      next: (draft) => {
+      next: draft => {
         this.selectDraft(draft);
         // If edit mode is requested, trigger edit after a short delay to ensure UI is ready
         if (editMode) {
@@ -214,18 +237,18 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
           }, 100);
         }
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load draft:', error);
         // If we get a 404, the draft doesn't exist - redirect to My Drafts to create one
         if (error.status === 404) {
-          this.router.navigate(['/my-drafts'], { 
-            queryParams: { entryId: this.getEntryIdFromUrl(), edit: 'true' } 
+          this.router.navigate(['/my-drafts'], {
+            queryParams: { entryId: this.getEntryIdFromUrl(), edit: 'true' },
           });
         } else {
           // For other errors, navigate back to review without specific draft
           this.router.navigate(['/review']);
         }
-      }
+      },
     });
   }
 
@@ -244,7 +267,6 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     const url = this.urlHelper.buildDraftUrl(draft.id, draft, true);
     this.location.replaceState(url);
   }
-
 
   approveDraft(): void {
     if (!this.state.selectedDraft) return;
@@ -268,15 +290,13 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   }
 
   getAlreadyApprovedCount(): number {
-    return this.state.filteredDrafts.filter(
-      (d) => d.approval_status_for_user === 'already_approved',
-    ).length;
+    return this.state.filteredDrafts.filter(d => d.approval_status_for_user === 'already_approved')
+      .length;
   }
 
   getRequestedCount(): number {
-    return this.state.filteredDrafts.filter(
-      (d) => d.approval_status_for_user === 'can_approve',
-    ).length;
+    return this.state.filteredDrafts.filter(d => d.approval_status_for_user === 'can_approve')
+      .length;
   }
 
   onShowAllChange(): void {
@@ -325,15 +345,20 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
   onReviewerSelectionConfirmed(reviewerIds: number[]): void {
     if (!this.state.draftToRequestReview) return;
-    this.panelCommonService.requestReview(this.state.draftToRequestReview.id, reviewerIds, this.state, () => {
-      // Refresh the data from server to get updated state
-      this.loadPendingDrafts();
-      
-      // Update selected draft if it's the same
-      if (this.state.selectedDraft?.id === this.state.draftToRequestReview?.id) {
-        this.state.selectedDraft = this.state.draftToRequestReview;
+    this.panelCommonService.requestReview(
+      this.state.draftToRequestReview.id,
+      reviewerIds,
+      this.state,
+      () => {
+        // Refresh the data from server to get updated state
+        this.loadPendingDrafts();
+
+        // Update selected draft if it's the same
+        if (this.state.selectedDraft?.id === this.state.draftToRequestReview?.id) {
+          this.state.selectedDraft = this.state.draftToRequestReview;
+        }
       }
-    });
+    );
   }
 
   onReviewerSelectionCancelled(): void {
@@ -348,9 +373,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
 
     // TODO: Replace with confirmation dialog
     if (
-      confirm(
-        'Are you sure you want to publish this draft? This will make it the active draft.',
-      )
+      confirm('Are you sure you want to publish this draft? This will make it the active draft.')
     ) {
       this.panelCommonService.publishDraft(draft, this.state, () => {
         // Clear the selected draft since it's no longer in the review list
@@ -360,7 +383,6 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
       });
     }
   }
-
 
   onCommentAdded(comment: Comment): void {
     this.panelCommonService.onCommentAdded(comment, this.state);
@@ -399,22 +421,22 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
    */
   private loadEntryById(entryId: number, editMode: boolean = false): void {
     this.glossaryService.getEntry(entryId).subscribe({
-      next: (entry) => {
+      next: entry => {
         // Find the appropriate draft for this entry
         if (entry.active_draft) {
           // Load the active draft
           this.loadDraftById(entry.active_draft.id, editMode);
         } else {
           // No active draft - redirect to My Drafts to create one
-          this.router.navigate(['/my-drafts'], { 
-            queryParams: { entryId, edit: 'true' } 
+          this.router.navigate(['/my-drafts'], {
+            queryParams: { entryId, edit: 'true' },
           });
         }
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load entry:', error);
         this.state.error = 'Failed to load entry details';
-      }
+      },
     });
   }
 
@@ -422,7 +444,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     return [
       { count: this.getRequestedCount(), label: 'ready to approve', color: '#3b82f6' },
       { count: this.getAlreadyApprovedCount(), label: 'already approved', color: '#10b981' },
-      { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' }
+      { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' },
     ];
   }
 

@@ -1,11 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
@@ -27,7 +22,7 @@ export class LoginComponent {
     private authService: AuthService,
     private permissionService: PermissionService,
     private router: Router,
-    private route: ActivatedRoute,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -46,17 +41,15 @@ export class LoginComponent {
     const { username, password } = this.loginForm.value;
 
     this.authService.login(username, password).subscribe({
-      next: (response) => {
+      next: response => {
         this.permissionService.setCurrentUser(response.user);
         // Redirect to return URL or default to glossary
-        const returnUrl =
-          this.route.snapshot.queryParams['returnUrl'] || '/glossary';
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/glossary';
         this.router.navigate([returnUrl]);
       },
-      error: (error) => {
+      error: error => {
         this.isLoading = false;
-        this.errorMessage =
-          error.error?.detail || 'Invalid username or password';
+        this.errorMessage = error.error?.detail || 'Invalid username or password';
       },
       complete: () => {
         this.isLoading = false;

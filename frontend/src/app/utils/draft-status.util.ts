@@ -5,7 +5,7 @@ export function getDraftStatus(draft: ReviewDraft): string {
   if (draft.status) {
     return draft.status;
   }
-  
+
   // Fallback calculation for backward compatibility
   if (draft.is_published) {
     return 'Published';
@@ -32,7 +32,7 @@ export function getDraftStatusClass(draft: ReviewDraft): string {
       return 'status-pending';
     }
   }
-  
+
   // Fallback calculation
   if (draft.is_published) {
     return 'status-published';
@@ -49,10 +49,11 @@ export function getApprovalStatusText(draft: ReviewDraft): string {
   if (draft.is_approved) {
     return 'Approved';
   }
-  
+
   // Use backend remaining_approvals if available, otherwise fall back to hardcoded value
-  const totalApprovals = draft.remaining_approvals ? 
-    draft.remaining_approvals + draft.approval_count : 2;
+  const totalApprovals = draft.remaining_approvals
+    ? draft.remaining_approvals + draft.approval_count
+    : 2;
   return `${draft.approval_count}/${totalApprovals} Approvals`;
 }
 
@@ -90,9 +91,9 @@ export function getEligibilityClass(draft: ReviewDraft): string {
 
 export function getApprovalReason(draft: ReviewDraft, currentUserId?: number): string {
   if (!currentUserId) return 'Please log in to approve definitions';
-  
+
   const status = draft.approval_status_for_user ?? 'unknown';
-  
+
   switch (status) {
     case 'own_draft':
       return 'You cannot approve your own definition';
@@ -114,7 +115,7 @@ export function canPublish(draft: ReviewDraft): boolean {
   if (draft.status) {
     return draft.status.includes('Ready to Publish') || draft.status.includes('Approved');
   }
-  
+
   // Fallback calculation
   return draft.is_approved && !draft.is_published;
 }

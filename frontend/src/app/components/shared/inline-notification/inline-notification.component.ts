@@ -8,7 +8,7 @@ import { Subject, takeUntil } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './inline-notification.component.html',
-  styleUrls: ['./inline-notification.component.scss']
+  styleUrls: ['./inline-notification.component.scss'],
 })
 export class InlineNotificationComponent implements OnInit, OnDestroy {
   notification: Notification | null = null;
@@ -34,9 +34,9 @@ export class InlineNotificationComponent implements OnInit, OnDestroy {
         this.isVisible = false;
         this.isFading = false;
         this.isResetting = true;
-        
+
         this.notification = notification;
-        
+
         // If there's a notification, start fresh
         if (notification) {
           // Use setTimeout to ensure CSS reset completes
@@ -44,7 +44,7 @@ export class InlineNotificationComponent implements OnInit, OnDestroy {
             this.isResetting = false;
             this.isVisible = true;
             this.isFading = false;
-            
+
             // Show for 5 seconds, then start fade-out
             this.autoHideTimer = setTimeout(() => {
               this.isFading = true;

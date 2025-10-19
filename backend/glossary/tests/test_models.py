@@ -206,8 +206,10 @@ class TestEntryDraftModel:
         version1 = EntryDraftFactory(entry=entry, author=author)
 
         # Should be able to create second unapproved version (linear draft history)
-        version2 = EntryDraftFactory(entry=entry, author=author, replaces_draft=version1)
-        
+        version2 = EntryDraftFactory(
+            entry=entry, author=author, replaces_draft=version1
+        )
+
         # Both versions should exist
         assert EntryDraft.objects.filter(entry=entry, author=author).count() == 2
         assert version1.replaces_draft is None  # First version doesn't replace anything
@@ -217,15 +219,15 @@ class TestEntryDraftModel:
         """Test the replaces_draft field functionality"""
         author = UserFactory()
         entry = EntryFactory()
-        
+
         # Create first draft
         draft1 = EntryDraftFactory(entry=entry, author=author)
         assert draft1.replaces_draft is None
-        
+
         # Create second draft that replaces the first
         draft2 = EntryDraftFactory(entry=entry, author=author, replaces_draft=draft1)
         assert draft2.replaces_draft == draft1
-        
+
         # Test reverse relationship
         assert draft2 in draft1.replaced_by.all()
 
@@ -305,14 +307,14 @@ class TestEntryModelEdgeCases:
         """Test get_latest_draft excludes soft-deleted drafts"""
         entry = EntryFactory()
         user = UserFactory()
-        
+
         # Create multiple drafts
         draft1 = EntryDraftFactory(entry=entry, author=user, content="First draft")
         draft2 = EntryDraftFactory(entry=entry, author=user, content="Second draft")
-        
+
         # Soft delete the latest draft
         draft2.delete()
-        
+
         # Should return the first draft as latest
         latest_draft = entry.get_latest_draft()
         assert latest_draft == draft1
@@ -322,14 +324,18 @@ class TestEntryModelEdgeCases:
         """Test get_latest_published_draft excludes soft-deleted drafts"""
         entry = EntryFactory()
         user = UserFactory()
-        
+
         # Create published drafts
-        published_draft1 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="First published")
-        published_draft2 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="Second published")
-        
+        published_draft1 = EntryDraftFactory(
+            entry=entry, author=user, is_published=True, content="First published"
+        )
+        published_draft2 = EntryDraftFactory(
+            entry=entry, author=user, is_published=True, content="Second published"
+        )
+
         # Soft delete the latest published draft
         published_draft2.delete()
-        
+
         # Should return the first published draft as latest
         latest_published = entry.get_latest_published_draft()
         assert latest_published == published_draft1
@@ -339,11 +345,15 @@ class TestEntryModelEdgeCases:
         """Test behavior when entry has multiple published drafts (edge case)"""
         entry = EntryFactory()
         user = UserFactory()
-        
+
         # Create multiple published drafts (shouldn't normally happen but test edge case)
-        published_draft1 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="First published")
-        published_draft2 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="Second published")
-        
+        published_draft1 = EntryDraftFactory(
+            entry=entry, author=user, is_published=True, content="First published"
+        )
+        published_draft2 = EntryDraftFactory(
+            entry=entry, author=user, is_published=True, content="Second published"
+        )
+
         # Should return the most recent published draft
         latest_published = entry.get_latest_published_draft()
         assert latest_published == published_draft2
@@ -352,7 +362,7 @@ class TestEntryModelEdgeCases:
     def test_entry_with_no_drafts(self):
         """Test entry with no drafts returns None for draft methods"""
         entry = EntryFactory()
-        
+
         # Should return None when no drafts exist
         assert entry.get_latest_draft() is None
         assert entry.get_latest_published_draft() is None
@@ -361,11 +371,11 @@ class TestEntryModelEdgeCases:
         """Test entry with only soft-deleted drafts"""
         entry = EntryFactory()
         user = UserFactory()
-        
+
         # Create and delete all drafts
         draft = EntryDraftFactory(entry=entry, author=user, content="Deleted draft")
         draft.delete()
-        
+
         # Should return None since all drafts are deleted
         assert entry.get_latest_draft() is None
         assert entry.get_latest_published_draft() is None

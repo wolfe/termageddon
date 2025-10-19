@@ -4,10 +4,10 @@
 @tailwind utilities;
 
 /* Quill CSS */
-@import "quill/dist/quill.snow.css";
+@import 'quill/dist/quill.snow.css';
 
 /* Shared three-panel view styles */
-@import "app/styles/three-panel-views.scss";
+@import 'app/styles/three-panel-views.scss';
 
 /* Global styles with Termageddon branding */
 @layer base {
@@ -16,8 +16,7 @@
     margin: 0;
     padding: 0;
     font-family:
-      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-      Cantarell, sans-serif;
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   }
 
   * {
@@ -85,11 +84,11 @@
   background: transparent !important;
   cursor: pointer !important;
   font-size: 16px !important;
-  
+
   &::before {
     content: '📖';
   }
-  
+
   &:hover {
     background: rgba(0, 0, 0, 0.1) !important;
   }

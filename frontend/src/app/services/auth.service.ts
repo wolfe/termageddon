@@ -14,41 +14,39 @@ export class AuthService {
 
   login(username: string, password: string): Observable<LoginResponse> {
     const request: LoginRequest = { username, password };
-    return this.http
-      .post<LoginResponse>(`${this.API_URL}/auth/login/`, request)
-      .pipe(
-        tap({
-          next: (response) => this.setToken(response.token),
-          error: (error) => {
-            // Clear any existing token on login failure
-            this.clearToken();
-          },
-        }),
-      );
+    return this.http.post<LoginResponse>(`${this.API_URL}/auth/login/`, request).pipe(
+      tap({
+        next: response => this.setToken(response.token),
+        error: error => {
+          // Clear any existing token on login failure
+          this.clearToken();
+        },
+      })
+    );
   }
 
   logout(): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/auth/logout/`, {}).pipe(
       tap({
         next: () => this.clearToken(),
-        error: (error) => {
+        error: error => {
           // Clear token even if logout request fails
           this.clearToken();
         },
-      }),
+      })
     );
   }
 
   getCurrentUser(): Observable<User> {
     return this.http.get<User>(`${this.API_URL}/auth/me/`).pipe(
       tap({
-        error: (error) => {
+        error: error => {
           // If we get an authentication error, clear the invalid token
           if (error.status === 401) {
             this.clearToken();
           }
         },
-      }),
+      })
     );
   }
 
@@ -83,12 +81,12 @@ export class AuthService {
       .post<LoginResponse>(`${this.API_URL}/auth/switch-test-user/`, { user_id: userId })
       .pipe(
         tap({
-          next: (response) => this.setToken(response.token),
-          error: (error) => {
+          next: response => this.setToken(response.token),
+          error: error => {
             // Clear any existing token on switch failure
             this.clearToken();
           },
-        }),
+        })
       );
   }
 

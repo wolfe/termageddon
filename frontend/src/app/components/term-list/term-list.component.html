@@ -38,25 +38,25 @@
       </div>
     } @else {
       @for (termEntries of getGroupedTermsArray(); track termEntries[0].term.id) {
-        <div
-          class="p-3 border-b border-gray-200 hover:bg-gray-50"
-        >
+        <div class="p-3 border-b border-gray-200 hover:bg-gray-50">
           <div class="flex items-start justify-between">
             <div class="flex-1">
               <!-- Term Name (clickable to select first perspective) -->
-              <h3 
+              <h3
                 (click)="selectTerm(termEntries)"
                 data-testid="term-name"
-                [class.bg-termageddon-gray-light]="selectedEntry?.term?.id === termEntries[0].term.id"
+                [class.bg-termageddon-gray-light]="
+                  selectedEntry?.term?.id === termEntries[0].term.id
+                "
                 class="font-semibold text-sm text-termageddon-gray-dark cursor-pointer hover:text-termageddon-primary"
               >
                 {{ termEntries[0].term.text }}
               </h3>
-              
+
               <!-- Perspective Bubbles -->
               <div class="flex flex-wrap gap-1 mt-2">
                 @for (entry of termEntries; track entry.id) {
-                  <app-perspective-pill 
+                  <app-perspective-pill
                     [perspective]="entry.perspective"
                     size="small"
                     [variant]="selectedEntry?.id === entry.id ? 'selected' : 'unselected'"
@@ -70,9 +70,7 @@
             </div>
             <div class="flex flex-col items-end">
               @if (hasAnyEndorsedEntry(termEntries)) {
-                <span
-                  class="px-2 py-0.5 bg-green-400 text-black text-xs rounded font-semibold"
-                >
+                <span class="px-2 py-0.5 bg-green-400 text-black text-xs rounded font-semibold">
                   Endorsed
                 </span>
               }

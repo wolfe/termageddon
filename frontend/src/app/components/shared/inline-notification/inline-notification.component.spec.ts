@@ -14,19 +14,19 @@ describe('InlineNotificationComponent', () => {
   beforeEach(async () => {
     notificationSubject = new BehaviorSubject<Notification | null>(null);
     const spy = jasmine.createSpyObj('NotificationService', [], {
-      notification$: notificationSubject.asObservable()
+      notification$: notificationSubject.asObservable(),
     });
 
     await TestBed.configureTestingModule({
       imports: [InlineNotificationComponent, BrowserAnimationsModule],
-      providers: [
-        { provide: NotificationService, useValue: spy }
-      ]
+      providers: [{ provide: NotificationService, useValue: spy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(InlineNotificationComponent);
     component = fixture.componentInstance;
-    notificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
+    notificationService = TestBed.inject(
+      NotificationService
+    ) as jasmine.SpyObj<NotificationService>;
   });
 
   it('should create', () => {
@@ -37,7 +37,7 @@ describe('InlineNotificationComponent', () => {
     const testNotification: Notification = {
       id: 'test-1',
       type: 'success',
-      message: 'Test success message'
+      message: 'Test success message',
     };
 
     notificationSubject.next(testNotification);
@@ -61,14 +61,14 @@ describe('InlineNotificationComponent', () => {
       { type: 'success' as const, expectedIcon: '✓' },
       { type: 'error' as const, expectedIcon: '✕' },
       { type: 'warning' as const, expectedIcon: '⚠' },
-      { type: 'info' as const, expectedIcon: 'ℹ' }
+      { type: 'info' as const, expectedIcon: 'ℹ' },
     ];
 
     testCases.forEach(({ type, expectedIcon }) => {
       const notification: Notification = {
         id: `test-${type}`,
         type,
-        message: `Test ${type} message`
+        message: `Test ${type} message`,
       };
 
       notificationSubject.next(notification);
@@ -84,14 +84,14 @@ describe('InlineNotificationComponent', () => {
       { type: 'success' as const, expectedClass: 'notification-success' },
       { type: 'error' as const, expectedClass: 'notification-error' },
       { type: 'warning' as const, expectedClass: 'notification-warning' },
-      { type: 'info' as const, expectedClass: 'notification-info' }
+      { type: 'info' as const, expectedClass: 'notification-info' },
     ];
 
     testCases.forEach(({ type, expectedClass }) => {
       const notification: Notification = {
         id: `test-${type}`,
         type,
-        message: `Test ${type} message`
+        message: `Test ${type} message`,
       };
 
       notificationSubject.next(notification);
@@ -107,13 +107,13 @@ describe('InlineNotificationComponent', () => {
     const firstNotification: Notification = {
       id: 'test-1',
       type: 'success',
-      message: 'First message'
+      message: 'First message',
     };
 
     const secondNotification: Notification = {
       id: 'test-2',
       type: 'error',
-      message: 'Second message'
+      message: 'Second message',
     };
 
     // Show first notification
@@ -137,9 +137,9 @@ describe('InlineNotificationComponent', () => {
   it('should clean up subscription on destroy', () => {
     const destroySpy = spyOn(component['destroy$'], 'next');
     const completeSpy = spyOn(component['destroy$'], 'complete');
-    
+
     component.ngOnDestroy();
-    
+
     expect(destroySpy).toHaveBeenCalled();
     expect(completeSpy).toHaveBeenCalled();
   });

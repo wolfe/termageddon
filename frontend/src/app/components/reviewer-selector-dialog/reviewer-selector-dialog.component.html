@@ -2,12 +2,7 @@
   <div class="modal-dialog">
     <div class="modal-header">
       <h3>Select Reviewers</h3>
-      <button
-        type="button"
-        class="close-btn"
-        (click)="onCancel()"
-        aria-label="Close"
-      >
+      <button type="button" class="close-btn" (click)="onCancel()" aria-label="Close">
         <span>&times;</span>
       </button>
     </div>
@@ -38,11 +33,9 @@
             <span class="checkmark"></span>
           </label>
           <div class="user-info">
-            <div class="user-name">
-              {{ user.first_name }} {{ user.last_name }}
-            </div>
+            <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
             <div class="user-username">
-              {{ "@" + user.username }}
+              {{ '@' + user.username }}
             </div>
           </div>
         </div>
@@ -58,12 +51,8 @@
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="onCancel()">
-        Cancel
-      </button>
-      <button type="button" class="btn btn-primary" (click)="onConfirm()">
-        Confirm Selection
-      </button>
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="onConfirm()">Confirm Selection</button>
     </div>
   </div>
 </div>

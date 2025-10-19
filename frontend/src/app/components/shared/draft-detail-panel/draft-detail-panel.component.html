@@ -1,285 +1,305 @@
 <div class="h-full flex flex-col">
-@if (draft) {
-  <!-- Header -->
-  <div class="p-4 border-b border-ui-border-light">
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-bold text-termageddon-gray-dark">
-          {{ draft.entry.term.text }}
-        </h2>
-        <div class="flex items-center space-x-2 mt-1">
-          <app-perspective-pill 
-            [perspective]="draft.entry.perspective" 
-            size="medium"
-            variant="selected"
-          ></app-perspective-pill>
-          @if (draft.entry.is_official) {
-            <span class="px-2 py-1 bg-status-ready text-black text-xs rounded font-semibold">
-              OFFICIAL
+  @if (draft) {
+    <!-- Header -->
+    <div class="p-4 border-b border-ui-border-light">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-termageddon-gray-dark">
+            {{ draft.entry.term.text }}
+          </h2>
+          <div class="flex items-center space-x-2 mt-1">
+            <app-perspective-pill
+              [perspective]="draft.entry.perspective"
+              size="medium"
+              variant="selected"
+            ></app-perspective-pill>
+            @if (draft.entry.is_official) {
+              <span class="px-2 py-1 bg-status-ready text-black text-xs rounded font-semibold">
+                OFFICIAL
+              </span>
+            }
+            <span
+              class="px-3 py-1 text-xs rounded font-medium"
+              [ngClass]="getDraftStatusClass(draft)"
+            >
+              {{ getDraftStatus(draft) }}
             </span>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          @if (showPublishButton && canPublishUtil(draft)) {
+            <button
+              (click)="onPublish()"
+              class="px-4 py-2 bg-action-success text-white rounded hover:bg-action-success-hover text-sm font-medium"
+            >
+              Publish Draft
+            </button>
           }
-          <span class="px-3 py-1 text-xs rounded font-medium" [ngClass]="getDraftStatusClass(draft)">
-            {{ getDraftStatus(draft) }}
-          </span>
+          @if (showRequestReviewButton) {
+            <button
+              (click)="onRequestReview()"
+              [disabled]="requestingReview"
+              class="px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover disabled:bg-action-secondary text-sm font-medium"
+            >
+              {{ requestingReview ? 'Requesting...' : getRequestReviewButtonText() }}
+            </button>
+          }
+          @if (canEdit) {
+            <button
+              (click)="onEdit()"
+              class="px-4 py-2 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm font-medium"
+            >
+              {{ isEditing() ? 'Cancel Edit' : 'Edit Definition' }}
+            </button>
+          }
+          @if (showApproveButton && canApproveUtil(draft)) {
+            <button (click)="onApprove()" [class]="getActionButtonClass()">
+              {{ getActionButtonText() }}
+            </button>
+          }
+          @if (canDiscard) {
+            <button
+              (click)="onDelete()"
+              class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
+            >
+              Discard Draft
+            </button>
+          }
+          <!-- Version History Button -->
+          <button
+            (click)="toggleVersionHistory()"
+            class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium"
+          >
+            {{ showVersionHistorySidebar ? 'Hide History' : 'Version History' }}
+          </button>
         </div>
       </div>
-      <div class="flex space-x-2">
-        @if (showPublishButton && canPublishUtil(draft)) {
-          <button
-            (click)="onPublish()"
-            class="px-4 py-2 bg-action-success text-white rounded hover:bg-action-success-hover text-sm font-medium"
-          >
-            Publish Draft
-          </button>
+
+      <!-- Metadata -->
+      <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
+        <span>Author: {{ getUserDisplayName(draft.author) }}</span>
+        <span>Created: {{ draft.timestamp | date: 'MMM d, y, h:mm a' }}</span>
+        @if (getMainDraftApprovers().length > 0 || getMainDraftRequestedReviewers().length > 0) {
+          <div class="flex items-center space-x-2">
+            <span>{{ getApprovalStatusText() }}</span>
+            <div class="flex space-x-1">
+              @for (approver of getMainDraftApprovers(); track approver.id) {
+                <app-user-avatar [user]="approver" color="green" size="medium"></app-user-avatar>
+              }
+              @for (reviewer of getMainDraftRequestedReviewers(); track reviewer.id) {
+                <app-user-avatar [user]="reviewer" color="purple" size="medium"></app-user-avatar>
+              }
+            </div>
+          </div>
         }
-        @if (showRequestReviewButton) {
-          <button
-            (click)="onRequestReview()"
-            [disabled]="requestingReview"
-            class="px-4 py-2 bg-action-primary text-white rounded hover:bg-action-primary-hover disabled:bg-action-secondary text-sm font-medium"
-          >
-            {{ requestingReview ? 'Requesting...' : getRequestReviewButtonText() }}
-          </button>
-        }
-        @if (canEdit) {
-          <button
-            (click)="onEdit()"
-            class="px-4 py-2 bg-termageddon-accent text-white rounded hover:bg-termageddon-primary text-sm font-medium"
-          >
-            {{ isEditing() ? 'Cancel Edit' : 'Edit Definition' }}
-          </button>
-        }
-        @if (showApproveButton && canApproveUtil(draft)) {
-          <button
-            (click)="onApprove()"
-            [class]="getActionButtonClass()"
-          >
-            {{ getActionButtonText() }}
-          </button>
-        }
-        @if (canDiscard) {
-          <button
-            (click)="onDelete()"
-            class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
-          >
-            Discard Draft
-          </button>
-        }
-        <!-- Version History Button -->
-        <button
-          (click)="toggleVersionHistory()"
-          class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium"
-        >
-          {{ showVersionHistorySidebar ? 'Hide History' : 'Version History' }}
-        </button>
       </div>
+
+      <!-- Approval Status Info -->
+      @if (currentUserId && getApprovalReason(draft, currentUserId)) {
+        <div class="mt-3 text-sm text-gray-600">
+          {{ getApprovalReason(draft, currentUserId) }}
+        </div>
+      }
     </div>
-    
-    <!-- Metadata -->
-    <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
-      <span>Author: {{ getUserDisplayName(draft.author) }}</span>
-      <span>Created: {{ draft.timestamp | date: "MMM d, y, h:mm a" }}</span>
-      @if (getMainDraftApprovers().length > 0 || getMainDraftRequestedReviewers().length > 0) {
-        <div class="flex items-center space-x-2">
-          <span>{{ getApprovalStatusText() }}</span>
-          <div class="flex space-x-1">
-            @for (approver of getMainDraftApprovers(); track approver.id) {
-              <app-user-avatar [user]="approver" color="green" size="medium"></app-user-avatar>
+
+    <!-- Content Area -->
+    <div class="flex-1 overflow-y-auto">
+      @if (isEditing()) {
+        <!-- Edit Mode -->
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Definition Content
+              </label>
+              <app-definition-form
+                [content]="editContent"
+                [placeholder]="'Enter the definition content here...'"
+                (contentChange)="editContent = $event"
+              ></app-definition-form>
+            </div>
+
+            <div class="flex space-x-3">
+              <button
+                (click)="onSaveEdit()"
+                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+              >
+                Save Changes
+              </button>
+              <button
+                (click)="onCancelEdit()"
+                class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <!-- View Mode -->
+        <div class="p-6">
+          <!-- Latest Draft Section -->
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <span class="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded mr-2"
+                >Latest Draft</span
+              >
+              Current Working Version
+            </h3>
+            <div
+              class="prose max-w-none bg-blue-50 p-4 rounded-lg"
+              data-testid="latest-draft-content"
+            >
+              <div #contentContainer [innerHTML]="getLatestDraftContent()"></div>
+            </div>
+            @if (latestDraft) {
+              <div class="mt-3 text-sm text-gray-600">
+                <p>
+                  <strong>Author:</strong>
+                  {{ latestDraft.author.first_name }} {{ latestDraft.author.last_name }}
+                </p>
+                <p class="mt-1">
+                  <strong>Last Updated:</strong>
+                  {{ latestDraft.timestamp | date: 'MMM d, y, h:mm a' }}
+                </p>
+              </div>
+            } @else if (draft) {
+              <div class="mt-3 text-sm text-gray-600">
+                <p>
+                  <strong>Author:</strong>
+                  {{ draft.author.first_name }} {{ draft.author.last_name }}
+                </p>
+                <p class="mt-1">
+                  <strong>Last Updated:</strong>
+                  {{ draft.timestamp | date: 'MMM d, y, h:mm a' }}
+                </p>
+              </div>
             }
-            @for (reviewer of getMainDraftRequestedReviewers(); track reviewer.id) {
-              <app-user-avatar [user]="reviewer" color="purple" size="medium"></app-user-avatar>
+          </div>
+
+          <!-- Published Version Section or Selected Historical Draft -->
+          @if (selectedHistoricalDraft) {
+            <div class="mb-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                <span class="px-2 py-1 bg-purple-100 text-purple-700 text-sm rounded mr-2"
+                  >Historical Draft</span
+                >
+                Selected from Version History
+              </h3>
+              <div
+                class="prose max-w-none bg-purple-50 p-4 rounded-lg"
+                data-testid="historical-draft-content"
+              >
+                <div #contentContainer [innerHTML]="selectedHistoricalDraft.content"></div>
+              </div>
+              <div class="mt-3 text-sm text-gray-600">
+                <p>
+                  <strong>Author:</strong>
+                  {{ selectedHistoricalDraft.author.first_name }}
+                  {{ selectedHistoricalDraft.author.last_name }}
+                </p>
+                <p class="mt-1">
+                  <strong>Created:</strong>
+                  {{ selectedHistoricalDraft.timestamp | date: 'MMM d, y, h:mm a' }}
+                </p>
+                @if (selectedHistoricalDraft.is_published) {
+                  <p class="mt-1">
+                    <strong>Status:</strong>
+                    <span class="text-green-600">Published</span>
+                  </p>
+                } @else if (selectedHistoricalDraft.is_approved) {
+                  <p class="mt-1">
+                    <strong>Status:</strong>
+                    <span class="text-blue-600">Approved</span>
+                  </p>
+                } @else {
+                  <p class="mt-1">
+                    <strong>Status:</strong>
+                    <span class="text-orange-600"
+                      >Draft ({{ selectedHistoricalDraft.approval_count }}/2)</span
+                    >
+                  </p>
+                }
+              </div>
+            </div>
+          } @else if (getPublishedDraft()) {
+            <div class="mb-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-sm rounded mr-2"
+                  >Published Version</span
+                >
+                Currently Live
+              </h3>
+              <div
+                class="prose max-w-none bg-green-50 p-4 rounded-lg"
+                data-testid="published-content"
+              >
+                <div #contentContainer [innerHTML]="getPublishedDraft()!.content"></div>
+              </div>
+              <div class="mt-3 text-sm text-gray-600">
+                <p>
+                  <strong>Author:</strong>
+                  {{ getPublishedDraftAuthor() }}
+                </p>
+                <p class="mt-1">
+                  <strong>Published:</strong>
+                  {{ getPublishedDraftTimestamp() | date: 'MMM d, y, h:mm a' }}
+                </p>
+              </div>
+            </div>
+          } @else {
+            <div class="mb-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-sm rounded mr-2"
+                  >Published Version</span
+                >
+                Currently Live
+              </h3>
+              <div class="prose max-w-none bg-green-50 p-4 rounded-lg text-gray-500 italic">
+                This is a new entry - no published version exists yet.
+              </div>
+            </div>
+          }
+
+          <!-- Comments Section -->
+          <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Comments</h3>
+            @if (isLoadingComments) {
+              <div class="text-center text-gray-500 py-4">
+                <p>Loading comments...</p>
+              </div>
+            } @else {
+              <app-comment-thread
+                [comments]="comments"
+                [objectId]="draft.entry.id"
+                [contentType]="10"
+                (commentAdded)="onCommentAdded($event)"
+                (commentResolved)="onCommentResolved($event)"
+                (commentUnresolved)="onCommentUnresolved($event)"
+              ></app-comment-thread>
             }
           </div>
         </div>
       }
     </div>
 
-    <!-- Approval Status Info -->
-    @if (currentUserId && getApprovalReason(draft, currentUserId)) {
-      <div class="mt-3 text-sm text-gray-600">
-        {{ getApprovalReason(draft, currentUserId) }}
-      </div>
-    }
-  </div>
-
-  <!-- Content Area -->
-  <div class="flex-1 overflow-y-auto">
-    @if (isEditing()) {
-      <!-- Edit Mode -->
-      <div class="p-6">
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Definition Content
-            </label>
-            <app-definition-form
-              [content]="editContent"
-              [placeholder]="'Enter the definition content here...'"
-              (contentChange)="editContent = $event"
-            ></app-definition-form>
-          </div>
-
-          <div class="flex space-x-3">
-            <button
-              (click)="onSaveEdit()"
-              class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
-            >
-              Save Changes
-            </button>
-            <button
-              (click)="onCancelEdit()"
-              class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
-            >
-              Cancel
-            </button>
-          </div>
+    <!-- Version History Sidebar -->
+    <app-version-history-sidebar
+      [entryId]="draft.entry.id"
+      [isOpen]="showVersionHistorySidebar"
+      (close)="onVersionHistoryClosed()"
+      (draftSelected)="onDraftSelected($event)"
+    ></app-version-history-sidebar>
+  } @else {
+    <!-- No Selection -->
+    <div class="three-panel-detail-empty-state">
+      <div class="three-panel-empty-content">
+        <div class="three-panel-empty-logo">
+          <img src="images/logo.png" alt="Termageddon Logo" />
         </div>
+        <h2 class="three-panel-empty-title">Select a Definition</h2>
+        <p class="three-panel-empty-subtitle">Choose a definition from the sidebar to review</p>
       </div>
-    } @else {
-      <!-- View Mode -->
-      <div class="p-6">
-        <!-- Latest Draft Section -->
-        <div class="mb-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded mr-2">Latest Draft</span>
-            Current Working Version
-          </h3>
-          <div class="prose max-w-none bg-blue-50 p-4 rounded-lg" data-testid="latest-draft-content">
-            <div #contentContainer [innerHTML]="getLatestDraftContent()"></div>
-          </div>
-          @if (latestDraft) {
-            <div class="mt-3 text-sm text-gray-600">
-              <p>
-                <strong>Author:</strong>
-                {{ latestDraft.author.first_name }} {{ latestDraft.author.last_name }}
-              </p>
-              <p class="mt-1">
-                <strong>Last Updated:</strong>
-                {{ latestDraft.timestamp | date: "MMM d, y, h:mm a" }}
-              </p>
-            </div>
-          } @else if (draft) {
-            <div class="mt-3 text-sm text-gray-600">
-              <p>
-                <strong>Author:</strong>
-                {{ draft.author.first_name }} {{ draft.author.last_name }}
-              </p>
-              <p class="mt-1">
-                <strong>Last Updated:</strong>
-                {{ draft.timestamp | date: "MMM d, y, h:mm a" }}
-              </p>
-            </div>
-          }
-        </div>
-
-        <!-- Published Version Section or Selected Historical Draft -->
-        @if (selectedHistoricalDraft) {
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-              <span class="px-2 py-1 bg-purple-100 text-purple-700 text-sm rounded mr-2">Historical Draft</span>
-              Selected from Version History
-            </h3>
-            <div class="prose max-w-none bg-purple-50 p-4 rounded-lg" data-testid="historical-draft-content">
-              <div #contentContainer [innerHTML]="selectedHistoricalDraft.content"></div>
-            </div>
-            <div class="mt-3 text-sm text-gray-600">
-              <p>
-                <strong>Author:</strong>
-                {{ selectedHistoricalDraft.author.first_name }} {{ selectedHistoricalDraft.author.last_name }}
-              </p>
-              <p class="mt-1">
-                <strong>Created:</strong>
-                {{ selectedHistoricalDraft.timestamp | date: "MMM d, y, h:mm a" }}
-              </p>
-              @if (selectedHistoricalDraft.is_published) {
-                <p class="mt-1">
-                  <strong>Status:</strong>
-                  <span class="text-green-600">Published</span>
-                </p>
-              } @else if (selectedHistoricalDraft.is_approved) {
-                <p class="mt-1">
-                  <strong>Status:</strong>
-                  <span class="text-blue-600">Approved</span>
-                </p>
-              } @else {
-                <p class="mt-1">
-                  <strong>Status:</strong>
-                  <span class="text-orange-600">Draft ({{ selectedHistoricalDraft.approval_count }}/2)</span>
-                </p>
-              }
-            </div>
-          </div>
-        } @else if (getPublishedDraft()) {
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-              <span class="px-2 py-1 bg-green-100 text-green-700 text-sm rounded mr-2">Published Version</span>
-              Currently Live
-            </h3>
-            <div class="prose max-w-none bg-green-50 p-4 rounded-lg" data-testid="published-content">
-              <div #contentContainer [innerHTML]="getPublishedDraft()!.content"></div>
-            </div>
-            <div class="mt-3 text-sm text-gray-600">
-              <p>
-                <strong>Author:</strong>
-                {{ getPublishedDraftAuthor() }}
-              </p>
-              <p class="mt-1">
-                <strong>Published:</strong>
-                {{ getPublishedDraftTimestamp() | date: "MMM d, y, h:mm a" }}
-              </p>
-            </div>
-          </div>
-        } @else {
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-              <span class="px-2 py-1 bg-green-100 text-green-700 text-sm rounded mr-2">Published Version</span>
-              Currently Live
-            </h3>
-            <div class="prose max-w-none bg-green-50 p-4 rounded-lg text-gray-500 italic">
-              This is a new entry - no published version exists yet.
-            </div>
-          </div>
-        }
-
-        <!-- Comments Section -->
-        <div class="mt-8">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Comments</h3>
-          @if (isLoadingComments) {
-            <div class="text-center text-gray-500 py-4">
-              <p>Loading comments...</p>
-            </div>
-          } @else {
-            <app-comment-thread
-              [comments]="comments"
-              [objectId]="draft.entry.id"
-              [contentType]="10"
-              (commentAdded)="onCommentAdded($event)"
-              (commentResolved)="onCommentResolved($event)"
-              (commentUnresolved)="onCommentUnresolved($event)"
-            ></app-comment-thread>
-          }
-        </div>
-      </div>
-    }
-  </div>
-
-  <!-- Version History Sidebar -->
-  <app-version-history-sidebar
-    [entryId]="draft.entry.id"
-    [isOpen]="showVersionHistorySidebar"
-    (close)="onVersionHistoryClosed()"
-    (draftSelected)="onDraftSelected($event)"
-  ></app-version-history-sidebar>
-} @else {
-  <!-- No Selection -->
-  <div class="three-panel-detail-empty-state">
-    <div class="three-panel-empty-content">
-      <div class="three-panel-empty-logo">
-        <img src="images/logo.png" alt="Termageddon Logo" />
-      </div>
-      <h2 class="three-panel-empty-title">Select a Definition</h2>
-      <p class="three-panel-empty-subtitle">Choose a definition from the sidebar to review</p>
     </div>
-  </div>
-}
+  }
 </div>

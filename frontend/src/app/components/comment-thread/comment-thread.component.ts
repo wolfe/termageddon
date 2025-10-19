@@ -32,7 +32,7 @@ export class CommentThreadComponent implements OnInit, OnChanges {
 
   constructor(
     private glossaryService: GlossaryService,
-    public permissionService: PermissionService,
+    public permissionService: PermissionService
   ) {}
 
   ngOnInit() {
@@ -54,11 +54,11 @@ export class CommentThreadComponent implements OnInit, OnChanges {
   }
 
   getTopLevelComments(): Comment[] {
-    return this.comments.filter((comment) => !comment.parent);
+    return this.comments.filter(comment => !comment.parent);
   }
 
   getReplies(comment: Comment): Comment[] {
-    return this.comments.filter((c) => c.parent === comment.id);
+    return this.comments.filter(c => c.parent === comment.id);
   }
 
   startReply(comment: Comment) {
@@ -85,12 +85,12 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     };
 
     this.glossaryService.createComment(commentData).subscribe({
-      next: (newComment) => {
+      next: newComment => {
         this.commentAdded.emit(newComment);
         this.cancelReply();
         this.loading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error creating reply:', error);
         this.error = 'Failed to create reply';
         this.loading = false;
@@ -111,12 +111,12 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     };
 
     this.glossaryService.createComment(commentData).subscribe({
-      next: (newComment) => {
+      next: newComment => {
         this.commentAdded.emit(newComment);
         this.newCommentText = '';
         this.loading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error creating comment:', error);
         this.error = 'Failed to create comment';
         this.loading = false;
@@ -129,11 +129,11 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     this.error = null;
 
     this.glossaryService.resolveComment(comment.id).subscribe({
-      next: (resolvedComment) => {
+      next: resolvedComment => {
         this.commentResolved.emit(resolvedComment);
         this.loading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error resolving comment:', error);
         this.error = 'Failed to resolve comment';
         this.loading = false;
@@ -146,11 +146,11 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     this.error = null;
 
     this.glossaryService.unresolveComment(comment.id).subscribe({
-      next: (unresolvedComment) => {
+      next: unresolvedComment => {
         this.commentUnresolved.emit(unresolvedComment);
         this.loading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error unresolving comment:', error);
         this.error = 'Failed to unresolve comment';
         this.loading = false;
@@ -192,7 +192,7 @@ export class CommentThreadComponent implements OnInit, OnChanges {
 
   getDraftPositionText(comment: Comment): string {
     if (!comment.draft_position) return '';
-    
+
     switch (comment.draft_position) {
       case 'current draft':
         return 'Current Draft';
@@ -205,7 +205,7 @@ export class CommentThreadComponent implements OnInit, OnChanges {
 
   getDraftPositionClass(comment: Comment): string {
     if (!comment.draft_position) return '';
-    
+
     switch (comment.draft_position) {
       case 'current draft':
         return 'bg-status-approved-light text-status-approved';

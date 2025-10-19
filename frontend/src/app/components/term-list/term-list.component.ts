@@ -7,12 +7,22 @@ import { GlossaryService } from '../../services/glossary.service';
 import { TermDialogComponent } from '../term-dialog/term-dialog.component';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
 import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
-import { SearchFilterBarComponent, SortOption } from '../shared/search-filter-bar/search-filter-bar.component';
+import {
+  SearchFilterBarComponent,
+  SortOption,
+} from '../shared/search-filter-bar/search-filter-bar.component';
 
 @Component({
   selector: 'app-term-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TermDialogComponent, CreateEntryDialogComponent, PerspectivePillComponent, SearchFilterBarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TermDialogComponent,
+    CreateEntryDialogComponent,
+    PerspectivePillComponent,
+    SearchFilterBarComponent,
+  ],
   templateUrl: './term-list.component.html',
   styleUrl: './term-list.component.scss',
 })
@@ -39,7 +49,7 @@ export class TermListComponent implements OnInit {
     { value: '-published_at', label: 'Newest Published' },
     { value: '-timestamp', label: 'Newest Edits' },
     { value: 'term__text_normalized', label: 'Term A-Z' },
-    { value: '-term__text_normalized', label: 'Term Z-A' }
+    { value: '-term__text_normalized', label: 'Term Z-A' },
   ];
 
   constructor(private glossaryService: GlossaryService) {}
@@ -62,10 +72,10 @@ export class TermListComponent implements OnInit {
 
   loadPerspectives(): void {
     this.glossaryService.getPerspectives().subscribe({
-      next: (response) => {
+      next: response => {
         this.perspectives = response.results;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load perspectives:', error);
       },
     });
@@ -73,10 +83,10 @@ export class TermListComponent implements OnInit {
 
   loadUsers(): void {
     this.glossaryService.getUsers().subscribe({
-      next: (users) => {
+      next: users => {
         this.users = users;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load users:', error);
       },
     });
@@ -104,13 +114,13 @@ export class TermListComponent implements OnInit {
 
     // Use new grouped_by_term endpoint instead of client-side grouping
     this.glossaryService.getEntriesGroupedByTerm(filters).subscribe({
-      next: (groupedEntries) => {
+      next: groupedEntries => {
         this.groupedEntries = groupedEntries;
         // Flatten for backward compatibility
         this.entries = groupedEntries.flatMap(group => group.entries);
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load entries:', error);
         this.isLoading = false;
       },

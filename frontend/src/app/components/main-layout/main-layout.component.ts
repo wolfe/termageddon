@@ -21,12 +21,12 @@ export class MainLayoutComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private permissionService: PermissionService,
-    private router: Router,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     // Load current user
-    this.permissionService.currentUser$.subscribe((user) => {
+    this.permissionService.currentUser$.subscribe(user => {
       this.currentUser = user;
 
       // If we have a token but no user data, refresh user info
@@ -48,10 +48,10 @@ export class MainLayoutComponent implements OnInit {
 
   loadTestUsers(): void {
     this.authService.getTestUsers().subscribe({
-      next: (users) => {
+      next: users => {
         this.testUsers = users;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load test users:', error);
       },
     });
@@ -59,13 +59,13 @@ export class MainLayoutComponent implements OnInit {
 
   switchUser(userId: number): void {
     this.authService.switchTestUser(userId).subscribe({
-      next: (response) => {
+      next: response => {
         // Update current user in permission service
         this.permissionService.setCurrentUser(response.user);
         // Refresh current page data by reloading
         window.location.reload();
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to switch user:', error);
         // If switch fails, redirect to login
         this.router.navigate(['/login']);

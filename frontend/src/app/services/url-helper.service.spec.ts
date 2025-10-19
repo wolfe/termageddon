@@ -24,18 +24,18 @@ describe('UrlHelperService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       const url = service.buildEntryUrl(1, entry, true);
@@ -51,18 +51,18 @@ describe('UrlHelperService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       const url = service.buildEntryUrl(1, entry, false);
@@ -76,7 +76,7 @@ describe('UrlHelperService', () => {
         perspective: undefined as any,
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       const url = service.buildEntryUrl(1, entry, true);
@@ -106,7 +106,7 @@ describe('UrlHelperService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -116,22 +116,22 @@ describe('UrlHelperService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const url = service.buildDraftUrl(1, draft, true);
@@ -154,7 +154,7 @@ describe('UrlHelperService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -164,22 +164,22 @@ describe('UrlHelperService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const url = service.buildDraftUrl(1, draft, false);
@@ -202,18 +202,18 @@ describe('UrlHelperService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       const url = service.buildEditEntryUrl(1, entry, true);
@@ -229,18 +229,18 @@ describe('UrlHelperService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       const url = service.buildEditEntryUrl(1, entry, false);
@@ -290,9 +290,9 @@ describe('UrlHelperService', () => {
   describe('parseQueryParams', () => {
     it('should parse query parameters correctly', () => {
       const queryParams = {
-        'term': 'test%20term',
-        'perspective': 'test%20perspective',
-        'other': 'value'
+        term: 'test%20term',
+        perspective: 'test%20perspective',
+        other: 'value',
       };
 
       const result = service.parseQueryParams(queryParams);
@@ -302,7 +302,7 @@ describe('UrlHelperService', () => {
 
     it('should handle missing parameters', () => {
       const queryParams = {
-        'other': 'value'
+        other: 'value',
       };
 
       const result = service.parseQueryParams(queryParams);

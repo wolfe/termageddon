@@ -18,9 +18,7 @@ export class PermissionService {
   }
 
   refreshUser(): Observable<User> {
-    return this.authService
-      .getCurrentUser()
-      .pipe(tap((user) => this.currentUserSubject.next(user)));
+    return this.authService.getCurrentUser().pipe(tap(user => this.currentUserSubject.next(user)));
   }
 
   setCurrentUser(user: User): void {

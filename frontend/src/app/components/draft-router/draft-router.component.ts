@@ -20,7 +20,7 @@ export class DraftRouterComponent implements OnInit {
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       const draftId = +params['draftId'];
-      
+
       if (draftId) {
         this.loadDraftAndRoute(draftId);
       } else {
@@ -31,31 +31,31 @@ export class DraftRouterComponent implements OnInit {
 
   private loadDraftAndRoute(draftId: number): void {
     this.glossaryService.getEntryDraft(draftId).subscribe({
-      next: (draft) => {
+      next: draft => {
         this.authService.getCurrentUser().subscribe({
-          next: (currentUser) => {
+          next: currentUser => {
             // Determine target panel based on draft state and user
             const targetPanel = this.determineDraftPanel(draft, currentUser);
-            
+
             // Preserve original query parameters and add draftId
             const currentQueryParams = this.route.snapshot.queryParams;
             const queryParams = { ...currentQueryParams, draftId: draftId };
-            
+
             // Navigate to appropriate panel with draft selected and original query params preserved
             this.router.navigate([targetPanel], {
-              queryParams: queryParams
+              queryParams: queryParams,
             });
           },
-          error: (error) => {
+          error: error => {
             console.error('Failed to get current user:', error);
             this.router.navigate(['/login']);
-          }
+          },
         });
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load draft:', error);
         this.router.navigate(['/glossary']);
-      }
+      },
     });
   }
 

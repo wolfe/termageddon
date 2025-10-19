@@ -13,7 +13,13 @@ import { StatusSummaryComponent } from '../shared/status-summary/status-summary.
 @Component({
   selector: 'app-glossary-view',
   standalone: true,
-  imports: [CommonModule, TermListComponent, TermDetailComponent, MasterDetailLayoutComponent, StatusSummaryComponent],
+  imports: [
+    CommonModule,
+    TermListComponent,
+    TermDetailComponent,
+    MasterDetailLayoutComponent,
+    StatusSummaryComponent,
+  ],
   templateUrl: './glossary-view.component.html',
   styleUrl: './glossary-view.component.scss',
 })
@@ -35,7 +41,7 @@ export class GlossaryViewComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const entryId = params['entryId'];
       const editMode = params['edit'] === 'true';
-      
+
       if (entryId) {
         this.loadEntryById(+entryId, editMode);
       }
@@ -44,31 +50,31 @@ export class GlossaryViewComponent implements OnInit {
 
   private loadEntryById(entryId: number, editMode: boolean = false): void {
     this.glossaryService.getEntryById(entryId).subscribe({
-      next: (entry) => {
+      next: entry => {
         this.selectedEntry = entry;
         this.isEditMode = editMode;
         this.updateUrl(entry);
         // Load all entries for this term to show correct perspective pills
         this.loadTermEntries(entry.term.id);
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load entry:', error);
         // Navigate back to glossary without specific entry
         this.router.navigate(['/glossary']);
-      }
+      },
     });
   }
 
   private loadTermEntries(termId: number): void {
     this.glossaryService.getEntries({ term: termId }).subscribe({
-      next: (response) => {
+      next: response => {
         this.selectedTermEntries = response.results;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load term entries:', error);
         // Fallback: just use the current entry
         this.selectedTermEntries = this.selectedEntry ? [this.selectedEntry] : [];
-      }
+      },
     });
   }
 

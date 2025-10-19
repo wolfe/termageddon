@@ -16,48 +16,48 @@ from glossary.models import (
 
 class EntryDraftApprovalMixin:
     """Mixin providing common approval-related serializer methods for EntryDraft serializers"""
-    
+
     def get_can_approve_by_current_user(self, obj):
         """Check if current user can approve this draft"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        
+
         # Cannot approve own drafts
         if obj.author.id == request.user.id:
             return False
-        
+
         # Cannot approve if already approved this draft
         if obj.approvers.filter(pk=request.user.pk).exists():
             return False
-        
+
         # Can approve if status is pending
         return not obj.is_approved
 
     def get_approval_status_for_user(self, obj):
         """Get approval status from current user's perspective"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
-            return 'unknown'
-        
+            return "unknown"
+
         if obj.author.id == request.user.id:
-            return 'own_draft'
-        
+            return "own_draft"
+
         if obj.approvers.filter(pk=request.user.pk).exists():
             # User has approved this draft
             if obj.is_approved:
-                return 'already_approved_by_others'  # Draft is fully approved
+                return "already_approved_by_others"  # Draft is fully approved
             else:
-                return 'can_approve'  # User approved but draft needs more approvals
-        
+                return "can_approve"  # User approved but draft needs more approvals
+
         if obj.is_approved:
-            return 'already_approved_by_others'
-        
-        return 'can_approve'
+            return "already_approved_by_others"
+
+        return "can_approve"
 
     def get_user_has_approved(self, obj):
         """Check if current user has already approved this draft"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
         return obj.approvers.filter(pk=request.user.pk).exists()
@@ -65,11 +65,13 @@ class EntryDraftApprovalMixin:
     def get_remaining_approvals(self, obj):
         """Calculate remaining approvals needed"""
         from django.conf import settings
+
         return max(0, settings.MIN_APPROVALS - obj.approval_count)
 
     def get_approval_percentage(self, obj):
         """Calculate approval percentage for progress indicators"""
         from django.conf import settings
+
         if settings.MIN_APPROVALS == 0:
             return 100
         return min(100, (obj.approval_count / settings.MIN_APPROVALS) * 100)
@@ -78,12 +80,20 @@ class EntryDraftApprovalMixin:
 # User serializers
 class UserSerializer(serializers.ModelSerializer):
     """Basic user serializer"""
+
     is_test_user = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "first_name", "last_name", "is_staff", "is_test_user"]
-    
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_test_user",
+        ]
+
     def get_is_test_user(self, obj):
         """Get is_test_user from profile"""
         try:
@@ -113,9 +123,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_perspective_curator_for(self, obj):
         """Return list of perspective IDs the user is a curator for"""
         return list(
-            PerspectiveCurator.objects.filter(user=obj).values_list("perspective_id", flat=True)
+            PerspectiveCurator.objects.filter(user=obj).values_list(
+                "perspective_id", flat=True
+            )
         )
-    
+
     def get_is_test_user(self, obj):
         """Get is_test_user from profile"""
         try:
@@ -207,6 +219,7 @@ class EntryDraftCreateSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     entry = serializers.PrimaryKeyRelatedField(queryset=Entry.objects.all())
     content = serializers.CharField(help_text="Rich HTML content (sanitized on save)")
+
     def validate_content(self, value: str) -> str:
         """Reject content that is effectively empty after stripping HTML.
 
@@ -250,8 +263,8 @@ class EntryDraftUpdateSerializer(serializers.ModelSerializer):
 
         # Check if content has changed
         old_content = instance.content
-        new_content = validated_data.get('content', old_content)
-        
+        new_content = validated_data.get("content", old_content)
+
         # If content has changed, clear approvals and requested reviewers
         if old_content != new_content:
             instance.clear_approvals()
@@ -295,14 +308,14 @@ class EntryListSerializer(serializers.ModelSerializer):
 
     def get_can_user_endorse(self, obj):
         """Check if current user can endorse this entry"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        
+
         # Staff can always endorse
         if request.user.is_staff:
             return True
-        
+
         # Perspective curators can endorse entries in their perspective
         return request.user.is_perspective_curator_for(obj.perspective.id)
 
@@ -315,14 +328,14 @@ class EntryListSerializer(serializers.ModelSerializer):
 
     def get_can_user_edit(self, obj):
         """Check if current user can edit this entry"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        
+
         # Staff can always edit
         if request.user.is_staff:
             return True
-        
+
         # Perspective curators can edit entries in their perspective
         return request.user.is_perspective_curator_for(obj.perspective.id)
 
@@ -418,14 +431,14 @@ class EntryDetailSerializer(serializers.ModelSerializer):
 
     def get_can_user_endorse(self, obj):
         """Check if current user can endorse this entry"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        
+
         # Staff can always endorse
         if request.user.is_staff:
             return True
-        
+
         # Perspective curators can endorse entries in their perspective
         return request.user.is_perspective_curator_for(obj.perspective.id)
 
@@ -439,32 +452,35 @@ class EntryDetailSerializer(serializers.ModelSerializer):
     def get_all_drafts(self, obj):
         """Get all drafts for this entry"""
         from glossary.models import EntryDraft
-        drafts = EntryDraft.objects.filter(
-            entry=obj,
-            is_deleted=False
-        ).select_related('author').prefetch_related('approvers').order_by('-timestamp')
+
+        drafts = (
+            EntryDraft.objects.filter(entry=obj, is_deleted=False)
+            .select_related("author")
+            .prefetch_related("approvers")
+            .order_by("-timestamp")
+        )
         return EntryDraftListSerializer(drafts, many=True, context=self.context).data
 
     def get_published_drafts(self, obj):
         """Get published drafts for this entry"""
         all_drafts = self.get_all_drafts(obj)
-        return [draft for draft in all_drafts if draft['is_published']]
+        return [draft for draft in all_drafts if draft["is_published"]]
 
     def get_unpublished_drafts(self, obj):
         """Get unpublished drafts for this entry"""
         all_drafts = self.get_all_drafts(obj)
-        return [draft for draft in all_drafts if not draft['is_published']]
+        return [draft for draft in all_drafts if not draft["is_published"]]
 
     def get_can_user_edit(self, obj):
         """Check if current user can edit this entry"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        
+
         # Staff can always edit
         if request.user.is_staff:
             return True
-        
+
         # Perspective curators can edit entries in their perspective
         return request.user.is_perspective_curator_for(obj.perspective.id)
 

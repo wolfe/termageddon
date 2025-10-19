@@ -1,13 +1,10 @@
-<app-master-detail-layout
-  sidebarTitle="Glossary"
-  sidebarSubtitle="Browse and edit terms"
->
+<app-master-detail-layout sidebarTitle="Glossary" sidebarSubtitle="Browse and edit terms">
   <!-- Sidebar Content -->
   <div sidebar>
     <!-- Status Summary (empty for consistency) -->
     <app-status-summary [items]="[]"></app-status-summary>
-    
-    <app-term-list 
+
+    <app-term-list
       (entrySelected)="onEntrySelected($event)"
       (termSelected)="onTermSelected($event)"
       (termCreated)="onTermCreated($event)"
@@ -32,9 +29,7 @@
             <img src="images/logo.png" alt="Termageddon Logo" />
           </div>
           <h2 class="three-panel-empty-title">Select a term to view its definition</h2>
-          <p class="three-panel-empty-subtitle">
-            Use the search bar on the left to find terms
-          </p>
+          <p class="three-panel-empty-subtitle">Use the search bar on the left to find terms</p>
         </div>
       </div>
     }

@@ -27,7 +27,7 @@ export interface SortOption {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './search-filter-bar.component.html',
-  styleUrl: './search-filter-bar.component.scss'
+  styleUrl: './search-filter-bar.component.scss',
 })
 export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Input() placeholder: string = 'Search...';
@@ -35,20 +35,20 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Input() showClearButton: boolean = true;
   @Input() searchTerm: string = '';
   @Input() loading: boolean = false;
-  
+
   // Debouncing for search input
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
-  
+
   // New unified filter inputs
   @Input() showPerspectiveFilter: boolean = false;
   @Input() perspectives: Perspective[] = [];
   @Input() selectedPerspectiveId: number | null = null;
-  
+
   @Input() showAuthorFilter: boolean = false;
   @Input() authors: User[] = [];
   @Input() selectedAuthorId: number | null = null;
-  
+
   @Input() showSortOptions: boolean = false;
   @Input() sortOptions: SortOption[] = [];
   @Input() selectedSortBy: string = '';
@@ -61,12 +61,12 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Output() searchTermChange = new EventEmitter<string>();
   @Output() filterChanged = new EventEmitter<{ filterId: string; value: any }>();
   @Output() cleared = new EventEmitter<void>();
-  
+
   // New unified filter outputs
   @Output() perspectiveChanged = new EventEmitter<number | null>();
   @Output() authorChanged = new EventEmitter<number | null>();
   @Output() sortChanged = new EventEmitter<string>();
-  
+
   // Action button outputs
   @Output() createClicked = new EventEmitter<void>();
   @Output() clearFilters = new EventEmitter<void>();

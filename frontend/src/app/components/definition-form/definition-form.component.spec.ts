@@ -9,7 +9,7 @@ describe('DefinitionFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DefinitionFormComponent, HttpClientTestingModule]
+      imports: [DefinitionFormComponent, HttpClientTestingModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DefinitionFormComponent);
@@ -30,8 +30,8 @@ describe('DefinitionFormComponent', () => {
         formatText: jasmine.createSpy('formatText'),
         setSelection: jasmine.createSpy('setSelection'),
         root: {
-          querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([])
-        }
+          querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([]),
+        },
       };
 
       component.editor = mockEditor;
@@ -45,7 +45,12 @@ describe('DefinitionFormComponent', () => {
       expect(mockEditor.insertText).toHaveBeenCalledWith(0, `${entryText} 📖`, 'user');
 
       // Verify that formatText was called
-      expect(mockEditor.formatText).toHaveBeenCalledWith(0, `${entryText} 📖`.length, 'link', `/entry/${entryId}`);
+      expect(mockEditor.formatText).toHaveBeenCalledWith(
+        0,
+        `${entryText} 📖`.length,
+        'link',
+        `/entry/${entryId}`
+      );
 
       // Verify that setSelection was called
       expect(mockEditor.setSelection).toHaveBeenCalledWith(`${entryText} 📖`.length);
@@ -66,7 +71,7 @@ describe('DefinitionFormComponent', () => {
         getSelection: jasmine.createSpy('getSelection').and.returnValue(null),
         insertText: jasmine.createSpy('insertText'),
         formatText: jasmine.createSpy('formatText'),
-        setSelection: jasmine.createSpy('setSelection')
+        setSelection: jasmine.createSpy('setSelection'),
       };
 
       component.editor = mockEditor;
@@ -107,23 +112,23 @@ describe('DefinitionFormComponent', () => {
 
       const mockEntry: Partial<Entry> = {
         id: 123,
-        term: { 
-          id: 1, 
+        term: {
+          id: 1,
           text: 'Test Term',
           text_normalized: 'test term',
           is_official: false,
           created_at: '2023-01-01T00:00:00Z',
-          updated_at: '2023-01-01T00:00:00Z'
+          updated_at: '2023-01-01T00:00:00Z',
         },
-        perspective: { 
-          id: 1, 
-          name: 'Test Perspective', 
+        perspective: {
+          id: 1,
+          name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2023-01-01T00:00:00Z',
-          updated_at: '2023-01-01T00:00:00Z'
+          updated_at: '2023-01-01T00:00:00Z',
         },
         active_draft: undefined,
-        is_official: false
+        is_official: false,
       };
 
       component.onEntrySelected(mockEntry as Entry);
@@ -136,16 +141,16 @@ describe('DefinitionFormComponent', () => {
   describe('editor configuration', () => {
     it('should include link in toolbar container', () => {
       const toolbarContainer = component.editorConfig.modules.toolbar.container;
-      const hasLink = toolbarContainer.some(group => 
-        Array.isArray(group) && group.includes('link' as any)
+      const hasLink = toolbarContainer.some(
+        group => Array.isArray(group) && group.includes('link' as any)
       );
       expect(hasLink).toBeTrue();
     });
 
     it('should not include custom-link in toolbar container (added dynamically)', () => {
       const toolbarContainer = component.editorConfig.modules.toolbar.container;
-      const hasCustomLink = toolbarContainer.some(group => 
-        Array.isArray(group) && group.includes('custom-link' as any)
+      const hasCustomLink = toolbarContainer.some(
+        group => Array.isArray(group) && group.includes('custom-link' as any)
       );
       expect(hasCustomLink).toBeFalse();
     });

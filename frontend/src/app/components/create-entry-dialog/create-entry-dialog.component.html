@@ -32,19 +32,26 @@
             <option value="">Select a perspective</option>
             <option *ngFor="let perspective of perspectives" [value]="perspective.id">
               {{ perspective.name }}
-              <span *ngIf="getPerspectiveStatusIcon(perspective.id)" 
-                    [title]="getPerspectiveStatusTooltip(perspective.id)"
-                    class="status-indicator">
+              <span
+                *ngIf="getPerspectiveStatusIcon(perspective.id)"
+                [title]="getPerspectiveStatusTooltip(perspective.id)"
+                class="status-indicator"
+              >
                 {{ getPerspectiveStatusIcon(perspective.id) }}
               </span>
             </option>
           </select>
         </div>
 
-        <div class="perspective-status" *ngIf="selectedPerspectiveId && perspectiveStatuses[selectedPerspectiveId]">
+        <div
+          class="perspective-status"
+          *ngIf="selectedPerspectiveId && perspectiveStatuses[selectedPerspectiveId]"
+        >
           <div class="status-info">
             <span class="status-icon">{{ getPerspectiveStatusIcon(selectedPerspectiveId) }}</span>
-            <span class="status-text">{{ getPerspectiveStatusTooltip(selectedPerspectiveId) }}</span>
+            <span class="status-text">{{
+              getPerspectiveStatusTooltip(selectedPerspectiveId)
+            }}</span>
           </div>
         </div>
 
@@ -67,7 +74,7 @@
             [disabled]="!entryForm.form.valid || isLoading || isLookingUp"
           >
             <span *ngIf="isLoading" class="spinner"></span>
-            {{ isLoading ? "Creating..." : getButtonText() }}
+            {{ isLoading ? 'Creating...' : getButtonText() }}
           </button>
         </div>
       </form>

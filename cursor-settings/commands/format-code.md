@@ -9,9 +9,9 @@ cd backend
 source venv/bin/activate
 black glossary/ Termageddon/
 
-# Frontend (TypeScript/SCSS)
+# Frontend (TypeScript/SCSS/Markdown)
 cd frontend
-npm run format
+npx prettier --write "src/**/*.{ts,html,scss,css,json}" "../**/*.md" --parser markdown
 ```
 
 ## Check Formatting
@@ -23,7 +23,7 @@ black --check glossary/ Termageddon/
 
 # Frontend
 cd frontend
-npm run format:check
+npx prettier --check "src/**/*.{ts,html,scss,css,json}" "../**/*.md" --parser markdown
 ```
 
 ## Fix Linting Issues

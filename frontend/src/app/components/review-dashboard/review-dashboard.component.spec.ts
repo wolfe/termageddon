@@ -31,42 +31,38 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       'searchDrafts',
       'approveDraft',
       'requestReview',
-      'publishDraft'
+      'publishDraft',
     ]);
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'getUsers',
-      'getPerspectives'
-    ]);
+    const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getUsers', 'getPerspectives']);
     const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
       currentUser$: {
-        subscribe: (callback: any) => callback({
-          id: 1,
-          username: 'testuser',
-          first_name: 'Test',
-          last_name: 'User',
-          is_staff: false,
-          perspective_curator_for: []
-        })
-      }
+        subscribe: (callback: any) =>
+          callback({
+            id: 1,
+            username: 'testuser',
+            first_name: 'Test',
+            last_name: 'User',
+            is_staff: false,
+            perspective_curator_for: [],
+          }),
+      },
     });
     const notificationSpy = jasmine.createSpyObj('NotificationService', [
       'success',
       'error',
-      'warning'
+      'warning',
     ]);
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
-      'loadCommentsWithPositions'
+      'loadCommentsWithPositions',
     ]);
-    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', [
-      'buildDraftUrl'
-    ]);
+    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', ['buildDraftUrl']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
       queryParams: of({}),
       snapshot: {
-        queryParams: {}
-      }
+        queryParams: {},
+      },
     });
 
     await TestBed.configureTestingModule({
@@ -80,8 +76,8 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         { provide: UrlHelperService, useValue: urlHelperSpy },
         { provide: Router, useValue: routerSpy },
         { provide: Location, useValue: locationSpy },
-        { provide: ActivatedRoute, useValue: activatedRouteSpy }
-      ]
+        { provide: ActivatedRoute, useValue: activatedRouteSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ReviewDashboardComponent);
@@ -89,7 +85,9 @@ describe('ReviewDashboardComponent Integration Tests', () => {
     reviewService = TestBed.inject(ReviewService) as jasmine.SpyObj<ReviewService>;
     glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
     permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
-    notificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
+    notificationService = TestBed.inject(
+      NotificationService
+    ) as jasmine.SpyObj<NotificationService>;
     entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
     urlHelperService = TestBed.inject(UrlHelperService) as jasmine.SpyObj<UrlHelperService>;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
@@ -118,7 +116,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -128,22 +126,22 @@ describe('ReviewDashboardComponent Integration Tests', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const mockComments: Comment[] = [
@@ -161,16 +159,20 @@ describe('ReviewDashboardComponent Integration Tests', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
-          replies: []
-        }
+          replies: [],
+        },
       ];
 
       component.state.selectedDraft = mockDraft;
       entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
-      reviewService.getDraftsCanApprove.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
-      glossaryService.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+      reviewService.getDraftsCanApprove.and.returnValue(
+        of({ count: 0, next: null, previous: null, results: [] })
+      );
+      glossaryService.getPerspectives.and.returnValue(
+        of({ count: 0, next: null, previous: null, results: [] })
+      );
 
       // Simulate edit saved event
       component.onEditSaved();
@@ -201,7 +203,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -211,33 +213,39 @@ describe('ReviewDashboardComponent Integration Tests', () => {
                 text_normalized: 'test term',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
-          }
-        ]
+            replaces_draft: undefined,
+          },
+        ],
       };
 
       reviewService.getDraftsCanApprove.and.returnValue(of(mockResponse));
-      glossaryService.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+      glossaryService.getPerspectives.and.returnValue(
+        of({ count: 0, next: null, previous: null, results: [] })
+      );
 
       // Simulate edit saved event
       component.onEditSaved();
 
-      expect(reviewService.getDraftsCanApprove).toHaveBeenCalledWith(false, undefined, '-published_at');
+      expect(reviewService.getDraftsCanApprove).toHaveBeenCalledWith(
+        false,
+        undefined,
+        '-published_at'
+      );
       expect(component.state.drafts).toEqual(mockResponse.results);
       expect(component.state.filteredDrafts).toEqual(mockResponse.results);
     });
@@ -260,7 +268,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -270,22 +278,22 @@ describe('ReviewDashboardComponent Integration Tests', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const mockComments: Comment[] = [
@@ -303,10 +311,10 @@ describe('ReviewDashboardComponent Integration Tests', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
-          replies: []
-        }
+          replies: [],
+        },
       ];
 
       entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));

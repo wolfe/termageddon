@@ -63,7 +63,9 @@ class Perspective(AuditedModel):
     """Perspective or category for terms (e.g., 'Finance', 'Technology')"""
 
     name = models.CharField(max_length=100)
-    name_normalized = models.CharField(max_length=100, editable=False, db_index=True, default='')
+    name_normalized = models.CharField(
+        max_length=100, editable=False, db_index=True, default=""
+    )
     description = models.TextField(blank=True)
 
     class Meta:
@@ -81,7 +83,9 @@ class Perspective(AuditedModel):
             .exists()
         )
         if existing:
-            raise ValidationError({"name": "A perspective with this name already exists."})
+            raise ValidationError(
+                {"name": "A perspective with this name already exists."}
+            )
 
     def save(self, *args, **kwargs):
         # Auto-populate name_normalized
@@ -127,7 +131,9 @@ class Entry(AuditedModel):
     """An entry represents a (term, perspective) pair"""
 
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="entries")
-    perspective = models.ForeignKey(Perspective, on_delete=models.CASCADE, related_name="entries")
+    perspective = models.ForeignKey(
+        Perspective, on_delete=models.CASCADE, related_name="entries"
+    )
     is_official = models.BooleanField(
         default=False,
         help_text="Indicates this is the official definition for this term in this perspective",
@@ -156,11 +162,11 @@ class Entry(AuditedModel):
 
     def get_latest_draft(self):
         """Get the most recent draft by timestamp (any state)"""
-        return self.drafts.order_by('-timestamp').first()
+        return self.drafts.order_by("-timestamp").first()
 
     def get_latest_published_draft(self):
         """Get the most recent published draft"""
-        return self.drafts.filter(is_published=True).order_by('-timestamp').first()
+        return self.drafts.filter(is_published=True).order_by("-timestamp").first()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -176,9 +182,7 @@ class EntryDraft(AuditedModel):
         User, on_delete=models.PROTECT, related_name="authored_drafts"
     )
     timestamp = models.DateTimeField(auto_now_add=True)
-    approvers = models.ManyToManyField(
-        User, related_name="approved_drafts", blank=True
-    )
+    approvers = models.ManyToManyField(User, related_name="approved_drafts", blank=True)
     requested_reviewers = models.ManyToManyField(
         User,
         related_name="requested_reviews",
@@ -194,17 +198,17 @@ class EntryDraft(AuditedModel):
         null=True,
         blank=True,
         related_name="endorsed_drafts",
-        help_text="Perspective curator who endorsed this draft"
+        help_text="Perspective curator who endorsed this draft",
     )
     endorsed_at = models.DateTimeField(null=True, blank=True)
     published_at = models.DateTimeField(null=True, blank=True)
     replaces_draft = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="replaced_by",
-        help_text="The draft that this draft replaces in the version history"
+        help_text="The draft that this draft replaces in the version history",
     )
 
     class Meta:
@@ -233,13 +237,13 @@ class EntryDraft(AuditedModel):
     def status(self):
         """Return human-readable status string for this draft"""
         if self.is_published:
-            return 'Published'
+            return "Published"
         elif self.is_approved:
-            return 'Approved'
+            return "Approved"
         elif self.approval_count >= settings.MIN_APPROVALS:
-            return 'Ready to Publish'
+            return "Ready to Publish"
         else:
-            return f'Pending ({self.approval_count}/{settings.MIN_APPROVALS})'
+            return f"Pending ({self.approval_count}/{settings.MIN_APPROVALS})"
 
     def clean(self):
         """Validate draft data"""
@@ -265,8 +269,10 @@ class EntryDraft(AuditedModel):
             raise ValidationError("Cannot request reviews for published drafts.")
 
         # Filter out the draft author from reviewers (silently exclude)
-        available_reviewers = [reviewer for reviewer in reviewers if reviewer.id != self.author.id]
-        
+        available_reviewers = [
+            reviewer for reviewer in reviewers if reviewer.id != self.author.id
+        ]
+
         self.requested_reviewers.set(available_reviewers)
 
     def clear_approvals(self):
@@ -291,10 +297,7 @@ class EntryDraft(AuditedModel):
         if self.pk:
             try:
                 old_draft = EntryDraft.objects.get(pk=self.pk)
-                if (
-                    old_draft.content != self.content
-                    and old_draft.approvers.exists()
-                ):
+                if old_draft.content != self.content and old_draft.approvers.exists():
                     self.clear_approvals()
             except EntryDraft.DoesNotExist:
                 pass
@@ -343,7 +346,9 @@ class PerspectiveCurator(AuditedModel):
     """Tracks which users are curators for which perspectives"""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="curatorship")
-    perspective = models.ForeignKey(Perspective, on_delete=models.CASCADE, related_name="curators")
+    perspective = models.ForeignKey(
+        Perspective, on_delete=models.CASCADE, related_name="curators"
+    )
     assigned_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -381,25 +386,22 @@ class PerspectiveCurator(AuditedModel):
 # Helper method to check if a user is a perspective curator
 def is_perspective_curator_for(user, perspective_id):
     """Check if a user is a perspective curator for a specific perspective"""
-    return PerspectiveCurator.objects.filter(user=user, perspective_id=perspective_id).exists()
+    return PerspectiveCurator.objects.filter(
+        user=user, perspective_id=perspective_id
+    ).exists()
 
 
 class UserProfile(AuditedModel):
     """User profile extending Django's built-in User model"""
-    
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name="profile"
-    )
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     is_test_user = models.BooleanField(
-        default=False,
-        help_text="Indicates this is a test user for easy switching"
+        default=False, help_text="Indicates this is a test user for easy switching"
     )
-    
+
     class Meta:
         db_table = "glossary_user_profile"
-    
+
     def __str__(self):
         return f"{self.user.username} profile"
 
@@ -411,6 +413,7 @@ User.add_to_class("is_perspective_curator_for", is_perspective_curator_for)
 # Signal to auto-create UserProfile when User is created
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

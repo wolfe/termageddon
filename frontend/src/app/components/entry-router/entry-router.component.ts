@@ -22,7 +22,7 @@ export class EntryRouterComponent implements OnInit {
       const entryId = +params['entryId'];
       const isEditMode = this.route.snapshot.url.some(segment => segment.path === 'edit');
       const isNewEntry = this.route.snapshot.url.some(segment => segment.path === 'new');
-      
+
       if (isNewEntry) {
         this.handleNewEntryRoute();
       } else if (entryId) {
@@ -35,27 +35,27 @@ export class EntryRouterComponent implements OnInit {
 
   private loadEntryAndRoute(entryId: number, isEditMode: boolean): void {
     this.glossaryService.getEntry(entryId).subscribe({
-      next: (entry) => {
+      next: entry => {
         this.authService.getCurrentUser().subscribe({
-          next: (currentUser) => {
+          next: currentUser => {
             // Determine target panel based on entry state and user
             const targetPanel = this.determineTargetPanel(entry, currentUser, isEditMode);
-            
+
             // Navigate to appropriate panel with entry selected
             this.router.navigate([targetPanel], {
-              queryParams: { entryId: entryId, edit: isEditMode ? 'true' : undefined }
+              queryParams: { entryId: entryId, edit: isEditMode ? 'true' : undefined },
             });
           },
-          error: (error) => {
+          error: error => {
             console.error('Failed to get current user:', error);
             this.router.navigate(['/login']);
-          }
+          },
         });
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load entry:', error);
         this.router.navigate(['/glossary']);
-      }
+      },
     });
   }
 
@@ -63,52 +63,52 @@ export class EntryRouterComponent implements OnInit {
     this.route.queryParams.subscribe(queryParams => {
       const termText = queryParams['term'];
       const perspectiveId = queryParams['perspective'];
-      
+
       if (!termText || !perspectiveId) {
         console.error('Missing required parameters: term and perspective');
         this.router.navigate(['/glossary']);
         return;
       }
-      
+
       const perspectiveIdNum = +perspectiveId;
-      
+
       // Look up term by text to get term ID
       this.glossaryService.getTerms(termText).subscribe({
-        next: (termsResponse) => {
+        next: termsResponse => {
           let termId: number | null = null;
-          
+
           // Find exact match for the term text
-          const matchingTerm = termsResponse.results.find(term => 
-            term.text.toLowerCase() === termText.toLowerCase()
+          const matchingTerm = termsResponse.results.find(
+            term => term.text.toLowerCase() === termText.toLowerCase()
           );
-          
+
           if (matchingTerm) {
             termId = matchingTerm.id;
           }
-          
+
           // Check if entry already exists for term+perspective combination
           this.checkEntryExists(termId, termText, perspectiveIdNum);
         },
-        error: (error) => {
+        error: error => {
           console.error('Failed to lookup term:', error);
           // If term lookup fails, still proceed with entry check using term text
           this.checkEntryExists(null, termText, perspectiveIdNum);
-        }
+        },
       });
     });
   }
-  
+
   private checkEntryExists(termId: number | null, termText: string, perspectiveId: number): void {
     const searchParams: any = { perspective: perspectiveId };
-    
+
     if (termId) {
       searchParams.term = termId;
     } else {
       searchParams.term_text = termText;
     }
-    
+
     this.glossaryService.getEntries(searchParams).subscribe({
-      next: (entriesResponse) => {
+      next: entriesResponse => {
         if (entriesResponse.results.length > 0) {
           // Entry already exists, show error and provide link to view it
           const existingEntry = entriesResponse.results[0];
@@ -120,22 +120,22 @@ export class EntryRouterComponent implements OnInit {
             queryParams: {
               newEntryTerm: termText,
               newEntryPerspective: perspectiveId,
-              edit: 'true'
-            }
+              edit: 'true',
+            },
           });
         }
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to check if entry exists:', error);
         // On error, proceed with creation flow
         this.router.navigate(['/my-drafts'], {
           queryParams: {
             newEntryTerm: termText,
             newEntryPerspective: perspectiveId,
-            edit: 'true'
-          }
+            edit: 'true',
+          },
         });
-      }
+      },
     });
   }
 

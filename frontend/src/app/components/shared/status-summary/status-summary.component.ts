@@ -17,17 +17,14 @@ export interface StatusSummaryItem {
         <div class="flex items-center space-x-4 text-xs">
           @for (item of items; track item.label) {
             <span class="flex items-center">
-              <span 
-                class="w-2 h-2 rounded-full mr-1"
-                [style.background-color]="item.color"
-              ></span>
+              <span class="w-2 h-2 rounded-full mr-1" [style.background-color]="item.color"></span>
               {{ item.count }} {{ item.label }}
             </span>
           }
         </div>
       </div>
     }
-  `
+  `,
 })
 export class StatusSummaryComponent {
   @Input() items: StatusSummaryItem[] = [];

@@ -6,7 +6,7 @@ describe('NotificationService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [NotificationService]
+      providers: [NotificationService],
     });
     service = TestBed.inject(NotificationService);
   });
@@ -18,9 +18,9 @@ describe('NotificationService', () => {
   describe('Single notification behavior', () => {
     it('should show success notification', () => {
       const message = 'Success message';
-      
+
       service.success(message);
-      
+
       const notification = service.getNotification();
       expect(notification).toBeTruthy();
       expect(notification!.message).toBe(message);
@@ -30,9 +30,9 @@ describe('NotificationService', () => {
 
     it('should show error notification', () => {
       const message = 'Error message';
-      
+
       service.error(message);
-      
+
       const notification = service.getNotification();
       expect(notification).toBeTruthy();
       expect(notification!.message).toBe(message);
@@ -42,9 +42,9 @@ describe('NotificationService', () => {
 
     it('should show warning notification', () => {
       const message = 'Warning message';
-      
+
       service.warning(message);
-      
+
       const notification = service.getNotification();
       expect(notification).toBeTruthy();
       expect(notification!.message).toBe(message);
@@ -54,9 +54,9 @@ describe('NotificationService', () => {
 
     it('should show info notification', () => {
       const message = 'Info message';
-      
+
       service.info(message);
-      
+
       const notification = service.getNotification();
       expect(notification).toBeTruthy();
       expect(notification!.message).toBe(message);
@@ -77,12 +77,12 @@ describe('NotificationService', () => {
     it('should replace previous notification with new one', () => {
       const firstId = service.success('First notification');
       const firstNotification = service.getNotification();
-      
+
       expect(firstNotification!.message).toBe('First notification');
-      
+
       const secondId = service.error('Second notification');
       const secondNotification = service.getNotification();
-      
+
       expect(secondNotification!.message).toBe('Second notification');
       expect(secondNotification!.type).toBe('error');
       expect(secondId).not.toBe(firstId);
@@ -90,35 +90,35 @@ describe('NotificationService', () => {
 
     it('should dismiss current notification', () => {
       service.success('Test notification');
-      
+
       expect(service.getNotification()).toBeTruthy();
-      
+
       service.dismiss();
-      
+
       expect(service.getNotification()).toBeNull();
     });
 
     it('should clear current notification', () => {
       service.success('Test notification');
-      
+
       expect(service.getNotification()).toBeTruthy();
-      
+
       service.clear();
-      
+
       expect(service.getNotification()).toBeNull();
     });
 
     it('should not auto-dismiss notification (component handles timing)', fakeAsync(() => {
       service.success('Test notification');
-      
+
       expect(service.getNotification()).toBeTruthy();
-      
+
       // Fast-forward 8 seconds - notification should still be there
       // because the component handles the timing, not the service
       tick(8000);
-      
+
       expect(service.getNotification()).toBeTruthy();
-      
+
       // Manually dismiss to clean up
       service.dismiss();
       expect(service.getNotification()).toBeNull();

@@ -17,7 +17,7 @@
           [disabled]="!newCommentText.trim() || loading"
           class="btn btn-primary"
         >
-          {{ loading ? "Posting..." : "Post Comment" }}
+          {{ loading ? 'Posting...' : 'Post Comment' }}
         </button>
       </div>
     </div>
@@ -39,19 +39,24 @@
               <span class="author-name">{{ getUserDisplayName(comment.author) }}</span>
               <span class="comment-date">{{ comment.created_at | relativeTime }}</span>
               <!-- Draft Position Indicator -->
-              <span *ngIf="comment.draft_position" 
-                    class="draft-position-badge"
-                    [ngClass]="getDraftPositionClass(comment)">
+              <span
+                *ngIf="comment.draft_position"
+                class="draft-position-badge"
+                [ngClass]="getDraftPositionClass(comment)"
+              >
                 {{ getDraftPositionText(comment) }}
               </span>
             </div>
             <div class="reply-count" *ngIf="getReplyCount(comment) > 0">
-              <button 
+              <button
                 (click)="toggleCommentCollapse(comment)"
                 class="collapse-btn"
                 [title]="isCommentCollapsed(comment) ? 'Show replies' : 'Hide replies'"
               >
-                <span class="reply-count-text">{{ getReplyCount(comment) }} {{ getReplyCount(comment) === 1 ? 'reply' : 'replies' }}</span>
+                <span class="reply-count-text"
+                  >{{ getReplyCount(comment) }}
+                  {{ getReplyCount(comment) === 1 ? 'reply' : 'replies' }}</span
+                >
                 <span class="collapse-icon" [class.collapsed]="isCommentCollapsed(comment)">▼</span>
               </button>
             </div>
@@ -59,16 +64,12 @@
           <div class="comment-actions">
             <button
               *ngIf="canResolve(comment)"
-              (click)="
-                comment.is_resolved
-                  ? unresolveComment(comment)
-                  : resolveComment(comment)
-              "
+              (click)="comment.is_resolved ? unresolveComment(comment) : resolveComment(comment)"
               [disabled]="loading"
               class="btn btn-sm"
               [ngClass]="comment.is_resolved ? 'btn-warning' : 'btn-success'"
             >
-              {{ comment.is_resolved ? "Unresolve" : "Resolve" }}
+              {{ comment.is_resolved ? 'Unresolve' : 'Resolve' }}
             </button>
             <button
               *ngIf="canReply(comment)"
@@ -101,11 +102,9 @@
             [disabled]="!replyText.trim() || loading"
             class="btn btn-primary btn-sm"
           >
-            {{ loading ? "Posting..." : "Post Reply" }}
+            {{ loading ? 'Posting...' : 'Post Reply' }}
           </button>
-          <button (click)="cancelReply()" class="btn btn-secondary btn-sm">
-            Cancel
-          </button>
+          <button (click)="cancelReply()" class="btn btn-secondary btn-sm">Cancel</button>
         </div>
       </div>
 

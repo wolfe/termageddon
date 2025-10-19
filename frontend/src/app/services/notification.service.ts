@@ -8,7 +8,7 @@ export interface Notification {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private notificationSubject = new BehaviorSubject<Notification | null>(null);
@@ -29,7 +29,7 @@ export class NotificationService {
     const notification: Notification = {
       id,
       type,
-      message
+      message,
     };
 
     // Replace any existing notification

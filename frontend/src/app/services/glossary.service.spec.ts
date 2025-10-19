@@ -10,7 +10,7 @@ describe('GlossaryService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [GlossaryService]
+      providers: [GlossaryService],
     });
     service = TestBed.inject(GlossaryService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -31,9 +31,21 @@ describe('GlossaryService', () => {
         next: null,
         previous: null,
         results: [
-          { id: 1, name: 'Perspective 1', description: 'Description 1', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-          { id: 2, name: 'Perspective 2', description: 'Description 2', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' }
-        ]
+          {
+            id: 1,
+            name: 'Perspective 1',
+            description: 'Description 1',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 2,
+            name: 'Perspective 2',
+            description: 'Description 2',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       service.getPerspectives().subscribe(response => {
@@ -51,7 +63,7 @@ describe('GlossaryService', () => {
         name: 'Test Perspective',
         description: 'Test Description',
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       service.getPerspective(1).subscribe(perspective => {
@@ -70,7 +82,7 @@ describe('GlossaryService', () => {
         name: 'New Perspective',
         description: 'New Description',
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       service.createPerspective(newPerspective).subscribe(perspective => {
@@ -97,9 +109,9 @@ describe('GlossaryService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          }
-        ]
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       service.getTerms('test').subscribe(response => {
@@ -118,7 +130,7 @@ describe('GlossaryService', () => {
         text_normalized: 'test term',
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       service.getTerm(1).subscribe(term => {
@@ -138,7 +150,7 @@ describe('GlossaryService', () => {
         text_normalized: 'new term',
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       service.createTerm(newTerm).subscribe(term => {
@@ -167,20 +179,20 @@ describe('GlossaryService', () => {
               text_normalized: 'test term',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          }
-        ]
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       const filters = { perspective: '1', approval_status: 'approved' };
@@ -188,7 +200,9 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/?perspective=1&approval_status=approved');
+      const req = httpMock.expectOne(
+        'http://localhost:8000/api/entries/?perspective=1&approval_status=approved'
+      );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -198,14 +212,16 @@ describe('GlossaryService', () => {
         count: 1,
         next: null,
         previous: null,
-        results: []
+        results: [],
       };
 
       service.searchEntries('test', { perspective: '1' }).subscribe(response => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/?search=test&perspective=1');
+      const req = httpMock.expectOne(
+        'http://localhost:8000/api/entries/?search=test&perspective=1'
+      );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -219,18 +235,18 @@ describe('GlossaryService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: true,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       service.markOfficial(1).subscribe(entry => {
@@ -252,8 +268,8 @@ describe('GlossaryService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
-        }
+          perspective_curator_for: [],
+        },
       ];
 
       service.getUsers().subscribe(users => {
@@ -286,12 +302,12 @@ describe('GlossaryService', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
+          replaces_draft: undefined,
         },
         {
           id: 2,
@@ -310,13 +326,13 @@ describe('GlossaryService', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       service.getDraftHistory(1).subscribe(drafts => {
@@ -346,20 +362,22 @@ describe('GlossaryService', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           replies: [],
           draft_position: 'current draft',
           draft_id: 1,
-          draft_timestamp: '2024-01-02T00:00:00Z'
-        }
+          draft_timestamp: '2024-01-02T00:00:00Z',
+        },
       ];
 
       service.getCommentsWithDraftPositions(1).subscribe(comments => {
         expect(comments).toEqual(mockComments);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/comments/with_draft_positions/?entry=1');
+      const req = httpMock.expectOne(
+        'http://localhost:8000/api/comments/with_draft_positions/?entry=1'
+      );
       expect(req.request.method).toBe('GET');
       req.flush(mockComments);
     });
@@ -376,14 +394,14 @@ describe('GlossaryService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         entry: {
           id: 1,
@@ -393,27 +411,27 @@ describe('GlossaryService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         has_published_draft: true,
         has_unpublished_draft: false,
-        unpublished_draft_author_id: null
+        unpublished_draft_author_id: null,
       };
 
       const request = {
         term_id: 1,
-        perspective_id: 1
+        perspective_id: 1,
       };
 
       service.lookupOrCreateEntry(request).subscribe(response => {
@@ -436,24 +454,24 @@ describe('GlossaryService', () => {
           text_normalized: 'new term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         entry: undefined,
         has_published_draft: false,
         has_unpublished_draft: false,
-        unpublished_draft_author_id: null
+        unpublished_draft_author_id: null,
       };
 
       const request = {
         term_text: 'New Term',
-        perspective_id: 1
+        perspective_id: 1,
       };
 
       service.lookupOrCreateEntry(request).subscribe(response => {
@@ -471,14 +489,14 @@ describe('GlossaryService', () => {
     it('should handle server errors gracefully in lookup or create entry', () => {
       const request = {
         term_id: 1,
-        perspective_id: 1
+        perspective_id: 1,
       };
 
       service.lookupOrCreateEntry(request).subscribe({
         next: () => fail('Should have failed'),
-        error: (error) => {
+        error: error => {
           expect(error.status).toBe(400);
-        }
+        },
       });
 
       const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
@@ -495,18 +513,18 @@ describe('GlossaryService', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       service.getEntryById(1).subscribe(entry => {
@@ -536,7 +554,7 @@ describe('GlossaryService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -546,22 +564,22 @@ describe('GlossaryService', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       service.getDraftById(1).subscribe(draft => {

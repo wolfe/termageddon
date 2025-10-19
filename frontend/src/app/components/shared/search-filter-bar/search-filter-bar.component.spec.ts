@@ -9,7 +9,7 @@ describe('SearchFilterBarComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SearchFilterBarComponent, FormsModule]
+      imports: [SearchFilterBarComponent, FormsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SearchFilterBarComponent);
@@ -23,23 +23,23 @@ describe('SearchFilterBarComponent', () => {
 
   it('should debounce search input', fakeAsync(() => {
     spyOn(component.search, 'emit');
-    
+
     // Simulate rapid typing
     component.searchTerm = 'a';
     component.onSearchInput();
-    
+
     component.searchTerm = 'ab';
     component.onSearchInput();
-    
+
     component.searchTerm = 'abc';
     component.onSearchInput();
-    
+
     // Should not emit immediately
     expect(component.search.emit).not.toHaveBeenCalled();
-    
+
     // Wait for debounce time (300ms)
     tick(300);
-    
+
     // Should emit only once with the latest value
     expect(component.search.emit).toHaveBeenCalledTimes(1);
     expect(component.search.emit).toHaveBeenCalledWith('abc');
@@ -47,22 +47,22 @@ describe('SearchFilterBarComponent', () => {
 
   it('should emit search immediately on Enter key', () => {
     spyOn(component.search, 'emit');
-    
+
     component.searchTerm = 'test';
     const event = new KeyboardEvent('keypress', { key: 'Enter' });
-    
+
     component.onKeyPress(event);
-    
+
     expect(component.search.emit).toHaveBeenCalledTimes(1);
     expect(component.search.emit).toHaveBeenCalledWith('test');
   });
 
   it('should emit searchTermChange immediately', () => {
     spyOn(component.searchTermChange, 'emit');
-    
+
     component.searchTerm = 'test';
     component.onSearchInput();
-    
+
     expect(component.searchTermChange.emit).toHaveBeenCalledTimes(1);
     expect(component.searchTermChange.emit).toHaveBeenCalledWith('test');
   });
@@ -71,13 +71,13 @@ describe('SearchFilterBarComponent', () => {
     spyOn(component.search, 'emit');
     spyOn(component.searchTermChange, 'emit');
     spyOn(component.cleared, 'emit');
-    
+
     component.onClear();
-    
+
     // searchTermChange and cleared should emit immediately
     expect(component.searchTermChange.emit).toHaveBeenCalledWith('');
     expect(component.cleared.emit).toHaveBeenCalledTimes(1);
-    
+
     // search should emit after debounce
     tick(300);
     expect(component.search.emit).toHaveBeenCalledWith('');

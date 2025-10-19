@@ -90,10 +90,10 @@ class TermViewSet(viewsets.ModelViewSet):
         """Override to ensure ALL terms are returned, including those with only drafts"""
         # Start with all terms
         queryset = Term.objects.all()
-        
+
         # Apply any DRF filtering (search, ordering, etc.)
         queryset = self.filter_queryset(queryset)
-        
+
         return queryset
 
     def perform_create(self, serializer):
@@ -112,9 +112,7 @@ class TermViewSet(viewsets.ModelViewSet):
 class EntryViewSet(viewsets.ModelViewSet):
     """ViewSet for Entry model"""
 
-    queryset = Entry.objects.select_related(
-        "term", "perspective"
-    )
+    queryset = Entry.objects.select_related("term", "perspective")
     serializer_class = EntryListSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [
@@ -124,40 +122,44 @@ class EntryViewSet(viewsets.ModelViewSet):
     ]
     filterset_fields = ["term", "perspective", "is_official"]
     search_fields = ["term__text", "term__text_normalized"]
-    ordering_fields = ["term__text", "term__text_normalized", "created_at", "updated_at"]
+    ordering_fields = [
+        "term__text",
+        "term__text_normalized",
+        "created_at",
+        "updated_at",
+    ]
     ordering = ["term__text_normalized"]
 
     def get_queryset(self):
         """Override queryset to handle additional filtering"""
         queryset = super().get_queryset()
-        
+
         # For list view, only show entries with published drafts
-        if self.action == 'list':
-            queryset = queryset.filter(
-                drafts__is_published=True
-            ).distinct()
-        
+        if self.action == "list":
+            queryset = queryset.filter(drafts__is_published=True).distinct()
+
         # Handle term_text filtering (exact match, case-insensitive)
-        term_text = self.request.query_params.get('term_text')
+        term_text = self.request.query_params.get("term_text")
         if term_text:
             from unidecode import unidecode
+
             term_text_normalized = unidecode(term_text.lower())
             queryset = queryset.filter(term__text_normalized=term_text_normalized)
-        
+
         # Handle author filtering
-        author_id = self.request.query_params.get('author')
+        author_id = self.request.query_params.get("author")
         if author_id:
             queryset = queryset.filter(drafts__author_id=author_id).distinct()
-        
+
         # Handle date range filtering
-        created_after = self.request.query_params.get('created_after')
+        created_after = self.request.query_params.get("created_after")
         if created_after:
             queryset = queryset.filter(created_at__gte=created_after)
-        
-        created_before = self.request.query_params.get('created_before')
+
+        created_before = self.request.query_params.get("created_before")
         if created_before:
             queryset = queryset.filter(created_at__lte=created_before)
-        
+
         return queryset
 
     def get_serializer_class(self):
@@ -175,7 +177,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Use EntryDetailSerializer for retrieve operations"""
-        if self.action == 'retrieve':
+        if self.action == "retrieve":
             return EntryDetailSerializer
         return super().get_serializer_class()
 
@@ -185,7 +187,9 @@ class EntryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff])
+    @action(
+        detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff]
+    )
     def endorse(self, request, pk=None):
         """Endorse the active draft of an entry (requires perspective curator or staff)"""
         entry = self.get_object()
@@ -218,6 +222,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
         # Endorse the draft
         from django.utils import timezone
+
         published_draft.endorsed_by = request.user
         published_draft.endorsed_at = timezone.now()
         published_draft.save()
@@ -229,88 +234,79 @@ class EntryViewSet(viewsets.ModelViewSet):
     def grouped_by_term(self, request):
         """Get entries grouped by term for simplified frontend display"""
         # Start with base queryset (no published filter yet)
-        queryset = Entry.objects.select_related(
-            "term", "perspective"
-        )
-        
+        queryset = Entry.objects.select_related("term", "perspective")
+
         # Apply DRF filtering first
         queryset = self.filter_queryset(queryset)
-        
+
         # Then apply published-only filter for glossary display
-        queryset = queryset.filter(
-            drafts__is_published=True
-        ).distinct()
-        
+        queryset = queryset.filter(drafts__is_published=True).distinct()
+
         # Group entries by term
         grouped_entries = {}
         for entry in queryset:
             term_id = entry.term.id
             if term_id not in grouped_entries:
                 grouped_entries[term_id] = {
-                    'term': {
-                        'id': entry.term.id,
-                        'text': entry.term.text,
-                        'text_normalized': entry.term.text_normalized,
-                        'is_official': entry.term.is_official,
+                    "term": {
+                        "id": entry.term.id,
+                        "text": entry.term.text,
+                        "text_normalized": entry.term.text_normalized,
+                        "is_official": entry.term.is_official,
                     },
-                    'entries': []
+                    "entries": [],
                 }
-            grouped_entries[term_id]['entries'].append(entry)
-        
+            grouped_entries[term_id]["entries"].append(entry)
+
         # Convert to list format for easier frontend consumption
         result = []
         for term_data in grouped_entries.values():
-            serializer = self.get_serializer(term_data['entries'], many=True)
-            result.append({
-                'term': term_data['term'],
-                'entries': serializer.data
-            })
-        
+            serializer = self.get_serializer(term_data["entries"], many=True)
+            result.append({"term": term_data["term"], "entries": serializer.data})
+
         return Response(result)
 
     @action(detail=False, methods=["post"], url_path="create-with-term")
     def create_with_term(self, request):
         """Create a term and entry atomically in a single request"""
         from django.db import transaction
-        
-        term_text = request.data.get('term_text')
-        perspective_id = request.data.get('perspective_id')
-        is_official = request.data.get('is_official', False)
-        
+
+        term_text = request.data.get("term_text")
+        perspective_id = request.data.get("perspective_id")
+        is_official = request.data.get("is_official", False)
+
         if not term_text or not perspective_id:
             return Response(
                 {"detail": "term_text and perspective_id are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         # Validate term text length
         if len(term_text) > 255:
             return Response(
                 {"detail": "Term text cannot exceed 255 characters."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         try:
             with transaction.atomic():
                 # Create the term
                 term = Term.objects.create(
-                    text=term_text,
-                    is_official=is_official,
-                    created_by=request.user
+                    text=term_text, is_official=is_official, created_by=request.user
                 )
-                
+
                 # Create the entry
                 entry = Entry.objects.create(
                     term=term,
                     perspective_id=perspective_id,
                     is_official=is_official,
-                    created_by=request.user
+                    created_by=request.user,
                 )
-                
+
                 # Return the created entry with full serialization
                 serializer = self.get_serializer(entry)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-                
+
         except ValidationError as e:
             return Response(
                 {"detail": str(e)},
@@ -337,22 +333,22 @@ class EntryViewSet(viewsets.ModelViewSet):
             'entry': {...} or None
         }
         """
-        term_id = request.data.get('term_id')
-        term_text = request.data.get('term_text')
-        perspective_id = request.data.get('perspective_id')
-        
+        term_id = request.data.get("term_id")
+        term_text = request.data.get("term_text")
+        perspective_id = request.data.get("perspective_id")
+
         if not perspective_id:
             return Response(
                 {"detail": "perspective_id is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if not term_id and not term_text:
             return Response(
                 {"detail": "Either term_id or term_text is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         try:
             # Get or create term
             if term_id:
@@ -370,17 +366,14 @@ class EntryViewSet(viewsets.ModelViewSet):
                         {"detail": "Term text cannot exceed 255 characters."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-                
+
                 # Look up existing term by text, or create new one
                 try:
                     term = Term.objects.get(text=term_text)
                 except Term.DoesNotExist:
                     # Create new term
-                    term = Term.objects.create(
-                        text=term_text,
-                        created_by=request.user
-                    )
-            
+                    term = Term.objects.create(text=term_text, created_by=request.user)
+
             # Get perspective
             try:
                 perspective = Perspective.objects.get(id=perspective_id)
@@ -389,28 +382,25 @@ class EntryViewSet(viewsets.ModelViewSet):
                     {"detail": "Perspective not found."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            
+
             # Check if entry exists
             try:
-                entry = Entry.objects.select_related('term', 'perspective').get(
-                    term=term,
-                    perspective=perspective
+                entry = Entry.objects.select_related("term", "perspective").get(
+                    term=term, perspective=perspective
                 )
                 is_new = False
             except Entry.DoesNotExist:
                 # Create new entry
                 entry = Entry.objects.create(
-                    term=term,
-                    perspective=perspective,
-                    created_by=request.user
+                    term=term, perspective=perspective, created_by=request.user
                 )
                 is_new = True
-            
+
             # Check draft status
             has_published_draft = False
             has_unpublished_draft = False
             unpublished_draft_author_id = None
-            
+
             latest_draft = entry.get_latest_draft()
             if latest_draft:
                 if latest_draft.is_published:
@@ -418,23 +408,23 @@ class EntryViewSet(viewsets.ModelViewSet):
                 else:
                     has_unpublished_draft = True
                     unpublished_draft_author_id = latest_draft.author.id
-            
+
             # Serialize response
             from glossary.serializers import TermSerializer, PerspectiveSerializer
-            
+
             response_data = {
-                'entry_id': entry.id,
-                'has_published_draft': has_published_draft,
-                'has_unpublished_draft': has_unpublished_draft,
-                'unpublished_draft_author_id': unpublished_draft_author_id,
-                'is_new': is_new,
-                'term': TermSerializer(term).data,
-                'perspective': PerspectiveSerializer(perspective).data,
-                'entry': self.get_serializer(entry).data if not is_new else None
+                "entry_id": entry.id,
+                "has_published_draft": has_published_draft,
+                "has_unpublished_draft": has_unpublished_draft,
+                "unpublished_draft_author_id": unpublished_draft_author_id,
+                "is_new": is_new,
+                "term": TermSerializer(term).data,
+                "perspective": PerspectiveSerializer(perspective).data,
+                "entry": self.get_serializer(entry).data if not is_new else None,
             }
-            
+
             return Response(response_data)
-            
+
         except Exception as e:
             return Response(
                 {"detail": f"Failed to lookup or create entry: {str(e)}"},
@@ -451,7 +441,12 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["entry", "author"]
-    ordering_fields = ["entry__term__text_normalized", "timestamp", "updated_at", "published_at"]
+    ordering_fields = [
+        "entry__term__text_normalized",
+        "timestamp",
+        "updated_at",
+        "published_at",
+    ]
     ordering = ["-timestamp"]
     http_method_names = [
         "get",
@@ -489,9 +484,10 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get("search")
         if search:
             from django.db.models import Q
+
             queryset = queryset.filter(
-                Q(entry__term__text__icontains=search) |
-                Q(entry__term__text_normalized__icontains=search)
+                Q(entry__term__text__icontains=search)
+                | Q(entry__term__text_normalized__icontains=search)
             )
 
         # Handle perspective filtering
@@ -502,12 +498,16 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         # Handle eligibility filtering for current user
         eligibility = self.request.query_params.get("eligibility")
         show_all = self.request.query_params.get("show_all", "false").lower() == "true"
-        
+
         # Apply eligibility filtering when specified
         # Special case: requested_or_approved with show_all=true ignores eligibility filtering
-        if eligibility and self.request.user.is_authenticated and not (eligibility == "requested_or_approved" and show_all):
+        if (
+            eligibility
+            and self.request.user.is_authenticated
+            and not (eligibility == "requested_or_approved" and show_all)
+        ):
             from django.db.models import Q, Count
-            
+
             if eligibility == "can_approve":
                 # Drafts the user can approve (not own, not already approved by them, not fully approved)
                 queryset = queryset.annotate(
@@ -515,31 +515,34 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 ).filter(
                     ~Q(author=self.request.user),  # Not own drafts
                     ~Q(approvers=self.request.user),  # Not already approved by user
-                    approval_count_annotated__lt=settings.MIN_APPROVALS  # Not approved yet
+                    approval_count_annotated__lt=settings.MIN_APPROVALS,  # Not approved yet
                 )
             elif eligibility == "requested_or_approved":
                 # Drafts the user was requested to review OR has already approved
                 queryset = queryset.filter(
-                    Q(requested_reviewers=self.request.user) | Q(approvers=self.request.user)
+                    Q(requested_reviewers=self.request.user)
+                    | Q(approvers=self.request.user)
                 ).distinct()
             elif eligibility == "own":
                 # User's own drafts - only show latest draft per entry
                 from django.db.models import Max
+
                 queryset = queryset.filter(author=self.request.user)
-                
+
                 # Get the latest timestamp per entry for this user's drafts
                 latest_timestamps = (
-                    queryset.values('entry')
-                    .annotate(latest_timestamp=Max('timestamp'))
-                    .values_list('entry', 'latest_timestamp')
+                    queryset.values("entry")
+                    .annotate(latest_timestamp=Max("timestamp"))
+                    .values_list("entry", "latest_timestamp")
                 )
-                
+
                 # Filter to only include drafts with the latest timestamp for each entry
                 from django.db.models import Q
+
                 latest_filter = Q()
                 for entry_id, latest_timestamp in latest_timestamps:
                     latest_filter |= Q(entry_id=entry_id, timestamp=latest_timestamp)
-                
+
                 queryset = queryset.filter(latest_filter)
             elif eligibility == "already_approved":
                 # Drafts already approved by user
@@ -550,12 +553,12 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 
         # Handle show_all parameter for review filtering
         # Only apply filtering for list actions, not detail actions (like approve)
-        
+
         # Always exclude published drafts from review (they're not drafts anymore)
         # Only apply this filter for list actions, not for individual draft retrieval
         if self.action == "list":
             queryset = queryset.filter(is_published=False)
-        
+
         # Apply additional filtering when show_all is false, but respect eligibility parameter
         # Only apply default filtering for list actions, not for individual draft retrieval
         if (
@@ -589,7 +592,10 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         if "entry" in expand:
             # Include entry with term and perspective for review
             queryset = queryset.select_related(
-                "entry__term", "entry__perspective", "replaces_draft", "replaces_draft__author"
+                "entry__term",
+                "entry__perspective",
+                "replaces_draft",
+                "replaces_draft__author",
             ).prefetch_related(
                 "replaces_draft__approvers", "replaces_draft__requested_reviewers"
             )
@@ -598,6 +604,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         ordering = self.request.query_params.get("ordering")
         if ordering and "published_at" in ordering:
             from django.db.models import F
+
             if ordering.startswith("-"):
                 # Descending: published drafts first, then unpublished
                 queryset = queryset.order_by(F("published_at").desc(nulls_last=True))
@@ -622,17 +629,18 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Set replaces_draft to the latest draft for this entry
-        entry = serializer.validated_data['entry']
-        latest_draft = EntryDraft.objects.filter(
-            entry=entry,
-            is_deleted=False
-        ).order_by('-timestamp').first()
-        
+        entry = serializer.validated_data["entry"]
+        latest_draft = (
+            EntryDraft.objects.filter(entry=entry, is_deleted=False)
+            .order_by("-timestamp")
+            .first()
+        )
+
         if latest_draft:
             serializer.save(
-                author=self.request.user, 
+                author=self.request.user,
                 created_by=self.request.user,
-                replaces_draft=latest_draft
+                replaces_draft=latest_draft,
             )
         else:
             serializer.save(author=self.request.user, created_by=self.request.user)
@@ -682,14 +690,14 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Delete a draft (only author can delete their own drafts)"""
         draft = self.get_object()
-        
+
         # Check if user is the author of the draft
         if draft.author != request.user:
             return Response(
                 {"detail": "You can only delete your own drafts."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        
+
         # Delete the draft
         self.perform_destroy(draft)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -697,14 +705,14 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         """Enhanced retrieve to include full entry information"""
         instance = self.get_object()
-        
+
         # Use review serializer if expand parameter includes entry
         expand = request.query_params.get("expand", "")
         if "entry" in expand:
             serializer = EntryDraftReviewSerializer(instance)
         else:
             serializer = self.get_serializer(instance)
-        
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
@@ -748,29 +756,27 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def history(self, request):
         """Get draft history for an entry"""
-        entry_id = request.query_params.get('entry')
+        entry_id = request.query_params.get("entry")
         if not entry_id:
             return Response(
                 {"detail": "entry parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         try:
-            drafts = EntryDraft.objects.filter(
-                entry_id=entry_id,
-                is_deleted=False
-            ).select_related(
-                'author', 'entry__term', 'entry__perspective'
-            ).prefetch_related(
-                'approvers', 'requested_reviewers'
-            ).order_by('-timestamp')
-            
+            drafts = (
+                EntryDraft.objects.filter(entry_id=entry_id, is_deleted=False)
+                .select_related("author", "entry__term", "entry__perspective")
+                .prefetch_related("approvers", "requested_reviewers")
+                .order_by("-timestamp")
+            )
+
             serializer = self.get_serializer(drafts, many=True)
             return Response(serializer.data)
         except Exception as e:
             return Response(
                 {"detail": f"Failed to get draft history: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -796,14 +802,20 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
+
         # Fetch the created comment with related author
-        instance = Comment.objects.select_related('author').get(pk=serializer.instance.pk)
-        
+        instance = Comment.objects.select_related("author").get(
+            pk=serializer.instance.pk
+        )
+
         # Return using CommentListSerializer to include nested author
-        output_serializer = CommentListSerializer(instance, context={'request': request})
+        output_serializer = CommentListSerializer(
+            instance, context={"request": request}
+        )
         headers = self.get_success_headers(output_serializer.data)
-        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            output_serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, created_by=self.request.user)
@@ -866,40 +878,46 @@ class CommentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def with_draft_positions(self, request):
         """Get comments with draft position indicators for an entry"""
-        entry_id = request.query_params.get('entry')
+        entry_id = request.query_params.get("entry")
         if not entry_id:
             return Response(
                 {"detail": "entry parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         try:
             # Get all drafts for this entry ordered by timestamp
             drafts = EntryDraft.objects.filter(
-                entry_id=entry_id,
-                is_deleted=False
-            ).order_by('-timestamp')
-            
+                entry_id=entry_id, is_deleted=False
+            ).order_by("-timestamp")
+
             # Get the last published draft
             last_published_draft = drafts.filter(is_published=True).first()
-            
+
             # Get comments from drafts created after the last published version
             if last_published_draft:
-                relevant_drafts = drafts.filter(timestamp__gte=last_published_draft.timestamp)
+                relevant_drafts = drafts.filter(
+                    timestamp__gte=last_published_draft.timestamp
+                )
             else:
                 relevant_drafts = drafts
-            
+
             # Get comments from these drafts
             from django.contrib.contenttypes.models import ContentType
+
             draft_content_type = ContentType.objects.get_for_model(EntryDraft)
-            
-            comments = Comment.objects.filter(
-                content_type=draft_content_type,
-                object_id__in=relevant_drafts.values_list('id', flat=True),
-                is_resolved=False,
-                parent__isnull=True  # Only top-level comments
-            ).select_related('author').prefetch_related('replies')
-            
+
+            comments = (
+                Comment.objects.filter(
+                    content_type=draft_content_type,
+                    object_id__in=relevant_drafts.values_list("id", flat=True),
+                    is_resolved=False,
+                    parent__isnull=True,  # Only top-level comments
+                )
+                .select_related("author")
+                .prefetch_related("replies")
+            )
+
             # Calculate draft positions for each comment
             comments_with_positions = []
             for comment in comments:
@@ -913,30 +931,34 @@ class CommentViewSet(viewsets.ModelViewSet):
                         draft_position = "published"
                     else:
                         # Count how many drafts ago this was
-                        drafts_after = drafts.filter(timestamp__gt=comment_draft.timestamp).count()
+                        drafts_after = drafts.filter(
+                            timestamp__gt=comment_draft.timestamp
+                        ).count()
                         if drafts_after == 0:
                             draft_position = "current draft"
                         else:
                             draft_position = f"{drafts_after} drafts ago"
-                    
+
                     comment_data = self.get_serializer(comment).data
-                    comment_data['draft_position'] = draft_position
-                    comment_data['draft_id'] = comment_draft.id
-                    comment_data['draft_timestamp'] = comment_draft.timestamp
+                    comment_data["draft_position"] = draft_position
+                    comment_data["draft_id"] = comment_draft.id
+                    comment_data["draft_timestamp"] = comment_draft.timestamp
                     comments_with_positions.append(comment_data)
-            
+
             return Response(comments_with_positions)
         except Exception as e:
             return Response(
                 {"detail": f"Failed to get comments with draft positions: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
 class PerspectiveCuratorViewSet(viewsets.ModelViewSet):
     """ViewSet for PerspectiveCurator model (staff only)"""
 
-    queryset = PerspectiveCurator.objects.select_related("user", "perspective", "assigned_by")
+    queryset = PerspectiveCurator.objects.select_related(
+        "user", "perspective", "assigned_by"
+    )
     serializer_class = PerspectiveCuratorSerializer
     permission_classes = [IsStaffOrReadOnly]
     filter_backends = [DjangoFilterBackend]
@@ -994,14 +1016,14 @@ def current_user_view(request):
 def switch_test_user_view(request):
     """Switch to a test user account"""
     from glossary.serializers import UserDetailSerializer
-    
-    user_id = request.data.get('user_id')
+
+    user_id = request.data.get("user_id")
     if not user_id:
         return Response(
             {"detail": "user_id is required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     try:
         target_user = User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -1009,7 +1031,7 @@ def switch_test_user_view(request):
             {"detail": "Target user not found."},
             status=status.HTTP_404_NOT_FOUND,
         )
-    
+
     # Validate current user is a test user
     try:
         if not request.user.profile.is_test_user:
@@ -1022,7 +1044,7 @@ def switch_test_user_view(request):
             {"detail": "User profile not found."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     # Validate target user is a test user
     try:
         if not target_user.profile.is_test_user:
@@ -1035,21 +1057,20 @@ def switch_test_user_view(request):
             {"detail": "Target user profile not found."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     # Delete current user's token
     try:
         request.user.auth_token.delete()
     except:
         pass  # Token might not exist
-    
+
     # Create/retrieve token for target user
     token, created = Token.objects.get_or_create(user=target_user)
-    
+
     # Return new token and user data (same format as login)
-    return Response({
-        "token": token.key, 
-        "user": UserDetailSerializer(target_user).data
-    })
+    return Response(
+        {"token": token.key, "user": UserDetailSerializer(target_user).data}
+    )
 
 
 @api_view(["GET"])
@@ -1059,12 +1080,12 @@ def users_list_view(request):
     from glossary.serializers import UserSerializer
 
     users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
-    
+
     # Filter for test users only if requested
-    test_users_only = request.query_params.get('test_users_only')
-    if test_users_only and test_users_only.lower() == 'true':
+    test_users_only = request.query_params.get("test_users_only")
+    if test_users_only and test_users_only.lower() == "true":
         users = users.filter(profile__is_test_user=True)
-    
+
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
@@ -1073,31 +1094,33 @@ def users_list_view(request):
 @permission_classes([IsAuthenticated])
 def system_config_view(request):
     """Get system configuration values"""
-    return Response({
-        "MIN_APPROVALS": settings.MIN_APPROVALS,
-        "DEBUG": settings.DEBUG,
-    })
+    return Response(
+        {
+            "MIN_APPROVALS": settings.MIN_APPROVALS,
+            "DEBUG": settings.DEBUG,
+        }
+    )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def reset_test_database(request):
     """Reset test database - only works in TEST_MODE"""
     import os
     from django.core.management import call_command
-    
-    if os.getenv('TEST_MODE') != 'true':
+
+    if os.getenv("TEST_MODE") != "true":
         return Response(
             {"error": "This endpoint only works in TEST_MODE"},
-            status=status.HTTP_403_FORBIDDEN
+            status=status.HTTP_403_FORBIDDEN,
         )
-    
+
     try:
         # Call management command to reset database
-        call_command('reset_test_db')
+        call_command("reset_test_db")
         return Response({"status": "Database reset complete"})
     except Exception as e:
         return Response(
             {"error": f"Failed to reset database: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

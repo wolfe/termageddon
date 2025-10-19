@@ -37,10 +37,10 @@ export class ReviewerSelectorDialogComponent implements OnInit {
     } else {
       const term = this.searchTerm.toLowerCase();
       this.filteredUsers = availableUsers.filter(
-        (user) =>
+        user =>
           user.first_name?.toLowerCase().includes(term) ||
           user.last_name?.toLowerCase().includes(term) ||
-          user.username.toLowerCase().includes(term),
+          user.username.toLowerCase().includes(term)
       );
     }
   }
@@ -56,9 +56,7 @@ export class ReviewerSelectorDialogComponent implements OnInit {
 
   toggleSelection(userId: number) {
     if (this.isSelected(userId)) {
-      this.selectedReviewerIds = this.selectedReviewerIds.filter(
-        (id) => id !== userId,
-      );
+      this.selectedReviewerIds = this.selectedReviewerIds.filter(id => id !== userId);
     } else {
       this.selectedReviewerIds = [...this.selectedReviewerIds, userId];
     }

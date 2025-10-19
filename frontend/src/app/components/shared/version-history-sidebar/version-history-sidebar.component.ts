@@ -58,7 +58,8 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.entryDetailService.loadDraftHistory(this.entryId)
+    this.entryDetailService
+      .loadDraftHistory(this.entryId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (drafts: EntryDraft[]) => {

@@ -172,7 +172,7 @@ class TestEntryViewSet:
         entries = EntryFactory.create_batch(3)
         for entry in entries:
             EntryDraftFactory(entry=entry, is_published=True)
-            
+
         url = reverse("entry-list")
         response = authenticated_client.get(url)
 
@@ -185,7 +185,7 @@ class TestEntryViewSet:
         perspective2 = PerspectiveFactory()
         entry1 = EntryFactory(perspective=perspective1)
         entry2 = EntryFactory(perspective=perspective2)
-        
+
         # Create published versions
         EntryDraftFactory(entry=entry1, is_published=True)
         EntryDraftFactory(entry=entry2, is_published=True)
@@ -219,24 +219,30 @@ class TestEntryViewSet:
         """Test atomic creation of term + entry"""
         perspective = PerspectiveFactory()
         url = reverse("entry-create-with-term")
-        payload = {"term_text": "New Term", "perspective_id": perspective.id, "is_official": False}
+        payload = {
+            "term_text": "New Term",
+            "perspective_id": perspective.id,
+            "is_official": False,
+        }
         response = authenticated_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert Entry.objects.filter(term__text="New Term", perspective=perspective).exists()
+        assert Entry.objects.filter(
+            term__text="New Term", perspective=perspective
+        ).exists()
 
     def test_create_with_term_long_text(self, authenticated_client):
         """Test creating a term with text exceeding length limit"""
         perspective = PerspectiveFactory()
-        
+
         url = reverse("entry-create-with-term")
         data = {
             "term_text": "x" * 1000,  # Very long term text
-            "perspective_id": perspective.id
+            "perspective_id": perspective.id,
         }
-        
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Term text cannot exceed 255 characters" in response.data["detail"]
 
@@ -246,7 +252,9 @@ class TestEntryViewSet:
         entry = EntryFactory(perspective=perspective)
         # Create a published version
         version = EntryDraftFactory(entry=entry, is_published=True)
-        PerspectiveCuratorFactory(user=authenticated_client.user, perspective=perspective)
+        PerspectiveCuratorFactory(
+            user=authenticated_client.user, perspective=perspective
+        )
 
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
         response = authenticated_client.post(url)
@@ -261,7 +269,7 @@ class TestEntryViewSet:
         entry = EntryFactory()
         # Create a published version
         version = EntryDraftFactory(entry=entry, is_published=True)
-        
+
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
         response = authenticated_client.post(url)
 
@@ -290,7 +298,9 @@ class TestEntryDraftViewSet:
         other_user = UserFactory()
         # Create drafts: one by other user with specific term, one by current user
         draft1 = EntryDraftFactory(author=other_user, content="absorption of energy")
-        draft2 = EntryDraftFactory(author=authenticated_client.user, content="other term")
+        draft2 = EntryDraftFactory(
+            author=authenticated_client.user, content="other term"
+        )
 
         url = reverse("entrydraft-list")
         # eligibility=can_approve should exclude own drafts
@@ -302,7 +312,9 @@ class TestEntryDraftViewSet:
 
         # search should find by term name (not content)
         # include show_all=true so relevance filter does not hide results
-        resp2 = authenticated_client.get(url, {"search": draft1.entry.term.text, "show_all": "true"})
+        resp2 = authenticated_client.get(
+            url, {"search": draft1.entry.term.text, "show_all": "true"}
+        )
         assert resp2.status_code == status.HTTP_200_OK
         ids2 = [v["id"] for v in resp2.data["results"]]
         assert draft1.id in ids2
@@ -336,10 +348,10 @@ class TestEntryDraftViewSet:
         draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
-        
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not EntryDraft.objects.filter(id=draft.id).exists()
 
@@ -347,13 +359,11 @@ class TestEntryDraftViewSet:
         """Test deleting a draft by non-author fails"""
         other_user = UserFactory()
         entry = EntryFactory()
-        draft = EntryDraftFactory(
-            entry=entry, author=other_user, is_published=False
-        )
-        
+        draft = EntryDraftFactory(entry=entry, author=other_user, is_published=False)
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "You can only delete your own drafts" in response.data["detail"]
         assert EntryDraft.objects.filter(id=draft.id).exists()
@@ -364,10 +374,10 @@ class TestEntryDraftViewSet:
         draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=True
         )
-        
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not EntryDraft.objects.filter(id=draft.id).exists()
 
@@ -375,7 +385,7 @@ class TestEntryDraftViewSet:
         """Test deleting a nonexistent draft returns 404"""
         url = reverse("entrydraft-detail", kwargs={"pk": 99999})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_draft_with_approvals(self, authenticated_client):
@@ -386,10 +396,10 @@ class TestEntryDraftViewSet:
             entry=entry, author=authenticated_client.user, is_published=False
         )
         draft.approvers.add(approver)
-        
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not EntryDraft.objects.filter(id=draft.id).exists()
 
@@ -401,10 +411,10 @@ class TestEntryDraftViewSet:
             entry=entry, author=authenticated_client.user, is_published=False
         )
         draft.requested_reviewers.add(reviewer)
-        
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not EntryDraft.objects.filter(id=draft.id).exists()
 
@@ -415,10 +425,10 @@ class TestEntryDraftViewSet:
             entry=entry, author=authenticated_client.user, is_published=False
         )
         CommentFactory(content_object=draft, author=authenticated_client.user)
-        
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = authenticated_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not EntryDraft.objects.filter(id=draft.id).exists()
 
@@ -426,10 +436,10 @@ class TestEntryDraftViewSet:
         """Test deleting a draft without authentication fails"""
         entry = EntryFactory()
         draft = EntryDraftFactory(entry=entry, is_published=False)
-        
+
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         response = api_client.delete(url)
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert EntryDraft.objects.filter(id=draft.id).exists()
 
@@ -486,9 +496,13 @@ class TestPerspectiveCuratorViewSet:
         response = staff_client.post(url, data)
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert PerspectiveCurator.objects.filter(user=user, perspective=perspective).exists()
+        assert PerspectiveCurator.objects.filter(
+            user=user, perspective=perspective
+        ).exists()
 
-    def test_create_perspective_curator_as_regular_user_fails(self, authenticated_client):
+    def test_create_perspective_curator_as_regular_user_fails(
+        self, authenticated_client
+    ):
         """Test creating perspective curator as regular user fails"""
         user = UserFactory()
         perspective = PerspectiveFactory()
@@ -535,9 +549,7 @@ class TestEntryDraftUpdateWorkflow:
         """Test updating an unpublished draft by non-author fails"""
         other_user = UserFactory()
         entry = EntryFactory()
-        draft = EntryDraftFactory(
-            entry=entry, author=other_user, is_published=False
-        )
+        draft = EntryDraftFactory(entry=entry, author=other_user, is_published=False)
 
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
         data = {"content": "Updated content"}
@@ -610,9 +622,7 @@ class TestEntryDraftUpdateWorkflow:
         other_user = UserFactory()
         reviewer = UserFactory()
         entry = EntryFactory()
-        draft = EntryDraftFactory(
-            entry=entry, author=other_user, is_published=False
-        )
+        draft = EntryDraftFactory(entry=entry, author=other_user, is_published=False)
 
         url = reverse("entrydraft-request-review", kwargs={"pk": draft.id})
         data = {"reviewer_ids": [reviewer.id]}
@@ -685,9 +695,7 @@ class TestEntryDraftUpdateWorkflow:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Draft is already published" in response.data["detail"]
 
-    def test_edit_workflow_with_existing_unpublished_draft(
-        self, authenticated_client
-    ):
+    def test_edit_workflow_with_existing_unpublished_draft(self, authenticated_client):
         """Test that editing with existing unpublished draft creates new draft (linear history)"""
         entry = EntryFactory()
 
@@ -710,7 +718,7 @@ class TestEntryDraftUpdateWorkflow:
         assert response.status_code == status.HTTP_201_CREATED
         new_draft_id = response.data["id"]
         new_draft = EntryDraft.objects.get(id=new_draft_id)
-        
+
         # New draft should replace the original draft
         assert new_draft.replaces_draft == draft1
         assert new_draft.content == "New content"
@@ -718,24 +726,36 @@ class TestEntryDraftUpdateWorkflow:
     def test_draft_history_endpoint(self, authenticated_client):
         """Test the draft history endpoint"""
         entry = EntryFactory()
-        
+
         # Create multiple drafts
-        draft1 = EntryDraftFactory(entry=entry, author=authenticated_client.user, content="First draft")
-        draft2 = EntryDraftFactory(entry=entry, author=authenticated_client.user, content="Second draft", replaces_draft=draft1)
-        draft3 = EntryDraftFactory(entry=entry, author=authenticated_client.user, content="Third draft", replaces_draft=draft2)
-        
+        draft1 = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, content="First draft"
+        )
+        draft2 = EntryDraftFactory(
+            entry=entry,
+            author=authenticated_client.user,
+            content="Second draft",
+            replaces_draft=draft1,
+        )
+        draft3 = EntryDraftFactory(
+            entry=entry,
+            author=authenticated_client.user,
+            content="Third draft",
+            replaces_draft=draft2,
+        )
+
         url = reverse("entrydraft-history")
         response = authenticated_client.get(url, {"entry": entry.id})
-        
+
         assert response.status_code == status.HTTP_200_OK
         drafts = response.data
-        
+
         # Should return drafts in reverse chronological order (newest first)
         assert len(drafts) == 3
         assert drafts[0]["id"] == draft3.id
         assert drafts[1]["id"] == draft2.id
         assert drafts[2]["id"] == draft1.id
-        
+
         # Check that replaces_draft field is included
         assert drafts[0]["replaces_draft"] == draft2.id
         assert drafts[1]["replaces_draft"] == draft1.id
@@ -745,35 +765,45 @@ class TestEntryDraftUpdateWorkflow:
         """Test the draft history endpoint with missing entry parameter"""
         url = reverse("entrydraft-history")
         response = authenticated_client.get(url)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "entry parameter is required" in response.data["detail"]
 
     def test_comments_with_draft_positions_endpoint(self, authenticated_client):
         """Test the comments with draft positions endpoint"""
         entry = EntryFactory()
-        
+
         # Create drafts
-        published_draft = EntryDraftFactory(entry=entry, author=authenticated_client.user, is_published=True)
-        current_draft = EntryDraftFactory(entry=entry, author=authenticated_client.user, replaces_draft=published_draft)
-        
+        published_draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=True
+        )
+        current_draft = EntryDraftFactory(
+            entry=entry,
+            author=authenticated_client.user,
+            replaces_draft=published_draft,
+        )
+
         # Create comments on different drafts
-        comment1 = CommentFactory(content_object=published_draft, author=authenticated_client.user)
-        comment2 = CommentFactory(content_object=current_draft, author=authenticated_client.user)
-        
+        comment1 = CommentFactory(
+            content_object=published_draft, author=authenticated_client.user
+        )
+        comment2 = CommentFactory(
+            content_object=current_draft, author=authenticated_client.user
+        )
+
         url = reverse("comment-with-draft-positions")
         response = authenticated_client.get(url, {"entry": entry.id})
-        
+
         assert response.status_code == status.HTTP_200_OK
         comments = response.data
-        
+
         # Should return comments with draft position information
         assert len(comments) >= 2
-        
+
         # Find our comments
         comment1_data = next(c for c in comments if c["id"] == comment1.id)
         comment2_data = next(c for c in comments if c["id"] == comment2.id)
-        
+
         assert comment1_data["draft_position"] == "published"
         assert comment2_data["draft_position"] == "current draft"
         assert comment1_data["draft_id"] == published_draft.id
@@ -783,7 +813,7 @@ class TestEntryDraftUpdateWorkflow:
         """Test the comments with draft positions endpoint with missing entry parameter"""
         url = reverse("comment-with-draft-positions")
         response = authenticated_client.get(url)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "entry parameter is required" in response.data["detail"]
 
@@ -828,50 +858,58 @@ class TestEntryDraftEligibilityFiltering:
         """Test eligibility=requested_or_approved with show_all=false shows only relevant drafts"""
         other_user = UserFactory()
         reviewer = UserFactory()
-        
+
         # Create drafts with different relationships to the authenticated user
         draft1 = EntryDraftFactory(author=other_user, is_published=False)  # Not related
-        draft2 = EntryDraftFactory(author=other_user, is_published=False)  # User is requested reviewer
-        draft3 = EntryDraftFactory(author=other_user, is_published=False)  # User has already approved
-        draft4 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # User's own draft
-        
+        draft2 = EntryDraftFactory(
+            author=other_user, is_published=False
+        )  # User is requested reviewer
+        draft3 = EntryDraftFactory(
+            author=other_user, is_published=False
+        )  # User has already approved
+        draft4 = EntryDraftFactory(
+            author=authenticated_client.user, is_published=False
+        )  # User's own draft
+
         # Set up relationships
         draft2.requested_reviewers.add(authenticated_client.user)
         draft3.approvers.add(authenticated_client.user)
-        
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "eligibility": "requested_or_approved",
-            "show_all": "false"
-        })
-        
+        response = authenticated_client.get(
+            url, {"eligibility": "requested_or_approved", "show_all": "false"}
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should include drafts where user is requested reviewer OR has approved
         assert draft2.id in result_ids  # User is requested reviewer
         assert draft3.id in result_ids  # User has already approved
         assert draft1.id not in result_ids  # Not related to user
-        assert draft4.id not in result_ids  # User's own draft (not in requested_or_approved)
+        assert (
+            draft4.id not in result_ids
+        )  # User's own draft (not in requested_or_approved)
 
     def test_requested_or_approved_with_show_all_true(self, authenticated_client):
         """Test eligibility=requested_or_approved with show_all=true shows all unpublished drafts"""
         other_user = UserFactory()
-        
+
         # Create drafts
         draft1 = EntryDraftFactory(author=other_user, is_published=False)
         draft2 = EntryDraftFactory(author=other_user, is_published=False)
-        draft3 = EntryDraftFactory(author=other_user, is_published=True)  # Published - should be excluded
-        
+        draft3 = EntryDraftFactory(
+            author=other_user, is_published=True
+        )  # Published - should be excluded
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "eligibility": "requested_or_approved",
-            "show_all": "true"
-        })
-        
+        response = authenticated_client.get(
+            url, {"eligibility": "requested_or_approved", "show_all": "true"}
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should include all unpublished drafts regardless of relationship
         assert draft1.id in result_ids
         assert draft2.id in result_ids
@@ -880,29 +918,38 @@ class TestEntryDraftEligibilityFiltering:
     def test_can_approve_eligibility(self, authenticated_client):
         """Test eligibility=can_approve shows only drafts user can approve"""
         other_user = UserFactory()
-        
+
         # Create drafts with different approval states
         draft1 = EntryDraftFactory(author=other_user, is_published=False)  # Can approve
-        draft2 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # Own draft
-        draft3 = EntryDraftFactory(author=other_user, is_published=False)  # Already approved by user
-        draft4 = EntryDraftFactory(author=other_user, is_published=False)  # Already fully approved
-        
+        draft2 = EntryDraftFactory(
+            author=authenticated_client.user, is_published=False
+        )  # Own draft
+        draft3 = EntryDraftFactory(
+            author=other_user, is_published=False
+        )  # Already approved by user
+        draft4 = EntryDraftFactory(
+            author=other_user, is_published=False
+        )  # Already fully approved
+
         # Set up relationships
         draft3.approvers.add(authenticated_client.user)
         # Add enough approvers to make draft4 fully approved
         approver1 = UserFactory()
         approver2 = UserFactory()
         draft4.approvers.add(approver1, approver2)
-        
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "eligibility": "can_approve",
-            "show_all": "true"  # Use show_all=true to bypass default filtering
-        })
-        
+        response = authenticated_client.get(
+            url,
+            {
+                "eligibility": "can_approve",
+                "show_all": "true",  # Use show_all=true to bypass default filtering
+            },
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should only include draft1 (can approve)
         assert draft1.id in result_ids
         assert draft2.id not in result_ids  # Own draft
@@ -912,21 +959,22 @@ class TestEntryDraftEligibilityFiltering:
     def test_own_eligibility(self, authenticated_client):
         """Test eligibility=own shows only user's own drafts"""
         other_user = UserFactory()
-        
+
         # Create drafts
         draft1 = EntryDraftFactory(author=authenticated_client.user, is_published=False)
         draft2 = EntryDraftFactory(author=other_user, is_published=False)
-        draft3 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # Changed to unpublished
-        
+        draft3 = EntryDraftFactory(
+            author=authenticated_client.user, is_published=False
+        )  # Changed to unpublished
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "eligibility": "own",
-            "show_all": "true"
-        })
-        
+        response = authenticated_client.get(
+            url, {"eligibility": "own", "show_all": "true"}
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should only include user's own drafts
         assert draft1.id in result_ids
         assert draft2.id not in result_ids
@@ -935,24 +983,23 @@ class TestEntryDraftEligibilityFiltering:
     def test_already_approved_eligibility(self, authenticated_client):
         """Test eligibility=already_approved shows only drafts user has approved"""
         other_user = UserFactory()
-        
+
         # Create drafts
         draft1 = EntryDraftFactory(author=other_user, is_published=False)
         draft2 = EntryDraftFactory(author=other_user, is_published=False)
         draft3 = EntryDraftFactory(author=authenticated_client.user, is_published=False)
-        
+
         # Set up relationships
         draft1.approvers.add(authenticated_client.user)
-        
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "eligibility": "already_approved",
-            "show_all": "true"
-        })
-        
+        response = authenticated_client.get(
+            url, {"eligibility": "already_approved", "show_all": "true"}
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should only include drafts user has approved
         assert draft1.id in result_ids
         assert draft2.id not in result_ids
@@ -961,23 +1008,26 @@ class TestEntryDraftEligibilityFiltering:
     def test_eligibility_without_show_all_parameter(self, authenticated_client):
         """Test that eligibility parameter works without show_all parameter"""
         other_user = UserFactory()
-        
+
         # Create drafts
         draft1 = EntryDraftFactory(author=other_user, is_published=False)
         draft2 = EntryDraftFactory(author=authenticated_client.user, is_published=False)
-        
+
         # Set up relationship
         draft1.requested_reviewers.add(authenticated_client.user)
-        
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "eligibility": "requested_or_approved"
-            # No show_all parameter - should default to false
-        })
-        
+        response = authenticated_client.get(
+            url,
+            {
+                "eligibility": "requested_or_approved"
+                # No show_all parameter - should default to false
+            },
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should include draft1 (user is requested reviewer) but not draft2 (own draft)
         assert draft1.id in result_ids
         assert draft2.id not in result_ids
@@ -985,31 +1035,38 @@ class TestEntryDraftEligibilityFiltering:
     def test_no_eligibility_with_show_all_false(self, authenticated_client):
         """Test default filtering when no eligibility parameter is provided"""
         other_user = UserFactory()
-        
+
         # Create drafts with different relationships
-        draft1 = EntryDraftFactory(author=authenticated_client.user, is_published=False)  # Own draft
+        draft1 = EntryDraftFactory(
+            author=authenticated_client.user, is_published=False
+        )  # Own draft
         draft2 = EntryDraftFactory(author=other_user, is_published=False)  # Not related
-        draft3 = EntryDraftFactory(author=other_user, is_published=False)  # User is requested reviewer
-        draft4 = EntryDraftFactory(author=other_user, is_published=False)  # Related term
-        
+        draft3 = EntryDraftFactory(
+            author=other_user, is_published=False
+        )  # User is requested reviewer
+        draft4 = EntryDraftFactory(
+            author=other_user, is_published=False
+        )  # Related term
+
         # Set up relationships
         draft3.requested_reviewers.add(authenticated_client.user)
         # Make draft4 related by having user author a draft for the same term
         EntryDraftFactory(
-            entry=draft4.entry,
-            author=authenticated_client.user,
-            is_published=False
+            entry=draft4.entry, author=authenticated_client.user, is_published=False
         )
-        
+
         url = reverse("entrydraft-list")
-        response = authenticated_client.get(url, {
-            "show_all": "false"
-            # No eligibility parameter
-        })
-        
+        response = authenticated_client.get(
+            url,
+            {
+                "show_all": "false"
+                # No eligibility parameter
+            },
+        )
+
         assert response.status_code == status.HTTP_200_OK
         result_ids = [d["id"] for d in response.data["results"]]
-        
+
         # Should include drafts user authored, was requested to review, or for related terms
         assert draft1.id in result_ids  # Own draft
         assert draft2.id not in result_ids  # Not related
@@ -1026,15 +1083,12 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["entry_id"] == entry.id
         assert response.data["is_new"] is False
@@ -1047,15 +1101,12 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_text": term.text,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_text": term.text, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["entry_id"] == entry.id
         assert response.data["is_new"] is False
@@ -1067,15 +1118,12 @@ class TestEntryLookupOrCreate:
         """Test creating new entry with existing term"""
         term = TermFactory()
         perspective = PerspectiveFactory()
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["entry_id"] is not None
         assert response.data["is_new"] is True
@@ -1087,15 +1135,12 @@ class TestEntryLookupOrCreate:
         """Test creating new entry with new term"""
         perspective = PerspectiveFactory()
         term_text = "New Term"
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_text": term_text,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_text": term_text, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["entry_id"] is not None
         assert response.data["is_new"] is True
@@ -1109,15 +1154,12 @@ class TestEntryLookupOrCreate:
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
         EntryDraftFactory(entry=entry, is_published=True)
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["has_published_draft"] is True
         assert response.data["has_unpublished_draft"] is False
@@ -1128,74 +1170,65 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        EntryDraftFactory(entry=entry, is_published=False, author=authenticated_client.user)
-        
+        EntryDraftFactory(
+            entry=entry, is_published=False, author=authenticated_client.user
+        )
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["has_published_draft"] is False
         assert response.data["has_unpublished_draft"] is True
-        assert response.data["unpublished_draft_author_id"] == authenticated_client.user.id
+        assert (
+            response.data["unpublished_draft_author_id"] == authenticated_client.user.id
+        )
 
     def test_missing_perspective_id(self, authenticated_client):
         """Test error when perspective_id is missing"""
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_text": "Test Term"
-        }
-        
+        data = {"term_text": "Test Term"}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "perspective_id is required" in response.data["detail"]
 
     def test_missing_term_id_and_text(self, authenticated_client):
         """Test error when both term_id and term_text are missing"""
         perspective = PerspectiveFactory()
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "perspective_id": perspective.id
-        }
-        
+        data = {"perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Either term_id or term_text is required" in response.data["detail"]
 
     def test_term_not_found(self, authenticated_client):
         """Test error when term_id references non-existent term"""
         perspective = PerspectiveFactory()
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": 99999,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": 99999, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Term not found" in response.data["detail"]
 
     def test_perspective_not_found(self, authenticated_client):
         """Test error when perspective_id references non-existent perspective"""
         term = TermFactory()
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": 99999
-        }
-        
+        data = {"term_id": term.id, "perspective_id": 99999}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Perspective not found" in response.data["detail"]
 
@@ -1203,18 +1236,15 @@ class TestEntryLookupOrCreate:
         """Test handling of concurrent entry creation attempts"""
         term = TermFactory()
         perspective = PerspectiveFactory()
-        
+
         # Simulate concurrent creation by creating entry before lookup
         entry = EntryFactory(term=term, perspective=perspective)
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         # Should find existing entry, not create duplicate
         assert response.status_code == status.HTTP_200_OK
         assert response.data["entry_id"] == entry.id
@@ -1225,15 +1255,12 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         term.delete()  # Soft delete the term
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Term not found" in response.data["detail"]
 
@@ -1242,15 +1269,12 @@ class TestEntryLookupOrCreate:
         term = TermFactory()
         perspective = PerspectiveFactory()
         perspective.delete()  # Soft delete the perspective
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Perspective not found" in response.data["detail"]
 
@@ -1260,15 +1284,12 @@ class TestEntryLookupOrCreate:
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
         entry.delete()  # Soft delete the entry
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         # Should create new entry since old one is deleted
         assert response.status_code == status.HTTP_200_OK
         assert response.data["is_new"] is True
@@ -1277,15 +1298,12 @@ class TestEntryLookupOrCreate:
     def test_create_entry_with_invalid_term_text(self, authenticated_client):
         """Test creation with empty or invalid term text"""
         perspective = PerspectiveFactory()
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_text": "",  # Empty term text
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_text": "", "perspective_id": perspective.id}  # Empty term text
+
         response = authenticated_client.post(url, data)
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Either term_id or term_text is required" in response.data["detail"]
 
@@ -1293,15 +1311,12 @@ class TestEntryLookupOrCreate:
         """Test creation with term text exceeding reasonable limits"""
         perspective = PerspectiveFactory()
         very_long_text = "x" * 1000  # Very long term text (exceeds 255 char limit)
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_text": very_long_text,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_text": very_long_text, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         # Should return 400 Bad Request with proper validation message
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Term text cannot exceed 255 characters" in response.data["detail"]
@@ -1310,15 +1325,12 @@ class TestEntryLookupOrCreate:
         """Test creation with term text at the maximum allowed length (255 chars)"""
         perspective = PerspectiveFactory()
         max_length_text = "x" * 255  # Exactly 255 characters
-        
+
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_text": max_length_text,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_text": max_length_text, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         # Should succeed with maximum length text
         assert response.status_code == status.HTTP_200_OK
         assert response.data["is_new"] is True
@@ -1332,19 +1344,19 @@ class TestEntryTermTextFiltering:
     def test_filter_entries_by_term_text_exact_match(self, authenticated_client):
         """Test filtering entries by exact term text"""
         term1 = TermFactory(text="Exact Term")
-        term2 = TermFactory(text="Other Term") 
+        term2 = TermFactory(text="Other Term")
         perspective = PerspectiveFactory()
-        
+
         entry1 = EntryFactory(term=term1, perspective=perspective)
         entry2 = EntryFactory(term=term2, perspective=perspective)
-        
+
         # Create published drafts so entries appear in results
         EntryDraftFactory(entry=entry1, is_published=True)
         EntryDraftFactory(entry=entry2, is_published=True)
-        
+
         url = reverse("entry-list")
         response = authenticated_client.get(url, {"term_text": "Exact Term"})
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
         assert response.data["results"][0]["id"] == entry1.id
@@ -1352,13 +1364,12 @@ class TestEntryTermTextFiltering:
     def test_filter_entries_by_term_text_no_match(self, authenticated_client):
         """Test filtering entries by term text with no matches"""
         perspective = PerspectiveFactory()
-        
+
         url = reverse("entry-list")
-        response = authenticated_client.get(url, {
-            "term_text": "Nonexistent Term",
-            "perspective": perspective.id
-        })
-        
+        response = authenticated_client.get(
+            url, {"term_text": "Nonexistent Term", "perspective": perspective.id}
+        )
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 0
 
@@ -1367,80 +1378,85 @@ class TestEntryTermTextFiltering:
         term = TermFactory(text="Case Sensitive Term")
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        
+
         # Create published draft so entry appears in results
         EntryDraftFactory(entry=entry, is_published=True)
-        
+
         url = reverse("entry-list")
-        
+
         # Test different case variations
         test_cases = [
             "case sensitive term",
-            "CASE SENSITIVE TERM", 
+            "CASE SENSITIVE TERM",
             "Case Sensitive Term",
-            "cAsE sEnSiTiVe TeRm"
+            "cAsE sEnSiTiVe TeRm",
         ]
-        
+
         for test_case in test_cases:
             response = authenticated_client.get(url, {"term_text": test_case})
             assert response.status_code == status.HTTP_200_OK
             assert response.data["count"] == 1
             assert response.data["results"][0]["id"] == entry.id
 
-    def test_filter_entries_by_term_text_with_special_characters(self, authenticated_client):
+    def test_filter_entries_by_term_text_with_special_characters(
+        self, authenticated_client
+    ):
         """Test filtering entries by term text with special characters"""
         term = TermFactory(text="Café & Résumé")
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        
+
         # Create published draft so entry appears in results
         EntryDraftFactory(entry=entry, is_published=True)
-        
+
         url = reverse("entry-list")
         response = authenticated_client.get(url, {"term_text": "Café & Résumé"})
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
         assert response.data["results"][0]["id"] == entry.id
 
-    def test_filter_entries_by_term_text_combined_with_perspective(self, authenticated_client):
+    def test_filter_entries_by_term_text_combined_with_perspective(
+        self, authenticated_client
+    ):
         """Test filtering entries by term_text combined with perspective filter"""
         term1 = TermFactory(text="Same Term One")
         term2 = TermFactory(text="Same Term Two")
         perspective1 = PerspectiveFactory()
         perspective2 = PerspectiveFactory()
-        
+
         entry1 = EntryFactory(term=term1, perspective=perspective1)
         entry2 = EntryFactory(term=term2, perspective=perspective2)
-        
+
         # Create published drafts so entries appear in results
         EntryDraftFactory(entry=entry1, is_published=True)
         EntryDraftFactory(entry=entry2, is_published=True)
-        
+
         url = reverse("entry-list")
-        response = authenticated_client.get(url, {
-            "term_text": "Same Term One",
-            "perspective": perspective1.id
-        })
-        
+        response = authenticated_client.get(
+            url, {"term_text": "Same Term One", "perspective": perspective1.id}
+        )
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
         assert response.data["results"][0]["id"] == entry1.id
 
-    def test_filter_entries_by_term_text_partial_match_not_supported(self, authenticated_client):
+    def test_filter_entries_by_term_text_partial_match_not_supported(
+        self, authenticated_client
+    ):
         """Test that term_text only matches exact text, not partial"""
         term = TermFactory(text="Complete Term Name")
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
         EntryDraftFactory(entry=entry, is_published=True)
-        
+
         url = reverse("entry-list")
-        
+
         # Partial match should return nothing (use search parameter for partial matching)
         response = authenticated_client.get(url, {"term_text": "Complete"})
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 0
-        
+
         # Exact match should work
         response = authenticated_client.get(url, {"term_text": "Complete Term Name"})
         assert response.status_code == status.HTTP_200_OK
@@ -1451,20 +1467,20 @@ class TestEntryTermTextFiltering:
         term1 = TermFactory(text="API Gateway")
         term2 = TermFactory(text="API")
         perspective = PerspectiveFactory()
-        
+
         entry1 = EntryFactory(term=term1, perspective=perspective)
         entry2 = EntryFactory(term=term2, perspective=perspective)
-        
+
         EntryDraftFactory(entry=entry1, is_published=True)
         EntryDraftFactory(entry=entry2, is_published=True)
-        
+
         url = reverse("entry-list")
-        
+
         # search parameter should find both (partial match)
         response = authenticated_client.get(url, {"search": "API"})
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 2
-        
+
         # term_text should find only exact match
         response = authenticated_client.get(url, {"term_text": "API"})
         assert response.status_code == status.HTTP_200_OK
@@ -1478,14 +1494,14 @@ class TestEntryTermTextFiltering:
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
         EntryDraftFactory(entry=entry, is_published=True)
-        
+
         url = reverse("entry-list")
-        
+
         # Search with normalized version (no accents)
         response = authenticated_client.get(url, {"term_text": "cafe"})
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
-        
+
         # Search with accented version
         response = authenticated_client.get(url, {"term_text": "Café"})
         assert response.status_code == status.HTTP_200_OK

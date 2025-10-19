@@ -5,14 +5,14 @@ import { EntryDetailService } from '../../services/entry-detail.service';
 import { PermissionService } from '../../services/permission.service';
 
 @Component({
-  template: ''
+  template: '',
 })
 export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   @Input() entry: Entry | ReviewDraft | null = null;
   @Input() canEdit: boolean = false;
   @Input() showVersionHistory: boolean = false;
   @Input() showWorkflowButtons: boolean = false;
-  
+
   @Output() editRequested = new EventEmitter<void>();
   @Output() editSaved = new EventEmitter<Entry>();
   @Output() editCancelled = new EventEmitter<void>();
@@ -68,17 +68,18 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    */
   protected loadComments(entryId: number): void {
     this.isLoadingComments = true;
-    this.entryDetailService.loadCommentsWithPositions(entryId)
+    this.entryDetailService
+      .loadCommentsWithPositions(entryId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (comments) => {
+        next: comments => {
           this.comments = comments;
           this.isLoadingComments = false;
         },
-        error: (error) => {
+        error: error => {
           console.error('Error loading comments:', error);
           this.isLoadingComments = false;
-        }
+        },
       });
   }
 
@@ -87,17 +88,18 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    */
   protected loadDraftHistory(entryId: number): void {
     this.isLoadingDraftHistory = true;
-    this.entryDetailService.loadDraftHistory(entryId)
+    this.entryDetailService
+      .loadDraftHistory(entryId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (drafts) => {
+        next: drafts => {
           this.draftHistory = drafts;
           this.isLoadingDraftHistory = false;
         },
-        error: (error) => {
+        error: error => {
           console.error('Error loading draft history:', error);
           this.isLoadingDraftHistory = false;
-        }
+        },
       });
   }
 
@@ -124,22 +126,23 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
     const currentUser = this.permissionService.currentUser;
     if (!currentUser) return;
 
-    this.entryDetailService.createNewDraft(entryId, this.editContent, currentUser.id)
+    this.entryDetailService
+      .createNewDraft(entryId, this.editContent, currentUser.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (newDraft) => {
+        next: newDraft => {
           this.isEditMode = false;
           this.editContent = '';
-          
+
           // Refresh data
           this.loadEntryData();
-          
+
           // Emit event
           this.editSaved.emit(this.entry as Entry);
         },
-        error: (error) => {
+        error: error => {
           console.error('Error saving draft:', error);
-        }
+        },
       });
   }
 
@@ -226,7 +229,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    */
   getLatestDraftContent(): string {
     if (!this.entry) return '';
-    
+
     if ('active_draft' in this.entry && this.entry.active_draft) {
       return this.entry.active_draft.content;
     }
@@ -254,7 +257,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
    * Get the draft to use for header metadata display
    */
   protected abstract getDisplayDraft(): Entry | ReviewDraft | null;
-  
+
   /**
    * Get author name from a draft or entry - NO FALLBACKS
    * If author is missing, this will throw an error exposing the backend bug
@@ -263,7 +266,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
     if (!obj) {
       throw new Error('Object is null/undefined - this is a backend data issue');
     }
-    
+
     // Handle Entry with active_draft
     if ('active_draft' in obj && obj.active_draft) {
       if (!obj.active_draft.author) {
@@ -271,7 +274,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
       }
       return this.getUserDisplayName(obj.active_draft.author);
     }
-    
+
     // Handle ReviewDraft or EntryDraft with author
     if ('author' in obj) {
       if (!obj.author) {
@@ -279,10 +282,10 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
       }
       return this.getUserDisplayName(obj.author);
     }
-    
+
     throw new Error('Object has no author field - backend data structure issue');
   }
-  
+
   /**
    * Get timestamp from a draft or entry - NO FALLBACKS
    * If timestamp is missing, this will throw an error exposing the backend bug
@@ -291,21 +294,21 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
     if (!obj) {
       throw new Error('Object is null/undefined - this is a backend data issue');
     }
-    
+
     if ('active_draft' in obj && obj.active_draft) {
       if (!obj.active_draft.timestamp) {
         throw new Error('Entry.active_draft.timestamp is missing - backend bug');
       }
       return obj.active_draft.timestamp;
     }
-    
+
     if ('timestamp' in obj) {
       if (!obj.timestamp) {
         throw new Error('Draft.timestamp is missing - backend bug');
       }
       return obj.timestamp;
     }
-    
+
     throw new Error('Object has no timestamp field - backend data structure issue');
   }
 

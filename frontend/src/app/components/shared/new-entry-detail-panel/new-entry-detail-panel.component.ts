@@ -19,7 +19,10 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
               {{ displayTermText }}
             </h2>
             <div class="flex items-center space-x-2 mt-1">
-              <app-perspective-pill [perspective]="displayPerspective" *ngIf="displayPerspective"></app-perspective-pill>
+              <app-perspective-pill
+                [perspective]="displayPerspective"
+                *ngIf="displayPerspective"
+              ></app-perspective-pill>
             </div>
           </div>
         </div>
@@ -60,7 +63,7 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
       </div>
     </div>
   `,
-  styleUrls: ['./new-entry-detail-panel.component.scss']
+  styleUrls: ['./new-entry-detail-panel.component.scss'],
 })
 export class NewEntryDetailPanelComponent implements OnInit {
   @Input() entry: Entry | null = null;

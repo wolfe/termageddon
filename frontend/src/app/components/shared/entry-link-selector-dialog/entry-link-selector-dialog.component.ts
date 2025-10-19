@@ -60,7 +60,8 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
     this.searchTerm = '';
     this.selectedEntry = null;
 
-    this.glossaryService.getEntriesGroupedByTerm()
+    this.glossaryService
+      .getEntriesGroupedByTerm()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (groupedEntries: GroupedEntry[]) => {
@@ -83,26 +84,28 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
     }
 
     const term = this.searchTerm.toLowerCase();
-    this.filteredEntries = this.groupedEntries.filter(group => {
-      // Check if term matches
-      if (group.term.text.toLowerCase().includes(term)) {
-        return true;
-      }
-      
-      // Check if any entry in the group matches
-      return group.entries.some((entry: Entry) =>
-        entry.perspective.name.toLowerCase().includes(term) ||
-        (entry.active_draft?.content &&
-          entry.active_draft.content.toLowerCase().includes(term))
-      );
-    }).map(group => ({
-      ...group,
-      entries: group.entries.filter((entry: Entry) =>
-        entry.perspective.name.toLowerCase().includes(term) ||
-        (entry.active_draft?.content &&
-          entry.active_draft.content.toLowerCase().includes(term))
-      )
-    }));
+    this.filteredEntries = this.groupedEntries
+      .filter(group => {
+        // Check if term matches
+        if (group.term.text.toLowerCase().includes(term)) {
+          return true;
+        }
+
+        // Check if any entry in the group matches
+        return group.entries.some(
+          (entry: Entry) =>
+            entry.perspective.name.toLowerCase().includes(term) ||
+            (entry.active_draft?.content && entry.active_draft.content.toLowerCase().includes(term))
+        );
+      })
+      .map(group => ({
+        ...group,
+        entries: group.entries.filter(
+          (entry: Entry) =>
+            entry.perspective.name.toLowerCase().includes(term) ||
+            (entry.active_draft?.content && entry.active_draft.content.toLowerCase().includes(term))
+        ),
+      }));
   }
 
   selectEntry(entry: Entry) {

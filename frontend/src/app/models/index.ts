@@ -43,7 +43,12 @@ export interface EntryDraft {
   status?: string;
   // New user-centric fields from backend
   can_approve_by_current_user?: boolean;
-  approval_status_for_user?: 'unknown' | 'own_draft' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
+  approval_status_for_user?:
+    | 'unknown'
+    | 'own_draft'
+    | 'already_approved'
+    | 'already_approved_by_others'
+    | 'can_approve';
   user_has_approved?: boolean;
   remaining_approvals?: number;
   approval_percentage?: number;
@@ -80,7 +85,6 @@ export interface Comment {
   draft_id?: number;
   draft_timestamp?: string;
 }
-
 
 export interface PaginatedResponse<T> {
   count: number;
@@ -127,7 +131,12 @@ export interface ReviewDraft {
   replaces_draft?: EntryDraft;
   // New user-centric fields from backend
   can_approve_by_current_user?: boolean;
-  approval_status_for_user?: 'unknown' | 'own_draft' | 'already_approved' | 'already_approved_by_others' | 'can_approve';
+  approval_status_for_user?:
+    | 'unknown'
+    | 'own_draft'
+    | 'already_approved'
+    | 'already_approved_by_others'
+    | 'can_approve';
   user_has_approved?: boolean;
   remaining_approvals?: number;
   approval_percentage?: number;

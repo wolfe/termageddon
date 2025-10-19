@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../../services/glossary.service';
@@ -23,7 +31,7 @@ import { TermPickerModalComponent } from '../term-picker-modal/term-picker-modal
           [disabled]="disabled"
         />
       </div>
-      
+
       <app-term-picker-modal
         [isOpen]="showPicker"
         [selectedTermId]="selectedTermId"
@@ -31,14 +39,14 @@ import { TermPickerModalComponent } from '../term-picker-modal/term-picker-modal
         (termSelected)="onTermSelected($event)"
       ></app-term-picker-modal>
     </div>
-  `
+  `,
 })
 export class TermAutocompleteComponent implements OnInit, OnChanges {
   @Input() selectedTermId: number | null = null;
   @Input() isOpen: boolean = false;
   @Input() disabled: boolean = false;
   @Output() termSelected = new EventEmitter<{ termId: number | null; termText: string }>();
-  
+
   displayText = '';
   showPicker = false;
   allTerms: Term[] = [];
@@ -64,7 +72,7 @@ export class TermAutocompleteComponent implements OnInit, OnChanges {
       },
       error: (error: any) => {
         console.error('Failed to load terms:', error);
-      }
+      },
     });
   }
 

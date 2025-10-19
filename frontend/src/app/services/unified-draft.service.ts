@@ -5,7 +5,12 @@ import { ReviewService } from './review.service';
 import { GlossaryService } from './glossary.service';
 
 export interface DraftLoadOptions {
-  eligibility?: 'own' | 'requested_or_approved' | 'already_approved' | 'can_approve' | 'all_except_own';
+  eligibility?:
+    | 'own'
+    | 'requested_or_approved'
+    | 'already_approved'
+    | 'can_approve'
+    | 'all_except_own';
   showAll?: boolean;
   searchTerm?: string;
   authorId?: number;
@@ -21,10 +26,9 @@ export interface DraftActionOptions {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UnifiedDraftService {
-
   constructor(
     private reviewService: ReviewService,
     private glossaryService: GlossaryService
@@ -34,11 +38,25 @@ export class UnifiedDraftService {
    * Unified method to load drafts based on context and options
    */
   loadDrafts(options: DraftLoadOptions = {}): Observable<PaginatedResponse<ReviewDraft>> {
-    const { eligibility, showAll = false, searchTerm, authorId, entryId, perspectiveId, sortBy } = options;
+    const {
+      eligibility,
+      showAll = false,
+      searchTerm,
+      authorId,
+      entryId,
+      perspectiveId,
+      sortBy,
+    } = options;
 
     // Handle search requests
     if (searchTerm) {
-      return this.reviewService.searchDrafts(searchTerm, showAll, eligibility, perspectiveId, sortBy);
+      return this.reviewService.searchDrafts(
+        searchTerm,
+        showAll,
+        eligibility,
+        perspectiveId,
+        sortBy
+      );
     }
 
     // Handle specific entry drafts
@@ -81,14 +99,22 @@ export class UnifiedDraftService {
   /**
    * Unified review request
    */
-  requestReview(draftId: number, reviewerIds: number[], options: DraftActionOptions = {}): Observable<EntryDraft> {
+  requestReview(
+    draftId: number,
+    reviewerIds: number[],
+    options: DraftActionOptions = {}
+  ): Observable<EntryDraft> {
     return this.reviewService.requestReview(draftId, reviewerIds);
   }
 
   /**
    * Unified draft update
    */
-  updateDraft(draftId: number, data: Partial<EntryDraft>, options: DraftActionOptions = {}): Observable<EntryDraft> {
+  updateDraft(
+    draftId: number,
+    data: Partial<EntryDraft>,
+    options: DraftActionOptions = {}
+  ): Observable<EntryDraft> {
     return this.glossaryService.updateEntryDraft(draftId, data);
   }
 

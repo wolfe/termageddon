@@ -4,10 +4,9 @@ import { EntryDraft, Comment, Entry, ReviewDraft } from '../models';
 import { GlossaryService } from './glossary.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EntryDetailService {
-
   constructor(private glossaryService: GlossaryService) {}
 
   /**
@@ -31,10 +30,11 @@ export class EntryDetailService {
     return this.glossaryService.getEntryDrafts(entryId).pipe(
       map(response => {
         if (response.results.length === 0) return null;
-        
+
         // Sort by timestamp descending and return the latest
-        const sortedDrafts = response.results.sort((a: EntryDraft, b: EntryDraft) => 
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        const sortedDrafts = response.results.sort(
+          (a: EntryDraft, b: EntryDraft) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         return sortedDrafts[0];
       })
@@ -72,7 +72,7 @@ export class EntryDetailService {
   createNewDraft(entryId: number, content: string, authorId: number): Observable<EntryDraft> {
     const draftData = {
       entry: entryId,
-      content: content
+      content: content,
     };
     return this.glossaryService.createEntryDraft(draftData);
   }
@@ -88,18 +88,14 @@ export class EntryDetailService {
    * Handle comment resolved - update local comments array
    */
   onCommentResolved(comments: Comment[], comment: Comment): Comment[] {
-    return comments.map(c => 
-      c.id === comment.id ? { ...c, is_resolved: true } : c
-    );
+    return comments.map(c => (c.id === comment.id ? { ...c, is_resolved: true } : c));
   }
 
   /**
    * Handle comment unresolved - update local comments array
    */
   onCommentUnresolved(comments: Comment[], comment: Comment): Comment[] {
-    return comments.map(c => 
-      c.id === comment.id ? { ...c, is_resolved: false } : c
-    );
+    return comments.map(c => (c.id === comment.id ? { ...c, is_resolved: false } : c));
   }
 
   /**
@@ -156,12 +152,12 @@ export class EntryDetailService {
   /**
    * Refresh entry data after draft creation
    */
-  refreshAfterDraftCreated(entryId: number): Observable<{ draftHistory: EntryDraft[], entry: Entry }> {
+  refreshAfterDraftCreated(
+    entryId: number
+  ): Observable<{ draftHistory: EntryDraft[]; entry: Entry }> {
     return this.loadDraftHistory(entryId).pipe(
-      switchMap(draftHistory => 
-        this.glossaryService.getEntry(entryId).pipe(
-          map(entry => ({ draftHistory, entry }))
-        )
+      switchMap(draftHistory =>
+        this.glossaryService.getEntry(entryId).pipe(map(entry => ({ draftHistory, entry })))
       )
     );
   }

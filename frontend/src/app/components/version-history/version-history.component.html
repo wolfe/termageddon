@@ -2,12 +2,7 @@
   <div class="modal-dialog">
     <div class="modal-header">
       <h3>Draft History</h3>
-      <button
-        type="button"
-        class="close-btn"
-        (click)="onClose()"
-        aria-label="Close"
-      >
+      <button type="button" class="close-btn" (click)="onClose()" aria-label="Close">
         <span>&times;</span>
       </button>
     </div>
@@ -36,48 +31,42 @@
             <div class="draft-header">
               <div class="draft-meta">
                 <div class="author-info">
-                  <app-user-avatar [user]="version.author" color="blue" size="large"></app-user-avatar>
+                  <app-user-avatar
+                    [user]="version.author"
+                    color="blue"
+                    size="large"
+                  ></app-user-avatar>
                   <div class="author-details">
                     <div class="author-name">
                       {{ getUserDisplayName(version.author) }}
                     </div>
                     <div class="draft-date">
-                      {{ draft.timestamp | date: "medium" }}
+                      {{ draft.timestamp | date: 'medium' }}
                     </div>
                   </div>
                 </div>
 
                 <div class="draft-status">
-                  <span
-                    class="status-badge"
-                    [ngClass]="getDraftStatusClass(draft)"
-                  >
+                  <span class="status-badge" [ngClass]="getDraftStatusClass(draft)">
                     {{ getDraftStatus(draft) }}
                   </span>
-                  <span *ngIf="isActiveDraft(draft)" class="active-badge">
-                    Current
-                  </span>
+                  <span *ngIf="isActiveDraft(draft)" class="active-badge"> Current </span>
                 </div>
               </div>
             </div>
 
             <div class="draft-preview">
-              <div
-                class="preview-content"
-                [innerHTML]="draft.content | slice: 0 : 200"
-              ></div>
-              <div *ngIf="draft.content.length > 200" class="preview-more">
-                ...
-              </div>
+              <div class="preview-content" [innerHTML]="draft.content | slice: 0 : 200"></div>
+              <div *ngIf="draft.content.length > 200" class="preview-more">...</div>
             </div>
 
             <div class="draft-approvals" *ngIf="draft.approvers.length > 0">
               <div class="approvals-label">Approved by:</div>
               <div class="approvers-list">
-                <app-user-avatar 
+                <app-user-avatar
                   *ngFor="let approver of draft.approvers"
-                  [user]="approver" 
-                  color="green" 
+                  [user]="approver"
+                  color="green"
                   size="medium"
                 ></app-user-avatar>
               </div>
@@ -88,9 +77,7 @@
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="onClose()">
-        Close
-      </button>
+      <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
     </div>
   </div>
 </div>

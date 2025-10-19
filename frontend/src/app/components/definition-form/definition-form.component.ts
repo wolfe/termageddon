@@ -1,11 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  OnInit,
-  OnDestroy,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
@@ -39,20 +32,20 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
         container: [
           ['bold', 'italic', 'underline'],
           ['blockquote', 'code-block'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'indent': '-1'}, { 'indent': '+1' }],
-          [{ 'align': [] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          [{ indent: '-1' }, { indent: '+1' }],
+          [{ align: [] }],
           ['link'], // custom-link is added dynamically
-          ['clean']
+          ['clean'],
         ],
         handlers: {
           'custom-link': () => {
             // Quill automatically preserves selection here!
             this.openEntryLinkSelector();
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   };
 
   ngOnInit() {
@@ -102,20 +95,15 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
 
   insertLink(entryId: number, entryText: string) {
     if (!this.editor) return;
-    
+
     const range = this.editor.getSelection(true); // true = force focus if needed
-    
+
     if (range) {
       // Insert link text with book icon
       const linkText = `${entryText} 📖`;
       this.editor.insertText(range.index, linkText, 'user');
-      this.editor.formatText(
-        range.index, 
-        linkText.length, 
-        'link', 
-        `/entry/${entryId}`
-      );
-      
+      this.editor.formatText(range.index, linkText.length, 'link', `/entry/${entryId}`);
+
       // Add custom data attribute for navigation
       setTimeout(() => {
         const links = this.editor.root.querySelectorAll('a[href^="/entry/"]');
@@ -125,7 +113,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
           lastLink.classList.add('entry-link');
         }
       }, 0);
-      
+
       // Move cursor after inserted link
       this.editor.setSelection(range.index + linkText.length);
     }

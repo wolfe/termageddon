@@ -14,7 +14,7 @@ interface ConfirmationDialogData {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './confirmation-dialog.component.html',
-  styleUrls: ['./confirmation-dialog.component.scss']
+  styleUrls: ['./confirmation-dialog.component.scss'],
 })
 export class ConfirmationDialogComponent {
   @Input() isOpen = false;
@@ -23,9 +23,9 @@ export class ConfirmationDialogComponent {
     message: 'Are you sure you want to proceed?',
     confirmText: 'Confirm',
     cancelText: 'Cancel',
-    type: 'warning'
+    type: 'warning',
   };
-  
+
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 

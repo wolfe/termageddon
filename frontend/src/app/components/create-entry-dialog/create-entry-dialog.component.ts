@@ -5,13 +5,13 @@ import { Router } from '@angular/router';
 import { GlossaryService } from '../../services/glossary.service';
 import { NavigationService } from '../../services/navigation.service';
 import { AuthService } from '../../services/auth.service';
-import { 
-  Perspective, 
-  Term, 
-  Entry, 
-  CreateEntryRequest, 
+import {
+  Perspective,
+  Term,
+  Entry,
+  CreateEntryRequest,
   EntryLookupResponse,
-  User 
+  User,
 } from '../../models';
 import { TermAutocompleteComponent } from '../shared/term-autocomplete/term-autocomplete.component';
 
@@ -55,11 +55,11 @@ export class CreateEntryDialogComponent implements OnInit {
 
   loadUsers() {
     this.glossaryService.getUsers().subscribe({
-      next: (users) => {
+      next: users => {
         this.users = users;
         this.initializePerspectiveStatuses();
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading users:', error);
       },
     });
@@ -67,11 +67,11 @@ export class CreateEntryDialogComponent implements OnInit {
 
   loadPerspectives() {
     this.glossaryService.getPerspectives().subscribe({
-      next: (response) => {
+      next: response => {
         this.perspectives = response.results;
         this.initializePerspectiveStatuses();
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading perspectives:', error);
         this.error = 'Failed to load perspectives';
       },
@@ -86,7 +86,7 @@ export class CreateEntryDialogComponent implements OnInit {
           hasPublishedDraft: false,
           hasUnpublishedDraft: false,
           unpublishedDraftAuthorId: null,
-          unpublishedDraftAuthorName: null
+          unpublishedDraftAuthorName: null,
         };
       });
     }
@@ -109,7 +109,7 @@ export class CreateEntryDialogComponent implements OnInit {
 
     this.isLookingUp = true;
     const request: CreateEntryRequest = {
-      perspective_id: this.selectedPerspectiveId
+      perspective_id: this.selectedPerspectiveId,
     };
 
     if (this.selectedTermId) {
@@ -123,10 +123,10 @@ export class CreateEntryDialogComponent implements OnInit {
         this.isLookingUp = false;
         this.updatePerspectiveStatus(this.selectedPerspectiveId!, response);
       },
-      error: (error) => {
+      error: error => {
         this.isLookingUp = false;
         console.error('Error looking up entry:', error);
-      }
+      },
     });
   }
 
@@ -135,8 +135,9 @@ export class CreateEntryDialogComponent implements OnInit {
       hasPublishedDraft: response.has_published_draft,
       hasUnpublishedDraft: response.has_unpublished_draft,
       unpublishedDraftAuthorId: response.unpublished_draft_author_id,
-      unpublishedDraftAuthorName: response.unpublished_draft_author_id ? 
-        this.getAuthorName(response.unpublished_draft_author_id) : null
+      unpublishedDraftAuthorName: response.unpublished_draft_author_id
+        ? this.getAuthorName(response.unpublished_draft_author_id)
+        : null,
     };
   }
 
@@ -148,7 +149,7 @@ export class CreateEntryDialogComponent implements OnInit {
   getPerspectiveStatusIcon(perspectiveId: number): string {
     const status = this.perspectiveStatuses[perspectiveId];
     if (!status) return '';
-    
+
     if (status.hasPublishedDraft) {
       return '✓';
     } else if (status.hasUnpublishedDraft) {
@@ -160,7 +161,7 @@ export class CreateEntryDialogComponent implements OnInit {
   getPerspectiveStatusTooltip(perspectiveId: number): string {
     const status = this.perspectiveStatuses[perspectiveId];
     if (!status) return 'No entry yet';
-    
+
     if (status.hasPublishedDraft) {
       return 'Published entry exists';
     } else if (status.hasUnpublishedDraft) {
@@ -180,13 +181,13 @@ export class CreateEntryDialogComponent implements OnInit {
 
     const status = this.perspectiveStatuses[this.selectedPerspectiveId];
     if (!status) return 'Create Entry';
-    
+
     if (status.hasPublishedDraft && !status.hasUnpublishedDraft) {
       return 'View Entry';
     } else if (status.hasUnpublishedDraft) {
       return 'View Entry';
     }
-    
+
     return 'Create Entry';
   }
 
@@ -211,23 +212,23 @@ export class CreateEntryDialogComponent implements OnInit {
       const request: CreateEntryRequest = {
         term_id: this.selectedTermId || undefined,
         term_text: this.selectedTermText.trim(),
-        perspective_id: this.selectedPerspectiveId
+        perspective_id: this.selectedPerspectiveId,
       };
 
       this.glossaryService.lookupOrCreateEntry(request).subscribe({
         next: (response: EntryLookupResponse) => {
           this.isLoading = false;
-          
+
           if (response.entry) {
             this.entryCreated.emit(response.entry);
           }
-          
+
           // Navigate using smart routing
           this.navigateAfterCreation(response);
           this.resetForm();
           this.close.emit();
         },
-        error: (error) => {
+        error: error => {
           this.isLoading = false;
           this.error = 'Failed to create entry: ' + (error.error?.detail || error.message);
         },
@@ -238,8 +239,8 @@ export class CreateEntryDialogComponent implements OnInit {
       this.router.navigate(['/entry/new'], {
         queryParams: {
           term: this.selectedTermText.trim(),
-          perspective: this.selectedPerspectiveId
-        }
+          perspective: this.selectedPerspectiveId,
+        },
       });
       this.resetForm();
       this.close.emit();
@@ -268,7 +269,7 @@ export class CreateEntryDialogComponent implements OnInit {
 
     // Determine the appropriate panel based on entry state
     const targetPanel = this.navigationService.determineTargetPanel(entry, this.currentUser, false);
-    
+
     // Check if targetPanel is a draft URL (starts with /draft/)
     if (targetPanel.startsWith('/draft/')) {
       // Navigate directly to the draft URL

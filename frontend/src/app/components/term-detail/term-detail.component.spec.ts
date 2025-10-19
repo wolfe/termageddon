@@ -16,8 +16,23 @@ describe('TermDetailComponent', () => {
 
   beforeEach(async () => {
     const navigationSpy = jasmine.createSpyObj('NavigationService', ['navigateToEntry']);
-    const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', ['loadCommentsWithPositions', 'loadDraftHistory', 'initializeEditContentFromLatest', 'createNewDraft', 'refreshAfterDraftCreated']);
-    const permissionSpy = jasmine.createSpyObj('PermissionService', ['canMarkOfficial'], { currentUser: { id: 1, username: 'testuser', first_name: 'Test', last_name: 'User', is_staff: false, perspective_curator_for: [] } });
+    const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
+      'loadCommentsWithPositions',
+      'loadDraftHistory',
+      'initializeEditContentFromLatest',
+      'createNewDraft',
+      'refreshAfterDraftCreated',
+    ]);
+    const permissionSpy = jasmine.createSpyObj('PermissionService', ['canMarkOfficial'], {
+      currentUser: {
+        id: 1,
+        username: 'testuser',
+        first_name: 'Test',
+        last_name: 'User',
+        is_staff: false,
+        perspective_curator_for: [],
+      },
+    });
     permissionSpy.canMarkOfficial.and.returnValue(false);
     const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
     const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getEntries', 'endorseEntry']);
@@ -34,8 +49,8 @@ describe('TermDetailComponent', () => {
         { provide: PermissionService, useValue: permissionSpy },
         { provide: NotificationService, useValue: notificationSpy },
         { provide: GlossaryService, useValue: glossarySpy },
-        { provide: NavigationService, useValue: navigationSpy }
-      ]
+        { provide: NavigationService, useValue: navigationSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TermDetailComponent);
@@ -45,25 +60,25 @@ describe('TermDetailComponent', () => {
     // Set up mock entry
     component.entry = {
       id: 1,
-      term: { 
-        id: 1, 
+      term: {
+        id: 1,
         text: 'Test Term',
         text_normalized: 'test term',
         is_official: false,
         created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z'
+        updated_at: '2023-01-01T00:00:00Z',
       },
-      perspective: { 
-        id: 1, 
-        name: 'Test Perspective', 
+      perspective: {
+        id: 1,
+        name: 'Test Perspective',
         description: 'Test Description',
         created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z'
+        updated_at: '2023-01-01T00:00:00Z',
       },
       active_draft: undefined,
       is_official: false,
       created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z'
+      updated_at: '2023-01-01T00:00:00Z',
     } as Entry;
   });
 
@@ -87,13 +102,13 @@ describe('TermDetailComponent', () => {
       // Create a mock click event
       const mockEvent = new MouseEvent('click', {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
 
       // Mock the event target
       Object.defineProperty(mockEvent, 'target', {
         value: mockLink,
-        writable: false
+        writable: false,
       });
 
       // Spy on preventDefault
@@ -118,13 +133,13 @@ describe('TermDetailComponent', () => {
       // Create a mock click event
       const mockEvent = new MouseEvent('click', {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
 
       // Mock the event target
       Object.defineProperty(mockEvent, 'target', {
         value: mockLink,
-        writable: false
+        writable: false,
       });
 
       // Spy on preventDefault
@@ -148,13 +163,13 @@ describe('TermDetailComponent', () => {
       // Create a mock click event
       const mockEvent = new MouseEvent('click', {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
 
       // Mock the event target
       Object.defineProperty(mockEvent, 'target', {
         value: mockDiv,
-        writable: false
+        writable: false,
       });
 
       // Spy on preventDefault
@@ -180,13 +195,13 @@ describe('TermDetailComponent', () => {
       // Create a mock click event
       const mockEvent = new MouseEvent('click', {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
 
       // Mock the event target
       Object.defineProperty(mockEvent, 'target', {
         value: mockLink,
-        writable: false
+        writable: false,
       });
 
       // Spy on preventDefault

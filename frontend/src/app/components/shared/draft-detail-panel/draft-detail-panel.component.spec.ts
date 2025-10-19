@@ -18,7 +18,7 @@ describe('DraftDetailPanelComponent', () => {
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
       'loadDraftHistory',
       'initializeEditContentFromLatest',
-      'createNewDraft'
+      'createNewDraft',
     ]);
     const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
       currentUser: {
@@ -27,28 +27,27 @@ describe('DraftDetailPanelComponent', () => {
         first_name: 'Test',
         last_name: 'User',
         is_staff: false,
-        perspective_curator_for: []
-      }
+        perspective_curator_for: [],
+      },
     });
-    const notificationSpy = jasmine.createSpyObj('NotificationService', [
-      'success',
-      'error'
-    ]);
+    const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
 
     await TestBed.configureTestingModule({
       imports: [DraftDetailPanelComponent, HttpClientTestingModule],
       providers: [
         { provide: EntryDetailService, useValue: entryDetailSpy },
         { provide: PermissionService, useValue: permissionSpy },
-        { provide: NotificationService, useValue: notificationSpy }
-      ]
+        { provide: NotificationService, useValue: notificationSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DraftDetailPanelComponent);
     component = fixture.componentInstance;
     entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
     permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
-    notificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
+    notificationService = TestBed.inject(
+      NotificationService
+    ) as jasmine.SpyObj<NotificationService>;
   });
 
   it('should create', () => {
@@ -73,12 +72,12 @@ describe('DraftDetailPanelComponent', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: 1,
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       component.latestDraft = latestDraft;
@@ -97,7 +96,7 @@ describe('DraftDetailPanelComponent', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -107,22 +106,22 @@ describe('DraftDetailPanelComponent', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const result = component.getProposedDefinitionContent();
@@ -146,7 +145,7 @@ describe('DraftDetailPanelComponent', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -156,22 +155,22 @@ describe('DraftDetailPanelComponent', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const result = component.getProposedDefinitionContent();
@@ -206,13 +205,13 @@ describe('DraftDetailPanelComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       component.draftHistory = draftHistory;
@@ -231,7 +230,7 @@ describe('DraftDetailPanelComponent', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -241,22 +240,22 @@ describe('DraftDetailPanelComponent', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       entryDetailService.initializeEditContentFromLatest.and.returnValue('Latest draft content');
@@ -291,12 +290,12 @@ describe('DraftDetailPanelComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
+          replaces_draft: undefined,
         },
         {
           id: 2,
@@ -314,13 +313,13 @@ describe('DraftDetailPanelComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       component.draft = {
@@ -338,7 +337,7 @@ describe('DraftDetailPanelComponent', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -348,22 +347,22 @@ describe('DraftDetailPanelComponent', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       entryDetailService.loadDraftHistory.and.returnValue(of(mockDrafts));

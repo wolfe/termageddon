@@ -19,11 +19,11 @@ describe('CreateEntryDialogComponent', () => {
     const glossaryServiceSpy = jasmine.createSpyObj('GlossaryService', [
       'getPerspectives',
       'getUsers',
-      'lookupOrCreateEntry'
+      'lookupOrCreateEntry',
     ]);
     const navigationServiceSpy = jasmine.createSpyObj('NavigationService', [
       'navigateToPanelWithEntry',
-      'determineTargetPanel'
+      'determineTargetPanel',
     ]);
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'navigateByUrl']);
@@ -34,8 +34,8 @@ describe('CreateEntryDialogComponent', () => {
         { provide: GlossaryService, useValue: glossaryServiceSpy },
         { provide: NavigationService, useValue: navigationServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
-        { provide: Router, useValue: routerSpy }
-      ]
+        { provide: Router, useValue: routerSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CreateEntryDialogComponent);
@@ -46,16 +46,20 @@ describe('CreateEntryDialogComponent', () => {
     mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
 
     // Setup default mocks
-    mockGlossaryService.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    mockGlossaryService.getPerspectives.and.returnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
     mockGlossaryService.getUsers.and.returnValue(of([]));
-    mockAuthService.getCurrentUser.and.returnValue(of({
-      id: 1,
-      username: 'testuser',
-      first_name: 'Test',
-      last_name: 'User',
-      is_staff: false,
-      perspective_curator_for: []
-    }));
+    mockAuthService.getCurrentUser.and.returnValue(
+      of({
+        id: 1,
+        username: 'testuser',
+        first_name: 'Test',
+        last_name: 'User',
+        is_staff: false,
+        perspective_curator_for: [],
+      })
+    );
   });
 
   it('should create', () => {
@@ -69,7 +73,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -77,31 +81,40 @@ describe('CreateEntryDialogComponent', () => {
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/entry/new'], {
       queryParams: {
         term: 'Brand New Term',
-        perspective: 1
-      }
+        perspective: 1,
+      },
     });
   });
 
   it('should use lookupOrCreateEntry for existing entries', () => {
     const mockEntry = {
       id: 5,
-      term: { id: 1, text: 'Existing Term', text_normalized: 'existing term', is_official: false, created_at: '', updated_at: '' },
+      term: {
+        id: 1,
+        text: 'Existing Term',
+        text_normalized: 'existing term',
+        is_official: false,
+        created_at: '',
+        updated_at: '',
+      },
       perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
       is_official: false,
       created_at: '',
-      updated_at: ''
+      updated_at: '',
     };
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(of({
-      entry_id: 5,
-      has_published_draft: true,
-      has_unpublished_draft: false,
-      unpublished_draft_author_id: null,
-      is_new: false,
-      term: mockEntry.term,
-      perspective: mockEntry.perspective,
-      entry: mockEntry
-    }));
+    mockGlossaryService.lookupOrCreateEntry.and.returnValue(
+      of({
+        entry_id: 5,
+        has_published_draft: true,
+        has_unpublished_draft: false,
+        unpublished_draft_author_id: null,
+        is_new: false,
+        term: mockEntry.term,
+        perspective: mockEntry.perspective,
+        entry: mockEntry,
+      })
+    );
 
     component.selectedTermId = 1;
     component.selectedTermText = 'Existing Term';
@@ -110,7 +123,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -142,23 +155,32 @@ describe('CreateEntryDialogComponent', () => {
   it('should emit entryCreated event when existing entry is found', () => {
     const mockEntry = {
       id: 5,
-      term: { id: 1, text: 'Existing Term', text_normalized: 'existing term', is_official: false, created_at: '', updated_at: '' },
+      term: {
+        id: 1,
+        text: 'Existing Term',
+        text_normalized: 'existing term',
+        is_official: false,
+        created_at: '',
+        updated_at: '',
+      },
       perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
       is_official: false,
       created_at: '',
-      updated_at: ''
+      updated_at: '',
     };
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(of({
-      entry_id: 5,
-      has_published_draft: true,
-      has_unpublished_draft: false,
-      unpublished_draft_author_id: null,
-      is_new: false,
-      term: mockEntry.term,
-      perspective: mockEntry.perspective,
-      entry: mockEntry
-    }));
+    mockGlossaryService.lookupOrCreateEntry.and.returnValue(
+      of({
+        entry_id: 5,
+        has_published_draft: true,
+        has_unpublished_draft: false,
+        unpublished_draft_author_id: null,
+        is_new: false,
+        term: mockEntry.term,
+        perspective: mockEntry.perspective,
+        entry: mockEntry,
+      })
+    );
 
     spyOn(component.entryCreated, 'emit');
 
@@ -169,7 +191,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -186,7 +208,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -201,7 +223,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -214,17 +236,26 @@ describe('CreateEntryDialogComponent', () => {
 
   it('should handle lookupOrCreateEntry error gracefully', () => {
     spyOn(component.close, 'emit');
-    
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(of({
-      entry_id: 5,
-      has_published_draft: true,
-      has_unpublished_draft: false,
-      unpublished_draft_author_id: null,
-      is_new: false,
-      term: { id: 1, text: 'Existing Term', text_normalized: 'existing term', is_official: false, created_at: '', updated_at: '' },
-      perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
-      entry: undefined
-    }));
+
+    mockGlossaryService.lookupOrCreateEntry.and.returnValue(
+      of({
+        entry_id: 5,
+        has_published_draft: true,
+        has_unpublished_draft: false,
+        unpublished_draft_author_id: null,
+        is_new: false,
+        term: {
+          id: 1,
+          text: 'Existing Term',
+          text_normalized: 'existing term',
+          is_official: false,
+          created_at: '',
+          updated_at: '',
+        },
+        perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
+        entry: undefined,
+      })
+    );
 
     component.selectedTermId = 1;
     component.selectedTermText = 'Existing Term';
@@ -233,7 +264,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -249,9 +280,16 @@ describe('CreateEntryDialogComponent', () => {
       has_unpublished_draft: false,
       unpublished_draft_author_id: null,
       is_new: false,
-      term: { id: 1, text: 'Existing Term', text_normalized: 'existing term', is_official: false, created_at: '', updated_at: '' },
+      term: {
+        id: 1,
+        text: 'Existing Term',
+        text_normalized: 'existing term',
+        is_official: false,
+        created_at: '',
+        updated_at: '',
+      },
       perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
-      entry: undefined
+      entry: undefined,
     };
     mockGlossaryService.lookupOrCreateEntry.and.returnValue(of(errorResponse));
 
@@ -262,7 +300,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     component.onSave();
@@ -277,12 +315,26 @@ describe('CreateEntryDialogComponent', () => {
       previous: null,
       results: [
         { id: 1, name: 'Perspective 1', description: '', created_at: '', updated_at: '' },
-        { id: 2, name: 'Perspective 2', description: '', created_at: '', updated_at: '' }
-      ]
+        { id: 2, name: 'Perspective 2', description: '', created_at: '', updated_at: '' },
+      ],
     };
     const mockUsers = [
-      { id: 1, username: 'user1', first_name: 'User', last_name: 'One', is_staff: false, perspective_curator_for: [] },
-      { id: 2, username: 'user2', first_name: 'User', last_name: 'Two', is_staff: false, perspective_curator_for: [] }
+      {
+        id: 1,
+        username: 'user1',
+        first_name: 'User',
+        last_name: 'One',
+        is_staff: false,
+        perspective_curator_for: [],
+      },
+      {
+        id: 2,
+        username: 'user2',
+        first_name: 'User',
+        last_name: 'Two',
+        is_staff: false,
+        perspective_curator_for: [],
+      },
     ];
 
     mockGlossaryService.getPerspectives.and.returnValue(of(mockPerspectives));
@@ -303,9 +355,16 @@ describe('CreateEntryDialogComponent', () => {
       has_unpublished_draft: false,
       unpublished_draft_author_id: null,
       is_new: false,
-      term: { id: 1, text: 'Test Term', text_normalized: 'test term', is_official: false, created_at: '', updated_at: '' },
+      term: {
+        id: 1,
+        text: 'Test Term',
+        text_normalized: 'test term',
+        is_official: false,
+        created_at: '',
+        updated_at: '',
+      },
       perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
-      entry: undefined
+      entry: undefined,
     };
 
     mockGlossaryService.lookupOrCreateEntry.and.returnValue(of(mockResponse));
@@ -318,7 +377,7 @@ describe('CreateEntryDialogComponent', () => {
 
     expect(mockGlossaryService.lookupOrCreateEntry).toHaveBeenCalledWith({
       term_id: 1,
-      perspective_id: 1
+      perspective_id: 1,
     });
   });
 
@@ -329,9 +388,16 @@ describe('CreateEntryDialogComponent', () => {
       has_unpublished_draft: false,
       unpublished_draft_author_id: null,
       is_new: false,
-      term: { id: 1, text: 'Test Term', text_normalized: 'test term', is_official: false, created_at: '', updated_at: '' },
+      term: {
+        id: 1,
+        text: 'Test Term',
+        text_normalized: 'test term',
+        is_official: false,
+        created_at: '',
+        updated_at: '',
+      },
       perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
-      entry: undefined
+      entry: undefined,
     };
 
     mockGlossaryService.lookupOrCreateEntry.and.returnValue(of(mockResponse));
@@ -344,7 +410,7 @@ describe('CreateEntryDialogComponent', () => {
 
     expect(mockGlossaryService.lookupOrCreateEntry).toHaveBeenCalledWith({
       term_id: 1,
-      perspective_id: 1
+      perspective_id: 1,
     });
   });
 
@@ -353,7 +419,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     expect(component.getPerspectiveStatusIcon(1)).toBe('✓');
@@ -362,7 +428,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: true,
       unpublishedDraftAuthorId: 1,
-      unpublishedDraftAuthorName: 'testuser'
+      unpublishedDraftAuthorName: 'testuser',
     };
 
     expect(component.getPerspectiveStatusIcon(1)).toBe('📝');
@@ -371,20 +437,27 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     expect(component.getPerspectiveStatusIcon(1)).toBe('');
   });
 
   it('should get correct perspective status tooltip', () => {
-    component.currentUser = { id: 1, username: 'testuser', first_name: 'Test', last_name: 'User', is_staff: false, perspective_curator_for: [] };
+    component.currentUser = {
+      id: 1,
+      username: 'testuser',
+      first_name: 'Test',
+      last_name: 'User',
+      is_staff: false,
+      perspective_curator_for: [],
+    };
 
     component.perspectiveStatuses[1] = {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     expect(component.getPerspectiveStatusTooltip(1)).toBe('Published entry exists');
@@ -393,7 +466,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: true,
       unpublishedDraftAuthorId: 1,
-      unpublishedDraftAuthorName: 'testuser'
+      unpublishedDraftAuthorName: 'testuser',
     };
 
     expect(component.getPerspectiveStatusTooltip(1)).toBe('You have a draft in progress');
@@ -402,7 +475,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: true,
       unpublishedDraftAuthorId: 2,
-      unpublishedDraftAuthorName: 'otheruser'
+      unpublishedDraftAuthorName: 'otheruser',
     };
 
     expect(component.getPerspectiveStatusTooltip(1)).toBe('Draft in progress by otheruser');
@@ -416,7 +489,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: true,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     expect(component.getButtonText()).toBe('View Entry');
@@ -425,7 +498,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: true,
       unpublishedDraftAuthorId: 1,
-      unpublishedDraftAuthorName: 'testuser'
+      unpublishedDraftAuthorName: 'testuser',
     };
 
     expect(component.getButtonText()).toBe('View Entry');
@@ -434,7 +507,7 @@ describe('CreateEntryDialogComponent', () => {
       hasPublishedDraft: false,
       hasUnpublishedDraft: false,
       unpublishedDraftAuthorId: null,
-      unpublishedDraftAuthorName: null
+      unpublishedDraftAuthorName: null,
     };
 
     expect(component.getButtonText()).toBe('Create Entry');

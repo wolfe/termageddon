@@ -3,11 +3,9 @@
     <div class="dialog-container">
       <div class="dialog-header">
         <h3 class="dialog-title">Select Entry to Link</h3>
-        <button class="close-button" (click)="onCancel()" aria-label="Close dialog">
-          ×
-        </button>
+        <button class="close-button" (click)="onCancel()" aria-label="Close dialog">×</button>
       </div>
-      
+
       <div class="dialog-body">
         <!-- Search -->
         <div class="search-section">
@@ -48,16 +46,16 @@
                     <h4 class="term-title">{{ group.term.text }}</h4>
                     <div class="entries-grid">
                       @for (entry of group.entries; track entry.id) {
-                        <div 
+                        <div
                           class="entry-item"
                           [class.selected]="selectedEntry?.id === entry.id"
                           (click)="selectEntry(entry)"
                         >
                           <div class="entry-header">
-                            <app-perspective-pill 
+                            <app-perspective-pill
                               [perspective]="entry.perspective"
                               size="small"
-                               variant="default"
+                              variant="default"
                             ></app-perspective-pill>
                           </div>
                           <div class="entry-preview">
@@ -73,17 +71,11 @@
           </div>
         }
       </div>
-      
+
       <div class="dialog-footer">
-        <button 
-          type="button" 
-          class="btn btn-secondary"
-          (click)="onCancel()"
-        >
-          Cancel
-        </button>
-        <button 
-          type="button" 
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+        <button
+          type="button"
           class="btn btn-primary"
           [disabled]="!selectedEntry"
           (click)="confirmSelection()"

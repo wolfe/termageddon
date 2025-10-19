@@ -1,4 +1,16 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -13,7 +25,18 @@ import { EntryDetailService } from '../../../services/entry-detail.service';
 import { PermissionService } from '../../../services/permission.service';
 import { NotificationService } from '../../../services/notification.service';
 import { NavigationService } from '../../../services/navigation.service';
-import { getDraftStatus, getDraftStatusClass, getApprovalStatusText, getEligibilityText, getEligibilityClass, getApprovalReason, canPublish as canPublishUtil, canApprove as canApproveUtil, getRemainingApprovals, getApprovalAccessLevel } from '../../../utils/draft-status.util';
+import {
+  getDraftStatus,
+  getDraftStatusClass,
+  getApprovalStatusText,
+  getEligibilityText,
+  getEligibilityClass,
+  getApprovalReason,
+  canPublish as canPublishUtil,
+  canApprove as canApproveUtil,
+  getRemainingApprovals,
+  getApprovalAccessLevel,
+} from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
@@ -21,11 +44,22 @@ type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
 @Component({
   selector: 'app-draft-detail-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, CommentThreadComponent, UserAvatarComponent, PerspectivePillComponent, DefinitionFormComponent, VersionHistorySidebarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CommentThreadComponent,
+    UserAvatarComponent,
+    PerspectivePillComponent,
+    DefinitionFormComponent,
+    VersionHistorySidebarComponent,
+  ],
   templateUrl: './draft-detail-panel.component.html',
-  styleUrl: './draft-detail-panel.component.scss'
+  styleUrl: './draft-detail-panel.component.scss',
 })
-export class DraftDetailPanelComponent extends BaseEntryDetailComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class DraftDetailPanelComponent
+  extends BaseEntryDetailComponent
+  implements OnInit, OnChanges, AfterViewInit, OnDestroy
+{
   @Input() context: DraftDisplayContext = 'review';
   @Input() draft: ReviewDraft | null = null;
   @Input() override canEdit: boolean = false;
@@ -90,7 +124,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
         this.selectedHistoricalDraft = null;
       }
     }
-    
+
     // When isEditMode input changes to true, automatically trigger edit mode
     if (changes['isEditMode'] && this.isEditMode && this.draft && this.canEdit) {
       // Use a small delay to ensure the component is fully initialized
@@ -102,15 +136,15 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
 
   override loadDraftHistory(): void {
     if (!this.draft?.entry?.id) return;
-    
+
     this.entryDetailService.loadDraftHistory(this.draft.entry.id).subscribe({
-      next: (drafts) => {
+      next: drafts => {
         this.draftHistory = drafts;
         this.latestDraft = drafts.length > 0 ? drafts[0] : null;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading draft history:', error);
-      }
+      },
     });
   }
   getDraftStatus = getDraftStatus;
@@ -144,13 +178,13 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
   // Override base class methods for draft-specific behavior
   onEdit(): void {
     if (!this.draft) return;
-    
+
     // Use latest draft from history, not the selected draft
     this.editContent = this.entryDetailService.initializeEditContentFromLatest(
       this.draftHistory,
-      this.draft.content  // fallback
+      this.draft.content // fallback
     );
-    
+
     this.isEditMode = true;
     this.editRequested.emit();
   }
@@ -161,26 +195,29 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
       return;
     }
 
-    this.entryDetailService.createNewDraft(
-      this.draft.entry.id,
-      this.editContent,
-      this.permissionService.currentUser?.id || 0
-    ).subscribe({
-      next: (newDraft) => {
-        
-        // Refresh draft history to get latest
-        this.loadDraftHistory();  // This will update latestDraft
-        
-        this.isEditMode = false;
-        this.editContent = '';
-        this.editSaved.emit();
-        this.notificationService.success(`Definition for "${this.draft?.entry?.term?.text}" saved successfully! It will be visible once approved.`);
-      },
-      error: (error) => {
-        console.error('Failed to create draft:', error);
-        this.handleSaveError(error);
-      }
-    });
+    this.entryDetailService
+      .createNewDraft(
+        this.draft.entry.id,
+        this.editContent,
+        this.permissionService.currentUser?.id || 0
+      )
+      .subscribe({
+        next: newDraft => {
+          // Refresh draft history to get latest
+          this.loadDraftHistory(); // This will update latestDraft
+
+          this.isEditMode = false;
+          this.editContent = '';
+          this.editSaved.emit();
+          this.notificationService.success(
+            `Definition for "${this.draft?.entry?.term?.text}" saved successfully! It will be visible once approved.`
+          );
+        },
+        error: error => {
+          console.error('Failed to create draft:', error);
+          this.handleSaveError(error);
+        },
+      });
   }
 
   override onCommentAdded(comment: Comment): void {
@@ -250,7 +287,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
 
   getActionButtonText(): string {
     if (!this.draft) return '';
-    
+
     const status = this.getApprovalAccessLevel(this.draft);
     switch (status) {
       case 'can_approve':
@@ -268,7 +305,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
 
   getActionButtonClass(): string {
     if (!this.draft) return '';
-    
+
     const status = this.getApprovalAccessLevel(this.draft);
     switch (status) {
       case 'can_approve':
@@ -301,18 +338,18 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
 
   getPublishedDraft(): EntryDraft | null {
     if (!this.draft) return null;
-    
+
     // First check if there's a published draft in history
     if (this.draftHistory) {
       const publishedInHistory = this.draftHistory.find(d => d.is_published);
       if (publishedInHistory) return publishedInHistory;
     }
-    
+
     // Then check replaces_draft
     if (this.draft.replaces_draft) {
       return this.draft.replaces_draft;
     }
-    
+
     return null;
   }
 
@@ -334,11 +371,11 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
     const requestedReviewers = this.getMainDraftRequestedReviewers();
     const remainingApprovals = this.draft?.remaining_approvals || 0;
     const approvalCount = this.draft?.approval_count || 0;
-    
+
     if (approvers.length === 0 && requestedReviewers.length === 0) {
       return '';
     }
-    
+
     if (approvers.length > 0 && requestedReviewers.length > 0) {
       // Both approvals and requests exist
       return `Approvals | Requests`;
@@ -375,7 +412,7 @@ export class DraftDetailPanelComponent extends BaseEntryDetailComponent implemen
 
     // Use native click handler on content area
     document.addEventListener('click', handleLinkClick);
-    
+
     // Clean up on destroy
     this.destroy$.subscribe(() => {
       document.removeEventListener('click', handleLinkClick);

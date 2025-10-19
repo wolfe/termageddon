@@ -26,14 +26,8 @@ describe('MyDraftsComponent', () => {
   let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
 
   beforeEach(async () => {
-    const reviewSpy = jasmine.createSpyObj('ReviewService', [
-      'getOwnDrafts',
-      'searchDrafts'
-    ]);
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'getUsers',
-      'getPerspectives'
-    ]);
+    const reviewSpy = jasmine.createSpyObj('ReviewService', ['getOwnDrafts', 'searchDrafts']);
+    const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getUsers', 'getPerspectives']);
     const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
       currentUser: {
         id: 1,
@@ -41,13 +35,13 @@ describe('MyDraftsComponent', () => {
         first_name: 'Test',
         last_name: 'User',
         is_staff: false,
-        perspective_curator_for: []
-      }
+        perspective_curator_for: [],
+      },
     });
     const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
       'loadCommentsWithPositions',
       'loadDraftHistory',
-      'getEntryId'
+      'getEntryId',
     ]);
     const panelCommonSpy = jasmine.createSpyObj('PanelCommonService', [
       'initializePanelState',
@@ -61,18 +55,16 @@ describe('MyDraftsComponent', () => {
       'onCommentResolved',
       'onCommentUnresolved',
       'getLatestDraftsPerEntry',
-      'filterDraftsBySearch'
+      'filterDraftsBySearch',
     ]);
-    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', [
-      'buildDraftUrl'
-    ]);
+    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', ['buildDraftUrl']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
     const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
       queryParams: of({}),
       snapshot: {
-        queryParams: {}
-      }
+        queryParams: {},
+      },
     });
 
     // Setup PanelCommonService mocks BEFORE component creation
@@ -90,64 +82,66 @@ describe('MyDraftsComponent', () => {
       allUsers: [],
       selectedReviewerIds: [],
       draftToRequestReview: null,
-      requestingReview: false
+      requestingReview: false,
     });
     panelCommonSpy.loadUsers.and.returnValue();
-    panelCommonSpy.loadDrafts.and.callFake((options: any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
-      // Backend now handles latest-only filtering for 'own' eligibility
-      const mockDrafts = [
-        {
-          id: 1,
-          content: 'Latest draft for entry 1',
-          is_approved: false,
-          is_published: false,
-          approval_count: 0,
-          timestamp: '2024-01-03T00:00:00Z',
-          created_at: '2024-01-03T00:00:00Z',
-          updated_at: '2024-01-03T00:00:00Z',
-          entry: { 
-            id: 1, 
-            term: { text: 'Test Term 1' },
-            perspective: {
+    panelCommonSpy.loadDrafts.and.callFake(
+      (options: any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
+        // Backend now handles latest-only filtering for 'own' eligibility
+        const mockDrafts = [
+          {
+            id: 1,
+            content: 'Latest draft for entry 1',
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
+            timestamp: '2024-01-03T00:00:00Z',
+            created_at: '2024-01-03T00:00:00Z',
+            updated_at: '2024-01-03T00:00:00Z',
+            entry: {
               id: 1,
-              name: 'Test Perspective',
-              description: 'Test Description'
-            }
+              term: { text: 'Test Term 1' },
+              perspective: {
+                id: 1,
+                name: 'Test Perspective',
+                description: 'Test Description',
+              },
+            },
+            author: { id: 1, username: 'testuser' },
+            approvers: [],
+            requested_reviewers: [],
+            replaces_draft: null,
           },
-          author: { id: 1, username: 'testuser' },
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: null
-        },
-        {
-          id: 3,
-          content: 'Latest draft for entry 2',
-          is_approved: false,
-          is_published: false,
-          approval_count: 0,
-          timestamp: '2024-01-02T12:00:00Z',
-          created_at: '2024-01-02T12:00:00Z',
-          updated_at: '2024-01-02T12:00:00Z',
-          entry: { 
-            id: 2, 
-            term: { text: 'Test Term 2' },
-            perspective: {
+          {
+            id: 3,
+            content: 'Latest draft for entry 2',
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
+            timestamp: '2024-01-02T12:00:00Z',
+            created_at: '2024-01-02T12:00:00Z',
+            updated_at: '2024-01-02T12:00:00Z',
+            entry: {
               id: 2,
-              name: 'Test Perspective 2',
-              description: 'Test Description 2'
-            }
+              term: { text: 'Test Term 2' },
+              perspective: {
+                id: 2,
+                name: 'Test Perspective 2',
+                description: 'Test Description 2',
+              },
+            },
+            author: { id: 1, username: 'testuser' },
+            approvers: [],
+            requested_reviewers: [],
+            replaces_draft: null,
           },
-          author: { id: 1, username: 'testuser' },
-          approvers: [],
-          requested_reviewers: [],
-          replaces_draft: null
-        }
-      ];
-      
-      state.drafts = mockDrafts;
-      state.filteredDrafts = [...state.drafts];
-      state.loading = false;
-    });
+        ];
+
+        state.drafts = mockDrafts;
+        state.filteredDrafts = [...state.drafts];
+        state.loading = false;
+      }
+    );
     panelCommonSpy.onSearch.and.callFake((searchTerm: string, state: any, options: any) => {
       // Backend now handles latest-only filtering for 'own' eligibility
       state.searchTerm = searchTerm;
@@ -161,15 +155,15 @@ describe('MyDraftsComponent', () => {
           timestamp: '2024-01-03T00:00:00Z',
           created_at: '2024-01-03T00:00:00Z',
           updated_at: '2024-01-03T00:00:00Z',
-          entry: { 
-            id: 1, 
+          entry: {
+            id: 1,
             term: { text: 'Test Term 1' },
-            perspective: { id: 1, name: 'Test Perspective', description: 'Test Description' }
+            perspective: { id: 1, name: 'Test Perspective', description: 'Test Description' },
           },
           author: { id: 1, username: 'testuser' },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: null
+          replaces_draft: null,
         },
         {
           id: 3,
@@ -180,16 +174,16 @@ describe('MyDraftsComponent', () => {
           timestamp: '2024-01-02T12:00:00Z',
           created_at: '2024-01-02T12:00:00Z',
           updated_at: '2024-01-02T12:00:00Z',
-          entry: { 
-            id: 2, 
+          entry: {
+            id: 2,
             term: { text: 'Test Term 2' },
-            perspective: { id: 1, name: 'Test Perspective', description: 'Test Description' }
+            perspective: { id: 1, name: 'Test Perspective', description: 'Test Description' },
           },
           author: { id: 1, username: 'testuser' },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: null
-        }
+          replaces_draft: null,
+        },
       ];
       state.filteredDrafts = mockDrafts;
       state.loading = false;
@@ -197,9 +191,11 @@ describe('MyDraftsComponent', () => {
     panelCommonSpy.refreshAfterEdit.and.callFake((state: any, loadDraftsCallback: () => void) => {
       // Simulate the actual behavior - refresh comments first, then drafts
       if (state.selectedDraft?.entry?.id) {
-        entryDetailService.loadCommentsWithPositions(state.selectedDraft.entry.id).subscribe((comments) => {
-          state.comments = comments;
-        });
+        entryDetailService
+          .loadCommentsWithPositions(state.selectedDraft.entry.id)
+          .subscribe(comments => {
+            state.comments = comments;
+          });
       }
       loadDraftsCallback();
     });
@@ -212,10 +208,16 @@ describe('MyDraftsComponent', () => {
     panelCommonSpy.onCommentResolved.and.returnValue();
     panelCommonSpy.onCommentUnresolved.and.returnValue();
     // Setup default return values for the spies BEFORE component creation
-    reviewSpy.getOwnDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
-    reviewSpy.searchDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    reviewSpy.getOwnDrafts.and.returnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
+    reviewSpy.searchDrafts.and.returnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
     glossarySpy.getUsers.and.returnValue(of([]));
-    glossarySpy.getPerspectives.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    glossarySpy.getPerspectives.and.returnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
     entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
     entryDetailSpy.loadDraftHistory.and.returnValue(of([]));
     entryDetailSpy.getEntryId.and.returnValue(1);
@@ -229,8 +231,9 @@ describe('MyDraftsComponent', () => {
           latestDraftsMap.set(entryId, draft);
         }
       });
-      return Array.from(latestDraftsMap.values())
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      return Array.from(latestDraftsMap.values()).sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
     });
     panelCommonSpy.filterDraftsBySearch.and.returnValue([]);
 
@@ -245,8 +248,8 @@ describe('MyDraftsComponent', () => {
         { provide: UrlHelperService, useValue: urlHelperSpy },
         { provide: Router, useValue: routerSpy },
         { provide: Location, useValue: locationSpy },
-        { provide: ActivatedRoute, useValue: activatedRouteSpy }
-      ]
+        { provide: ActivatedRoute, useValue: activatedRouteSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MyDraftsComponent);
@@ -260,7 +263,7 @@ describe('MyDraftsComponent', () => {
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     location = TestBed.inject(Location) as jasmine.SpyObj<Location>;
     activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
-    
+
     // Ensure the component state is initialized
     fixture.detectChanges();
     expect(component.state).toBeDefined();
@@ -276,9 +279,9 @@ describe('MyDraftsComponent', () => {
         {
           id: 1,
           content: 'Latest draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
           timestamp: '2024-01-03T00:00:00Z',
           created_at: '2024-01-03T00:00:00Z',
           updated_at: '2024-01-03T00:00:00Z',
@@ -288,7 +291,7 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: {
             id: 1,
@@ -298,29 +301,29 @@ describe('MyDraftsComponent', () => {
               text_normalized: 'test term 1',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
+          replaces_draft: undefined,
         },
         {
           id: 2,
           content: 'Older draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
           timestamp: '2024-01-02T00:00:00Z',
           created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
@@ -330,7 +333,7 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: {
             id: 1,
@@ -340,29 +343,29 @@ describe('MyDraftsComponent', () => {
               text_normalized: 'test term 1',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
+          replaces_draft: undefined,
         },
         {
           id: 3,
           content: 'Latest draft for entry 2',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
           timestamp: '2024-01-02T12:00:00Z',
           created_at: '2024-01-02T12:00:00Z',
           updated_at: '2024-01-02T12:00:00Z',
@@ -372,7 +375,7 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: {
             id: 2,
@@ -382,23 +385,23 @@ describe('MyDraftsComponent', () => {
               text_normalized: 'test term 2',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       const result = panelCommonService.getLatestDraftsPerEntry(drafts);
@@ -415,9 +418,9 @@ describe('MyDraftsComponent', () => {
         {
           id: 1,
           content: 'Older draft',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
           timestamp: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -427,7 +430,7 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: {
             id: 1,
@@ -437,29 +440,29 @@ describe('MyDraftsComponent', () => {
               text_normalized: 'test term 1',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
+          replaces_draft: undefined,
         },
         {
           id: 2,
           content: 'Newer draft',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
           timestamp: '2024-01-02T00:00:00Z',
           created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
@@ -469,7 +472,7 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: {
             id: 2,
@@ -479,23 +482,23 @@ describe('MyDraftsComponent', () => {
               text_normalized: 'test term 2',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       const result = panelCommonService.getLatestDraftsPerEntry(drafts);
@@ -520,9 +523,9 @@ describe('MyDraftsComponent', () => {
         {
           id: 1,
           content: 'Single draft',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+          is_approved: false,
+          is_published: false,
+          approval_count: 0,
           timestamp: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -532,7 +535,7 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
           entry: {
             id: 1,
@@ -542,23 +545,23 @@ describe('MyDraftsComponent', () => {
               text_normalized: 'test term',
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             perspective: {
               id: 1,
               name: 'Test Perspective',
               description: 'Test Description',
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       ];
 
       const result = panelCommonService.getLatestDraftsPerEntry(drafts);
@@ -579,9 +582,9 @@ describe('MyDraftsComponent', () => {
           {
             id: 1,
             content: 'Latest draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
@@ -591,7 +594,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -601,29 +604,29 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 1',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
+            replaces_draft: undefined,
           },
           {
             id: 2,
             content: 'Older draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-02T00:00:00Z',
             created_at: '2024-01-02T00:00:00Z',
             updated_at: '2024-01-02T00:00:00Z',
@@ -633,7 +636,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -643,29 +646,29 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 1',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
+            replaces_draft: undefined,
           },
           {
             id: 3,
             content: 'Latest draft for entry 2',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
@@ -675,7 +678,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 2,
@@ -685,24 +688,24 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 2',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
-          }
-        ]
+            replaces_draft: undefined,
+          },
+        ],
       };
 
       reviewService.getOwnDrafts.and.returnValue(of(mockResponse));
@@ -727,9 +730,9 @@ describe('MyDraftsComponent', () => {
           {
             id: 1,
             content: 'Latest draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
@@ -739,7 +742,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -749,29 +752,29 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 1',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
+            replaces_draft: undefined,
           },
           {
             id: 2,
             content: 'Older draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-02T00:00:00Z',
             created_at: '2024-01-02T00:00:00Z',
             updated_at: '2024-01-02T00:00:00Z',
@@ -781,7 +784,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -791,29 +794,29 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 1',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
+            replaces_draft: undefined,
           },
           {
             id: 3,
             content: 'Latest draft for entry 2',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
@@ -823,7 +826,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 2,
@@ -833,24 +836,24 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 2',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
-          }
-        ]
+            replaces_draft: undefined,
+          },
+        ],
       };
 
       reviewService.getOwnDrafts.and.returnValue(of(mockResponse));
@@ -861,7 +864,7 @@ describe('MyDraftsComponent', () => {
       expect(component.state.drafts.length).toBe(2);
       expect(component.state.drafts[0].id).toBe(1); // Latest draft for entry 1
       expect(component.state.drafts[1].id).toBe(3); // Latest draft for entry 2
-      
+
       // Verify older draft (id: 2) is not included
       const draftIds = component.state.drafts.map((d: ReviewDraft) => d.id);
       expect(draftIds).not.toContain(2);
@@ -876,9 +879,9 @@ describe('MyDraftsComponent', () => {
           {
             id: 1,
             content: 'Latest draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
@@ -888,7 +891,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -898,29 +901,29 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 1',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
+            replaces_draft: undefined,
           },
           {
             id: 2,
             content: 'Older draft for entry 1',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-02T00:00:00Z',
             created_at: '2024-01-02T00:00:00Z',
             updated_at: '2024-01-02T00:00:00Z',
@@ -930,7 +933,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 1,
@@ -940,29 +943,29 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 1',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
+            replaces_draft: undefined,
           },
           {
             id: 3,
             content: 'Latest draft for entry 2',
-        is_approved: false,
-        is_published: false,
-        approval_count: 0,
+            is_approved: false,
+            is_published: false,
+            approval_count: 0,
             timestamp: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
@@ -972,7 +975,7 @@ describe('MyDraftsComponent', () => {
               first_name: 'Test',
               last_name: 'User',
               is_staff: false,
-              perspective_curator_for: []
+              perspective_curator_for: [],
             },
             entry: {
               id: 2,
@@ -982,28 +985,30 @@ describe('MyDraftsComponent', () => {
                 text_normalized: 'test term 2',
                 is_official: false,
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               perspective: {
                 id: 1,
                 name: 'Test Perspective',
                 description: 'Test Description',
                 created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z'
+                updated_at: '2024-01-01T00:00:00Z',
               },
               is_official: false,
               created_at: '2024-01-01T00:00:00Z',
-              updated_at: '2024-01-01T00:00:00Z'
+              updated_at: '2024-01-01T00:00:00Z',
             },
             approvers: [],
             requested_reviewers: [],
-            replaces_draft: undefined
-          }
-        ]
+            replaces_draft: undefined,
+          },
+        ],
       };
 
       reviewService.searchDrafts.and.returnValue(of(mockSearchResponse));
-      reviewService.getOwnDrafts.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+      reviewService.getOwnDrafts.and.returnValue(
+        of({ count: 0, next: null, previous: null, results: [] })
+      );
       glossaryService.getUsers.and.returnValue(of([]));
 
       component.state.searchTerm = 'test';
@@ -1014,7 +1019,7 @@ describe('MyDraftsComponent', () => {
       expect(component.state.filteredDrafts.length).toBe(2);
       expect(component.state.filteredDrafts[0].id).toBe(1); // Latest draft for entry 1
       expect(component.state.filteredDrafts[1].id).toBe(3); // Latest draft for entry 2
-      
+
       // Verify older draft (id: 2) is not included
       const draftIds = component.state.filteredDrafts.map((d: ReviewDraft) => d.id);
       expect(draftIds).not.toContain(2);
@@ -1036,7 +1041,7 @@ describe('MyDraftsComponent', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
+          perspective_curator_for: [],
         },
         entry: {
           id: 1,
@@ -1046,22 +1051,22 @@ describe('MyDraftsComponent', () => {
             text_normalized: 'test term',
             is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           perspective: {
             id: 1,
             name: 'Test Perspective',
             description: 'Test Description',
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         approvers: [],
         requested_reviewers: [],
-        replaces_draft: undefined
+        replaces_draft: undefined,
       };
 
       const mockComments: Comment[] = [
@@ -1079,21 +1084,23 @@ describe('MyDraftsComponent', () => {
             first_name: 'Test',
             last_name: 'User',
             is_staff: false,
-            perspective_curator_for: []
+            perspective_curator_for: [],
           },
-          replies: []
-        }
+          replies: [],
+        },
       ];
 
       component.state.selectedDraft = mockDraft;
-      
-      reviewService.getOwnDrafts.and.returnValue(of({ 
-        count: 1, 
-        next: null, 
-        previous: null, 
-        results: [mockDraft] 
-      }));
-      
+
+      reviewService.getOwnDrafts.and.returnValue(
+        of({
+          count: 1,
+          next: null,
+          previous: null,
+          results: [mockDraft],
+        })
+      );
+
       entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
 
       // Simulate edit saved event

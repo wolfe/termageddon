@@ -2,7 +2,13 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReviewDraft } from '../../../models';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
-import { getDraftStatus, getDraftStatusClass, getEligibilityText, getEligibilityClass, canPublish as canPublishUtil } from '../../../utils/draft-status.util';
+import {
+  getDraftStatus,
+  getDraftStatusClass,
+  getEligibilityText,
+  getEligibilityClass,
+  canPublish as canPublishUtil,
+} from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
@@ -10,7 +16,7 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
   standalone: true,
   imports: [CommonModule, PerspectivePillComponent],
   templateUrl: './draft-list-item.component.html',
-  styleUrl: './draft-list-item.component.scss'
+  styleUrl: './draft-list-item.component.scss',
 })
 export class DraftListItemComponent {
   @Input() draft!: ReviewDraft;
@@ -58,8 +64,10 @@ export class DraftListItemComponent {
 
   getItemClass(): string {
     const baseClass = 'p-3 cursor-pointer transition-colors';
-    const selectedClass = this.selected ? 'bg-blue-50 border-l-4 border-action-primary' : 'bg-white hover:bg-gray-50';
-    
+    const selectedClass = this.selected
+      ? 'bg-blue-50 border-l-4 border-action-primary'
+      : 'bg-white hover:bg-gray-50';
+
     return `${baseClass} ${selectedClass}`;
   }
 

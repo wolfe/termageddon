@@ -10,11 +10,11 @@ describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [AuthService]
+      providers: [AuthService],
     });
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
-    
+
     // Clear localStorage before each test
     localStorage.clear();
   });
@@ -38,8 +38,8 @@ describe('AuthService', () => {
           first_name: 'Test',
           last_name: 'User',
           is_staff: false,
-          perspective_curator_for: []
-        }
+          perspective_curator_for: [],
+        },
       };
 
       service.login('testuser', 'password').subscribe(response => {
@@ -59,10 +59,10 @@ describe('AuthService', () => {
 
       service.login('testuser', 'wrongpassword').subscribe({
         next: () => fail('Should have failed'),
-        error: (error) => {
+        error: error => {
           expect(error.status).toBe(401);
           expect(service.getToken()).toBeNull();
-        }
+        },
       });
 
       const req = httpMock.expectOne('http://localhost:8000/api/auth/login/');
@@ -93,7 +93,7 @@ describe('AuthService', () => {
         first_name: 'Test',
         last_name: 'User',
         is_staff: false,
-        perspective_curator_for: []
+        perspective_curator_for: [],
       };
 
       service.getCurrentUser().subscribe(user => {
@@ -109,7 +109,7 @@ describe('AuthService', () => {
   describe('token management', () => {
     it('should set and get token', () => {
       expect(service.getToken()).toBeNull();
-      
+
       service.setToken('test-token');
       expect(service.getToken()).toBe('test-token');
     });
@@ -117,7 +117,7 @@ describe('AuthService', () => {
     it('should clear token', () => {
       service.setToken('test-token');
       expect(service.getToken()).toBe('test-token');
-      
+
       service.clearToken();
       expect(service.getToken()).toBeNull();
     });

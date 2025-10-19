@@ -8,15 +8,11 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div
-      [class]="getAvatarClasses()"
-      [title]="getUserDisplayName(user)"
-      *ngIf="user"
-    >
+    <div [class]="getAvatarClasses()" [title]="getUserDisplayName(user)" *ngIf="user">
       {{ getInitials(user) || '?' }}
     </div>
   `,
-  styles: []
+  styles: [],
 })
 export class UserAvatarComponent {
   @Input() user!: User | undefined;
@@ -31,14 +27,14 @@ export class UserAvatarComponent {
     const sizeClasses = {
       small: 'w-4 h-4 text-xs',
       medium: 'w-6 h-6 text-xs',
-      large: 'w-8 h-8 text-xs'
+      large: 'w-8 h-8 text-xs',
     };
 
     const colorClasses = {
       blue: 'bg-action-primary text-white',
       green: 'bg-role-approver text-white',
       purple: 'bg-role-reviewer text-white',
-      yellow: 'bg-role-admin text-black'
+      yellow: 'bg-role-admin text-black',
     };
 
     const cursorClass = this.clickable ? 'cursor-pointer' : 'cursor-default';
@@ -47,7 +43,7 @@ export class UserAvatarComponent {
       'rounded-full flex items-center justify-center font-semibold',
       sizeClasses[this.size],
       colorClasses[this.color],
-      cursorClass
+      cursorClass,
     ].join(' ');
   }
 }

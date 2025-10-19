@@ -34,6 +34,7 @@ def api_client():
 def authenticated_client(api_client):
     """Fixture for authenticated API client"""
     from rest_framework.authtoken.models import Token
+
     user = UserFactory()
     token = Token.objects.create(user=user)
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
@@ -48,14 +49,12 @@ class TestErrorHandling:
     def test_invalid_json_requests(self, authenticated_client):
         """Test handling of malformed JSON requests"""
         url = reverse("entry-lookup-or-create-entry")
-        
+
         # Send malformed JSON
         response = authenticated_client.post(
-            url, 
-            data="invalid json", 
-            content_type="application/json"
+            url, data="invalid json", content_type="application/json"
         )
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_permission_errors_with_deleted_objects(self, authenticated_client):
@@ -64,14 +63,14 @@ class TestErrorHandling:
         term = TermFactory()
         perspective = PerspectiveFactory()
         entry = EntryFactory(term=term, perspective=perspective)
-        
+
         # Soft delete the entry
         entry.delete()
-        
+
         # Try to access deleted entry
         url = reverse("entry-detail", kwargs={"pk": entry.id})
         response = authenticated_client.get(url)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_unauthorized_access_to_protected_endpoints(self, api_client):
@@ -82,7 +81,7 @@ class TestErrorHandling:
             reverse("entrydraft-list"),
             reverse("comment-list"),
         ]
-        
+
         for endpoint in endpoints:
             response = api_client.post(endpoint, {})
             assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -92,7 +91,7 @@ class TestErrorHandling:
         # Test with non-existent entry ID
         url = reverse("entry-detail", kwargs={"pk": 99999})
         response = authenticated_client.get(url)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_invalid_draft_id_in_urls(self, authenticated_client):
@@ -100,7 +99,7 @@ class TestErrorHandling:
         # Test with non-existent draft ID
         url = reverse("entrydraft-detail", kwargs={"pk": 99999})
         response = authenticated_client.get(url)
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_missing_required_fields(self, authenticated_client):
@@ -108,7 +107,7 @@ class TestErrorHandling:
         # Test entry creation without required fields
         url = reverse("entry-lookup-or-create-entry")
         data = {}  # Missing required fields
-        
+
         response = authenticated_client.post(url, data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -116,19 +115,16 @@ class TestErrorHandling:
         """Test handling of duplicate entry creation attempts"""
         term = TermFactory()
         perspective = PerspectiveFactory()
-        
+
         # Create first entry
         EntryFactory(term=term, perspective=perspective)
-        
+
         # Try to create duplicate entry
         url = reverse("entry-lookup-or-create-entry")
-        data = {
-            "term_id": term.id,
-            "perspective_id": perspective.id
-        }
-        
+        data = {"term_id": term.id, "perspective_id": perspective.id}
+
         response = authenticated_client.post(url, data)
-        
+
         # Should find existing entry, not create duplicate
         assert response.status_code == status.HTTP_200_OK
         assert response.data["is_new"] is False
@@ -138,36 +134,37 @@ class TestErrorHandling:
         other_user = UserFactory()
         entry = EntryFactory()
         draft = EntryDraftFactory(entry=entry, author=other_user)
-        
+
         # Test approving non-existent draft
         url = reverse("entrydraft-approve", kwargs={"pk": 99999})
         response = authenticated_client.post(url)
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        
+
         # Test approving already approved draft
         approver1 = UserFactory()
         approver2 = UserFactory()
-        
+
         from rest_framework.authtoken.models import Token
+
         token1 = Token.objects.create(user=approver1)
         token2 = Token.objects.create(user=approver2)
-        
+
         client1 = APIClient()
         client1.credentials(HTTP_AUTHORIZATION=f"Token {token1.key}")
-        
+
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f"Token {token2.key}")
-        
+
         approve_url = reverse("entrydraft-approve", kwargs={"pk": draft.id})
-        
+
         # First approval
         response1 = client1.post(approve_url + "?show_all=true")
         assert response1.status_code == status.HTTP_200_OK
-        
+
         # Second approval
         response2 = client2.post(approve_url + "?show_all=true")
         assert response2.status_code == status.HTTP_200_OK
-        
+
         # Try to approve again (should fail)
         response3 = client1.post(approve_url + "?show_all=true")
         assert response3.status_code == status.HTTP_400_BAD_REQUEST
@@ -175,28 +172,32 @@ class TestErrorHandling:
     def test_comment_creation_edge_cases(self, authenticated_client):
         """Test edge cases in comment creation"""
         entry = EntryFactory()
-        
+
         # Test comment on non-existent object
         url = reverse("comment-list")
         content_type = ContentType.objects.get_for_model(Entry)
         data = {
             "content_type": content_type.id,
             "object_id": 99999,  # Non-existent entry
-            "text": "Test comment"
+            "text": "Test comment",
         }
-        
+
         response = authenticated_client.post(url, data)
-        assert response.status_code == status.HTTP_201_CREATED  # Comment creation succeeds even with non-existent object
+        assert (
+            response.status_code == status.HTTP_201_CREATED
+        )  # Comment creation succeeds even with non-existent object
 
     def test_pagination_edge_cases(self, authenticated_client):
         """Test edge cases in pagination"""
         # Test with invalid page parameters
         url = reverse("entry-list")
-        
+
         # Test negative page
         response = authenticated_client.get(url, {"page": "-1"})
-        assert response.status_code == status.HTTP_404_NOT_FOUND  # Django returns 404 for invalid pages
-        
+        assert (
+            response.status_code == status.HTTP_404_NOT_FOUND
+        )  # Django returns 404 for invalid pages
+
         # Test very large page
         response = authenticated_client.get(url, {"page": "999999"})
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -204,16 +205,16 @@ class TestErrorHandling:
     def test_search_edge_cases(self, authenticated_client):
         """Test edge cases in search functionality"""
         url = reverse("entry-list")
-        
+
         # Test empty search
         response = authenticated_client.get(url, {"search": ""})
         assert response.status_code == status.HTTP_200_OK
-        
+
         # Test very long search term
         long_search = "x" * 1000
         response = authenticated_client.get(url, {"search": long_search})
         assert response.status_code == status.HTTP_200_OK
-        
+
         # Test special characters in search
         response = authenticated_client.get(url, {"search": "!@#$%^&*()"})
         assert response.status_code == status.HTTP_200_OK
@@ -228,15 +229,15 @@ class TestErrorHandling:
         """Test edge cases with concurrent modifications"""
         entry = EntryFactory()
         draft = EntryDraftFactory(entry=entry, author=authenticated_client.user)
-        
+
         # Simulate concurrent modification by updating the same draft
         url = reverse("entrydraft-detail", kwargs={"pk": draft.id})
-        
+
         # First update
         data1 = {"content": "First update"}
         response1 = authenticated_client.patch(url, data1)
         assert response1.status_code == status.HTTP_200_OK
-        
+
         # Second update (should work with linear draft history)
         data2 = {"content": "Second update"}
         response2 = authenticated_client.patch(url, data2)
@@ -246,14 +247,14 @@ class TestErrorHandling:
         """Test edge cases that might cause memory issues"""
         # Test creating many entries (stress test)
         perspective = PerspectiveFactory()
-        
+
         for i in range(10):  # Reasonable number for testing
             url = reverse("entry-lookup-or-create-entry")
             data = {
                 "term_text": f"Stress Test Term {i}",
-                "perspective_id": perspective.id
+                "perspective_id": perspective.id,
             }
-            
+
             response = authenticated_client.post(url, data)
             assert response.status_code == status.HTTP_200_OK
 
@@ -261,7 +262,7 @@ class TestErrorHandling:
         """Test handling of database constraint violations"""
         # Test creating term with duplicate text
         TermFactory(text="Duplicate Term")
-        
+
         with pytest.raises(Exception):  # Should raise validation error
             TermFactory(text="Duplicate Term")
 
@@ -269,12 +270,12 @@ class TestErrorHandling:
         """Test handling of network timeout scenarios"""
         # This would typically be tested with actual network simulation
         # For now, we'll test that the API handles missing data gracefully
-        
+
         url = reverse("entry-lookup-or-create-entry")
         data = {
             "term_text": "Timeout Test Term",
-            "perspective_id": 99999  # Non-existent perspective
+            "perspective_id": 99999,  # Non-existent perspective
         }
-        
+
         response = authenticated_client.post(url, data)
         assert response.status_code == status.HTTP_404_NOT_FOUND

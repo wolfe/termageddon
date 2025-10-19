@@ -21,7 +21,7 @@ describe('EntryRouterComponent', () => {
     // Suppress console.error during tests
     originalConsoleError = console.error;
     console.error = jasmine.createSpy('console.error');
-    
+
     const glossaryServiceSpy = jasmine.createSpyObj('GlossaryService', ['getEntry']);
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -30,8 +30,8 @@ describe('EntryRouterComponent', () => {
       params: of({ entryId: '1' }),
       snapshot: {
         url: [{ path: 'entry' }, { path: '1' }],
-        queryParams: {}
-      }
+        queryParams: {},
+      },
     };
 
     await TestBed.configureTestingModule({
@@ -40,8 +40,8 @@ describe('EntryRouterComponent', () => {
         { provide: GlossaryService, useValue: glossaryServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: Router, useValue: routerSpy },
-        { provide: ActivatedRoute, useValue: mockActivatedRoute }
-      ]
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EntryRouterComponent);
@@ -67,7 +67,7 @@ describe('EntryRouterComponent', () => {
       first_name: 'Test',
       last_name: 'User',
       is_staff: false,
-      perspective_curator_for: []
+      perspective_curator_for: [],
     };
 
     beforeEach(() => {
@@ -83,14 +83,14 @@ describe('EntryRouterComponent', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
@@ -109,8 +109,8 @@ describe('EntryRouterComponent', () => {
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       };
 
       mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
@@ -118,11 +118,11 @@ describe('EntryRouterComponent', () => {
       component.ngOnInit();
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/glossary'], {
-        queryParams: { entryId: 1, edit: undefined }
+        queryParams: { entryId: 1, edit: undefined },
       });
     });
 
-    it('should route to my-drafts for user\'s own unpublished drafts', () => {
+    it("should route to my-drafts for user's own unpublished drafts", () => {
       const mockEntry: Entry = {
         id: 1,
         term: {
@@ -131,14 +131,14 @@ describe('EntryRouterComponent', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
@@ -157,8 +157,8 @@ describe('EntryRouterComponent', () => {
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       };
 
       mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
@@ -166,18 +166,18 @@ describe('EntryRouterComponent', () => {
       component.ngOnInit();
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/my-drafts'], {
-        queryParams: { entryId: 1, edit: undefined }
+        queryParams: { entryId: 1, edit: undefined },
       });
     });
 
-    it('should route to review for others\' unpublished drafts', () => {
+    it("should route to review for others' unpublished drafts", () => {
       const otherUser: User = {
         id: 2,
         username: 'otheruser',
         first_name: 'Other',
         last_name: 'User',
         is_staff: false,
-        perspective_curator_for: []
+        perspective_curator_for: [],
       };
 
       const mockEntry: Entry = {
@@ -188,14 +188,14 @@ describe('EntryRouterComponent', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
@@ -214,8 +214,8 @@ describe('EntryRouterComponent', () => {
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       };
 
       mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
@@ -223,7 +223,7 @@ describe('EntryRouterComponent', () => {
       component.ngOnInit();
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/review'], {
-        queryParams: { entryId: 1, edit: undefined }
+        queryParams: { entryId: 1, edit: undefined },
       });
     });
 
@@ -238,14 +238,14 @@ describe('EntryRouterComponent', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
@@ -264,8 +264,8 @@ describe('EntryRouterComponent', () => {
           entry: 1,
           approvers: [],
           requested_reviewers: [],
-          replaces_draft: undefined
-        }
+          replaces_draft: undefined,
+        },
       };
 
       mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
@@ -273,12 +273,14 @@ describe('EntryRouterComponent', () => {
       component.ngOnInit();
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/my-drafts'], {
-        queryParams: { entryId: 1, edit: 'true' }
+        queryParams: { entryId: 1, edit: 'true' },
       });
     });
 
     it('should navigate to login when user is not authenticated', () => {
-      mockAuthService.getCurrentUser.and.returnValue(throwError(() => new Error('Not authenticated')));
+      mockAuthService.getCurrentUser.and.returnValue(
+        throwError(() => new Error('Not authenticated'))
+      );
 
       const mockEntry: Entry = {
         id: 1,
@@ -288,18 +290,18 @@ describe('EntryRouterComponent', () => {
           text_normalized: 'test term',
           is_official: false,
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         perspective: {
           id: 1,
           name: 'Test Perspective',
           description: 'Test Description',
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
+          updated_at: '2024-01-01T00:00:00Z',
         },
         is_official: false,
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       };
 
       mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
@@ -330,7 +332,7 @@ describe('EntryRouterComponent', () => {
     beforeEach(() => {
       mockActivatedRoute.snapshot.url = [{ path: 'entry' }, { path: 'new' }];
       mockActivatedRoute.queryParams = of({ term: 'New Test Term', perspective: '1' });
-      
+
       const glossaryServiceExtended = mockGlossaryService as any;
       glossaryServiceExtended.getTerms = jasmine.createSpy('getTerms');
       glossaryServiceExtended.getEntries = jasmine.createSpy('getEntries');
@@ -339,19 +341,21 @@ describe('EntryRouterComponent', () => {
     it('should handle new entry route with existing term', () => {
       const mockTermsResponse = {
         count: 1,
-        results: [{
-          id: 5,
-          text: 'New Test Term',
-          text_normalized: 'new test term',
-          is_official: false,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }]
+        results: [
+          {
+            id: 5,
+            text: 'New Test Term',
+            text_normalized: 'new test term',
+            is_official: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       const mockEntriesResponse = {
         count: 0,
-        results: []
+        results: [],
       };
 
       (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
@@ -363,20 +367,20 @@ describe('EntryRouterComponent', () => {
         queryParams: {
           newEntryTerm: 'New Test Term',
           newEntryPerspective: 1,
-          edit: 'true'
-        }
+          edit: 'true',
+        },
       });
     });
 
     it('should handle new entry route with brand new term', () => {
       const mockTermsResponse = {
         count: 0,
-        results: []
+        results: [],
       };
 
       const mockEntriesResponse = {
         count: 0,
-        results: []
+        results: [],
       };
 
       (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
@@ -388,40 +392,44 @@ describe('EntryRouterComponent', () => {
         queryParams: {
           newEntryTerm: 'New Test Term',
           newEntryPerspective: 1,
-          edit: 'true'
-        }
+          edit: 'true',
+        },
       });
     });
 
     it('should redirect to existing entry when duplicate detected', () => {
       const mockTermsResponse = {
         count: 1,
-        results: [{
-          id: 5,
-          text: 'New Test Term',
-          text_normalized: 'new test term',
-          is_official: false,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }]
+        results: [
+          {
+            id: 5,
+            text: 'New Test Term',
+            text_normalized: 'new test term',
+            is_official: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       const mockEntriesResponse = {
         count: 1,
-        results: [{
-          id: 10,
-          term: mockTermsResponse.results[0],
-          perspective: {
-            id: 1,
-            name: 'Test Perspective',
-            description: '',
+        results: [
+          {
+            id: 10,
+            term: mockTermsResponse.results[0],
+            perspective: {
+              id: 1,
+              name: 'Test Perspective',
+              description: '',
+              created_at: '2024-01-01T00:00:00Z',
+              updated_at: '2024-01-01T00:00:00Z',
+            },
+            is_official: false,
             created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
+            updated_at: '2024-01-01T00:00:00Z',
           },
-          is_official: false,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }]
+        ],
       };
 
       (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
@@ -443,12 +451,12 @@ describe('EntryRouterComponent', () => {
     it('should use term_text parameter when term ID is not available', () => {
       const mockTermsResponse = {
         count: 0,
-        results: []
+        results: [],
       };
 
       const mockEntriesResponse = {
         count: 0,
-        results: []
+        results: [],
       };
 
       (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
@@ -459,26 +467,28 @@ describe('EntryRouterComponent', () => {
       // Verify that getEntries was called with term_text instead of term ID
       expect((mockGlossaryService as any).getEntries).toHaveBeenCalledWith({
         perspective: 1,
-        term_text: 'New Test Term'
+        term_text: 'New Test Term',
       });
     });
 
     it('should use term ID parameter when term exists', () => {
       const mockTermsResponse = {
         count: 1,
-        results: [{
-          id: 5,
-          text: 'New Test Term',
-          text_normalized: 'new test term',
-          is_official: false,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }]
+        results: [
+          {
+            id: 5,
+            text: 'New Test Term',
+            text_normalized: 'new test term',
+            is_official: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       const mockEntriesResponse = {
         count: 0,
-        results: []
+        results: [],
       };
 
       (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
@@ -489,7 +499,7 @@ describe('EntryRouterComponent', () => {
       // Verify that getEntries was called with term ID
       expect((mockGlossaryService as any).getEntries).toHaveBeenCalledWith({
         perspective: 1,
-        term: 5
+        term: 5,
       });
     });
   });

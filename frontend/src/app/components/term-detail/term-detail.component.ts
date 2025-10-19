@@ -1,4 +1,16 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -19,7 +31,15 @@ import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
 @Component({
   selector: 'app-term-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, DefinitionFormComponent, CommentThreadComponent, UserAvatarComponent, PerspectivePillComponent, VersionHistorySidebarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DefinitionFormComponent,
+    CommentThreadComponent,
+    UserAvatarComponent,
+    PerspectivePillComponent,
+    VersionHistorySidebarComponent,
+  ],
   templateUrl: './term-detail.component.html',
   styleUrl: './term-detail.component.scss',
 })
@@ -50,7 +70,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     private glossaryService: GlossaryService,
     private notificationService: NotificationService,
     private entryDetailService: EntryDetailService,
-    private navigationService: NavigationService,
+    private navigationService: NavigationService
   ) {}
 
   ngOnInit(): void {
@@ -88,7 +108,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
         this.shouldLoadEntries = true;
       }
     }
-    
+
     // When entry changes, load comments, draft history and all entries for this term if needed
     if (changes['entry'] && this.entry) {
       this.loadComments();
@@ -107,37 +127,37 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
 
   loadComments(): void {
     if (!this.entry?.id) return;
-    
+
     this.isLoadingComments = true;
     // Use EntryDetailService instead of direct glossaryService call
     this.entryDetailService.loadCommentsWithPositions(this.entry.id).subscribe({
-      next: (comments) => {
+      next: comments => {
         this.comments = comments;
         this.isLoadingComments = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading comments:', error);
         this.isLoadingComments = false;
-      }
+      },
     });
   }
 
   loadDraftHistory(): void {
     if (!this.entry?.id) return;
-    
+
     this.isLoadingDraftHistory = true;
     // Use EntryDetailService instead of direct glossaryService call
     this.entryDetailService.loadDraftHistory(this.entry.id).subscribe({
-      next: (drafts) => {
+      next: drafts => {
         this.draftHistory = drafts;
         // Set the latest draft (first in the list since it's ordered by timestamp desc)
         this.latestDraft = drafts.length > 0 ? drafts[0] : null;
         this.isLoadingDraftHistory = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading draft history:', error);
         this.isLoadingDraftHistory = false;
-      }
+      },
     });
   }
 
@@ -161,9 +181,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
 
   get sanitizedContent(): SafeHtml {
     if (this.entry?.active_draft?.content) {
-      return this.sanitizer.bypassSecurityTrustHtml(
-        this.entry.active_draft.content,
-      );
+      return this.sanitizer.bypassSecurityTrustHtml(this.entry.active_draft.content);
     }
     return '';
   }
@@ -191,46 +209,44 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     this.createNewDraft();
   }
 
-
   private createNewDraft(): void {
     const entryId = this.entry.id;
     const content = this.editContent.trim();
 
     // Use EntryDetailService instead of direct glossaryService call
-    this.entryDetailService.createNewDraft(entryId, content, this.permissionService.currentUser?.id || 0).subscribe({
-      next: (newDraft) => {
-        
-        // Use unified refresh pattern
-        this.entryDetailService.refreshAfterDraftCreated(entryId).subscribe({
-          next: (response: { draftHistory: EntryDraft[], entry: Entry }) => {
-            this.draftHistory = response.draftHistory;
-            this.latestDraft = response.draftHistory[0] || null;
-            if (response.entry) {
-              Object.assign(this.entry, response.entry);
-            }
-            this.editSaved.emit(this.entry);
-            this.notificationService.success(
-              `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`,
-            );
-          },
-          error: (error: any) => {
-            console.error('Failed to refresh:', error);
-            // Still emit success, just log the error
-            this.editSaved.emit(this.entry);
-            this.notificationService.success(
-              `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`,
-            );
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Failed to create draft:', error);
-        this.handleSaveError(error);
-      },
-    });
+    this.entryDetailService
+      .createNewDraft(entryId, content, this.permissionService.currentUser?.id || 0)
+      .subscribe({
+        next: newDraft => {
+          // Use unified refresh pattern
+          this.entryDetailService.refreshAfterDraftCreated(entryId).subscribe({
+            next: (response: { draftHistory: EntryDraft[]; entry: Entry }) => {
+              this.draftHistory = response.draftHistory;
+              this.latestDraft = response.draftHistory[0] || null;
+              if (response.entry) {
+                Object.assign(this.entry, response.entry);
+              }
+              this.editSaved.emit(this.entry);
+              this.notificationService.success(
+                `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`
+              );
+            },
+            error: (error: any) => {
+              console.error('Failed to refresh:', error);
+              // Still emit success, just log the error
+              this.editSaved.emit(this.entry);
+              this.notificationService.success(
+                `Definition for "${this.entry.term.text}" saved successfully! It will be visible once approved.`
+              );
+            },
+          });
+        },
+        error: error => {
+          console.error('Failed to create draft:', error);
+          this.handleSaveError(error);
+        },
+      });
   }
-
-
 
   private handleSaveError(error: any): void {
     // Show specific error message based on the type of error
@@ -242,8 +258,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
       } else if (error.error?.content) {
         errorMessage = error.error.content[0];
       } else {
-        errorMessage =
-          'Invalid data provided. Please check your input and try again.';
+        errorMessage = 'Invalid data provided. Please check your input and try again.';
       }
     } else if (error.status === 403) {
       errorMessage = 'You do not have permission to save definitions.';
@@ -280,22 +295,24 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     }
 
     this.glossaryService.endorseEntry(this.entry.id).subscribe({
-      next: (updatedEntry) => {
+      next: updatedEntry => {
         this.entry = updatedEntry;
-        this.notificationService.success(`Definition for "${this.entry.term.text}" endorsed successfully!`);
+        this.notificationService.success(
+          `Definition for "${this.entry.term.text}" endorsed successfully!`
+        );
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to endorse definition:', error);
         let errorMessage = 'Failed to endorse definition. Please try again.';
-        
+
         if (error.status === 400 && error.error?.detail) {
           errorMessage = error.error.detail;
         } else if (error.status === 403) {
           errorMessage = 'You do not have permission to endorse definitions.';
         }
-        
+
         this.notificationService.error(errorMessage);
-      }
+      },
     });
   }
 
@@ -334,10 +351,10 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
 
   loadAllEntriesForTerm(): void {
     if (!this.entry?.term?.id) return;
-    
+
     // Load all entries for this term
     this.glossaryService.getEntries({ term: this.entry.term.id }).subscribe({
-      next: (response) => {
+      next: response => {
         this.termEntries = response.results;
         // Ensure the current entry is in the list
         const currentEntryInList = this.termEntries.find(e => e.id === this.entry?.id);
@@ -345,11 +362,11 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
           this.termEntries.unshift(this.entry);
         }
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading entries for term:', error);
         // Fallback: just use the current entry
         this.termEntries = [this.entry];
-      }
+      },
     });
   }
 
@@ -381,7 +398,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
 
     // Use native click handler on content area
     document.addEventListener('click', handleLinkClick);
-    
+
     // Clean up on destroy
     this.destroy$.subscribe(() => {
       document.removeEventListener('click', handleLinkClick);

@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../../services/glossary.service';
@@ -31,20 +39,13 @@ import { of, Subject } from 'rxjs';
               class="search-input"
               #searchInput
             />
-            <button
-              *ngIf="searchText"
-              (click)="clearSearch()"
-              class="clear-button"
-              type="button"
-            >
+            <button *ngIf="searchText" (click)="clearSearch()" class="clear-button" type="button">
               ✕
             </button>
           </div>
 
           <!-- Loading Indicator -->
-          <div *ngIf="isLoading" class="loading-indicator">
-            Loading terms...
-          </div>
+          <div *ngIf="isLoading" class="loading-indicator">Loading terms...</div>
 
           <!-- Term List -->
           <div class="term-list" *ngIf="!isLoading">
@@ -59,32 +60,29 @@ import { of, Subject } from 'rxjs';
                 <span class="official-badge">Official</span>
               </div>
             </div>
-            
+
             <!-- Create New Option -->
-            <div
-              *ngIf="showCreateNewOption"
-              class="term-item create-new"
-              (click)="createNewTerm()"
-            >
+            <div *ngIf="showCreateNewOption" class="term-item create-new" (click)="createNewTerm()">
               <div class="term-text">
                 <em>Create new term: "{{ searchText }}"</em>
               </div>
             </div>
-            
+
             <!-- No Results -->
-            <div *ngIf="terms.length === 0 && !showCreateNewOption && !isLoading" class="no-results">
+            <div
+              *ngIf="terms.length === 0 && !showCreateNewOption && !isLoading"
+              class="no-results"
+            >
               <div *ngIf="searchText; else noSearchText">
                 No terms found matching "{{ searchText }}"
               </div>
-              <ng-template #noSearchText>
-                No terms available
-              </ng-template>
+              <ng-template #noSearchText> No terms available </ng-template>
             </div>
 
             <!-- Load More Button -->
             <div *ngIf="hasNextPage && !isLoading" class="load-more-container">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="btn btn-secondary load-more-btn"
                 (click)="loadMoreTerms()"
                 [disabled]="isLoadingMore"
@@ -96,14 +94,12 @@ import { of, Subject } from 'rxjs';
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="onClose()">
-            Cancel
-          </button>
+          <button type="button" class="btn btn-secondary" (click)="onClose()">Cancel</button>
         </div>
       </div>
     </div>
   `,
-  styleUrls: ['./term-picker-modal.component.scss']
+  styleUrls: ['./term-picker-modal.component.scss'],
 })
 export class TermPickerModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
@@ -118,7 +114,7 @@ export class TermPickerModalComponent implements OnInit, OnChanges {
   hasNextPage = false;
   nextPageUrl: string | null = null;
   showCreateNewOption = false;
-  
+
   private searchSubject = new Subject<string>();
   private currentSearch = '';
 
@@ -126,22 +122,24 @@ export class TermPickerModalComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     // Set up debounced search
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(searchTerm => {
-        this.currentSearch = searchTerm;
-        this.isLoading = true;
-        return this.glossaryService.getTerms(searchTerm, 50).pipe(
-          catchError(error => {
-            console.error('Error searching terms:', error);
-            return of({ results: [], count: 0, next: null, previous: null });
-          })
-        );
-      })
-    ).subscribe(response => {
-      this.handleSearchResponse(response);
-    });
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap(searchTerm => {
+          this.currentSearch = searchTerm;
+          this.isLoading = true;
+          return this.glossaryService.getTerms(searchTerm, 50).pipe(
+            catchError(error => {
+              console.error('Error searching terms:', error);
+              return of({ results: [], count: 0, next: null, previous: null });
+            })
+          );
+        })
+      )
+      .subscribe(response => {
+        this.handleSearchResponse(response);
+      });
 
     // Load initial terms
     this.loadInitialTerms();
@@ -163,13 +161,13 @@ export class TermPickerModalComponent implements OnInit, OnChanges {
   private loadInitialTerms(): void {
     this.isLoading = true;
     this.glossaryService.getTerms('', 50).subscribe({
-      next: (response) => {
+      next: response => {
         this.handleSearchResponse(response);
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading initial terms:', error);
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -179,15 +177,15 @@ export class TermPickerModalComponent implements OnInit, OnChanges {
     this.nextPageUrl = response.next;
     this.isLoading = false;
     this.isLoadingMore = false;
-    
+
     // Determine if we should show "create new" option
     this.updateCreateNewOption();
   }
 
   private updateCreateNewOption(): void {
     if (this.currentSearch && this.currentSearch.trim()) {
-      const exactMatch = this.terms.some(term => 
-        term.text.toLowerCase() === this.currentSearch.toLowerCase()
+      const exactMatch = this.terms.some(
+        term => term.text.toLowerCase() === this.currentSearch.toLowerCase()
       );
       this.showCreateNewOption = !exactMatch;
     } else {
@@ -211,16 +209,16 @@ export class TermPickerModalComponent implements OnInit, OnChanges {
 
     this.isLoadingMore = true;
     this.glossaryService.getTermsFromUrl(this.nextPageUrl).subscribe({
-      next: (response) => {
+      next: response => {
         this.terms = [...this.terms, ...response.results];
         this.hasNextPage = !!response.next;
         this.nextPageUrl = response.next;
         this.isLoadingMore = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading more terms:', error);
         this.isLoadingMore = false;
-      }
+      },
     });
   }
 

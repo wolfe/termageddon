@@ -89,7 +89,7 @@ WSGI_APPLICATION = "Termageddon.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Use separate test database when TEST_MODE=true
-if os.getenv('TEST_MODE') == 'true':
+if os.getenv("TEST_MODE") == "true":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",

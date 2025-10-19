@@ -15,12 +15,13 @@ import { Perspective } from '../../../models';
       {{ getDisplayText() }}
     </span>
   `,
-  styleUrls: ['./perspective-pill.component.scss']
+  styleUrls: ['./perspective-pill.component.scss'],
 })
 export class PerspectivePillComponent {
   @Input() perspective!: Perspective;
   @Input() size: 'small' | 'medium' = 'medium';
-  @Input() variant: 'default' | 'selected' | 'unselected' | 'tab-selected' | 'tab-unselected' = 'default';
+  @Input() variant: 'default' | 'selected' | 'unselected' | 'tab-selected' | 'tab-unselected' =
+    'default';
   @Input() clickable: boolean = false;
   @Input() maxLength: number = 0; // 0 means no truncation
   @Output() click = new EventEmitter<void>();
@@ -39,15 +40,13 @@ export class PerspectivePillComponent {
   }
 
   getPillClasses(): string {
-    const sizeClass = this.size === 'small' ? 'perspective-pill--small' : 'perspective-pill--medium';
+    const sizeClass =
+      this.size === 'small' ? 'perspective-pill--small' : 'perspective-pill--medium';
     const variantClass = `perspective-pill--${this.variant}`;
-    const cursorClass = this.clickable ? 'perspective-pill--clickable' : 'perspective-pill--default';
+    const cursorClass = this.clickable
+      ? 'perspective-pill--clickable'
+      : 'perspective-pill--default';
 
-    return [
-      'perspective-pill',
-      sizeClass,
-      variantClass,
-      cursorClass
-    ].join(' ');
+    return ['perspective-pill', sizeClass, variantClass, cursorClass].join(' ');
   }
 }

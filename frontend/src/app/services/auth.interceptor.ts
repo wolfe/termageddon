@@ -22,14 +22,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       },
     });
     return next(clonedReq).pipe(
-      catchError((error) => {
+      catchError(error => {
         // If we get a 401 or 403 error, the token is invalid or expired
         if (error.status === 401 || error.status === 403) {
           authService.clearToken();
           router.navigate(['/login']);
         }
         return throwError(() => error);
-      }),
+      })
     );
   }
 

@@ -11,11 +11,18 @@ import { GlossaryService } from '../../services/glossary.service';
 import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewerSelectorDialogComponent } from '../reviewer-selector-dialog/reviewer-selector-dialog.component';
 import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/master-detail-layout.component';
-import { SearchFilterBarComponent, Perspective, SortOption } from '../shared/search-filter-bar/search-filter-bar.component';
+import {
+  SearchFilterBarComponent,
+  Perspective,
+  SortOption,
+} from '../shared/search-filter-bar/search-filter-bar.component';
 import { DraftListItemComponent } from '../shared/draft-list-item/draft-list-item.component';
 import { DraftDetailPanelComponent } from '../shared/draft-detail-panel/draft-detail-panel.component';
 import { NewEntryDetailPanelComponent } from '../shared/new-entry-detail-panel/new-entry-detail-panel.component';
-import { StatusSummaryComponent, StatusSummaryItem } from '../shared/status-summary/status-summary.component';
+import {
+  StatusSummaryComponent,
+  StatusSummaryItem,
+} from '../shared/status-summary/status-summary.component';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
 import { ConfirmationDialogComponent } from '../shared/confirmation-dialog/confirmation-dialog.component';
 import { ReviewDraft, PaginatedResponse, User, Comment } from '../../models';
@@ -26,8 +33,8 @@ import { getInitials } from '../../utils/user.util';
   selector: 'app-my-drafts',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     ReviewerSelectorDialogComponent,
     MasterDetailLayoutComponent,
     SearchFilterBarComponent,
@@ -36,17 +43,17 @@ import { getInitials } from '../../utils/user.util';
     NewEntryDetailPanelComponent,
     StatusSummaryComponent,
     CreateEntryDialogComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
   ],
   templateUrl: './my-drafts.component.html',
   styleUrls: ['./my-drafts.component.scss'],
 })
 export class MyDraftsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   // Use centralized panel state
   state: PanelState;
-  
+
   // My Drafts-specific state
   isEditMode: boolean = false; // Track edit mode for auto-editing
   showCreateDialog: boolean = false;
@@ -60,13 +67,13 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   selectedPerspectiveId: number | null = null;
   selectedSortBy: string = '-timestamp'; // Default to newest edits first
   pendingPerspectiveId: number | null = null; // Store perspective ID from URL if perspectives not loaded yet
-  
+
   // Sort options
   sortOptions: SortOption[] = [
     { value: '-published_at', label: 'Newest Published' },
     { value: '-timestamp', label: 'Newest Edits' },
     { value: 'entry__term__text_normalized', label: 'Term A-Z' },
-    { value: '-entry__term__text_normalized', label: 'Term Z-A' }
+    { value: '-entry__term__text_normalized', label: 'Term Z-A' },
   ];
 
   constructor(
@@ -86,7 +93,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     this.state.currentUser = this.permissionService.currentUser;
     this.loadPerspectives();
     this.panelCommonService.loadUsers(this.state);
-    
+
     // Subscribe to route parameters first
     this.route.queryParams.subscribe(params => {
       const draftId = params['draftId'];
@@ -94,13 +101,13 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       const editMode = params['edit'] === 'true';
       const newEntryTerm = params['newEntryTerm'];
       const newEntryPerspective = params['newEntryPerspective'];
-      
+
       // Handle filter parameters from URL
       this.handleUrlFilterParams(params);
-      
+
       // Always load the draft list first (for the left panel)
       this.loadMyDrafts();
-      
+
       // Then handle specific draft/entry selection
       if (draftId) {
         this.loadDraftById(+draftId, editMode);
@@ -120,30 +127,31 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   }
 
   loadPerspectives(): void {
-    this.glossaryService.getPerspectives()
+    this.glossaryService
+      .getPerspectives()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (perspectives) => {
+        next: perspectives => {
           this.perspectives = perspectives.results.map((p: any) => ({ id: p.id, name: p.name }));
-          
+
           // Apply pending perspective ID from URL if available
           if (this.pendingPerspectiveId) {
             this.selectedPerspectiveId = this.pendingPerspectiveId;
             this.pendingPerspectiveId = null;
           }
         },
-        error: (error) => {
+        error: error => {
           console.error('Error loading perspectives:', error);
-        }
+        },
       });
   }
 
   loadMyDrafts(): void {
     this.panelCommonService.loadDrafts(
-      { 
+      {
         eligibility: 'own',
         perspectiveId: this.selectedPerspectiveId || undefined,
-        sortBy: this.selectedSortBy
+        sortBy: this.selectedSortBy,
       },
       this.state,
       this.route
@@ -168,12 +176,11 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     }
   }
 
-
   onSearch(): void {
-    this.panelCommonService.onSearch(this.state.searchTerm, this.state, { 
+    this.panelCommonService.onSearch(this.state.searchTerm, this.state, {
       eligibility: 'own',
       perspectiveId: this.selectedPerspectiveId || undefined,
-      sortBy: this.selectedSortBy
+      sortBy: this.selectedSortBy,
     });
   }
 
@@ -194,11 +201,11 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
           }, 100);
         }
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load draft:', error);
         // Navigate back to my-drafts without specific draft
         this.router.navigate(['/my-drafts']);
-      }
+      },
     });
   }
 
@@ -266,7 +273,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
 
   onDeleteDraft(): void {
     if (!this.state.selectedDraft) return;
-    
+
     this.draftToDelete = this.state.selectedDraft;
     this.showDeleteConfirmation = true;
   }
@@ -279,21 +286,21 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
         // Close confirmation dialog
         this.showDeleteConfirmation = false;
         this.draftToDelete = null;
-        
+
         // Use centralized refresh logic
         this.panelCommonService.refreshAfterDelete(this.state, () => {
           this.loadMyDrafts();
         });
-        
+
         // Navigate back to my-drafts without specific draft
         this.router.navigate(['/my-drafts']);
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to delete draft:', error);
         this.showDeleteConfirmation = false;
         this.draftToDelete = null;
         // You might want to show an error notification here
-      }
+      },
     });
   }
 
@@ -308,16 +315,16 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   private handleNewEntry(entryId: number): void {
     this.state.newEntryId = entryId;
     this.state.isNewEntryMode = true;
-    
+
     // Load the entry details to show in the detail panel
     this.glossaryService.getEntry(entryId).subscribe({
-      next: (entry) => {
+      next: entry => {
         this.state.newEntry = entry;
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to load entry:', error);
         this.state.error = 'Failed to load entry details';
-      }
+      },
     });
   }
 
@@ -328,7 +335,7 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     this.state.newEntryTerm = termText;
     this.state.newEntryPerspectiveId = perspectiveId;
     this.state.isNewEntryCreationMode = true;
-    
+
     // Find the perspective object for display
     const perspective = this.perspectives.find(p => p.id === perspectiveId);
     if (perspective) {
@@ -345,7 +352,11 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     }
 
     // Check if we're in new entry creation mode (no entry exists yet)
-    if (this.state.isNewEntryCreationMode && this.state.newEntryTerm && this.state.newEntryPerspectiveId) {
+    if (
+      this.state.isNewEntryCreationMode &&
+      this.state.newEntryTerm &&
+      this.state.newEntryPerspectiveId
+    ) {
       this.createEntryAndDraft(content);
     } else if (this.state.newEntryId) {
       // Existing entry, just create draft
@@ -361,43 +372,41 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
     // First create the entry
     const createEntryRequest = {
       term_text: this.state.newEntryTerm,
-      perspective_id: this.state.newEntryPerspectiveId
+      perspective_id: this.state.newEntryPerspectiveId,
     };
 
     this.glossaryService.lookupOrCreateEntry(createEntryRequest).subscribe({
-      next: (response) => {
+      next: response => {
         if (response.entry_id) {
           // Now create the draft
-          this.entryDetailService.createNewDraft(
-            response.entry_id,
-            content,
-            this.state.currentUser!.id
-          ).subscribe({
-            next: (newDraft) => {
-              
-              // Refresh drafts list to include the new draft
-              this.loadMyDrafts();
-              
-              // Clear new entry creation mode
-              this.state.isNewEntryCreationMode = false;
-              this.state.newEntryTerm = null;
-              this.state.newEntryPerspectiveId = null;
-              this.state.newEntryPerspective = null;
-              
-              // Navigate to the newly created draft
-              this.navigateToNewDraft(newDraft);
-            },
-            error: (error) => {
-              console.error('Failed to create first draft:', error);
-              this.state.error = 'Failed to create draft: ' + (error.error?.detail || error.message);
-            }
-          });
+          this.entryDetailService
+            .createNewDraft(response.entry_id, content, this.state.currentUser!.id)
+            .subscribe({
+              next: newDraft => {
+                // Refresh drafts list to include the new draft
+                this.loadMyDrafts();
+
+                // Clear new entry creation mode
+                this.state.isNewEntryCreationMode = false;
+                this.state.newEntryTerm = null;
+                this.state.newEntryPerspectiveId = null;
+                this.state.newEntryPerspective = null;
+
+                // Navigate to the newly created draft
+                this.navigateToNewDraft(newDraft);
+              },
+              error: error => {
+                console.error('Failed to create first draft:', error);
+                this.state.error =
+                  'Failed to create draft: ' + (error.error?.detail || error.message);
+              },
+            });
         }
       },
-      error: (error) => {
+      error: error => {
         console.error('Failed to create entry:', error);
         this.state.error = 'Failed to create entry: ' + (error.error?.detail || error.message);
-      }
+      },
     });
   }
 
@@ -406,39 +415,36 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.entryDetailService.createNewDraft(
-      this.state.newEntryId,
-      content,
-      this.state.currentUser.id
-    ).subscribe({
-      next: (newDraft) => {
-        
-        // Refresh drafts list to include the new draft
-        this.loadMyDrafts();
-        
-        // Clear new entry mode
-        this.state.isNewEntryMode = false;
-        this.state.newEntryId = null;
-        this.state.newEntry = null;
-        
-        // Navigate to the newly created draft
-        this.navigateToNewDraft(newDraft);
-      },
-      error: (error) => {
-        console.error('Failed to create first draft:', error);
-        this.state.error = 'Failed to create draft: ' + (error.error?.detail || error.message);
-      }
-    });
+    this.entryDetailService
+      .createNewDraft(this.state.newEntryId, content, this.state.currentUser.id)
+      .subscribe({
+        next: newDraft => {
+          // Refresh drafts list to include the new draft
+          this.loadMyDrafts();
+
+          // Clear new entry mode
+          this.state.isNewEntryMode = false;
+          this.state.newEntryId = null;
+          this.state.newEntry = null;
+
+          // Navigate to the newly created draft
+          this.navigateToNewDraft(newDraft);
+        },
+        error: error => {
+          console.error('Failed to create first draft:', error);
+          this.state.error = 'Failed to create draft: ' + (error.error?.detail || error.message);
+        },
+      });
   }
 
   getStatusSummaryItems(): StatusSummaryItem[] {
-    const publishableCount = this.state.filteredDrafts.filter(d => 
-      d.approvers && d.approvers.length > 0
+    const publishableCount = this.state.filteredDrafts.filter(
+      d => d.approvers && d.approvers.length > 0
     ).length;
-    
+
     return [
       { count: publishableCount, label: 'ready to publish', color: '#10b981' },
-      { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' }
+      { count: this.state.filteredDrafts.length, label: 'total drafts', color: '#9ca3af' },
     ];
   }
 
@@ -484,12 +490,13 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   private navigateToNewDraft(newDraft: any): void {
     // Build the draft URL with term and perspective information
     const termText = this.state.newEntryTerm || this.state.newEntry?.term?.text || '';
-    const perspectiveName = this.state.newEntryPerspective?.name || this.state.newEntry?.perspective?.name || '';
-    
+    const perspectiveName =
+      this.state.newEntryPerspective?.name || this.state.newEntry?.perspective?.name || '';
+
     // Use the UrlHelperService to build the proper draft URL
     const draftUrl = this.urlHelper.buildDraftUrl(newDraft.id, undefined, false);
     const queryParams = `?term=${encodeURIComponent(termText)}&perspective=${encodeURIComponent(perspectiveName)}`;
-    
+
     // Navigate to the draft URL
     this.router.navigateByUrl(draftUrl + queryParams);
   }

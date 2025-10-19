@@ -7,7 +7,7 @@ describe('ConfirmationDialogComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ConfirmationDialogComponent]
+      imports: [ConfirmationDialogComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ConfirmationDialogComponent);
@@ -20,17 +20,17 @@ describe('ConfirmationDialogComponent', () => {
 
   it('should emit confirmed event when confirm is clicked', () => {
     spyOn(component.confirmed, 'emit');
-    
+
     component.onConfirm();
-    
+
     expect(component.confirmed.emit).toHaveBeenCalled();
   });
 
   it('should emit cancelled event when cancel is clicked', () => {
     spyOn(component.cancelled, 'emit');
-    
+
     component.onCancel();
-    
+
     expect(component.cancelled.emit).toHaveBeenCalled();
   });
 
@@ -38,11 +38,11 @@ describe('ConfirmationDialogComponent', () => {
     spyOn(component.cancelled, 'emit');
     const mockEvent = {
       target: 'backdrop',
-      currentTarget: 'backdrop'
+      currentTarget: 'backdrop',
     } as any;
-    
+
     component.onBackdropClick(mockEvent);
-    
+
     expect(component.cancelled.emit).toHaveBeenCalled();
   });
 
@@ -50,11 +50,11 @@ describe('ConfirmationDialogComponent', () => {
     spyOn(component.cancelled, 'emit');
     const mockEvent = {
       target: 'content',
-      currentTarget: 'backdrop'
+      currentTarget: 'backdrop',
     } as any;
-    
+
     component.onBackdropClick(mockEvent);
-    
+
     expect(component.cancelled.emit).not.toHaveBeenCalled();
   });
 
@@ -74,7 +74,7 @@ describe('ConfirmationDialogComponent', () => {
       message: 'Custom Message',
       confirmText: 'Yes',
       cancelText: 'No',
-      type: 'danger'
+      type: 'danger',
     };
 
     expect(component.isOpen).toBe(true);

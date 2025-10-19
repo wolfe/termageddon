@@ -240,6 +240,6 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__first_name", "user__last_name")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
     actions = [soft_delete_selected, undelete_selected]
-    
+
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user')
+        return super().get_queryset(request).select_related("user")

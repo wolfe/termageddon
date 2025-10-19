@@ -5,20 +5,19 @@ import { Entry, ReviewDraft } from '../models';
   providedIn: 'root',
 })
 export class UrlHelperService {
-
   /**
    * Build entry URL with optional query parameters
    */
   buildEntryUrl(entryId: number, entry?: Entry, includeQueryParams: boolean = true): string {
     let url = `/entry/${entryId}`;
-    
+
     if (includeQueryParams && entry) {
       const queryParams = this.buildQueryParams(entry);
       if (queryParams) {
         url += `?${queryParams}`;
       }
     }
-    
+
     return url;
   }
 
@@ -27,14 +26,14 @@ export class UrlHelperService {
    */
   buildDraftUrl(draftId: number, draft?: ReviewDraft, includeQueryParams: boolean = true): string {
     let url = `/draft/${draftId}`;
-    
+
     if (includeQueryParams && draft && draft.entry) {
       const queryParams = this.buildQueryParams(draft.entry);
       if (queryParams) {
         url += `?${queryParams}`;
       }
     }
-    
+
     return url;
   }
 
@@ -43,14 +42,14 @@ export class UrlHelperService {
    */
   buildEditEntryUrl(entryId: number, entry?: Entry, includeQueryParams: boolean = true): string {
     let url = `/entry/${entryId}/edit`;
-    
+
     if (includeQueryParams && entry) {
       const queryParams = this.buildQueryParams(entry);
       if (queryParams) {
         url += `?${queryParams}`;
       }
     }
-    
+
     return url;
   }
 
@@ -59,15 +58,15 @@ export class UrlHelperService {
    */
   private buildQueryParams(entry: Entry): string {
     const params: string[] = [];
-    
+
     if (entry.term) {
       params.push(`term=${this.normalizeTermForUrl(entry.term.text)}`);
     }
-    
+
     if (entry.perspective) {
       params.push(`perspective=${this.normalizePerspectiveForUrl(entry.perspective.name)}`);
     }
-    
+
     return params.join('&');
   }
 
@@ -90,15 +89,15 @@ export class UrlHelperService {
    */
   parseQueryParams(queryParams: any): { term?: string; perspective?: string } {
     const result: { term?: string; perspective?: string } = {};
-    
+
     if (queryParams && queryParams['term']) {
       result.term = decodeURIComponent(queryParams['term']);
     }
-    
+
     if (queryParams && queryParams['perspective']) {
       result.perspective = decodeURIComponent(queryParams['perspective']);
     }
-    
+
     return result;
   }
 }

@@ -25,7 +25,6 @@ import { BaseService } from './base.service';
   providedIn: 'root',
 })
 export class GlossaryService extends BaseService {
-
   constructor(http: HttpClient) {
     super(http);
   }
@@ -69,7 +68,11 @@ export class GlossaryService extends BaseService {
     return this.get<Entry>(`/entries/${id}/`);
   }
 
-  createEntry(entry: { term: number; perspective: number; is_official?: boolean }): Observable<Entry> {
+  createEntry(entry: {
+    term: number;
+    perspective: number;
+    is_official?: boolean;
+  }): Observable<Entry> {
     return this.post<Entry>('/entries/', entry);
   }
 
@@ -78,9 +81,7 @@ export class GlossaryService extends BaseService {
   }
 
   // EntryDraft endpoints
-  getEntryDrafts(
-    entryId?: number,
-  ): Observable<PaginatedResponse<EntryDraft>> {
+  getEntryDrafts(entryId?: number): Observable<PaginatedResponse<EntryDraft>> {
     const filters = entryId ? { entry: entryId } : undefined;
     return this.getPaginated<EntryDraft>('/entry-drafts/', filters);
   }
@@ -89,9 +90,7 @@ export class GlossaryService extends BaseService {
     return this.get<EntryDraft>(`/entry-drafts/${id}/`);
   }
 
-  createEntryDraft(
-    draft: CreateEntryDraftRequest,
-  ): Observable<EntryDraft> {
+  createEntryDraft(draft: CreateEntryDraftRequest): Observable<EntryDraft> {
     return this.post<EntryDraft>('/entry-drafts/', draft);
   }
 
@@ -104,10 +103,7 @@ export class GlossaryService extends BaseService {
   }
 
   // Search entries
-  searchEntries(
-    searchTerm: string,
-    filters?: any,
-  ): Observable<PaginatedResponse<Entry>> {
+  searchEntries(searchTerm: string, filters?: any): Observable<PaginatedResponse<Entry>> {
     const searchFilters = { search: searchTerm, ...filters };
     return this.getPaginated<Entry>('/entries/', searchFilters);
   }
@@ -118,34 +114,23 @@ export class GlossaryService extends BaseService {
   }
 
   // EntryDraft update methods
-  updateEntryDraft(
-    draftId: number,
-    data: Partial<EntryDraft>,
-  ): Observable<EntryDraft> {
+  updateEntryDraft(draftId: number, data: Partial<EntryDraft>): Observable<EntryDraft> {
     return this.patch<EntryDraft>(`/entry-drafts/${draftId}/`, data);
   }
 
-  getUnpublishedDraftForEntry(
-    entryId: number,
-    authorId: number,
-  ): Observable<EntryDraft | null> {
+  getUnpublishedDraftForEntry(entryId: number, authorId: number): Observable<EntryDraft | null> {
     const filters = {
       entry: entryId,
       author: authorId,
       is_published: false,
     };
     return this.getPaginated<EntryDraft>('/entry-drafts/', filters).pipe(
-      map((response) =>
-        response.results.length > 0 ? response.results[0] : null,
-      ),
+      map(response => (response.results.length > 0 ? response.results[0] : null))
     );
   }
 
   // Comment endpoints
-  getComments(
-    contentType: number,
-    objectId: number,
-  ): Observable<PaginatedResponse<Comment>> {
+  getComments(contentType: number, objectId: number): Observable<PaginatedResponse<Comment>> {
     const filters = {
       content_type: contentType,
       object_id: objectId,
@@ -228,7 +213,6 @@ export class GlossaryService extends BaseService {
   getDraftById(draftId: number): Observable<ReviewDraft> {
     return this.get<ReviewDraft>(`/entry-drafts/${draftId}/?expand=entry`);
   }
-
 
   /**
    * Get paginated terms from a URL (for load more functionality)

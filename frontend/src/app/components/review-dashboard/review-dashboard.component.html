@@ -47,12 +47,7 @@
     <div *ngIf="state.error && !state.loading" class="three-panel-error">
       <div class="three-panel-error-content">
         <p class="three-panel-error-text">{{ state.error }}</p>
-        <button
-          (click)="loadPendingDrafts()"
-          class="three-panel-error-button"
-        >
-          Retry
-        </button>
+        <button (click)="loadPendingDrafts()" class="three-panel-error-button">Retry</button>
       </div>
     </div>
 

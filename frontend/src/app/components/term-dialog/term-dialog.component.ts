@@ -31,10 +31,10 @@ export class TermDialogComponent implements OnInit {
 
   loadPerspectives() {
     this.glossaryService.getPerspectives().subscribe({
-      next: (response) => {
+      next: response => {
         this.perspectives = response.results;
       },
-      error: (error) => {
+      error: error => {
         console.error('Error loading perspectives:', error);
         this.error = 'Failed to load perspectives';
       },
@@ -63,17 +63,15 @@ export class TermDialogComponent implements OnInit {
     };
 
     this.glossaryService.createTermAndEntry(request).subscribe({
-      next: (entry) => {
+      next: entry => {
         this.isLoading = false;
         this.termCreated.emit(entry);
         this.resetForm();
         this.close.emit();
       },
-      error: (error) => {
+      error: error => {
         this.isLoading = false;
-        this.error =
-          'Failed to create term and entry: ' +
-          (error.error?.detail || error.message);
+        this.error = 'Failed to create term and entry: ' + (error.error?.detail || error.message);
       },
     });
   }

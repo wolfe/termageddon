@@ -1,7 +1,4 @@
-<app-master-detail-layout
-  sidebarTitle="My Drafts"
-  sidebarSubtitle="Your draft definitions"
->
+<app-master-detail-layout sidebarTitle="My Drafts" sidebarSubtitle="Your draft definitions">
   <!-- Sidebar Content -->
   <div sidebar>
     <!-- Status Summary -->
@@ -44,12 +41,7 @@
         <div class="three-panel-error">
           <div class="three-panel-error-content">
             <p class="three-panel-error-text">{{ state.error }}</p>
-            <button
-              (click)="loadMyDrafts()"
-              class="three-panel-error-button"
-            >
-              Retry
-            </button>
+            <button (click)="loadMyDrafts()" class="three-panel-error-button">Retry</button>
           </div>
         </div>
       } @else if (state.filteredDrafts.length === 0) {
@@ -161,7 +153,7 @@
     message: 'Discard this draft and revert to previous?',
     confirmText: 'Discard',
     cancelText: 'Cancel',
-    type: 'warning'
+    type: 'warning',
   }"
   (confirmed)="onDeleteConfirmed()"
   (cancelled)="onDeleteCancelled()"
