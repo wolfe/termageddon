@@ -1,11 +1,21 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from unidecode import unidecode
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
-from unidecode import unidecode
+
+if TYPE_CHECKING:
+    pass  # TYPE_CHECKING imports would go here if needed
 
 
 class SoftDeleteManager(models.Manager):
@@ -25,23 +35,23 @@ class AllObjectsManager(models.Manager):
 class AuditedModel(models.Model):
     """Abstract base model with audit fields and soft delete functionality"""
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
+    created_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="%(class)s_created",
     )
-    updated_by = models.ForeignKey(
+    updated_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="%(class)s_updated",
     )
-    is_deleted = models.BooleanField(default=False)
+    is_deleted: models.BooleanField = models.BooleanField(default=False)
 
     objects = SoftDeleteManager()
     all_objects = AllObjectsManager()
@@ -62,11 +72,11 @@ class AuditedModel(models.Model):
 class Perspective(AuditedModel):
     """Perspective or category for terms (e.g., 'Finance', 'Technology')"""
 
-    name = models.CharField(max_length=100)
-    name_normalized = models.CharField(
+    name: models.CharField = models.CharField(max_length=100)
+    name_normalized: models.CharField = models.CharField(
         max_length=100, editable=False, db_index=True, default=""
     )
-    description = models.TextField(blank=True)
+    description: models.TextField = models.TextField(blank=True)
 
     class Meta:
         db_table = "glossary_perspective"
@@ -97,9 +107,11 @@ class Perspective(AuditedModel):
 class Term(AuditedModel):
     """A term in the glossary - globally unique"""
 
-    text = models.CharField(max_length=255)
-    text_normalized = models.CharField(max_length=255, editable=False, db_index=True)
-    is_official = models.BooleanField(
+    text: models.CharField = models.CharField(max_length=255)
+    text_normalized: models.CharField = models.CharField(
+        max_length=255, editable=False, db_index=True
+    )
+    is_official: models.BooleanField = models.BooleanField(
         default=False, help_text="Indicates term has official status"
     )
 
@@ -130,11 +142,13 @@ class Term(AuditedModel):
 class Entry(AuditedModel):
     """An entry represents a (term, perspective) pair"""
 
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="entries")
-    perspective = models.ForeignKey(
+    term: models.ForeignKey[Term, Term] = models.ForeignKey(
+        Term, on_delete=models.CASCADE, related_name="entries"
+    )
+    perspective: models.ForeignKey[Perspective, Perspective] = models.ForeignKey(
         Perspective, on_delete=models.CASCADE, related_name="entries"
     )
-    is_official = models.BooleanField(
+    is_official: models.BooleanField = models.BooleanField(
         default=False,
         help_text="Indicates this is the official definition for this term in this perspective",
     )
@@ -176,23 +190,29 @@ class Entry(AuditedModel):
 class EntryDraft(AuditedModel):
     """A draft of an entry's definition - requires approval to become active"""
 
-    entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="drafts")
-    content = models.TextField(help_text="Rich HTML content (sanitized on save)")
-    author = models.ForeignKey(
+    entry: models.ForeignKey[Entry, Entry] = models.ForeignKey(
+        Entry, on_delete=models.CASCADE, related_name="drafts"
+    )
+    content: models.TextField = models.TextField(
+        help_text="Rich HTML content (sanitized on save)"
+    )
+    author: models.ForeignKey[User, User] = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="authored_drafts"
     )
-    timestamp = models.DateTimeField(auto_now_add=True)
-    approvers = models.ManyToManyField(User, related_name="approved_drafts", blank=True)
-    requested_reviewers = models.ManyToManyField(
+    timestamp: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    approvers: models.ManyToManyField[User, User] = models.ManyToManyField(
+        User, related_name="approved_drafts", blank=True
+    )
+    requested_reviewers: models.ManyToManyField[User, User] = models.ManyToManyField(
         User,
         related_name="requested_reviews",
         blank=True,
         help_text="Users specifically requested to review this draft",
     )
-    is_published = models.BooleanField(
+    is_published: models.BooleanField = models.BooleanField(
         default=False, help_text="Whether this draft has been published as active"
     )
-    endorsed_by = models.ForeignKey(
+    endorsed_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
@@ -200,9 +220,9 @@ class EntryDraft(AuditedModel):
         related_name="endorsed_drafts",
         help_text="Perspective curator who endorsed this draft",
     )
-    endorsed_at = models.DateTimeField(null=True, blank=True)
-    published_at = models.DateTimeField(null=True, blank=True)
-    replaces_draft = models.ForeignKey(
+    endorsed_at: models.DateTimeField = models.DateTimeField(null=True, blank=True)
+    published_at: models.DateTimeField = models.DateTimeField(null=True, blank=True)
+    replaces_draft: models.ForeignKey[EntryDraft, EntryDraft] = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
         null=True,
@@ -309,20 +329,24 @@ class EntryDraft(AuditedModel):
 class Comment(AuditedModel):
     """Comments can be attached to any model using GenericForeignKey"""
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
+    content_type: models.ForeignKey[ContentType, ContentType] = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE
+    )
+    object_id: models.PositiveIntegerField = models.PositiveIntegerField()
+    content_object: GenericForeignKey = GenericForeignKey("content_type", "object_id")
 
-    parent = models.ForeignKey(
+    parent: models.ForeignKey[Comment, Comment] = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="replies",
     )
-    text = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.PROTECT, related_name="comments")
-    is_resolved = models.BooleanField(default=False)
+    text: models.TextField = models.TextField()
+    author: models.ForeignKey[User, User] = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="comments"
+    )
+    is_resolved: models.BooleanField = models.BooleanField(default=False)
 
     class Meta:
         db_table = "glossary_comment"
@@ -345,11 +369,13 @@ class Comment(AuditedModel):
 class PerspectiveCurator(AuditedModel):
     """Tracks which users are curators for which perspectives"""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="curatorship")
-    perspective = models.ForeignKey(
+    user: models.ForeignKey[User, User] = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="curatorship"
+    )
+    perspective: models.ForeignKey[Perspective, Perspective] = models.ForeignKey(
         Perspective, on_delete=models.CASCADE, related_name="curators"
     )
-    assigned_by = models.ForeignKey(
+    assigned_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
@@ -394,8 +420,10 @@ def is_perspective_curator_for(user, perspective_id):
 class UserProfile(AuditedModel):
     """User profile extending Django's built-in User model"""
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    is_test_user = models.BooleanField(
+    user: models.OneToOneField[User, User] = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="profile"
+    )
+    is_test_user: models.BooleanField = models.BooleanField(
         default=False, help_text="Indicates this is a test user for easy switching"
     )
 
@@ -411,12 +439,10 @@ User.add_to_class("is_perspective_curator_for", is_perspective_curator_for)
 
 
 # Signal to auto-create UserProfile when User is created
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_user_profile(*args, instance, created, **kwargs):
     """Create UserProfile when User is created"""
     if created:
         UserProfile.objects.create(user=instance)

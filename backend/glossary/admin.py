@@ -1,14 +1,14 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
-from django.utils.html import format_html
 from django.db import models
+from django.utils.html import format_html
 
 from glossary.models import (
     Comment,
-    Perspective,
-    PerspectiveCurator,
     Entry,
     EntryDraft,
+    Perspective,
+    PerspectiveCurator,
     Term,
     UserProfile,
 )

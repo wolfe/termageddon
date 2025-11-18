@@ -1,26 +1,26 @@
 import pytest
-from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
+
 from glossary.models import (
     Comment,
-    Perspective,
-    PerspectiveCurator,
     Entry,
     EntryDraft,
-    Term,
+    Perspective,
+    PerspectiveCurator,
 )
 from glossary.tests.conftest import (
+    CommentFactory,
+    EntryDraftFactory,
+    EntryFactory,
     PerspectiveCuratorFactory,
     PerspectiveFactory,
-    EntryFactory,
-    EntryDraftFactory,
     TermFactory,
     UserFactory,
-    CommentFactory,
 )
 
 
@@ -204,8 +204,8 @@ class TestEntryViewSet:
         perspective2 = PerspectiveFactory()
         e1 = EntryFactory(term=term, perspective=perspective1)
         e2 = EntryFactory(term=term, perspective=perspective2)
-        v1 = EntryDraftFactory(entry=e1, is_published=True)
-        v2 = EntryDraftFactory(entry=e2, is_published=True)
+        EntryDraftFactory(entry=e1, is_published=True)
+        EntryDraftFactory(entry=e2, is_published=True)
 
         url = reverse("entry-grouped-by-term")
         response = authenticated_client.get(url)
@@ -251,7 +251,7 @@ class TestEntryViewSet:
         perspective = PerspectiveFactory()
         entry = EntryFactory(perspective=perspective)
         # Create a published version
-        version = EntryDraftFactory(entry=entry, is_published=True)
+        draft = EntryDraftFactory(entry=entry, is_published=True)
         PerspectiveCuratorFactory(
             user=authenticated_client.user, perspective=perspective
         )
@@ -260,15 +260,15 @@ class TestEntryViewSet:
         response = authenticated_client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
-        version.refresh_from_db()
-        assert version.is_endorsed is True
-        assert version.endorsed_by == authenticated_client.user
+        draft.refresh_from_db()
+        assert draft.is_endorsed is True
+        assert draft.endorsed_by == authenticated_client.user
 
     def test_endorse_as_non_curator_fails(self, authenticated_client):
         """Test endorsing entry without being curator fails"""
         entry = EntryFactory()
         # Create a published version
-        version = EntryDraftFactory(entry=entry, is_published=True)
+        EntryDraftFactory(entry=entry, is_published=True)
 
         url = reverse("entry-endorse", kwargs={"pk": entry.id})
         response = authenticated_client.post(url)
@@ -857,7 +857,7 @@ class TestEntryDraftEligibilityFiltering:
     def test_requested_or_approved_with_show_all_false(self, authenticated_client):
         """Test eligibility=requested_or_approved with show_all=false shows only relevant drafts"""
         other_user = UserFactory()
-        reviewer = UserFactory()
+        UserFactory()  # reviewer
 
         # Create drafts with different relationships to the authenticated user
         draft1 = EntryDraftFactory(author=other_user, is_published=False)  # Not related

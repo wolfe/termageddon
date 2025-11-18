@@ -1,15 +1,17 @@
+import html
+
+from rest_framework import serializers
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
-import html
-from rest_framework import serializers
 
 from glossary.models import (
     Comment,
-    Perspective,
-    PerspectiveCurator,
     Entry,
     EntryDraft,
+    Perspective,
+    PerspectiveCurator,
     Term,
 )
 
@@ -98,7 +100,7 @@ class UserSerializer(serializers.ModelSerializer):
         """Get is_test_user from profile"""
         try:
             return obj.profile.is_test_user
-        except:
+        except AttributeError:
             return False
 
 
@@ -132,7 +134,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         """Get is_test_user from profile"""
         try:
             return obj.profile.is_test_user
-        except:
+        except AttributeError:
             return False
 
 

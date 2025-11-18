@@ -1,21 +1,19 @@
 import pytest
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
 from glossary.models import (
-    Comment,
-    Perspective,
-    PerspectiveCurator,
     Entry,
     EntryDraft,
-    Term,
+    Perspective,
 )
 from glossary.tests.conftest import (
     CommentFactory,
+    EntryDraftFactory,
+    EntryFactory,
     PerspectiveCuratorFactory,
     PerspectiveFactory,
-    EntryFactory,
-    EntryDraftFactory,
     TermFactory,
     UserFactory,
 )
@@ -347,7 +345,7 @@ class TestEntryModelEdgeCases:
         user = UserFactory()
 
         # Create multiple published drafts (shouldn't normally happen but test edge case)
-        published_draft1 = EntryDraftFactory(
+        EntryDraftFactory(
             entry=entry, author=user, is_published=True, content="First published"
         )
         published_draft2 = EntryDraftFactory(

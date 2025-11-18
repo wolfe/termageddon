@@ -86,7 +86,7 @@ venv/
 Make API URL environment-aware:
 
 ```typescript
-private apiUrl = environment.production 
+private apiUrl = environment.production
   ? 'https://termageddon-backend.onrender.com/api'
   : 'http://localhost:8000/api';
 ```

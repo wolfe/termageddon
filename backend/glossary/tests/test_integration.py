@@ -1,25 +1,15 @@
 import pytest
-from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from glossary.models import (
-    Comment,
-    Perspective,
-    PerspectiveCurator,
-    Entry,
-    EntryDraft,
-    Term,
-)
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
+
+from glossary.models import Comment, EntryDraft
 from glossary.tests.conftest import (
     PerspectiveCuratorFactory,
     PerspectiveFactory,
-    EntryFactory,
-    EntryDraftFactory,
-    TermFactory,
     UserFactory,
-    CommentFactory,
 )
 
 

@@ -1,14 +1,15 @@
 import factory
-from django.contrib.auth.models import User
 from factory.django import DjangoModelFactory
 from faker import Faker
 
+from django.contrib.auth.models import User
+
 from glossary.models import (
     Comment,
-    Perspective,
-    PerspectiveCurator,
     Entry,
     EntryDraft,
+    Perspective,
+    PerspectiveCurator,
     Term,
 )
 

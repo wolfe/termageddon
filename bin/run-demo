@@ -23,12 +23,12 @@ FRONTEND_PID=""
 # Cleanup function
 cleanup() {
     echo -e "\n${YELLOW}Shutting down servers and cleaning up...${NC}"
-    
+
     # Kill any existing processes on our ports
     echo -e "${BLUE}  → Killing any existing processes on ports 8000 and 4200...${NC}"
     lsof -ti:8000 | xargs kill -9 2>/dev/null || true
     lsof -ti:4200 | xargs kill -9 2>/dev/null || true
-    
+
     # Kill our tracked processes
     if [ ! -z "$BACKEND_PID" ]; then
         kill $BACKEND_PID 2>/dev/null || true
@@ -38,13 +38,13 @@ cleanup() {
         kill $FRONTEND_PID 2>/dev/null || true
         echo -e "${GREEN}✓ Frontend stopped${NC}"
     fi
-    
+
     # Clear Angular dev server cache
     echo -e "${BLUE}  → Clearing Angular dev server cache...${NC}"
     cd "$PROJECT_ROOT/frontend"
     npx ng cache clean 2>/dev/null || true
     rm -rf .angular dist node_modules/.angular 2>/dev/null || true
-    
+
     echo -e "${GREEN}Demo stopped and cleaned up. Goodbye!${NC}"
 }
 
@@ -85,7 +85,7 @@ if [ ! -d "venv" ]; then
     echo -e "${BLUE}  → Creating virtual environment...${NC}"
     python3 -m venv venv
     echo -e "${GREEN}  ✓ Virtual environment created${NC}"
-    
+
     # Install dependencies
     echo -e "${BLUE}  → Installing dependencies...${NC}"
     source venv/bin/activate
@@ -122,13 +122,13 @@ if [ ! -d "venv" ]; then
     echo -e "${BLUE}  → Creating virtual environment...${NC}"
     python3 -m venv venv
     echo -e "${GREEN}  ✓ Virtual environment created${NC}"
-    
+
     # Install dependencies
     echo -e "${BLUE}  → Installing dependencies...${NC}"
     source venv/bin/activate
     pip install -r requirements.txt > /dev/null 2>&1
     echo -e "${GREEN}  ✓ Dependencies installed${NC}"
-    
+
     # Collect static files
     echo -e "${BLUE}  → Collecting static files...${NC}"
     python manage.py collectstatic --noinput > /dev/null 2>&1
@@ -189,12 +189,12 @@ echo -e "${YELLOW}[5/6] Pre-authenticating test user...${NC}"
 get_auth_token() {
     local username="$1"
     local password="$2"
-    
+
     # Login via API and extract token
     local response=$(curl -s -X POST http://localhost:8000/api/auth/login/ \
         -H "Content-Type: application/json" \
         -d "{\"username\": \"$username\", \"password\": \"$password\"}")
-    
+
     # Extract token using jq or sed (fallback)
     if command -v jq &> /dev/null; then
         echo "$response" | jq -r '.token'
@@ -223,11 +223,11 @@ echo -e "${YELLOW}[6/6] Opening Chrome browser...${NC}"
 if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; then
     # macOS - Open windows for demo
     echo -e "${BLUE}  → Opening Chrome windows for demo...${NC}"
-    
+
     # Window 1: Admin interface
     open -a "Google Chrome" "http://localhost:8000/admin/"
     sleep 2
-    
+
     # Window 2: Frontend as Maria Carter (pre-authenticated if token available)
     if [ -n "$MARIA_TOKEN" ]; then
         MARIA_URL="http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true"
@@ -237,7 +237,7 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
         echo -e "${BLUE}  → Opening Maria Carter window (manual login required)...${NC}"
     fi
     open -a "Google Chrome" "$MARIA_URL"
-    
+
     echo -e "${GREEN}  ✓ Chrome opened with 2 windows:${NC}"
     echo -e "    ${BLUE}•${NC} Django Admin (admin/admin)"
     if [ -n "$MARIA_TOKEN" ]; then
@@ -245,7 +245,7 @@ if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; the
     else
         echo -e "    ${BLUE}•${NC} Frontend Window (login as mariacarter/ImABird)"
     fi
-    
+
 elif command -v google-chrome &> /dev/null; then
     # Linux with google-chrome
     google-chrome "http://localhost:8000/admin/" &
@@ -331,4 +331,3 @@ while true; do
     fi
     sleep 5
 done
-

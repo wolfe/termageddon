@@ -1,19 +1,19 @@
 import pytest
 from rest_framework.test import APIRequestFactory
 
-from glossary.models import EntryDraft
+# EntryDraft imported via serializers
 from glossary.serializers import (
-    PerspectiveSerializer,
-    EntryListSerializer,
     EntryDraftListSerializer,
+    EntryListSerializer,
+    PerspectiveSerializer,
     TermSerializer,
     UserDetailSerializer,
 )
 from glossary.tests.conftest import (
+    EntryDraftFactory,
+    EntryFactory,
     PerspectiveCuratorFactory,
     PerspectiveFactory,
-    EntryFactory,
-    EntryDraftFactory,
     TermFactory,
     UserFactory,
 )

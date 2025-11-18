@@ -1,6 +1,3 @@
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.authtoken.models import Token
@@ -9,27 +6,31 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
 from glossary.models import (
     Comment,
-    Perspective,
-    PerspectiveCurator,
     Entry,
     EntryDraft,
+    Perspective,
+    PerspectiveCurator,
     Term,
 )
 from glossary.serializers import (
     CommentCreateSerializer,
     CommentListSerializer,
-    PerspectiveCuratorSerializer,
-    PerspectiveSerializer,
     EntryCreateSerializer,
-    EntryListSerializer,
     EntryDetailSerializer,
-    EntryUpdateSerializer,
     EntryDraftCreateSerializer,
     EntryDraftListSerializer,
     EntryDraftReviewSerializer,
     EntryDraftUpdateSerializer,
+    EntryListSerializer,
+    EntryUpdateSerializer,
+    PerspectiveCuratorSerializer,
+    PerspectiveSerializer,
     TermSerializer,
 )
 
@@ -163,7 +164,10 @@ class EntryViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action in ["create"]:
+        """Select serializer based on action"""
+        if self.action == "retrieve":
+            return EntryDetailSerializer
+        elif self.action in ["create"]:
             return EntryCreateSerializer
         elif self.action in ["update", "partial_update"]:
             return EntryUpdateSerializer
@@ -174,12 +178,6 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-
-    def get_serializer_class(self):
-        """Use EntryDetailSerializer for retrieve operations"""
-        if self.action == "retrieve":
-            return EntryDetailSerializer
-        return super().get_serializer_class()
 
     def retrieve(self, request, *args, **kwargs):
         """Enhanced retrieve to include all draft information"""
@@ -319,7 +317,7 @@ class EntryViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"], url_path="lookup-or-create-entry")
-    def lookup_or_create_entry(self, request):
+    def lookup_or_create_entry(self, request):  # noqa: C901
         """
         Look up or create an entry for term+perspective.
         Returns: {
@@ -410,7 +408,7 @@ class EntryViewSet(viewsets.ModelViewSet):
                     unpublished_draft_author_id = latest_draft.author.id
 
             # Serialize response
-            from glossary.serializers import TermSerializer, PerspectiveSerializer
+            from glossary.serializers import PerspectiveSerializer, TermSerializer
 
             response_data = {
                 "entry_id": entry.id,
@@ -458,7 +456,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         "options",
     ]  # Allow updates
 
-    def get_queryset(self):
+    def get_queryset(self):  # noqa: C901
         """Override queryset to handle expansion and custom filtering"""
         queryset = super().get_queryset()
 
@@ -506,7 +504,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             and self.request.user.is_authenticated
             and not (eligibility == "requested_or_approved" and show_all)
         ):
-            from django.db.models import Q, Count
+            from django.db.models import Count, Q
 
             if eligibility == "can_approve":
                 # Drafts the user can approve (not own, not already approved by them, not fully approved)
@@ -1013,7 +1011,7 @@ def current_user_view(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def switch_test_user_view(request):
+def switch_test_user_view(request):  # noqa: C901
     """Switch to a test user account"""
     from glossary.serializers import UserDetailSerializer
 
@@ -1039,7 +1037,7 @@ def switch_test_user_view(request):
                 {"detail": "Only test users can switch accounts."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-    except:
+    except AttributeError:
         return Response(
             {"detail": "User profile not found."},
             status=status.HTTP_400_BAD_REQUEST,
@@ -1052,7 +1050,7 @@ def switch_test_user_view(request):
                 {"detail": "Can only switch to test users."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-    except:
+    except AttributeError:
         return Response(
             {"detail": "Target user profile not found."},
             status=status.HTTP_400_BAD_REQUEST,
@@ -1061,7 +1059,7 @@ def switch_test_user_view(request):
     # Delete current user's token
     try:
         request.user.auth_token.delete()
-    except:
+    except AttributeError:
         pass  # Token might not exist
 
     # Create/retrieve token for target user
@@ -1107,6 +1105,7 @@ def system_config_view(request):
 def reset_test_database(request):
     """Reset test database - only works in TEST_MODE"""
     import os
+
     from django.core.management import call_command
 
     if os.getenv("TEST_MODE") != "true":

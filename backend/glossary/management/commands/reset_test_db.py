@@ -1,6 +1,5 @@
-from django.core.management.base import BaseCommand
 from django.core.management import call_command
-from django.conf import settings
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
@@ -41,7 +40,8 @@ class Command(BaseCommand):
     def verify_database_state(self):
         """Verify that the database has the expected test data"""
         from django.contrib.auth.models import User
-        from glossary.models import Perspective, Entry, EntryDraft
+
+        from glossary.models import Entry, EntryDraft, Perspective
 
         # Check users
         user_count = User.objects.count()

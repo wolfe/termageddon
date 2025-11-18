@@ -34,7 +34,7 @@ def scrape_glossary(perspective, url):
         response = requests.get(url, headers={'User-Agent': 'TermageddonTestDataGenerator/1.0'})
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
-        
+
         content = soup.find('div', {'class': 'mw-parser-output'})
         if not content:
             print(f"Warning: Could not find content div for {perspective}")
@@ -51,11 +51,11 @@ def scrape_glossary(perspective, url):
                 # then normalize whitespace to clean up any extra spaces.
                 raw_definition = dd.get_text(separator=' ', strip=True)
                 definition = ' '.join(raw_definition.split())
-                
+
                 # Ensure the definition is not empty before adding
                 if definition:
                     data.append({"term": term, "definition": definition})
-        
+
         print(f"Found {len(data)} terms in {perspective} glossary.")
         return data
     except requests.RequestException as e:
@@ -65,7 +65,7 @@ def scrape_glossary(perspective, url):
 def generate_csv():
     """Generates the CSV file from the Wikipedia glossaries."""
     print("Step 1: Scraping all glossaries...")
-    
+
     all_terms = {}
     total_scraped_count = 0
 
@@ -77,7 +77,7 @@ def generate_csv():
             if term not in all_terms:
                 all_terms[term] = []
             all_terms[term].append({'perspective': perspective, 'definition': item['definition']})
-            
+
     print(f"\nStep 1 Complete: Scraped {total_scraped_count} total terms from {len(GLOSSARIES)} glossaries.")
     print(f"Found {len(all_terms)} unique terms.")
 
@@ -94,7 +94,7 @@ def generate_csv():
             entry = definitions[0]
             author = random.choice(AUTHORS)
             unique_entries.append([entry['perspective'], term, entry['definition'], author])
-            
+
     print(f"Step 2 Complete: Found {len(duplicate_entries)} entries for duplicate terms.")
     print(f"Found {len(unique_entries)} entries for unique terms.")
 
@@ -102,28 +102,28 @@ def generate_csv():
     with open(CSV_FILE_PATH, 'w', newline='', encoding='utf-8') as f_csv:
         writer = csv.writer(f_csv)
         writer.writerow(["perspective", "term", "definition", "author"])
-        
+
         # Write all duplicate entries first
         for row in duplicate_entries:
             writer.writerow(row)
-        
+
         total_rows_written = len(duplicate_entries)
-        
+
         # Calculate how many more rows we need
         target_total_rows = len(GLOSSARIES) * TARGET_ROWS_PER_PERSPECTIVE
         remaining_rows_needed = target_total_rows - total_rows_written
-        
+
         if remaining_rows_needed > 0:
             # Shuffle the unique entries to get a random sample
             random.shuffle(unique_entries)
-            
+
             # Add unique entries until the target is met or we run out
             num_to_add = min(remaining_rows_needed, len(unique_entries))
             for i in range(num_to_add):
                 writer.writerow(unique_entries[i])
                 total_rows_written += 1
-                
+
     print(f"\nStep 3 Complete: Successfully generated {total_rows_written} rows in {CSV_FILE_PATH}")
 
 if __name__ == "__main__":
-    generate_csv() 
+    generate_csv()

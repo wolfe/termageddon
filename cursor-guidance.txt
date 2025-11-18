@@ -15,7 +15,3 @@ CODE STYLE:
 
 YOU MAY:
     Feel free to open a web browser to localhost ports as needed to view the frontend.  If the MCP Server isn't usable, please ask me to enable it for you.
-
-
-
-

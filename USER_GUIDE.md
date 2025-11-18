@@ -51,7 +51,7 @@ The sidebar provides several ways to find terms:
 
 #### Filters
 - **Perspective:** Filter by business perspective (e.g., Technology, Finance)
-- **Approval Status:** 
+- **Approval Status:**
   - All: Show all terms
   - Approved: Show only approved definitions
   - Pending: Show terms awaiting approval

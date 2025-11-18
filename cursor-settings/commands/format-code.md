@@ -8,6 +8,7 @@ Format code using the project's formatting tools.
 cd backend
 source venv/bin/activate
 black glossary/ Termageddon/
+isort glossary/ Termageddon/
 
 # Frontend (TypeScript/SCSS/Markdown)
 cd frontend
@@ -20,6 +21,7 @@ npx prettier --write "src/**/*.{ts,html,scss,css,json}" "../**/*.md" --parser ma
 cd backend
 source venv/bin/activate
 black --check glossary/ Termageddon/
+isort --check-only glossary/ Termageddon/
 
 # Frontend
 cd frontend

@@ -20,7 +20,7 @@ module.exports = {
             dark: '#1F2F38',       // Dark blue-gray (same as primary)
           }
         },
-        
+
         // Status colors - semantic mapping for draft states
         status: {
           published: {
@@ -44,7 +44,7 @@ module.exports = {
             dark: 'orange-800'
           }
         },
-        
+
         // Action colors - semantic mapping for buttons and interactions
         action: {
           primary: {
@@ -68,14 +68,14 @@ module.exports = {
             hover: '#4b5563'    // gray-600
           }
         },
-        
+
         // Role colors - semantic mapping for user roles
         role: {
           approver: '#10b981',  // green-500
           reviewer: '#8b5cf6',  // purple-500
           admin: '#eab308'      // yellow-500
         },
-        
+
         // UI element colors - semantic mapping for interface elements
         ui: {
           border: {
@@ -95,7 +95,7 @@ module.exports = {
           },
           focus: '#9A706F'      // termageddon-accent
         },
-        
+
         // Notification colors - semantic mapping for alerts and messages
         notification: {
           success: '#10b981',  // green-500

@@ -1,13 +1,14 @@
-from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
+from django.urls import include, path
 
 from glossary.views import (
     CommentViewSet,
     CustomAuthToken,
-    PerspectiveCuratorViewSet,
-    PerspectiveViewSet,
     EntryDraftViewSet,
     EntryViewSet,
+    PerspectiveCuratorViewSet,
+    PerspectiveViewSet,
     TermViewSet,
     current_user_view,
     logout_view,

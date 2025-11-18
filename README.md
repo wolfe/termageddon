@@ -15,7 +15,7 @@ Launch the complete application with one command:
 This will:
 - Reset and populate the database with 360 test entries
 - Start the Django backend server
-- Start the Angular frontend server  
+- Start the Angular frontend server
 - Open Chrome with both the admin interface and frontend app
 
 **Login:** `admin` / `admin` or `maria.flores` / `maria.flores`

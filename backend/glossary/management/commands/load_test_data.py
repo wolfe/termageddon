@@ -5,10 +5,10 @@ from pathlib import Path
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
-from django.db import transaction, models
+from django.db import models, transaction
 from django.utils import timezone
 
-from glossary.models import Perspective, PerspectiveCurator, Entry, EntryDraft, Term
+from glossary.models import Entry, EntryDraft, Perspective, PerspectiveCurator, Term
 
 # Set random seed for reproducible test data
 RANDOM_SEED = 42
@@ -69,7 +69,7 @@ class Command(BaseCommand):
 
         return selected_approvers
 
-    def create_draft_revision_chain(
+    def create_draft_revision_chain(  # noqa: C901
         self, entry, author, admin, base_timestamp, users, perspective
     ):
         """Create a chain of 2-3 draft revisions for an entry"""
@@ -287,7 +287,7 @@ class Command(BaseCommand):
             help="Path to CSV file (relative to project root)",
         )
 
-    def handle(self, **options):
+    def handle(self, **options):  # noqa: C901
         csv_path = options["csv_path"]
 
         # Navigate up from backend directory to project root
@@ -510,7 +510,7 @@ class Command(BaseCommand):
                         20,
                         25,
                         40,
-                    ],  # More realistic: 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
+                    ],  # 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
                 )[0]
 
                 # Determine if this will be published (affects timestamp)
@@ -569,7 +569,7 @@ class Command(BaseCommand):
             # Generate and display data quality metrics
             metrics = self.generate_data_quality_metrics()
 
-            self.stdout.write(self.style.SUCCESS(f"\nData loading complete!"))
+            self.stdout.write(self.style.SUCCESS("\nData loading complete!"))
             self.stdout.write(self.style.SUCCESS(f"Created {len(users)} users"))
             self.stdout.write(
                 self.style.SUCCESS(f"Created {len(perspectives)} perspectives")
@@ -583,18 +583,30 @@ class Command(BaseCommand):
             )
 
             # Display data quality metrics
-            self.stdout.write(self.style.SUCCESS(f"\nData Quality Metrics:"))
+            self.stdout.write(self.style.SUCCESS("\nData Quality Metrics:"))
             self.stdout.write(
                 self.style.SUCCESS(f"  Total drafts: {metrics['total_drafts']}")
             )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"  Published drafts: {metrics['published_drafts']} ({metrics['published_drafts']/metrics['total_drafts']*100:.1f}%)"
-                )
+            published_pct = (
+                metrics["published_drafts"] / metrics["total_drafts"] * 100
+                if metrics["total_drafts"] > 0
+                else 0
             )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Endorsed drafts: {metrics['endorsed_drafts']} ({metrics['endorsed_drafts']/metrics['total_drafts']*100:.1f}%)"
+                    f"  Published drafts: {metrics['published_drafts']} "
+                    f"({published_pct:.1f}%)"
+                )
+            )
+            endorsed_pct = (
+                metrics["endorsed_drafts"] / metrics["total_drafts"] * 100
+                if metrics["total_drafts"] > 0
+                else 0
+            )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"  Endorsed drafts: {metrics['endorsed_drafts']} "
+                    f"({endorsed_pct:.1f}%)"
                 )
             )
             self.stdout.write(
@@ -616,7 +628,7 @@ class Command(BaseCommand):
                 )
 
             # Approval distribution
-            self.stdout.write(self.style.SUCCESS(f"\nApproval Distribution:"))
+            self.stdout.write(self.style.SUCCESS("\nApproval Distribution:"))
             for key, count in metrics["approval_distribution"].items():
                 percentage = (
                     count / metrics["total_drafts"] * 100
@@ -630,15 +642,12 @@ class Command(BaseCommand):
                 )
 
             # Entry-level validation metrics
-            total_entries = (
-                metrics["entries_with_only_unpublished"]
-                + metrics["entries_with_published"]
-                + metrics["entries_with_both_states"]
-            )
-            self.stdout.write(self.style.SUCCESS(f"\nEntry State Distribution:"))
+            self.stdout.write(self.style.SUCCESS("\nEntry State Distribution:"))
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Entries with only unpublished drafts: {metrics['entries_with_only_unpublished']} (should not appear in glossary)"
+                    f"  Entries with only unpublished drafts: "
+                    f"{metrics['entries_with_only_unpublished']} "
+                    f"(should not appear in glossary)"
                 )
             )
             self.stdout.write(
@@ -648,14 +657,17 @@ class Command(BaseCommand):
             )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Entries with both published and unpublished: {metrics['entries_with_both_states']} (should show published draft in glossary)"
+                    f"  Entries with both published and unpublished: "
+                    f"{metrics['entries_with_both_states']} "
+                    f"(should show published draft in glossary)"
                 )
             )
 
-            self.stdout.write(self.style.SUCCESS(f"\nLogin credentials:"))
-            self.stdout.write(self.style.SUCCESS(f"  Superuser: admin / admin"))
+            self.stdout.write(self.style.SUCCESS("\nLogin credentials:"))
+            self.stdout.write(self.style.SUCCESS("  Superuser: admin / admin"))
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Test users: <username> / ImABird (most users, all but the last one)"
+                    "  Test users: <username> / ImABird "
+                    "(most users, all but the last one)"
                 )
             )

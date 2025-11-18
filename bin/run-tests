@@ -51,18 +51,18 @@ setup_paths() {
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
     FRONTEND_DIR="$PROJECT_ROOT/frontend"
     BACKEND_DIR="$PROJECT_ROOT/backend"
-    
+
     print_status "Script directory: $SCRIPT_DIR"
     print_status "Project root: $PROJECT_ROOT"
     print_status "Frontend directory: $FRONTEND_DIR"
     print_status "Backend directory: $BACKEND_DIR"
-    
+
     # Verify directories exist
     if [ ! -d "$FRONTEND_DIR" ]; then
         print_error "Frontend directory not found at: $FRONTEND_DIR"
         exit 1
     fi
-    
+
     if [ ! -d "$BACKEND_DIR" ]; then
         print_error "Backend directory not found at: $BACKEND_DIR"
         exit 1
@@ -72,24 +72,24 @@ setup_paths() {
 # Function to run frontend tests
 run_frontend_tests() {
     print_status "Running frontend unit tests..."
-    
+
     if [ ! -d "$FRONTEND_DIR" ]; then
         print_error "Frontend directory not found at: $FRONTEND_DIR"
         return 1
     fi
-    
+
     # Store current directory
     local original_dir="$(pwd)"
-    
+
     # Change to frontend directory
     cd "$FRONTEND_DIR"
-    
+
     # Check if node_modules exists
     if [ ! -d "node_modules" ]; then
         print_status "Installing frontend dependencies..."
         npm install
     fi
-    
+
     # Run frontend tests
     print_status "Running Angular unit tests..."
     local frontend_success=true
@@ -99,10 +99,10 @@ run_frontend_tests() {
         print_error "Frontend unit tests failed"
         frontend_success=false
     fi
-    
+
     # Return to original directory
     cd "$original_dir"
-    
+
     if [ "$frontend_success" = true ]; then
         return 0
     else
@@ -113,37 +113,37 @@ run_frontend_tests() {
 # Function to run backend tests
 run_backend_tests() {
     print_status "Running backend tests..."
-    
+
     if [ ! -d "$BACKEND_DIR" ]; then
         print_error "Backend directory not found at: $BACKEND_DIR"
         return 1
     fi
-    
+
     # Store current directory
     local original_dir="$(pwd)"
-    
+
     # Change to backend directory
     cd "$BACKEND_DIR"
-    
+
     # Check if virtual environment exists
     if [ ! -d "venv" ]; then
         print_status "Creating backend virtual environment..."
         python3 -m venv venv
     fi
-    
+
     # Activate virtual environment
     source venv/bin/activate
-    
+
     # Check if requirements are installed
     if ! python -c "import django" 2>/dev/null; then
         print_status "Installing backend dependencies..."
         pip install -r requirements.txt
     fi
-    
+
     # Collect static files for tests
     print_status "Collecting static files..."
     python manage.py collectstatic --noinput > /dev/null 2>&1
-    
+
     # Run backend tests
     print_status "Running backend tests with pytest..."
     local backend_success=true
@@ -153,12 +153,12 @@ run_backend_tests() {
         print_error "Backend tests failed"
         backend_success=false
     fi
-    
+
     deactivate
-    
+
     # Return to original directory
     cd "$original_dir"
-    
+
     if [ "$backend_success" = true ]; then
         return 0
     else
@@ -169,28 +169,28 @@ run_backend_tests() {
 # Function to run dead code detection
 run_dead_code_detection() {
     print_status "Running dead code detection..."
-    
+
     # Track overall success
     local dead_code_success=true
-    
+
     # Store current directory
     local original_dir="$(pwd)"
-    
+
     # Run backend dead code detection
     print_status "Checking backend for dead code with Vulture..."
     if [ -d "$BACKEND_DIR" ]; then
         cd "$BACKEND_DIR"
-        
+
         # Check if virtual environment exists and activate it
         if [ -d "venv" ]; then
             source venv/bin/activate
-            
+
             # Check if vulture is installed
             if ! python -c "import vulture" 2>/dev/null; then
                 print_status "Installing Vulture..."
                 pip install vulture
             fi
-            
+
             # Run vulture
             if vulture --config .vulture-config glossary/; then
                 print_success "Backend dead code check passed"
@@ -198,7 +198,7 @@ run_dead_code_detection() {
                 print_warning "Backend dead code check found issues (see output above)"
                 dead_code_success=false
             fi
-            
+
             deactivate
         else
             print_warning "Backend virtual environment not found, skipping backend dead code check"
@@ -208,24 +208,24 @@ run_dead_code_detection() {
         print_warning "Backend directory not found, skipping backend dead code check"
         dead_code_success=false
     fi
-    
+
     # Run frontend dead code detection
     print_status "Checking frontend for dead code with Knip..."
     if [ -d "$FRONTEND_DIR" ]; then
         cd "$FRONTEND_DIR"
-        
+
         # Check if node_modules exists
         if [ ! -d "node_modules" ]; then
             print_status "Installing frontend dependencies..."
             npm install
         fi
-        
+
         # Check if knip is installed globally
         if ! command_exists knip; then
             print_status "Installing Knip globally..."
             npm install -g knip
         fi
-        
+
         # Run knip
         if knip --config knip.json; then
             print_success "Frontend dead code check passed"
@@ -237,10 +237,10 @@ run_dead_code_detection() {
         print_warning "Frontend directory not found, skipping frontend dead code check"
         dead_code_success=false
     fi
-    
+
     # Return to original directory
     cd "$original_dir"
-    
+
     # Report overall result
     if [ "$dead_code_success" = true ]; then
         print_success "Dead code detection completed successfully! 🧹"
@@ -275,18 +275,18 @@ show_help() {
 main() {
     # Setup absolute paths first
     setup_paths
-    
+
     # Check for required commands
     if ! command_exists node; then
         print_error "Node.js is required but not installed"
         exit 1
     fi
-    
+
     if ! command_exists python3; then
         print_error "Python 3 is required but not installed"
         exit 1
     fi
-    
+
     # Parse arguments
     case "${1:-}" in
         -f|--frontend)
@@ -307,28 +307,28 @@ main() {
             ;;
         "")
             print_status "Running all tests and dead code detection..."
-            
+
             # Track overall success
             local overall_success=true
-            
+
             # Run backend tests first
             if ! run_backend_tests; then
                 print_warning "Backend tests failed, but continuing with frontend tests..."
                 overall_success=false
             fi
-            
+
             # Run frontend tests
             if ! run_frontend_tests; then
                 print_warning "Frontend tests failed..."
                 overall_success=false
             fi
-            
+
             # Run dead code detection
             if ! run_dead_code_detection; then
                 print_warning "Dead code detection found issues..."
                 overall_success=false
             fi
-            
+
             # Report overall result
             if [ "$overall_success" = true ]; then
                 print_success "All tests and dead code detection passed! 🎉"

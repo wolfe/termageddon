@@ -1,26 +1,17 @@
 import pytest
-from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from unittest.mock import patch
 
-from glossary.models import (
-    Comment,
-    Perspective,
-    PerspectiveCurator,
-    Entry,
-    EntryDraft,
-    Term,
-)
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
+
+from glossary.models import Entry
 from glossary.tests.conftest import (
-    PerspectiveCuratorFactory,
-    PerspectiveFactory,
-    EntryFactory,
     EntryDraftFactory,
+    EntryFactory,
+    PerspectiveFactory,
     TermFactory,
     UserFactory,
-    CommentFactory,
 )
 
 
@@ -171,7 +162,7 @@ class TestErrorHandling:
 
     def test_comment_creation_edge_cases(self, authenticated_client):
         """Test edge cases in comment creation"""
-        entry = EntryFactory()
+        EntryFactory()  # Create entry for test
 
         # Test comment on non-existent object
         url = reverse("comment-list")

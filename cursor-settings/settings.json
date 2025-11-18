@@ -1,13 +1,13 @@
 {
   "rules": [
     "django",
-    "angular", 
+    "angular",
     "testing",
     "code-style"
   ],
   "commands": [
     "run-tests",
-    "format-code", 
+    "format-code",
     "start-dev",
     "database-ops",
     "build-prod"
