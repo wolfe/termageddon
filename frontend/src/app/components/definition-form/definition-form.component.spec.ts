@@ -147,12 +147,12 @@ describe('DefinitionFormComponent', () => {
       expect(hasLink).toBeTrue();
     });
 
-    it('should not include custom-link in toolbar container (added dynamically)', () => {
+    it('should include custom-link in toolbar container', () => {
       const toolbarContainer = component.editorConfig.modules.toolbar.container;
       const hasCustomLink = toolbarContainer.some(
         group => Array.isArray(group) && group.includes('custom-link' as any)
       );
-      expect(hasCustomLink).toBeFalse();
+      expect(hasCustomLink).toBeTrue();
     });
   });
 });

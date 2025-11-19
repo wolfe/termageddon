@@ -101,9 +101,10 @@ export class DraftDetailPanelComponent
   }
 
   override ngOnInit(): void {
-    // Set the entry from the draft for base class
     this.entry = this.draft;
-    super.ngOnInit();
+    if (this.draft?.entry?.id) {
+      this.loadDraftHistory();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -120,14 +121,11 @@ export class DraftDetailPanelComponent
       this.entry = this.draft;
       if (this.draft) {
         this.loadDraftHistory();
-        // Reset historical draft selection when switching drafts
         this.selectedHistoricalDraft = null;
       }
     }
 
-    // When isEditMode input changes to true, automatically trigger edit mode
     if (changes['isEditMode'] && this.isEditMode && this.draft && this.canEdit) {
-      // Use a small delay to ensure the component is fully initialized
       setTimeout(() => {
         this.onEdit();
       }, 100);
@@ -221,17 +219,14 @@ export class DraftDetailPanelComponent
   }
 
   override onCommentAdded(comment: Comment): void {
-    super.onCommentAdded(comment);
     this.commentAdded.emit(comment);
   }
 
   override onCommentResolved(comment: Comment): void {
-    super.onCommentResolved(comment);
     this.commentResolved.emit(comment);
   }
 
   override onCommentUnresolved(comment: Comment): void {
-    super.onCommentUnresolved(comment);
     this.commentUnresolved.emit(comment);
   }
 

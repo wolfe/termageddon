@@ -35,7 +35,7 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
           [{ list: 'ordered' }, { list: 'bullet' }],
           [{ indent: '-1' }, { indent: '+1' }],
           [{ align: [] }],
-          ['link'], // custom-link is added dynamically
+          ['link', 'custom-link'],
           ['clean'],
         ],
         handlers: {

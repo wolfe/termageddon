@@ -8,9 +8,15 @@ alwaysApply: true
 
 ## General Style Guidelines
 - No trailing whitespace on lines
-- Use minimal comments that explain complex logic, not obvious code
 - Suggest opportunities to unify code whenever possible
 - Put complex business logic in the backend to keep frontend simple and focused on presentation
+
+### Comments
+- Comment only complex business logic that isn't self-explanatory
+- Avoid obvious comments that restate what the code does - the code should be self-documenting
+- Explain the "why" not the "what"
+- A comment on a single line of code is seldom necessary
+- Prefer clear variable names and code structure over comments
 
 ## Python/Django Style
 - Format using Black (as per user preference)
@@ -25,9 +31,6 @@ alwaysApply: true
 
 ### Comments
 - Use docstrings for functions and classes
-- Add comments for complex business logic
-- Avoid obvious comments like `# increment counter`
-- Explain the "why" not the "what"
 
 ## TypeScript/Angular Style
 - Use meaningful component and service names
@@ -40,9 +43,7 @@ alwaysApply: true
 
 ### Comments
 - Use JSDoc for public methods
-- Comment complex business logic
-- Avoid obvious comments
-- Explain architectural decisions
+- Explain architectural decisions when they're non-obvious
 
 ## SCSS/CSS Style
 - Use semantic naming for colors with centralized mapping
