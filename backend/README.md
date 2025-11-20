@@ -81,7 +81,7 @@ A production-ready glossary management REST API built with Django and Django RES
 
    This creates:
    - Superuser: `admin` / `admin`
-   - 10 test users with credentials: `<username>` / `<username>` (e.g., `maria.flores` / `maria.flores`)
+   - 10 test users with credentials: `<username>` / `ImABird` (e.g., `mariacarter` / `ImABird`)
    - 9 perspectives (Physics, Chemistry, Biology, etc.)
    - 360 entries with approved versions
 
@@ -139,14 +139,14 @@ Authorization: Token <your-token-here>
 # Login
 curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"username": "maria.flores", "password": "maria.flores"}'
+  -d '{"username": "mariacarter", "password": "ImABird"}'
 
 # Response:
 {
   "token": "abc123...",
   "user": {
     "id": 2,
-    "username": "maria.flores",
+    "username": "mariacarter",
     "first_name": "Maria",
     "last_name": "Flores",
     "is_staff": false,
@@ -162,21 +162,27 @@ curl -X GET http://localhost:8000/api/entries/ \
 ## Data Models
 
 ### Perspective
+
 Represents a knowledge area (e.g., Physics, Chemistry)
 
 ### Term
+
 A term in the glossary (globally unique)
 
 ### Entry
+
 A (term, perspective) pair representing a definition
 
 ### EntryVersion
+
 A versioned definition that requires approval
 
 ### Comment
+
 Threaded comments attachable to any model
 
 ### PerspectiveCurator
+
 Tracks which users are curators for which perspectives
 
 ## Permissions
@@ -212,6 +218,7 @@ Access the Django admin at: `http://localhost:8000/admin/`
 Login with superuser credentials: `admin` / `admin`
 
 Features:
+
 - View and manage all models
 - Custom actions: soft delete, undelete, mark as official, bulk approve
 - Inline editing for entry versions
@@ -256,6 +263,7 @@ backend/
 ### Soft Delete
 
 All models inherit from `AuditedModel` which provides soft delete functionality:
+
 - `delete()` - Soft deletes (sets `is_deleted=True`)
 - `hard_delete()` - Permanently deletes
 - `objects` - Excludes soft-deleted records
@@ -264,6 +272,7 @@ All models inherit from `AuditedModel` which provides soft delete functionality:
 ### Approval Workflow
 
 Entry versions require 2 approvals (configurable via `MIN_APPROVALS` in settings):
+
 1. Author creates a version
 2. Two other users approve it
 3. Upon reaching MIN_APPROVALS, the version automatically becomes active
@@ -314,17 +323,21 @@ Nested relationships in read operations:
 ## Troubleshooting
 
 **Issue**: ModuleNotFoundError when running tests
+
 - **Solution**: Ensure you're in the backend directory and virtual environment is activated
 
 **Issue**: Database is locked
+
 - **Solution**: Close any other processes accessing the database, or delete `db.sqlite3` and re-run migrations
 
 **Issue**: CORS errors from frontend
+
 - **Solution**: Ensure `CORS_ALLOWED_ORIGINS` in `settings.py` includes your frontend URL
 
 ## Development
 
 To add new models:
+
 1. Define model in `models.py`
 2. Create serializers in `serializers.py`
 3. Create ViewSet in `views.py`

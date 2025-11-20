@@ -99,24 +99,33 @@ The frontend connects to the Django backend API at `http://localhost:8000/api/`:
 Test with these credentials from the backend:
 
 - **Admin:** admin / admin
-- **Test User:** maria.flores / maria.flores
+- **Test Users (password = ImABird):**
+  - mariacarter (Maria Carter)
+  - bencarter (Ben Carter)
+  - leoschmidt (Leo Schmidt)
+  - kenjitanaka (Kenji Tanaka)
+  - sofiarossi (Sofia Rossi)
+  - aishakhan, samuelgreene, ivanpetrov, chloedubois, evelynreed
 - **Other Users:** <firstname>.<lastname> / <firstname>.<lastname>
 
 ## Features
 
 ### Login Page
+
 - Clean, branded login form
 - Form validation
 - Error messaging
 - Auto-redirect after successful login
 
 ### Main Layout
+
 - Termageddon red header (#E31937)
 - User info display
 - Navigation links
 - Logout button
 
 ### Glossary View (30/70 Split)
+
 - **Left Sidebar (30%):**
   - Search box for terms
   - Perspective filter dropdown
@@ -142,9 +151,9 @@ Test with these credentials from the backend:
 ### Termageddon Brand Colors
 
 ```scss
-$termageddon-red: #E31937;
-$termageddon-blue: #003A70;
-$termageddon-gray-light: #F5F5F5;
+$termageddon-red: #e31937;
+$termageddon-blue: #003a70;
+$termageddon-gray-light: #f5f5f5;
 $termageddon-gray-dark: #333333;
 ```
 
@@ -218,15 +227,19 @@ The following features are designed but not yet implemented:
 ## Troubleshooting
 
 **Issue:** CORS errors when calling API
+
 - **Solution:** Ensure backend CORS settings include `http://localhost:4200`
 
 **Issue:** 401 Unauthorized errors
+
 - **Solution:** Check that token is stored in localStorage and backend is running
 
 **Issue:** Blank screen after login
+
 - **Solution:** Check browser console for errors, ensure backend API is accessible
 
 **Issue:** npm install fails
+
 - **Solution:** Delete `node_modules` and `package-lock.json`, run `npm install` again
 
 ## Scripts

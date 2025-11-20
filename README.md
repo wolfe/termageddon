@@ -13,12 +13,13 @@ Launch the complete application with one command:
 ```
 
 This will:
+
 - Reset and populate the database with 360 test entries
 - Start the Django backend server
 - Start the Angular frontend server
 - Open Chrome with both the admin interface and frontend app
 
-**Login:** `admin` / `admin` or `maria.flores` / `maria.flores`
+**Login:** `admin` / `admin` or `mariacarter` / `ImABird`
 
 ### Option 2: Manual Setup
 
@@ -151,21 +152,22 @@ npm start
 ## 🔐 Test Credentials
 
 - **Admin:** `admin` / `admin`
-- **Test Users (password = username):**
-  - `maria.flores` (Maria Flores)
-  - `ben.carter` (Ben Carter)
-  - `leo.schmidt` (Leo Schmidt)
-  - `evelyn.reed` (Evelyn Reed)
-  - `kenji.tanaka` (Kenji Tanaka)
-  - `sofia.rossi` (Sofia Rossi)
-  - `aisha.khan` (Aisha Khan)
-  - `samuel.greene` (Samuel Greene)
-  - `ivan.petrov` (Ivan Petrov)
-  - `chloe.dubois` (Chloe Dubois)
+- **Test Users (password = ImABird):**
+  - `mariacarter` (Maria Carter) - Perspective Curator: Physics, Chemistry
+  - `bencarter` (Ben Carter) - Perspective Curator: Chemistry, Biology
+  - `leoschmidt` (Leo Schmidt) - Perspective Curator: Biology, Geology
+  - `kenjitanaka` (Kenji Tanaka) - Perspective Curator: Physics, Geology
+  - `sofiarossi` (Sofia Rossi) - Perspective Curator: Computer Science, Graph Theory
+  - `aishakhan` (Aisha Khan) - Regular User
+  - `samuelgreene` (Samuel Greene) - Regular User
+  - `ivanpetrov` (Ivan Petrov) - Regular User
+  - `chloedubois` (Chloe Dubois) - Regular User
+  - `evelynreed` (Evelyn Reed) - Regular User (not a test user, but uses same password)
 
 ## 📊 Test Data
 
 The application includes:
+
 - **360 glossary entries** (Physics, Chemistry, Biology, Computer Science, etc.)
 - **10 test users** with various permissions
 - **9 perspectives** with assigned curators
@@ -199,6 +201,7 @@ npm test
 ## 🛠️ Technology Stack
 
 ### Backend
+
 - Python 3.13
 - Django 5.1.4
 - Django REST Framework 3.16.0
@@ -206,6 +209,7 @@ npm test
 - pytest + factory-boy
 
 ### Frontend
+
 - Node.js 18+
 - Angular 17
 - TypeScript 5.x
@@ -222,6 +226,7 @@ npm test
 ## 🔮 Future Enhancements
 
 See [TODO.md](TODO.md) for detailed roadmap including:
+
 - Advanced search and filtering
 - Bulk operations
 - Export functionality
