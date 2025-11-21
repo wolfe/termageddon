@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
-import { LoginRequest, LoginResponse, User } from '../models';
+import { Observable, map, tap } from 'rxjs';
+import { LoginRequest, LoginResponse, PaginatedResponse, User } from '../models';
 
 @Injectable({
   providedIn: 'root',
@@ -91,6 +91,14 @@ export class AuthService {
   }
 
   getTestUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.API_URL}/users/?test_users_only=true`);
+    return this.http
+      .get<PaginatedResponse<User>>(`${this.API_URL}/users/`, {
+        params: {
+          test_users_only: 'true',
+        },
+      })
+      .pipe(
+        map(response => (Array.isArray(response.results) ? response.results : []))
+      );
   }
 }

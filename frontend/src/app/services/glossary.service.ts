@@ -168,7 +168,26 @@ export class GlossaryService extends BaseService {
     if (page) {
       params.page = page;
     }
-    return this.get<PaginatedResponse<GroupedEntry>>('/entries/grouped-by-term/', params);
+    return this.get<PaginatedResponse<GroupedEntry>>('/entries/grouped-by-term/', params).pipe(
+      map(response => {
+        const rawResults = Array.isArray(response.results)
+          ? response.results
+          : Array.isArray((response as any)?.results?.results)
+            ? (response as any).results.results
+            : [];
+
+        const normalizedResults = rawResults.map((group: GroupedEntry) => ({
+          term: group.term,
+          entries: Array.isArray(group.entries) ? group.entries : [],
+        }));
+
+        return {
+          ...response,
+          results: normalizedResults,
+          count: response.count ?? normalizedResults.length,
+        };
+      })
+    );
   }
 
   /**

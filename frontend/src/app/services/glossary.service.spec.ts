@@ -1,7 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { GlossaryService } from './glossary.service';
-import { Perspective, Entry, EntryDraft, Term, User, PaginatedResponse } from '../models';
+import {
+  Perspective,
+  Entry,
+  EntryDraft,
+  Term,
+  User,
+  PaginatedResponse,
+  GroupedEntry,
+} from '../models';
 
 describe('GlossaryService', () => {
   let service: GlossaryService;
@@ -280,6 +288,74 @@ describe('GlossaryService', () => {
       const req = httpMock.expectOne('http://localhost:8000/api/users/');
       expect(req.request.method).toBe('GET');
       req.flush({ count: mockUsers.length, next: null, previous: null, results: mockUsers });
+    });
+  });
+
+  describe('Grouped entries endpoint', () => {
+    const baseEntry: Entry = {
+      id: 1,
+      term: {
+        id: 1,
+        text: 'Test Term',
+        text_normalized: 'test term',
+        is_official: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+      perspective: {
+        id: 1,
+        name: 'Physics',
+        description: 'Physics terms',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+      is_official: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    it('should normalize paginated grouped results', () => {
+      const mockResponse: PaginatedResponse<GroupedEntry> = {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          {
+            term: baseEntry.term,
+            entries: [baseEntry],
+          },
+        ],
+      };
+
+      service.getEntriesGroupedByTerm({ perspective: '1' }, 2).subscribe(response => {
+        expect(response.results.length).toBe(1);
+        expect(response.results[0].entries.length).toBe(1);
+        expect(response.results[0].entries[0].id).toBe(baseEntry.id);
+      });
+
+      const req = httpMock.expectOne(
+        'http://localhost:8000/api/entries/grouped-by-term/?perspective=1&page=2'
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should fallback to empty array when results are not iterable', () => {
+      const malformedResponse = {
+        count: 0,
+        next: null,
+        previous: null,
+        results: null,
+      };
+
+      service.getEntriesGroupedByTerm().subscribe(response => {
+        expect(response.results).toEqual([]);
+        expect(response.count).toBe(0);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/entries/grouped-by-term/');
+      expect(req.request.method).toBe('GET');
+      req.flush(malformedResponse);
     });
   });
 

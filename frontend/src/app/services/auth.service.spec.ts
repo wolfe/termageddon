@@ -138,4 +138,47 @@ describe('AuthService', () => {
       expect(service.isAuthenticated()).toBe(false);
     });
   });
+
+  describe('getTestUsers', () => {
+    it('should return flattened user list from paginated response', () => {
+      const mockUsers: User[] = [
+        {
+          id: 1,
+          username: 'testuser',
+          first_name: 'Test',
+          last_name: 'User',
+          is_staff: false,
+          perspective_curator_for: [],
+          is_test_user: true,
+        },
+      ];
+
+      service.getTestUsers().subscribe(users => {
+        expect(users).toEqual(mockUsers);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/users/?test_users_only=true');
+      expect(req.request.method).toBe('GET');
+      req.flush({
+        count: mockUsers.length,
+        next: null,
+        previous: null,
+        results: mockUsers,
+      });
+    });
+
+    it('should return empty array when API omits results', () => {
+      service.getTestUsers().subscribe(users => {
+        expect(users).toEqual([]);
+      });
+
+      const req = httpMock.expectOne('http://localhost:8000/api/users/?test_users_only=true');
+      req.flush({
+        count: 0,
+        next: null,
+        previous: null,
+        results: null,
+      });
+    });
+  });
 });
