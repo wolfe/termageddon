@@ -19,12 +19,12 @@
       }
 
       @if (!loading && !error) {
-        @if (draftHistory.length === 0) {
+        @if (draftHistory.length === 0 && !loadingMore) {
           <div class="no-versions">
             <p>No version history available.</p>
           </div>
         } @else {
-          <div class="versions-list">
+          <div class="versions-list" (scroll)="onScroll($event)">
             @for (draft of draftHistory; track draft.id) {
               <div
                 class="version-item"
@@ -72,6 +72,11 @@
                     <small>Replaces previous version</small>
                   </div>
                 }
+              </div>
+            }
+            @if (loadingMore) {
+              <div class="loading-more">
+                <p>Loading more...</p>
               </div>
             }
           </div>

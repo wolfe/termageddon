@@ -54,9 +54,9 @@ export class CreateEntryDialogComponent implements OnInit {
   }
 
   loadUsers() {
-    this.glossaryService.getUsers().subscribe({
-      next: users => {
-        this.users = users;
+    this.glossaryService.getUsers(1).subscribe({
+      next: response => {
+        this.users = response.results;
         this.initializePerspectiveStatuses();
       },
       error: error => {

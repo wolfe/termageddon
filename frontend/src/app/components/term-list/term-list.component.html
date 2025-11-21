@@ -27,12 +27,12 @@
   </div>
 
   <!-- Entry List -->
-  <div class="flex-1 overflow-y-auto">
-    @if (isLoading) {
+  <div #scrollContainer class="flex-1 overflow-y-auto" (scroll)="onScroll()">
+    @if (isLoading && groupedEntries.length === 0) {
       <div class="p-4 text-center text-gray-500">
         <p>Loading...</p>
       </div>
-    } @else if (getGroupedTermsArray().length === 0) {
+    } @else if (getGroupedTermsArray().length === 0 && !isLoading) {
       <div class="p-4 text-center text-gray-500">
         <p>No entries found</p>
       </div>
@@ -76,6 +76,11 @@
               }
             </div>
           </div>
+        </div>
+      }
+      @if (isLoadingMore) {
+        <div class="p-4 text-center text-gray-500">
+          <p>Loading more...</p>
         </div>
       }
     }

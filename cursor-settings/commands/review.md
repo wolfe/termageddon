@@ -8,6 +8,7 @@ A comprehensive checklist for reviewing code changes in the Termageddon project.
 - [ ] No trailing whitespace on lines
 - [ ] No console.log statements left in production code
 - [ ] No hardcoded credentials or sensitive data
+- [ ] For bug fixes: Bug was verified in browser before fix and verified fixed after fix
 
 ## Backend (Django) Review Points
 
@@ -91,6 +92,10 @@ A comprehensive checklist for reviewing code changes in the Termageddon project.
 - [ ] Test data uses factories
 - [ ] Edge cases are tested
 - [ ] Error scenarios are covered
+- [ ] For bug fixes: Manual browser testing performed before and after fix
+- [ ] Bug reproduction steps documented
+- [ ] Fix verified in browser after implementation
+- [ ] Related functionality tested for regressions
 
 ## Documentation
 - [ ] README updated if needed

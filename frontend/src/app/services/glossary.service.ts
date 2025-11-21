@@ -109,8 +109,12 @@ export class GlossaryService extends BaseService {
   }
 
   // User endpoints
-  getUsers(): Observable<User[]> {
-    return this.get<User[]>('/users/');
+  getUsers(page?: number): Observable<PaginatedResponse<User>> {
+    const params: any = {};
+    if (page) {
+      params.page = page;
+    }
+    return this.getPaginated<User>('/users/', params);
   }
 
   // EntryDraft update methods
@@ -157,10 +161,14 @@ export class GlossaryService extends BaseService {
   // New backend enhancement methods
 
   /**
-   * Get entries grouped by term for simplified glossary display
+   * Get entries grouped by term for simplified glossary display (paginated)
    */
-  getEntriesGroupedByTerm(filters?: any): Observable<GroupedEntry[]> {
-    return this.get<GroupedEntry[]>('/entries/grouped-by-term/', filters);
+  getEntriesGroupedByTerm(filters?: any, page?: number): Observable<PaginatedResponse<GroupedEntry>> {
+    const params = { ...filters };
+    if (page) {
+      params.page = page;
+    }
+    return this.get<PaginatedResponse<GroupedEntry>>('/entries/grouped-by-term/', params);
   }
 
   /**
@@ -178,17 +186,25 @@ export class GlossaryService extends BaseService {
   }
 
   /**
-   * Get draft history for an entry
+   * Get draft history for an entry (paginated)
    */
-  getDraftHistory(entryId: number): Observable<EntryDraft[]> {
-    return this.get<EntryDraft[]>(`/entry-drafts/history/?entry=${entryId}`);
+  getDraftHistory(entryId: number, page?: number): Observable<PaginatedResponse<EntryDraft>> {
+    const params: any = { entry: entryId };
+    if (page) {
+      params.page = page;
+    }
+    return this.getPaginated<EntryDraft>(`/entry-drafts/history/`, params);
   }
 
   /**
-   * Get comments with draft position indicators for an entry
+   * Get comments with draft position indicators for an entry (paginated)
    */
-  getCommentsWithDraftPositions(entryId: number): Observable<Comment[]> {
-    return this.get<Comment[]>(`/comments/with_draft_positions/?entry=${entryId}`);
+  getCommentsWithDraftPositions(entryId: number, page?: number): Observable<PaginatedResponse<Comment>> {
+    const params: any = { entry: entryId };
+    if (page) {
+      params.page = page;
+    }
+    return this.getPaginated<Comment>(`/comments/with_draft_positions/`, params);
   }
 
   // New methods for entry enhancement

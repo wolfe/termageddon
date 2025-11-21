@@ -272,13 +272,14 @@ describe('GlossaryService', () => {
         },
       ];
 
-      service.getUsers().subscribe(users => {
-        expect(users).toEqual(mockUsers);
+      service.getUsers().subscribe(response => {
+        expect(response.results).toEqual(mockUsers);
+        expect(response.count).toBe(mockUsers.length);
       });
 
       const req = httpMock.expectOne('http://localhost:8000/api/users/');
       expect(req.request.method).toBe('GET');
-      req.flush(mockUsers);
+      req.flush({ count: mockUsers.length, next: null, previous: null, results: mockUsers });
     });
   });
 
@@ -335,13 +336,14 @@ describe('GlossaryService', () => {
         },
       ];
 
-      service.getDraftHistory(1).subscribe(drafts => {
-        expect(drafts).toEqual(mockDrafts);
+      service.getDraftHistory(1).subscribe(response => {
+        expect(response.results).toEqual(mockDrafts);
+        expect(response.count).toBe(mockDrafts.length);
       });
 
       const req = httpMock.expectOne('http://localhost:8000/api/entry-drafts/history/?entry=1');
       expect(req.request.method).toBe('GET');
-      req.flush(mockDrafts);
+      req.flush({ count: mockDrafts.length, next: null, previous: null, results: mockDrafts });
     });
   });
 
@@ -371,15 +373,16 @@ describe('GlossaryService', () => {
         },
       ];
 
-      service.getCommentsWithDraftPositions(1).subscribe(comments => {
-        expect(comments).toEqual(mockComments);
+      service.getCommentsWithDraftPositions(1).subscribe(response => {
+        expect(response.results).toEqual(mockComments);
+        expect(response.count).toBe(mockComments.length);
       });
 
       const req = httpMock.expectOne(
         'http://localhost:8000/api/comments/with_draft_positions/?entry=1'
       );
       expect(req.request.method).toBe('GET');
-      req.flush(mockComments);
+      req.flush({ count: mockComments.length, next: null, previous: null, results: mockComments });
     });
   });
 

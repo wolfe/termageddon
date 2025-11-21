@@ -1,4 +1,13 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  OnInit,
+  Output,
+  ViewChild,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -82,9 +91,9 @@ export class TermListComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.glossaryService.getUsers().subscribe({
-      next: users => {
-        this.users = users;
+    this.glossaryService.getUsers(1).subscribe({
+      next: response => {
+        this.users = response.results;
       },
       error: error => {
         console.error('Failed to load users:', error);
@@ -92,8 +101,18 @@ export class TermListComponent implements OnInit {
     });
   }
 
-  loadEntries(): void {
-    this.isLoading = true;
+  loadEntries(reset: boolean = true): void {
+    if (reset) {
+      this.isLoading = true;
+      this.currentPage = 1;
+      this.groupedEntries = [];
+      this.entries = [];
+      this.hasNextPage = false;
+      this.nextPageUrl = null;
+    } else {
+      this.isLoadingMore = true;
+    }
+
     const filters: any = {};
 
     if (this.searchControl.value) {
@@ -112,19 +131,69 @@ export class TermListComponent implements OnInit {
       filters.ordering = this.sortControl.value;
     }
 
-    // Use new grouped_by_term endpoint instead of client-side grouping
-    this.glossaryService.getEntriesGroupedByTerm(filters).subscribe({
-      next: groupedEntries => {
-        this.groupedEntries = groupedEntries;
-        // Flatten for backward compatibility
-        this.entries = groupedEntries.flatMap(group => group.entries);
+    if (!reset) {
+      filters.page = this.currentPage + 1;
+    }
+
+    // Use new grouped_by_term endpoint with pagination
+    this.glossaryService.getEntriesGroupedByTerm(filters, reset ? 1 : this.currentPage + 1).subscribe({
+      next: response => {
+        if (reset) {
+          this.groupedEntries = response.results;
+          this.entries = response.results.flatMap(group => group.entries);
+        } else {
+          // Append new results
+          this.groupedEntries = [...this.groupedEntries, ...response.results];
+          this.entries = [...this.entries, ...response.results.flatMap(group => group.entries)];
+        }
+
+        this.hasNextPage = !!response.next;
+        this.nextPageUrl = response.next;
+        if (response.next) {
+          // Extract page number from next URL if available
+          const urlParams = new URLSearchParams(response.next.split('?')[1] || '');
+          const nextPage = urlParams.get('page');
+          if (nextPage) {
+            this.currentPage = parseInt(nextPage, 10) - 1;
+          } else {
+            this.currentPage = reset ? 1 : this.currentPage + 1;
+          }
+        }
+
         this.isLoading = false;
+        this.isLoadingMore = false;
       },
       error: error => {
         console.error('Failed to load entries:', error);
         this.isLoading = false;
+        this.isLoadingMore = false;
       },
     });
+  }
+
+  loadMoreEntries(): void {
+    if (this.hasNextPage && !this.isLoadingMore && !this.isLoading) {
+      this.loadEntries(false);
+    }
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  onScroll(): void {
+    if (!this.scrollContainer) return;
+
+    const element = this.scrollContainer.nativeElement;
+    const scrollTop = element.scrollTop;
+    const scrollHeight = element.scrollHeight;
+    const clientHeight = element.clientHeight;
+
+    // Load more when user scrolls to within 200px of bottom
+    if (scrollTop + clientHeight >= scrollHeight - 200 && this.hasNextPage && !this.isLoadingMore && !this.isLoading) {
+      this.loadMoreEntries();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup if needed
   }
 
   selectEntry(entry: Entry): void {

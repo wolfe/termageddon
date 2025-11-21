@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Observable, of, Subject, takeUntil, switchMap } from 'rxjs';
+import { Observable, of, Subject, takeUntil, switchMap, map } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { ReviewDraft, Comment, User, PaginatedResponse, EntryDraft } from '../models';
 import { UnifiedDraftService, DraftLoadOptions, DraftActionOptions } from './unified-draft.service';
@@ -98,7 +98,10 @@ export class PanelCommonService implements OnDestroy {
     state.isLoadingComments = true;
     return this.entryDetailService
       .loadCommentsWithPositions(entryId)
-      .pipe(takeUntil(this.destroy$));
+      .pipe(
+        map(response => response.results),
+        takeUntil(this.destroy$)
+      );
   }
 
   /**
@@ -172,11 +175,11 @@ export class PanelCommonService implements OnDestroy {
    */
   loadUsers(state: PanelState): void {
     this.unifiedDraftService
-      .getUsers()
+      .getUsers(1)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: users => {
-          state.allUsers = users;
+        next: response => {
+          state.allUsers = response.results;
         },
         error: error => {
           console.error('Error loading users:', error);

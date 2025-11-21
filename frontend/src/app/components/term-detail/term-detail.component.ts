@@ -56,13 +56,18 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   editContent: string = '';
   comments: Comment[] = [];
   isLoadingComments: boolean = false;
-  draftHistory: EntryDraft[] = [];
+  hasNextCommentsPage: boolean = false;
+  commentsNextPage: string | null = null;
+  draftHistory: EntryDraft[] = []; // Initialize to empty array to prevent undefined errors
   latestDraft: EntryDraft | null = null;
   isLoadingDraftHistory: boolean = false;
+  hasNextDraftHistoryPage: boolean = false;
+  draftHistoryNextPage: string | null = null;
   showVersionHistory: boolean = false;
   selectedHistoricalDraft: EntryDraft | null = null;
   private shouldLoadEntries: boolean = true;
   private destroy$ = new Subject<void>();
+  private commentsLoadedForEntryId: number | null = null;
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -74,8 +79,12 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   ) {}
 
   ngOnInit(): void {
-    this.loadComments();
-    this.loadDraftHistory();
+    // Only load comments and draft history if entry is already available
+    // Otherwise, ngOnChanges will handle it when entry is set
+    if (this.entry?.id) {
+      this.loadComments();
+      this.loadDraftHistory();
+    }
     // Only load entries if we don't have any termEntries provided by parent
     if (this.entry && this.termEntries.length === 0 && this.shouldLoadEntries) {
       this.loadAllEntriesForTerm();
@@ -84,6 +93,15 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
 
   ngAfterViewInit(): void {
     this.setupEntryLinkHandlers();
+    // Fallback: ensure comments are loaded if entry is available but comments weren't loaded yet
+    // This handles cases where entry was set before ngOnInit or ngOnChanges didn't fire
+    // Use setTimeout to ensure this runs after all change detection cycles
+    setTimeout(() => {
+      if (this.entry?.id && this.commentsLoadedForEntryId !== this.entry.id && !this.isLoadingComments) {
+        this.loadComments();
+        this.loadDraftHistory();
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -100,6 +118,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
         if (!currentEntryInNewTerm) {
           this.entry = this.termEntries[0];
           this.loadComments();
+          this.loadDraftHistory();
         }
         // If parent provided termEntries, don't load our own
         this.shouldLoadEntries = false;
@@ -109,12 +128,20 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
       }
     }
 
-    // When entry changes, load comments, draft history and all entries for this term if needed
-    if (changes['entry'] && this.entry) {
-      this.loadComments();
-      this.loadDraftHistory();
+    // When entry changes (including initial set), load comments and draft history
+    if (changes['entry']) {
+      const entryChange = changes['entry'];
+      // Load comments and draft history if entry is now available
+      // This handles both initial set and subsequent changes
+      if (this.entry?.id) {
+        // Always load on first change or when entry ID actually changes
+        if (entryChange.isFirstChange() || entryChange.previousValue?.id !== this.entry.id) {
+          this.loadComments();
+          this.loadDraftHistory();
+        }
+      }
       // Only load entries if we don't have any termEntries provided by parent
-      if (this.termEntries.length === 0 && this.shouldLoadEntries) {
+      if (this.entry && this.termEntries.length === 0 && this.shouldLoadEntries) {
         this.loadAllEntriesForTerm();
       }
     }
@@ -123,21 +150,46 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     if (changes['isEditMode'] && this.isEditMode && this.entry) {
       this.initializeEditContent();
     }
+
+    // After processing all changes, ensure comments are loaded if entry is available
+    // This is a safety net in case entry was set but ngOnChanges didn't fire properly
+    if (this.entry?.id && this.commentsLoadedForEntryId !== this.entry.id && !this.isLoadingComments) {
+      // Use setTimeout to ensure this runs after all change detection
+      setTimeout(() => {
+        if (this.entry?.id && this.commentsLoadedForEntryId !== this.entry.id && !this.isLoadingComments) {
+          this.loadComments();
+          this.loadDraftHistory();
+        }
+      }, 0);
+    }
   }
 
   loadComments(): void {
     if (!this.entry?.id) return;
 
+    // Don't reload if we're already loading or have already loaded comments for this entry
+    // Only skip if we've successfully loaded comments (not just attempted)
+    if (this.isLoadingComments) {
+      return;
+    }
+    if (this.commentsLoadedForEntryId === this.entry.id) {
+      return;
+    }
+
     this.isLoadingComments = true;
     // Use EntryDetailService instead of direct glossaryService call
     this.entryDetailService.loadCommentsWithPositions(this.entry.id).subscribe({
-      next: comments => {
-        this.comments = comments;
+      next: response => {
+        this.comments = response.results;
+        this.commentsLoadedForEntryId = this.entry.id;
+        this.hasNextCommentsPage = !!response.next;
+        this.commentsNextPage = response.next;
         this.isLoadingComments = false;
       },
       error: error => {
         console.error('Error loading comments:', error);
         this.isLoadingComments = false;
+        // Don't set commentsLoadedForEntryId on error so we can retry
       },
     });
   }
@@ -148,10 +200,12 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     this.isLoadingDraftHistory = true;
     // Use EntryDetailService instead of direct glossaryService call
     this.entryDetailService.loadDraftHistory(this.entry.id).subscribe({
-      next: drafts => {
-        this.draftHistory = drafts;
+      next: response => {
+        this.draftHistory = response.results;
         // Set the latest draft (first in the list since it's ordered by timestamp desc)
-        this.latestDraft = drafts.length > 0 ? drafts[0] : null;
+        this.latestDraft = response.results.length > 0 ? response.results[0] : null;
+        this.hasNextDraftHistoryPage = !!response.next;
+        this.draftHistoryNextPage = response.next;
         this.isLoadingDraftHistory = false;
       },
       error: error => {
@@ -320,7 +374,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   getUserDisplayName = getUserDisplayName;
 
   hasUnpublishedDrafts(): boolean {
-    return this.draftHistory.some(draft => !draft.is_published);
+    return this.draftHistory?.some(draft => !draft.is_published) ?? false;
   }
 
   getPublishedDraft(): EntryDraft | null {

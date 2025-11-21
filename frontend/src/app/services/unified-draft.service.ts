@@ -121,15 +121,17 @@ export class UnifiedDraftService {
   /**
    * Get users for reviewer selection
    */
-  getUsers(): Observable<User[]> {
-    return this.glossaryService.getUsers();
+  getUsers(page?: number): Observable<PaginatedResponse<User>> {
+    return this.glossaryService.getUsers(page);
   }
 
   /**
    * Get draft history for an entry
    */
   getDraftHistory(entryId: number): Observable<EntryDraft[]> {
-    return this.glossaryService.getDraftHistory(entryId);
+    return this.glossaryService.getDraftHistory(entryId).pipe(
+      map(response => response.results)
+    );
   }
 
   /**

@@ -30,8 +30,14 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
   filteredEntries: GroupedEntry[] = [];
   searchTerm = '';
   loading = false;
+  loadingMore = false;
   error: string | null = null;
   selectedEntry: Entry | null = null;
+
+  // Pagination state
+  currentPage: number = 1;
+  hasNextPage: boolean = false;
+  nextPageUrl: string | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -54,27 +60,79 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
     this.destroy$.complete();
   }
 
-  loadEntries() {
-    this.loading = true;
+  loadEntries(reset: boolean = true) {
+    if (reset) {
+      this.loading = true;
+      this.currentPage = 1;
+      this.groupedEntries = [];
+      this.filteredEntries = [];
+      this.hasNextPage = false;
+      this.nextPageUrl = null;
+      this.searchTerm = '';
+      this.selectedEntry = null;
+    } else {
+      this.loadingMore = true;
+    }
+
     this.error = null;
-    this.searchTerm = '';
-    this.selectedEntry = null;
 
     this.glossaryService
-      .getEntriesGroupedByTerm()
+      .getEntriesGroupedByTerm({}, reset ? 1 : this.currentPage + 1)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (groupedEntries: GroupedEntry[]) => {
-          this.groupedEntries = groupedEntries;
-          this.filteredEntries = [...groupedEntries];
+        next: (response) => {
+          if (reset) {
+            this.groupedEntries = response.results;
+            this.filteredEntries = [...response.results];
+          } else {
+            // Append new results
+            this.groupedEntries = [...this.groupedEntries, ...response.results];
+            this.filteredEntries = [...this.filteredEntries, ...response.results];
+          }
+
+          this.hasNextPage = !!response.next;
+          this.nextPageUrl = response.next;
+          if (response.next) {
+            // Extract page number from next URL if available
+            const urlParams = new URLSearchParams(response.next.split('?')[1] || '');
+            const nextPage = urlParams.get('page');
+            if (nextPage) {
+              this.currentPage = parseInt(nextPage, 10) - 1;
+            } else {
+              this.currentPage = reset ? 1 : this.currentPage + 1;
+            }
+          }
+
           this.loading = false;
+          this.loadingMore = false;
         },
         error: (error: any) => {
           console.error('Error loading entries:', error);
           this.error = 'Failed to load entries';
           this.loading = false;
+          this.loadingMore = false;
         },
       });
+  }
+
+  loadMoreEntries() {
+    if (this.hasNextPage && !this.loadingMore && !this.loading) {
+      this.loadEntries(false);
+    }
+  }
+
+  onScroll(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    const scrollTop = target.scrollTop;
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+
+    // Load more when user scrolls to within 200px of bottom
+    if (scrollTop + clientHeight >= scrollHeight - 200 && this.hasNextPage && !this.loadingMore && !this.loading) {
+      this.loadMoreEntries();
+    }
   }
 
   onSearchChange() {

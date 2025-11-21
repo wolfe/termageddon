@@ -37,9 +37,9 @@ describe('TermDetailComponent', () => {
     const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
     const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getEntries', 'endorseEntry']);
 
-    // Mock the service methods to return observables
-    entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
-    entryDetailSpy.loadDraftHistory.and.returnValue(of([]));
+    // Mock the service methods to return observables (paginated responses)
+    entryDetailSpy.loadCommentsWithPositions.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    entryDetailSpy.loadDraftHistory.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     glossarySpy.getEntries.and.returnValue(of({ results: [] }));
 
     await TestBed.configureTestingModule({

@@ -103,12 +103,21 @@ export class DraftDetailPanelComponent
   override ngOnInit(): void {
     this.entry = this.draft;
     if (this.draft?.entry?.id) {
-      this.loadDraftHistory();
+      this.loadEntryData();
     }
   }
 
   ngAfterViewInit(): void {
     this.setupEntryLinkHandlers();
+    // Fallback: ensure comments are loaded if draft is available but comments weren't loaded yet
+    // This handles cases where draft was set before ngOnInit or ngOnChanges didn't fire
+    // Use setTimeout to ensure this runs after all change detection cycles
+    setTimeout(() => {
+      const entryId = this.draft?.entry?.id;
+      if (entryId && this.commentsLoadedForEntryId !== entryId && !this.isLoadingComments) {
+        this.loadEntryData();
+      }
+    }, 0);
   }
 
   override ngOnDestroy(): void {
@@ -119,8 +128,13 @@ export class DraftDetailPanelComponent
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['draft']) {
       this.entry = this.draft;
-      if (this.draft) {
-        this.loadDraftHistory();
+      if (this.draft?.entry?.id) {
+        // Load comments and draft history when draft changes
+        // This handles both initial set and subsequent changes
+        const draftChange = changes['draft'];
+        if (draftChange.isFirstChange() || draftChange.previousValue?.entry?.id !== this.draft.entry.id) {
+          this.loadEntryData();
+        }
         this.selectedHistoricalDraft = null;
       }
     }
@@ -130,15 +144,29 @@ export class DraftDetailPanelComponent
         this.onEdit();
       }, 100);
     }
+
+    // After processing all changes, ensure comments are loaded if draft is available
+    // This is a safety net in case draft was set but ngOnChanges didn't fire properly
+    const entryId = this.draft?.entry?.id;
+    if (entryId && this.commentsLoadedForEntryId !== entryId && !this.isLoadingComments) {
+      // Use setTimeout to ensure this runs after all change detection
+      setTimeout(() => {
+        if (this.draft?.entry?.id && this.commentsLoadedForEntryId !== this.draft.entry.id && !this.isLoadingComments) {
+          this.loadEntryData();
+        }
+      }, 0);
+    }
   }
 
   override loadDraftHistory(): void {
     if (!this.draft?.entry?.id) return;
 
     this.entryDetailService.loadDraftHistory(this.draft.entry.id).subscribe({
-      next: drafts => {
-        this.draftHistory = drafts;
-        this.latestDraft = drafts.length > 0 ? drafts[0] : null;
+      next: response => {
+        this.draftHistory = response.results;
+        this.latestDraft = response.results.length > 0 ? response.results[0] : null;
+        this.hasNextDraftHistoryPage = !!response.next;
+        this.draftHistoryNextPage = response.next;
       },
       error: error => {
         console.error('Error loading draft history:', error);
@@ -193,9 +221,10 @@ export class DraftDetailPanelComponent
       return;
     }
 
+    const entryId = this.draft.entry.id;
     this.entryDetailService
       .createNewDraft(
-        this.draft.entry.id,
+        entryId,
         this.editContent,
         this.permissionService.currentUser?.id || 0
       )
@@ -206,6 +235,20 @@ export class DraftDetailPanelComponent
 
           this.isEditMode = false;
           this.editContent = '';
+
+          // Update the draft to the new one so the parent can see it
+          // The parent will reload the list and should select the newest draft
+          if (this.draft) {
+            // Update the draft with the new draft data
+            Object.assign(this.draft, {
+              id: newDraft.id,
+              timestamp: newDraft.timestamp,
+              content: newDraft.content,
+              is_approved: newDraft.is_approved,
+              approval_count: newDraft.approval_count,
+            });
+          }
+
           this.editSaved.emit();
           this.notificationService.success(
             `Definition for "${this.draft?.entry?.term?.text}" saved successfully! It will be visible once approved.`

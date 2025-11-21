@@ -29,10 +29,15 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   editContent: string = '';
   comments: Comment[] = [];
   isLoadingComments: boolean = false;
+  hasNextCommentsPage: boolean = false;
+  commentsNextPage: string | null = null;
   draftHistory: EntryDraft[] = [];
   isLoadingDraftHistory: boolean = false;
+  hasNextDraftHistoryPage: boolean = false;
+  draftHistoryNextPage: string | null = null;
   selectedHistoricalDraft: EntryDraft | null = null;
   showVersionHistorySidebar: boolean = false;
+  protected commentsLoadedForEntryId: number | null = null;
 
   constructor(
     protected entryDetailService: EntryDetailService,
@@ -64,36 +69,62 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load comments for the entry
+   * Load comments for the entry (with pagination support)
    */
-  protected loadComments(entryId: number): void {
+  protected loadComments(entryId: number, page?: number, append: boolean = false): void {
+    // Don't reload if we're already loading or have already loaded comments for this entry
+    // Only skip if we've successfully loaded comments (not just attempted) and not appending
+    if (this.isLoadingComments) {
+      return;
+    }
+    if (!append && this.commentsLoadedForEntryId === entryId) {
+      return;
+    }
+
     this.isLoadingComments = true;
     this.entryDetailService
-      .loadCommentsWithPositions(entryId)
+      .loadCommentsWithPositions(entryId, page)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: comments => {
-          this.comments = comments;
+        next: response => {
+          if (append) {
+            this.comments = [...this.comments, ...response.results];
+          } else {
+            this.comments = response.results;
+            this.commentsLoadedForEntryId = entryId;
+          }
+          this.hasNextCommentsPage = !!response.next;
+          this.commentsNextPage = response.next;
           this.isLoadingComments = false;
         },
         error: error => {
           console.error('Error loading comments:', error);
           this.isLoadingComments = false;
+          if (!append) {
+            // Don't set commentsLoadedForEntryId on error so we can retry
+            this.commentsLoadedForEntryId = null;
+          }
         },
       });
   }
 
   /**
-   * Load draft history for the entry
+   * Load draft history for the entry (with pagination support)
    */
-  protected loadDraftHistory(entryId: number): void {
+  protected loadDraftHistory(entryId: number, page?: number, append: boolean = false): void {
     this.isLoadingDraftHistory = true;
     this.entryDetailService
-      .loadDraftHistory(entryId)
+      .loadDraftHistory(entryId, page)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: drafts => {
-          this.draftHistory = drafts;
+        next: response => {
+          if (append) {
+            this.draftHistory = [...this.draftHistory, ...response.results];
+          } else {
+            this.draftHistory = response.results;
+          }
+          this.hasNextDraftHistoryPage = !!response.next;
+          this.draftHistoryNextPage = response.next;
           this.isLoadingDraftHistory = false;
         },
         error: error => {

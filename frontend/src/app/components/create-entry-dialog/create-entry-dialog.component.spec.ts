@@ -49,7 +49,7 @@ describe('CreateEntryDialogComponent', () => {
     mockGlossaryService.getPerspectives.and.returnValue(
       of({ count: 0, next: null, previous: null, results: [] })
     );
-    mockGlossaryService.getUsers.and.returnValue(of([]));
+    mockGlossaryService.getUsers.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     mockAuthService.getCurrentUser.and.returnValue(
       of({
         id: 1,
@@ -338,7 +338,7 @@ describe('CreateEntryDialogComponent', () => {
     ];
 
     mockGlossaryService.getPerspectives.and.returnValue(of(mockPerspectives));
-    mockGlossaryService.getUsers.and.returnValue(of(mockUsers));
+    mockGlossaryService.getUsers.and.returnValue(of({ count: mockUsers.length, next: null, previous: null, results: mockUsers }));
 
     component.ngOnInit();
 

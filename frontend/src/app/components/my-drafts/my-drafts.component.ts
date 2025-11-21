@@ -262,8 +262,24 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   }
 
   onEditSaved(): void {
+    const entryId = this.state.selectedDraft?.entry?.id;
     this.panelCommonService.refreshAfterEdit(this.state, () => {
       this.loadMyDrafts();
+      // After drafts reload, select the newly created draft (newest for this entry)
+      if (entryId) {
+        // Use setTimeout to ensure loadMyDrafts completes first
+        setTimeout(() => {
+          // Find the newest draft for this entry (should be first if sorted by timestamp)
+          const entryDrafts = this.state.filteredDrafts.filter(
+            d => d.entry?.id === entryId
+          );
+          if (entryDrafts.length > 0) {
+            // Select the newest draft (first in list when sorted by -timestamp)
+            const newestDraft = entryDrafts[0];
+            this.selectDraft(newestDraft);
+          }
+        }, 200);
+      }
     });
   }
 

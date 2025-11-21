@@ -230,7 +230,9 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="grouped-by-term")
     def grouped_by_term(self, request):
-        """Get entries grouped by term for simplified frontend display"""
+        """Get entries grouped by term for simplified frontend display (paginated)"""
+        from rest_framework.pagination import PageNumberPagination
+
         # Start with base queryset (no published filter yet)
         queryset = Entry.objects.select_related("term", "perspective")
 
@@ -262,7 +264,11 @@ class EntryViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(term_data["entries"], many=True)
             result.append({"term": term_data["term"], "entries": serializer.data})
 
-        return Response(result)
+        # Apply pagination to the grouped results
+        paginator = PageNumberPagination()
+        paginator.page_size = 50  # Same as default PAGE_SIZE
+        paginated_result = paginator.paginate_queryset(result, request)
+        return paginator.get_paginated_response(paginated_result)
 
     @action(detail=False, methods=["post"], url_path="create-with-term")
     def create_with_term(self, request):
@@ -753,7 +759,9 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def history(self, request):
-        """Get draft history for an entry"""
+        """Get draft history for an entry (paginated)"""
+        from rest_framework.pagination import PageNumberPagination
+
         entry_id = request.query_params.get("entry")
         if not entry_id:
             return Response(
@@ -769,8 +777,12 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 .order_by("-timestamp")
             )
 
-            serializer = self.get_serializer(drafts, many=True)
-            return Response(serializer.data)
+            # Apply pagination
+            paginator = PageNumberPagination()
+            paginator.page_size = 50
+            paginated_drafts = paginator.paginate_queryset(drafts, request)
+            serializer = self.get_serializer(paginated_drafts, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             return Response(
                 {"detail": f"Failed to get draft history: {str(e)}"},
@@ -873,9 +885,104 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(comment)
         return Response(serializer.data)
 
+    def _get_relevant_drafts(self, entry_id):
+        """Get drafts relevant for comment loading (after last published or all if none published)"""
+        drafts = EntryDraft.objects.filter(
+            entry_id=entry_id, is_deleted=False
+        ).order_by("-timestamp")
+
+        last_published_draft = drafts.filter(is_published=True).first()
+        if last_published_draft:
+            return drafts.filter(timestamp__gte=last_published_draft.timestamp)
+        return drafts
+
+    def _get_comment_ids(self, entry_id, relevant_drafts):
+        """Get comment IDs from both drafts and entry"""
+        from django.contrib.contenttypes.models import ContentType
+
+        draft_content_type = ContentType.objects.get_for_model(EntryDraft)
+        entry_content_type = ContentType.objects.get_for_model(Entry)
+
+        # Get comments on drafts
+        draft_comment_ids = list(
+            Comment.objects.filter(
+                content_type=draft_content_type,
+                object_id__in=relevant_drafts.values_list("id", flat=True),
+                is_resolved=False,
+                parent__isnull=True,
+            ).values_list("id", flat=True)
+        )
+
+        # Get comments on the entry itself
+        entry_comment_ids = list(
+            Comment.objects.filter(
+                content_type=entry_content_type,
+                object_id=entry_id,
+                is_resolved=False,
+                parent__isnull=True,
+            ).values_list("id", flat=True)
+        )
+
+        return (
+            draft_comment_ids + entry_comment_ids,
+            draft_content_type,
+            entry_content_type,
+        )
+
+    def _calculate_draft_comment_position(
+        self, comment, comment_draft, drafts, latest_draft
+    ):
+        """Calculate draft position for a comment on a draft"""
+        if latest_draft and comment_draft.id == latest_draft.id:
+            return "current draft"
+        if comment_draft.is_published:
+            return "published"
+
+        # Count how many drafts ago this was
+        drafts_after = drafts.filter(timestamp__gt=comment_draft.timestamp).count()
+        if drafts_after == 0:
+            return "current draft"
+        return f"{drafts_after} drafts ago"
+
+    def _calculate_entry_comment_position(self, latest_draft):
+        """Calculate draft position for a comment on an entry"""
+        if not latest_draft:
+            return "entry", None, None
+        if latest_draft.is_published:
+            return "published", latest_draft.id, latest_draft.timestamp
+        return "current draft", latest_draft.id, latest_draft.timestamp
+
+    def _process_draft_comment(self, comment, drafts, latest_draft, draft_content_type):
+        """Process a comment that's on a draft"""
+        comment_draft = drafts.filter(id=comment.object_id).first()
+        if not comment_draft:
+            return None
+
+        draft_position = self._calculate_draft_comment_position(
+            comment, comment_draft, drafts, latest_draft
+        )
+        comment_data = self.get_serializer(comment).data
+        comment_data["draft_position"] = draft_position
+        comment_data["draft_id"] = comment_draft.id
+        comment_data["draft_timestamp"] = comment_draft.timestamp
+        return comment_data
+
+    def _process_entry_comment(self, comment, latest_draft):
+        """Process a comment that's on an entry"""
+        draft_position, draft_id, draft_timestamp = (
+            self._calculate_entry_comment_position(latest_draft)
+        )
+        comment_data = self.get_serializer(comment).data
+        comment_data["draft_position"] = draft_position
+        comment_data["draft_id"] = draft_id
+        comment_data["draft_timestamp"] = draft_timestamp
+        return comment_data
+
     @action(detail=False, methods=["get"])
     def with_draft_positions(self, request):
-        """Get comments with draft position indicators for an entry"""
+        """Get comments with draft position indicators for an entry (paginated)"""
+        from rest_framework.pagination import PageNumberPagination
+
         entry_id = request.query_params.get("entry")
         if not entry_id:
             return Response(
@@ -884,66 +991,41 @@ class CommentViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            # Get all drafts for this entry ordered by timestamp
-            drafts = EntryDraft.objects.filter(
-                entry_id=entry_id, is_deleted=False
-            ).order_by("-timestamp")
-
-            # Get the last published draft
-            last_published_draft = drafts.filter(is_published=True).first()
-
-            # Get comments from drafts created after the last published version
-            if last_published_draft:
-                relevant_drafts = drafts.filter(
-                    timestamp__gte=last_published_draft.timestamp
-                )
-            else:
-                relevant_drafts = drafts
-
-            # Get comments from these drafts
-            from django.contrib.contenttypes.models import ContentType
-
-            draft_content_type = ContentType.objects.get_for_model(EntryDraft)
-
-            comments = (
-                Comment.objects.filter(
-                    content_type=draft_content_type,
-                    object_id__in=relevant_drafts.values_list("id", flat=True),
-                    is_resolved=False,
-                    parent__isnull=True,  # Only top-level comments
-                )
-                .select_related("author")
-                .prefetch_related("replies")
+            drafts = self._get_relevant_drafts(entry_id)
+            all_comment_ids, draft_content_type, entry_content_type = (
+                self._get_comment_ids(entry_id, drafts)
             )
 
-            # Calculate draft positions for each comment
-            comments_with_positions = []
-            for comment in comments:
-                comment_draft = drafts.filter(id=comment.object_id).first()
-                if comment_draft:
-                    # Calculate position relative to latest draft
-                    latest_draft = drafts.first()
-                    if latest_draft and comment_draft.id == latest_draft.id:
-                        draft_position = "current draft"
-                    elif comment_draft.is_published:
-                        draft_position = "published"
-                    else:
-                        # Count how many drafts ago this was
-                        drafts_after = drafts.filter(
-                            timestamp__gt=comment_draft.timestamp
-                        ).count()
-                        if drafts_after == 0:
-                            draft_position = "current draft"
-                        else:
-                            draft_position = f"{drafts_after} drafts ago"
+            comments = (
+                Comment.objects.filter(id__in=all_comment_ids)
+                .select_related("author")
+                .prefetch_related("replies")
+                .order_by("-created_at")
+            )
 
-                    comment_data = self.get_serializer(comment).data
-                    comment_data["draft_position"] = draft_position
-                    comment_data["draft_id"] = comment_draft.id
-                    comment_data["draft_timestamp"] = comment_draft.timestamp
+            comments_with_positions = []
+            latest_draft = drafts.first() if drafts.exists() else None
+
+            for comment in comments:
+                if comment.content_type == draft_content_type:
+                    comment_data = self._process_draft_comment(
+                        comment, drafts, latest_draft, draft_content_type
+                    )
+                elif comment.content_type == entry_content_type:
+                    comment_data = self._process_entry_comment(comment, latest_draft)
+                else:
+                    continue
+
+                if comment_data:
                     comments_with_positions.append(comment_data)
 
-            return Response(comments_with_positions)
+            # Apply pagination to the processed comments
+            paginator = PageNumberPagination()
+            paginator.page_size = 50
+            paginated_comments = paginator.paginate_queryset(
+                comments_with_positions, request
+            )
+            return paginator.get_paginated_response(paginated_comments)
         except Exception as e:
             return Response(
                 {"detail": f"Failed to get comments with draft positions: {str(e)}"},
@@ -1074,7 +1156,9 @@ def switch_test_user_view(request):  # noqa: C901
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def users_list_view(request):
-    """Get list of all users for reviewer selection"""
+    """Get list of all users for reviewer selection (paginated)"""
+    from rest_framework.pagination import PageNumberPagination
+
     from glossary.serializers import UserSerializer
 
     users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
@@ -1084,8 +1168,12 @@ def users_list_view(request):
     if test_users_only and test_users_only.lower() == "true":
         users = users.filter(profile__is_test_user=True)
 
-    serializer = UserSerializer(users, many=True)
-    return Response(serializer.data)
+    # Apply pagination
+    paginator = PageNumberPagination()
+    paginator.page_size = 50
+    paginated_users = paginator.paginate_queryset(users, request)
+    serializer = UserSerializer(paginated_users, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(["GET"])

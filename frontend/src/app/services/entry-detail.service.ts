@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, map, switchMap } from 'rxjs';
-import { EntryDraft, Comment, Entry, ReviewDraft } from '../models';
+import { EntryDraft, Comment, Entry, ReviewDraft, PaginatedResponse } from '../models';
 import { GlossaryService } from './glossary.service';
 
 @Injectable({
@@ -10,17 +10,17 @@ export class EntryDetailService {
   constructor(private glossaryService: GlossaryService) {}
 
   /**
-   * Load draft history for an entry
+   * Load draft history for an entry (paginated)
    */
-  loadDraftHistory(entryId: number): Observable<EntryDraft[]> {
-    return this.glossaryService.getDraftHistory(entryId);
+  loadDraftHistory(entryId: number, page?: number): Observable<PaginatedResponse<EntryDraft>> {
+    return this.glossaryService.getDraftHistory(entryId, page);
   }
 
   /**
-   * Load comments with draft position indicators for an entry
+   * Load comments with draft position indicators for an entry (paginated)
    */
-  loadCommentsWithPositions(entryId: number): Observable<Comment[]> {
-    return this.glossaryService.getCommentsWithDraftPositions(entryId);
+  loadCommentsWithPositions(entryId: number, page?: number): Observable<PaginatedResponse<Comment>> {
+    return this.glossaryService.getCommentsWithDraftPositions(entryId, page);
   }
 
   /**
@@ -156,6 +156,7 @@ export class EntryDetailService {
     entryId: number
   ): Observable<{ draftHistory: EntryDraft[]; entry: Entry }> {
     return this.loadDraftHistory(entryId).pipe(
+      map(response => response.results),
       switchMap(draftHistory =>
         this.glossaryService.getEntry(entryId).pipe(map(entry => ({ draftHistory, entry })))
       )

@@ -29,7 +29,13 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
   draftHistory: EntryDraft[] = [];
   selectedDraft: EntryDraft | null = null;
   loading = false;
+  loadingMore = false;
   error: string | null = null;
+
+  // Pagination state
+  currentPage: number = 1;
+  hasNextPage: boolean = false;
+  nextPageUrl: string | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -52,30 +58,80 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadDraftHistory() {
+  loadDraftHistory(reset: boolean = true) {
     if (!this.entryId) return;
 
-    this.loading = true;
+    if (reset) {
+      this.loading = true;
+      this.currentPage = 1;
+      this.draftHistory = [];
+      this.hasNextPage = false;
+      this.nextPageUrl = null;
+    } else {
+      this.loadingMore = true;
+    }
+
     this.error = null;
 
     this.entryDetailService
-      .loadDraftHistory(this.entryId)
+      .loadDraftHistory(this.entryId, reset ? 1 : this.currentPage + 1)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (drafts: EntryDraft[]) => {
-          this.draftHistory = drafts;
-          // Select the latest draft by default
-          if (drafts.length > 0) {
-            this.selectedDraft = drafts[0];
+        next: (response) => {
+          if (reset) {
+            this.draftHistory = response.results;
+            // Select the latest draft by default
+            if (response.results.length > 0) {
+              this.selectedDraft = response.results[0];
+            }
+          } else {
+            // Append new results
+            this.draftHistory = [...this.draftHistory, ...response.results];
           }
+
+          this.hasNextPage = !!response.next;
+          this.nextPageUrl = response.next;
+          if (response.next) {
+            // Extract page number from next URL if available
+            const urlParams = new URLSearchParams(response.next.split('?')[1] || '');
+            const nextPage = urlParams.get('page');
+            if (nextPage) {
+              this.currentPage = parseInt(nextPage, 10) - 1;
+            } else {
+              this.currentPage = reset ? 1 : this.currentPage + 1;
+            }
+          }
+
           this.loading = false;
+          this.loadingMore = false;
         },
         error: (error: any) => {
           console.error('Error loading draft history:', error);
           this.error = 'Failed to load version history';
           this.loading = false;
+          this.loadingMore = false;
         },
       });
+  }
+
+  loadMoreDraftHistory() {
+    if (this.hasNextPage && !this.loadingMore && !this.loading) {
+      this.loadDraftHistory(false);
+    }
+  }
+
+  onScroll(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    const scrollTop = target.scrollTop;
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+
+    // Load more when user scrolls to within 200px of bottom
+    if (scrollTop + clientHeight >= scrollHeight - 200 && this.hasNextPage && !this.loadingMore && !this.loading) {
+      this.loadMoreDraftHistory();
+    }
   }
 
   selectDraft(draft: EntryDraft) {

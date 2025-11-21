@@ -365,7 +365,7 @@ describe('DraftDetailPanelComponent', () => {
         replaces_draft: undefined,
       };
 
-      entryDetailService.loadDraftHistory.and.returnValue(of(mockDrafts));
+      entryDetailService.loadDraftHistory.and.returnValue(of({ count: mockDrafts.length, next: null, previous: null, results: mockDrafts }));
 
       component.loadDraftHistory();
 

@@ -166,7 +166,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       ];
 
       component.state.selectedDraft = mockDraft;
-      entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
+      entryDetailService.loadCommentsWithPositions.and.returnValue(of({ count: mockComments.length, next: null, previous: null, results: mockComments }));
       reviewService.getDraftsCanApprove.and.returnValue(
         of({ count: 0, next: null, previous: null, results: [] })
       );
@@ -317,7 +317,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         },
       ];
 
-      entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
+      entryDetailService.loadCommentsWithPositions.and.returnValue(of({ count: mockComments.length, next: null, previous: null, results: mockComments }));
 
       component.selectDraft(mockDraft);
 

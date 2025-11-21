@@ -12,6 +12,35 @@ alwaysApply: false
 - Ensure existing tests pass before making changes
 - Write tests for new features and bug fixes
 
+## Manual Browser Testing for Bug Fixes
+
+### Before Fixing a Bug
+- **Always verify the bug exists** by manually testing in the browser using Cursor's browser tools
+- Navigate to the affected page/feature and reproduce the reported issue
+- Document the exact steps to reproduce and the observed behavior
+- Take screenshots or note the specific error messages/behaviors
+- Confirm the bug is present before starting any code changes
+
+### After Fixing a Bug
+- **Always verify the fix works** by manually testing in the browser using Cursor's browser tools
+- Follow the same steps used to reproduce the bug
+- Confirm the bug is no longer present and the expected behavior is restored
+- Test related functionality to ensure the fix didn't introduce regressions
+- Test edge cases and error scenarios related to the fix
+
+### Testing Workflow
+1. **Reproduce**: Use browser tools to navigate and interact with the application to reproduce the bug
+2. **Fix**: Implement the code fix
+3. **Verify**: Use browser tools again to confirm the fix resolves the issue
+4. **Validate**: Test related features to ensure no regressions were introduced
+
+### Browser Testing Tools
+- Use Cursor's built-in browser automation tools (Playwright) for manual testing
+- Navigate to `http://localhost:4200` for frontend testing
+- Ensure backend is running on `http://localhost:8000`
+- Use test user credentials from `test-plan.md` for authentication
+- Test with different user roles when relevant (admin, perspective curator, regular user)
+
 ## Django Backend Testing
 - Use pytest with pytest-django
 - Write tests in `glossary/tests/` directory

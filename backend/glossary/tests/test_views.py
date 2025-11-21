@@ -211,9 +211,10 @@ class TestEntryViewSet:
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert isinstance(response.data, list)
-        assert response.data[0]["term"]["text"] == "Cache"
-        assert len(response.data[0]["entries"]) == 2
+        assert "results" in response.data
+        assert isinstance(response.data["results"], list)
+        assert response.data["results"][0]["term"]["text"] == "Cache"
+        assert len(response.data["results"][0]["entries"]) == 2
 
     def test_create_with_term(self, authenticated_client):
         """Test atomic creation of term + entry"""
@@ -748,7 +749,7 @@ class TestEntryDraftUpdateWorkflow:
         response = authenticated_client.get(url, {"entry": entry.id})
 
         assert response.status_code == status.HTTP_200_OK
-        drafts = response.data
+        drafts = response.data["results"]
 
         # Should return drafts in reverse chronological order (newest first)
         assert len(drafts) == 3
@@ -795,7 +796,7 @@ class TestEntryDraftUpdateWorkflow:
         response = authenticated_client.get(url, {"entry": entry.id})
 
         assert response.status_code == status.HTTP_200_OK
-        comments = response.data
+        comments = response.data["results"]
 
         # Should return comments with draft position information
         assert len(comments) >= 2

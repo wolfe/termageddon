@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -193,8 +193,8 @@ describe('MyDraftsComponent', () => {
       if (state.selectedDraft?.entry?.id) {
         entryDetailService
           .loadCommentsWithPositions(state.selectedDraft.entry.id)
-          .subscribe(comments => {
-            state.comments = comments;
+          .subscribe(response => {
+            state.comments = response.results;
           });
       }
       loadDraftsCallback();
@@ -1009,7 +1009,7 @@ describe('MyDraftsComponent', () => {
       reviewService.getOwnDrafts.and.returnValue(
         of({ count: 0, next: null, previous: null, results: [] })
       );
-      glossaryService.getUsers.and.returnValue(of([]));
+      glossaryService.getUsers.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
 
       component.state.searchTerm = 'test';
       component.ngOnInit(); // Ensure currentUser is initialized
@@ -1025,7 +1025,7 @@ describe('MyDraftsComponent', () => {
       expect(draftIds).not.toContain(2);
     });
 
-    it('should refresh drafts and comments after edit is saved', () => {
+    it('should refresh drafts and comments after edit is saved', fakeAsync(() => {
       const mockDraft: ReviewDraft = {
         id: 1,
         content: 'Test draft content',
@@ -1101,14 +1101,18 @@ describe('MyDraftsComponent', () => {
         })
       );
 
-      entryDetailService.loadCommentsWithPositions.and.returnValue(of(mockComments));
+      entryDetailService.loadCommentsWithPositions.and.returnValue(of({ count: mockComments.length, next: null, previous: null, results: mockComments }));
+
+      // The existing refreshAfterEdit spy should handle this correctly
 
       // Simulate edit saved event
       component.onEditSaved();
+      tick(); // Wait for async operations
+      flush(); // Flush all timers (including setTimeout in onEditSaved)
 
       expect(panelCommonService.loadDrafts).toHaveBeenCalled();
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
       expect(component.state.comments).toEqual(mockComments);
-    });
+    }));
   });
 });

@@ -34,8 +34,8 @@
 
         <!-- Entries List -->
         @if (!loading && !error) {
-          <div class="entries-section">
-            @if (filteredEntries.length === 0) {
+          <div class="entries-section" (scroll)="onScroll($event)">
+            @if (filteredEntries.length === 0 && !loadingMore) {
               <div class="no-entries">
                 <p>No entries found.</p>
               </div>
@@ -67,6 +67,11 @@
                   </div>
                 }
               </div>
+              @if (loadingMore) {
+                <div class="loading-more">
+                  <p>Loading more entries...</p>
+                </div>
+              }
             }
           </div>
         }
