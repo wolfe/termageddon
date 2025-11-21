@@ -90,6 +90,7 @@ class TermViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Override to ensure ALL terms are returned, including those with only drafts"""
         # Start with all terms
+        # Composite index: Term(is_deleted, text_normalized) optimizes search queries with soft-delete
         queryset = Term.objects.all()
 
         # Apply any DRF filtering (search, ordering, etc.)
@@ -136,6 +137,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         # For list view, only show entries with published drafts
+        # Composite index: EntryDraft(entry, is_published, timestamp) optimizes this query
         if self.action == "list":
             queryset = queryset.filter(drafts__is_published=True).distinct()
 
@@ -153,6 +155,7 @@ class EntryViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(drafts__author_id=author_id).distinct()
 
         # Handle date range filtering
+        # Composite index: Entry(is_deleted, created_at) optimizes soft-delete + date queries
         created_after = self.request.query_params.get("created_after")
         if created_after:
             queryset = queryset.filter(created_at__gte=created_after)
@@ -529,6 +532,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 ).distinct()
             elif eligibility == "own":
                 # User's own drafts - only show latest draft per entry
+                # Composite index: EntryDraft(author, is_published, timestamp) optimizes author filtering with ordering
                 from django.db.models import Max
 
                 queryset = queryset.filter(author=self.request.user)
@@ -560,6 +564,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 
         # Always exclude published drafts from review (they're not drafts anymore)
         # Only apply this filter for list actions, not for individual draft retrieval
+        # Composite index: EntryDraft(is_published, timestamp) optimizes this common filter+order pattern
         if self.action == "list":
             queryset = queryset.filter(is_published=False)
 
@@ -770,6 +775,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Composite index: EntryDraft(entry, is_deleted, timestamp) optimizes history queries
             drafts = (
                 EntryDraft.objects.filter(entry_id=entry_id, is_deleted=False)
                 .select_related("author", "entry__term", "entry__perspective")
@@ -801,6 +807,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     filterset_fields = ["content_type", "object_id", "is_resolved", "parent"]
     ordering_fields = ["created_at"]
     ordering = ["created_at"]
+    # Composite index: Comment(parent, created_at) optimizes reply ordering
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -904,6 +911,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         entry_content_type = ContentType.objects.get_for_model(Entry)
 
         # Get comments on drafts
+        # Composite index: Comment(content_type, object_id, is_resolved) optimizes generic FK filtering
         draft_comment_ids = list(
             Comment.objects.filter(
                 content_type=draft_content_type,

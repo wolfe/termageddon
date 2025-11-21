@@ -35,7 +35,9 @@ class AllObjectsManager(models.Manager):
 class AuditedModel(models.Model):
     """Abstract base model with audit fields and soft delete functionality"""
 
-    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    created_at: models.DateTimeField = models.DateTimeField(
+        auto_now_add=True, db_index=True
+    )
     updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
     created_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
@@ -112,7 +114,9 @@ class Term(AuditedModel):
         max_length=255, editable=False, db_index=True
     )
     is_official: models.BooleanField = models.BooleanField(
-        default=False, help_text="Indicates term has official status"
+        default=False,
+        help_text="Indicates term has official status",
+        db_index=True,
     )
 
     class Meta:
@@ -199,7 +203,9 @@ class EntryDraft(AuditedModel):
     author: models.ForeignKey[User, User] = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="authored_drafts"
     )
-    timestamp: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    timestamp: models.DateTimeField = models.DateTimeField(
+        auto_now_add=True, db_index=True
+    )
     approvers: models.ManyToManyField[User, User] = models.ManyToManyField(
         User, related_name="approved_drafts", blank=True
     )
@@ -210,7 +216,9 @@ class EntryDraft(AuditedModel):
         help_text="Users specifically requested to review this draft",
     )
     is_published: models.BooleanField = models.BooleanField(
-        default=False, help_text="Whether this draft has been published as active"
+        default=False,
+        help_text="Whether this draft has been published as active",
+        db_index=True,
     )
     endorsed_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
@@ -221,7 +229,9 @@ class EntryDraft(AuditedModel):
         help_text="Perspective curator who endorsed this draft",
     )
     endorsed_at: models.DateTimeField = models.DateTimeField(null=True, blank=True)
-    published_at: models.DateTimeField = models.DateTimeField(null=True, blank=True)
+    published_at: models.DateTimeField = models.DateTimeField(
+        null=True, blank=True, db_index=True
+    )
     replaces_draft: models.ForeignKey[EntryDraft, EntryDraft] = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -332,7 +342,7 @@ class Comment(AuditedModel):
     content_type: models.ForeignKey[ContentType, ContentType] = models.ForeignKey(
         ContentType, on_delete=models.CASCADE
     )
-    object_id: models.PositiveIntegerField = models.PositiveIntegerField()
+    object_id: models.PositiveIntegerField = models.PositiveIntegerField(db_index=True)
     content_object: GenericForeignKey = GenericForeignKey("content_type", "object_id")
 
     parent: models.ForeignKey[Comment, Comment] = models.ForeignKey(
@@ -346,7 +356,7 @@ class Comment(AuditedModel):
     author: models.ForeignKey[User, User] = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="comments"
     )
-    is_resolved: models.BooleanField = models.BooleanField(default=False)
+    is_resolved: models.BooleanField = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         db_table = "glossary_comment"

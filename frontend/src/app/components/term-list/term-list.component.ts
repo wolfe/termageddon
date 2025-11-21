@@ -35,7 +35,7 @@ import {
   templateUrl: './term-list.component.html',
   styleUrl: './term-list.component.scss',
 })
-export class TermListComponent implements OnInit {
+export class TermListComponent implements OnInit, OnDestroy {
   @Output() entrySelected = new EventEmitter<Entry>();
   @Output() termSelected = new EventEmitter<Entry[]>();
   @Output() termCreated = new EventEmitter<Entry>();
@@ -45,8 +45,14 @@ export class TermListComponent implements OnInit {
   perspectives: Perspective[] = [];
   users: User[] = [];
   isLoading: boolean = false;
+  isLoadingMore: boolean = false;
   selectedEntry: Entry | null = null;
   showCreateDialog: boolean = false;
+  currentPage: number = 1;
+  hasNextPage: boolean = false;
+  nextPageUrl: string | null = null;
+
+  @ViewChild('scrollContainer', { static: false }) scrollContainer!: ElementRef;
 
   searchControl = new FormControl('');
   perspectiveControl = new FormControl('');
@@ -138,13 +144,16 @@ export class TermListComponent implements OnInit {
     // Use new grouped_by_term endpoint with pagination
     this.glossaryService.getEntriesGroupedByTerm(filters, reset ? 1 : this.currentPage + 1).subscribe({
       next: response => {
+        // Ensure results is an array
+        const results = Array.isArray(response.results) ? response.results : [];
+
         if (reset) {
-          this.groupedEntries = response.results;
-          this.entries = response.results.flatMap(group => group.entries);
+          this.groupedEntries = results;
+          this.entries = results.flatMap(group => group.entries || []);
         } else {
           // Append new results
-          this.groupedEntries = [...this.groupedEntries, ...response.results];
-          this.entries = [...this.entries, ...response.results.flatMap(group => group.entries)];
+          this.groupedEntries = [...this.groupedEntries, ...results];
+          this.entries = [...this.entries, ...results.flatMap(group => group.entries || [])];
         }
 
         this.hasNextPage = !!response.next;
