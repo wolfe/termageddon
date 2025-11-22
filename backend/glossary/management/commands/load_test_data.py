@@ -286,9 +286,15 @@ class Command(BaseCommand):
             default="test_data/test_data.csv",
             help="Path to CSV file (relative to project root)",
         )
+        parser.add_argument(
+            "--demo",
+            action="store_true",
+            help="Populate demo data: all terms/entries/drafts by admin and published",
+        )
 
     def handle(self, **options):  # noqa: C901
         csv_path = options["csv_path"]
+        demo_mode = options.get("demo", False)
 
         # Navigate up from backend directory to project root
         project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
@@ -325,7 +331,15 @@ class Command(BaseCommand):
             # Read CSV to extract unique authors
             with open(csv_file, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
-                data = list(reader)
+                data = []
+                skipped_rows = 0
+                for i, row in enumerate(reader):
+                    # Check for required fields
+                    if not row.get("perspective") or not row.get("term") or not row.get("definition") or not row.get("author"):
+                        skipped_rows += 1
+                        print(f"Warning: Skipping malformed row {i+2}: {row}")
+                        continue
+                    data.append(row)
 
             # Shuffle data to break alphabetical correlation with timestamps
             random.shuffle(data)
@@ -392,7 +406,7 @@ class Command(BaseCommand):
                         )
                 users[author_name] = user
 
-            # Create perspectives from CSV
+            # Create perspectives from CSV (always needed)
             unique_perspectives = set(row["perspective"] for row in data)
             perspectives = {}
             for perspective_name in unique_perspectives:
@@ -409,51 +423,58 @@ class Command(BaseCommand):
                     )
                 perspectives[perspective_name] = perspective
 
-            # Assign specific users as perspective curators for realistic demo
-            # Maria Flores - Physics, Chemistry curator
-            # Ben Carter - Chemistry, Biology curator
-            # Sofia Rossi - Computer Science, Graph Theory curator
-            # Leo Schmidt - Biology, Geology curator
-            # Kenji Tanaka - Physics, Geology curator
+            if demo_mode:
+                # Only create admin user, skip other users
+                users = {"admin": admin}
+                self.stdout.write(self.style.SUCCESS("Demo mode: all terms/entries/drafts by admin"))
+            else:
+                # Assign specific users as perspective curators for realistic demo
+                # Maria Flores - Physics, Chemistry curator
+                # Ben Carter - Chemistry, Biology curator
+                # Sofia Rossi - Computer Science, Graph Theory curator
+                # Leo Schmidt - Biology, Geology curator
+                # Kenji Tanaka - Physics, Geology curator
 
-            perspective_curator_assignments = {
-                "Maria Flores": ["Physics", "Chemistry"],
-                "Ben Carter": ["Chemistry", "Biology"],
-                "Sofia Rossi": ["Computer Science", "Graph Theory"],
-                "Leo Schmidt": ["Biology", "Geology"],
-                "Kenji Tanaka": ["Physics", "Geology"],
-            }
+                perspective_curator_assignments = {
+                    "Maria Flores": ["Physics", "Chemistry"],
+                    "Ben Carter": ["Chemistry", "Biology"],
+                    "Sofia Rossi": ["Computer Science", "Graph Theory"],
+                    "Leo Schmidt": ["Biology", "Geology"],
+                    "Kenji Tanaka": ["Physics", "Geology"],
+                }
 
-            for (
-                author_name,
-                perspective_names,
-            ) in perspective_curator_assignments.items():
-                if author_name in users:
-                    user = users[author_name]
-                    for perspective_name in perspective_names:
-                        if perspective_name in perspectives:
-                            PerspectiveCurator.objects.get_or_create(
-                                user=user,
-                                perspective=perspectives[perspective_name],
-                                defaults={
-                                    "assigned_by": admin,
-                                    "created_by": admin,
-                                },
-                            )
-                            self.stdout.write(
-                                self.style.SUCCESS(
-                                    f"Assigned {author_name} as curator for {perspective_name}"
+                for (
+                    author_name,
+                    perspective_names,
+                ) in perspective_curator_assignments.items():
+                    if author_name in users:
+                        user = users[author_name]
+                        for perspective_name in perspective_names:
+                            if perspective_name in perspectives:
+                                PerspectiveCurator.objects.get_or_create(
+                                    user=user,
+                                    perspective=perspectives[perspective_name],
+                                    defaults={
+                                        "assigned_by": admin,
+                                        "created_by": admin,
+                                    },
                                 )
-                            )
+                                self.stdout.write(
+                                    self.style.SUCCESS(
+                                        f"Assigned {author_name} as curator for {perspective_name}"
+                                    )
+                                )
 
-            # Load entries from CSV
             entries_created = 0
             drafts_created = 0
             revision_chains_created = 0
 
             for row in data:
                 perspective = perspectives[row["perspective"]]
-                author = users[row["author"]]
+                if demo_mode:
+                    author = admin
+                else:
+                    author = users[row["author"]]
 
                 # Get or create term
                 term, _ = Term.objects.get_or_create(
@@ -469,89 +490,73 @@ class Command(BaseCommand):
                 if entry_created:
                     entries_created += 1
 
-                # Check if this author already has an unpublished draft for this entry
-                existing_draft = EntryDraft.objects.filter(
-                    entry=entry, author=author, is_deleted=False, is_published=False
-                ).first()
-
-                # Decide whether to create revision chain (~15% chance)
-                create_revision_chain = random.random() < 0.15 and not existing_draft
-
-                if create_revision_chain:
-                    # Create revision chain
-                    drafts = self.create_draft_revision_chain(
-                        entry, author, admin, base_timestamp, users, perspective
-                    )
-                    drafts_created += len(drafts)
-                    revision_chains_created += 1
-                    continue  # Skip single draft creation
-                elif existing_draft:
-                    # Update existing draft instead of creating new one
-                    existing_draft.content = f"<p>{row['definition']}</p>"
-                    existing_draft.save()
-                    draft = existing_draft
-                else:
-                    # Create new entry draft
-                    draft = EntryDraft.objects.create(
-                        entry=entry,
-                        content=f"<p>{row['definition']}</p>",
-                        author=author,
-                        created_by=admin,
-                    )
+                # Create new entry draft
+                draft = EntryDraft.objects.create(
+                    entry=entry,
+                    content=f"<p>{row['definition']}</p>",
+                    author=author,
+                    created_by=admin,
+                )
                 drafts_created += 1
 
-                # Create realistic approval states
-                all_users = list(users.values())
-                potential_approvers = [u for u in all_users if u != author]
-                approval_state = random.choices(
-                    ["no_approvals", "one_approval", "two_approvals", "published"],
-                    weights=[
-                        15,
-                        20,
-                        25,
-                        40,
-                    ],  # 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
-                )[0]
+                if demo_mode:
+                    # Mark all drafts as published
+                    draft.is_published = True
+                    draft.published_at = draft.timestamp
+                    draft.save()
+                else:
+                    # Create realistic approval states
+                    all_users = list(users.values())
+                    potential_approvers = [u for u in all_users if u != author]
+                    approval_state = random.choices(
+                        ["no_approvals", "one_approval", "two_approvals", "published"],
+                        weights=[
+                            15,
+                            20,
+                            25,
+                            40,
+                        ],  # 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
+                    )[0]
 
-                # Determine if this will be published (affects timestamp)
-                will_be_published = approval_state == "published"
+                    # Determine if this will be published (affects timestamp)
+                    will_be_published = approval_state == "published"
 
-                # Assign realistic timestamp
-                realistic_timestamp = self.generate_realistic_timestamp(
-                    base_timestamp, will_be_published
-                )
+                    # Assign realistic timestamp
+                    realistic_timestamp = self.generate_realistic_timestamp(
+                        base_timestamp, will_be_published
+                    )
 
-                # Update draft with timestamp
-                draft.timestamp = realistic_timestamp
-                draft.save()
+                    # Update draft with timestamp
+                    draft.timestamp = realistic_timestamp
+                    draft.save()
 
-                if approval_state == "one_approval" and len(potential_approvers) >= 1:
-                    approvers = self.select_approvers(perspective, author, all_users, 1)
-                    draft.approvers.add(*approvers)
-                elif (
-                    approval_state in ["two_approvals", "published"]
-                    and len(potential_approvers) >= 2
-                ):
-                    approvers = self.select_approvers(perspective, author, all_users, 2)
-                    draft.approvers.add(*approvers)
+                    if approval_state == "one_approval" and len(potential_approvers) >= 1:
+                        approvers = self.select_approvers(perspective, author, all_users, 1)
+                        draft.approvers.add(*approvers)
+                    elif (
+                        approval_state in ["two_approvals", "published"]
+                        and len(potential_approvers) >= 2
+                    ):
+                        approvers = self.select_approvers(perspective, author, all_users, 2)
+                        draft.approvers.add(*approvers)
 
-                    # If published, mark as published and set published_at
-                    if approval_state == "published":
-                        draft.is_published = True
-                        draft.published_at = realistic_timestamp
-                        draft.save()
+                        # If published, mark as published and set published_at
+                        if approval_state == "published":
+                            draft.is_published = True
+                            draft.published_at = realistic_timestamp
+                            draft.save()
 
-                        # Add endorsements: ~30% of published drafts get endorsed by a curator
-                        if random.random() < 0.3:
-                            curators = PerspectiveCurator.objects.filter(
-                                perspective=perspective
-                            )
-                            if curators.exists():
-                                endorser = random.choice(curators).user
-                                if endorser != author:  # Don't self-endorse
-                                    draft.endorsed_by = endorser
-                                    draft.endorsed_at = realistic_timestamp
-                                    draft.save()
+                            # Add endorsements: ~30% of published drafts get endorsed by a curator
+                            if random.random() < 0.3:
+                                curators = PerspectiveCurator.objects.filter(
+                                    perspective=perspective
+                                )
+                                if curators.exists():
+                                    endorser = random.choice(curators).user
+                                    if endorser != author:  # Don't self-endorse
+                                        draft.endorsed_by = endorser
+                                        draft.endorsed_at = realistic_timestamp
+                                        draft.save()
 
             # Validate data consistency
             validation_errors = self.validate_data_consistency()
@@ -671,3 +676,8 @@ class Command(BaseCommand):
                     "(most users, all but the last one)"
                 )
             )
+
+            if skipped_rows > 0:
+                self.stdout.write(self.style.WARNING(
+                    f"\nSkipped {skipped_rows} malformed CSV rows (see warnings above)."
+                ))
