@@ -14,6 +14,7 @@ from glossary.models import (
     Comment,
     Entry,
     EntryDraft,
+    Notification,
     Perspective,
     PerspectiveCurator,
     Term,
@@ -29,6 +30,7 @@ from glossary.serializers import (
     EntryDraftUpdateSerializer,
     EntryListSerializer,
     EntryUpdateSerializer,
+    NotificationSerializer,
     PerspectiveCuratorSerializer,
     PerspectiveSerializer,
     TermSerializer,
@@ -123,7 +125,12 @@ class EntryViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_fields = ["term", "perspective", "is_official"]
-    search_fields = ["term__text", "term__text_normalized"]
+    search_fields = [
+        "term__text",
+        "term__text_normalized",
+        "drafts__content",
+        "drafts__comments__text",
+    ]
     ordering_fields = [
         "term__text",
         "term__text_normalized",
@@ -469,6 +476,9 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         """Override queryset to handle expansion and custom filtering"""
         queryset = super().get_queryset()
 
+        # Exclude archived drafts by default
+        queryset = queryset.filter(is_archived=False)
+
         # Handle is_approved filtering manually since it's a property
         is_approved = self.request.query_params.get("is_approved")
         if is_approved is not None:
@@ -799,12 +809,12 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet for Comment model"""
 
-    queryset = Comment.objects.select_related("author", "parent").prefetch_related(
-        "replies"
-    )
+    queryset = Comment.objects.select_related(
+        "author", "parent", "draft"
+    ).prefetch_related("replies", "reactions", "mentioned_users")
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ["content_type", "object_id", "is_resolved", "parent"]
+    filterset_fields = ["draft", "is_resolved", "parent"]
     ordering_fields = ["created_at"]
     ordering = ["created_at"]
     # Composite index: Comment(parent, created_at) optimizes reply ordering
@@ -892,6 +902,57 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(comment)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["post"])
+    def react(self, request, pk=None):
+        """Add a reaction to a comment"""
+        from glossary.models import Reaction
+
+        comment = self.get_object()
+        reaction_type = request.data.get("reaction_type", "thumbs_up")
+
+        # Check if user already reacted
+        existing_reaction = Reaction.objects.filter(
+            comment=comment, user=request.user, reaction_type=reaction_type
+        ).first()
+
+        if existing_reaction:
+            return Response(
+                {"detail": "You have already reacted to this comment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Create reaction
+        Reaction.objects.create(
+            comment=comment, user=request.user, reaction_type=reaction_type
+        )
+
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def unreact(self, request, pk=None):
+        """Remove a reaction from a comment"""
+        from glossary.models import Reaction
+
+        comment = self.get_object()
+        reaction_type = request.data.get("reaction_type", "thumbs_up")
+
+        # Find and delete reaction
+        reaction = Reaction.objects.filter(
+            comment=comment, user=request.user, reaction_type=reaction_type
+        ).first()
+
+        if not reaction:
+            return Response(
+                {"detail": "You have not reacted to this comment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reaction.delete()
+
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data)
+
     def _get_relevant_drafts(self, entry_id):
         """Get drafts relevant for comment loading (after last published or all if none published)"""
         drafts = EntryDraft.objects.filter(
@@ -900,46 +961,11 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         last_published_draft = drafts.filter(is_published=True).first()
         if last_published_draft:
-            return drafts.filter(timestamp__gte=last_published_draft.timestamp)
+            # Only show comments on drafts created after the last published draft
+            return drafts.filter(timestamp__gt=last_published_draft.timestamp)
         return drafts
 
-    def _get_comment_ids(self, entry_id, relevant_drafts):
-        """Get comment IDs from both drafts and entry"""
-        from django.contrib.contenttypes.models import ContentType
-
-        draft_content_type = ContentType.objects.get_for_model(EntryDraft)
-        entry_content_type = ContentType.objects.get_for_model(Entry)
-
-        # Get comments on drafts
-        # Composite index: Comment(content_type, object_id, is_resolved) optimizes generic FK filtering
-        draft_comment_ids = list(
-            Comment.objects.filter(
-                content_type=draft_content_type,
-                object_id__in=relevant_drafts.values_list("id", flat=True),
-                is_resolved=False,
-                parent__isnull=True,
-            ).values_list("id", flat=True)
-        )
-
-        # Get comments on the entry itself
-        entry_comment_ids = list(
-            Comment.objects.filter(
-                content_type=entry_content_type,
-                object_id=entry_id,
-                is_resolved=False,
-                parent__isnull=True,
-            ).values_list("id", flat=True)
-        )
-
-        return (
-            draft_comment_ids + entry_comment_ids,
-            draft_content_type,
-            entry_content_type,
-        )
-
-    def _calculate_draft_comment_position(
-        self, comment, comment_draft, drafts, latest_draft
-    ):
+    def _calculate_draft_comment_position(self, comment_draft, drafts, latest_draft):
         """Calculate draft position for a comment on a draft"""
         if latest_draft and comment_draft.id == latest_draft.id:
             return "current draft"
@@ -952,46 +978,17 @@ class CommentViewSet(viewsets.ModelViewSet):
             return "current draft"
         return f"{drafts_after} drafts ago"
 
-    def _calculate_entry_comment_position(self, latest_draft):
-        """Calculate draft position for a comment on an entry"""
-        if not latest_draft:
-            return "entry", None, None
-        if latest_draft.is_published:
-            return "published", latest_draft.id, latest_draft.timestamp
-        return "current draft", latest_draft.id, latest_draft.timestamp
-
-    def _process_draft_comment(self, comment, drafts, latest_draft, draft_content_type):
-        """Process a comment that's on a draft"""
-        comment_draft = drafts.filter(id=comment.object_id).first()
-        if not comment_draft:
-            return None
-
-        draft_position = self._calculate_draft_comment_position(
-            comment, comment_draft, drafts, latest_draft
-        )
-        comment_data = self.get_serializer(comment).data
-        comment_data["draft_position"] = draft_position
-        comment_data["draft_id"] = comment_draft.id
-        comment_data["draft_timestamp"] = comment_draft.timestamp
-        return comment_data
-
-    def _process_entry_comment(self, comment, latest_draft):
-        """Process a comment that's on an entry"""
-        draft_position, draft_id, draft_timestamp = (
-            self._calculate_entry_comment_position(latest_draft)
-        )
-        comment_data = self.get_serializer(comment).data
-        comment_data["draft_position"] = draft_position
-        comment_data["draft_id"] = draft_id
-        comment_data["draft_timestamp"] = draft_timestamp
-        return comment_data
-
     @action(detail=False, methods=["get"])
     def with_draft_positions(self, request):
         """Get comments with draft position indicators for an entry (paginated)"""
         from rest_framework.pagination import PageNumberPagination
 
         entry_id = request.query_params.get("entry")
+        draft_id = request.query_params.get("draft_id")  # For version history view
+        show_resolved = (
+            request.query_params.get("show_resolved", "false").lower() == "true"
+        )
+
         if not entry_id:
             return Response(
                 {"detail": "entry parameter is required"},
@@ -999,33 +996,46 @@ class CommentViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Get relevant drafts (drafts since last published, or all if none published)
             drafts = self._get_relevant_drafts(entry_id)
-            all_comment_ids, draft_content_type, entry_content_type = (
-                self._get_comment_ids(entry_id, drafts)
-            )
-
-            comments = (
-                Comment.objects.filter(id__in=all_comment_ids)
-                .select_related("author")
-                .prefetch_related("replies")
-                .order_by("-created_at")
-            )
-
-            comments_with_positions = []
             latest_draft = drafts.first() if drafts.exists() else None
 
-            for comment in comments:
-                if comment.content_type == draft_content_type:
-                    comment_data = self._process_draft_comment(
-                        comment, drafts, latest_draft, draft_content_type
-                    )
-                elif comment.content_type == entry_content_type:
-                    comment_data = self._process_entry_comment(comment, latest_draft)
-                else:
-                    continue
+            # Build comment query
+            comment_query = (
+                Comment.objects.filter(
+                    draft__entry_id=entry_id,
+                    draft__is_deleted=False,
+                    parent__isnull=True,  # Only top-level comments
+                )
+                .select_related("author", "draft")
+                .prefetch_related("replies")
+            )
 
-                if comment_data:
-                    comments_with_positions.append(comment_data)
+            # If viewing a specific draft in version history, filter to that draft
+            if draft_id:
+                comment_query = comment_query.filter(draft_id=draft_id)
+            else:
+                # Otherwise, only show comments on relevant drafts
+                relevant_draft_ids = drafts.values_list("id", flat=True)
+                comment_query = comment_query.filter(draft_id__in=relevant_draft_ids)
+
+            # Filter resolved comments based on context
+            if not show_resolved:
+                comment_query = comment_query.filter(is_resolved=False)
+
+            comments = comment_query.order_by("-created_at")
+
+            # Process comments to add draft position info
+            comments_with_positions = []
+            for comment in comments:
+                draft_position = self._calculate_draft_comment_position(
+                    comment.draft, drafts, latest_draft
+                )
+                comment_data = self.get_serializer(comment).data
+                comment_data["draft_position"] = draft_position
+                comment_data["draft_id"] = comment.draft.id
+                comment_data["draft_timestamp"] = comment.draft.timestamp
+                comments_with_positions.append(comment_data)
 
             # Apply pagination to the processed comments
             paginator = PageNumberPagination()
@@ -1089,11 +1099,34 @@ def logout_view(request):
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# Store last archiving check time in memory (module-level)
+_last_archiving_check = None
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def current_user_view(request):
     """Get current user info with computed fields"""
+    from datetime import timedelta
+
+    from django.core.management import call_command
+    from django.utils import timezone
+
     from glossary.serializers import UserDetailSerializer
+
+    # Check if we need to run archiving (at least once per day)
+    global _last_archiving_check
+    now = timezone.now()
+
+    if _last_archiving_check is None or (now - _last_archiving_check) >= timedelta(
+        days=1
+    ):
+        try:
+            call_command("archive_old_drafts", verbosity=0)
+            _last_archiving_check = now
+        except Exception:
+            # Silently fail - don't break the /me endpoint if archiving fails
+            pass
 
     serializer = UserDetailSerializer(request.user)
     return Response(serializer.data)
@@ -1194,6 +1227,41 @@ def system_config_view(request):
             "DEBUG": settings.DEBUG,
         }
     )
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """ViewSet for Notification model"""
+
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return notifications for the current user"""
+        return Notification.objects.filter(user=self.request.user).select_related(
+            "related_draft", "related_comment"
+        )
+
+    @action(detail=True, methods=["patch"])
+    def mark_read(self, request, pk=None):
+        """Mark a notification as read"""
+        notification = self.get_object()
+        if notification.user != request.user:
+            return Response(
+                {"detail": "You can only mark your own notifications as read."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        notification.is_read = True
+        notification.save()
+        serializer = self.get_serializer(notification)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"])
+    def mark_all_read(self, request):
+        """Mark all notifications as read for the current user"""
+        Notification.objects.filter(user=request.user, is_read=False).update(
+            is_read=True
+        )
+        return Response({"detail": "All notifications marked as read."})
 
 
 @api_view(["POST"])

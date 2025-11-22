@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericTabularInline
 from django.db import models
 from django.utils.html import format_html
 
@@ -7,8 +6,10 @@ from glossary.models import (
     Comment,
     Entry,
     EntryDraft,
+    Notification,
     Perspective,
     PerspectiveCurator,
+    Reaction,
     Term,
     UserProfile,
 )
@@ -83,12 +84,13 @@ class EntryDraftInline(admin.TabularInline):
     is_approved.boolean = True
 
 
-# Inline for Comments (generic)
-class CommentInline(GenericTabularInline):
+# Inline for Comments on EntryDraft
+class CommentInline(admin.TabularInline):
     model = Comment
     extra = 0
     fields = ("author", "text", "is_resolved", "created_at")
     readonly_fields = ("created_at",)
+    fk_name = "draft"
 
 
 @admin.register(Perspective)
@@ -182,6 +184,7 @@ class EntryDraftAdmin(admin.ModelAdmin):
         "updated_by",
     )
     filter_horizontal = ("approvers",)
+    inlines = [CommentInline]
     actions = [soft_delete_selected, undelete_selected, bulk_approve_drafts]
 
     formfield_overrides = {
@@ -205,15 +208,27 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "author",
+        "draft",
         "text_short",
         "parent",
         "is_resolved",
         "is_deleted",
         "created_at",
     )
-    list_filter = ("is_resolved", "is_deleted", "created_at")
-    search_fields = ("text", "author__username")
-    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+    list_filter = (
+        "is_resolved",
+        "is_deleted",
+        "created_at",
+        "draft__entry__perspective",
+    )
+    search_fields = ("text", "author__username", "draft__entry__term__text")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "edited_at",
+        "created_by",
+        "updated_by",
+    )
     actions = [soft_delete_selected, undelete_selected]
 
     def text_short(self, obj):
@@ -243,3 +258,35 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("user")
+
+
+@admin.register(Reaction)
+class ReactionAdmin(admin.ModelAdmin):
+    list_display = ("id", "comment", "user", "reaction_type", "created_at")
+    list_filter = ("reaction_type", "created_at")
+    search_fields = ("comment__text", "user__username")
+    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+    actions = [soft_delete_selected, undelete_selected]
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "type",
+        "message_short",
+        "is_read",
+        "created_at",
+    )
+    list_filter = ("type", "is_read", "created_at")
+    search_fields = ("user__username", "message")
+    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+    actions = [soft_delete_selected, undelete_selected]
+
+    def message_short(self, obj):
+        if len(obj.message) > 50:
+            return obj.message[:50] + "..."
+        return obj.message
+
+    message_short.short_description = "Message"

@@ -72,6 +72,12 @@
                     <small>Replaces previous version</small>
                   </div>
                 }
+
+                @if (draft.comment_count !== undefined && draft.comment_count > 0) {
+                  <div class="comment-count">
+                    <span class="comment-count-badge">{{ draft.comment_count }} {{ draft.comment_count === 1 ? 'comment' : 'comments' }}</span>
+                  </div>
+                }
               </div>
             }
             @if (loadingMore) {

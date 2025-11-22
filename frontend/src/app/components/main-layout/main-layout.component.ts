@@ -5,11 +5,12 @@ import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
 import { User } from '../../models';
 import { InlineNotificationComponent } from '../shared/inline-notification/inline-notification.component';
+import { NotificationsPanelComponent } from '../notifications/notifications-panel.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, InlineNotificationComponent],
+  imports: [CommonModule, RouterModule, InlineNotificationComponent, NotificationsPanelComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
 })

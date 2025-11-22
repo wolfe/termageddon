@@ -7,6 +7,7 @@ from glossary.views import (
     CustomAuthToken,
     EntryDraftViewSet,
     EntryViewSet,
+    NotificationViewSet,
     PerspectiveCuratorViewSet,
     PerspectiveViewSet,
     TermViewSet,
@@ -28,6 +29,7 @@ router.register(r"comments", CommentViewSet, basename="comment")
 router.register(
     r"perspective-curators", PerspectiveCuratorViewSet, basename="perspectivecurator"
 )
+router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [
     # Auth endpoints

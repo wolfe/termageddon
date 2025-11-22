@@ -10,6 +10,7 @@ from glossary.models import (
     Comment,
     Entry,
     EntryDraft,
+    Notification,
     Perspective,
     PerspectiveCurator,
     Term,
@@ -152,6 +153,8 @@ class PerspectiveSerializer(serializers.ModelSerializer):
 class TermSerializer(serializers.ModelSerializer):
     """Term serializer"""
 
+    is_highlighted = serializers.SerializerMethodField()
+
     class Meta:
         model = Term
         fields = [
@@ -159,10 +162,34 @@ class TermSerializer(serializers.ModelSerializer):
             "text",
             "text_normalized",
             "is_official",
+            "is_highlighted",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["text_normalized", "created_at", "updated_at"]
+        read_only_fields = [
+            "text_normalized",
+            "created_at",
+            "updated_at",
+            "is_highlighted",
+        ]
+
+    def get_is_highlighted(self, obj):
+        """Check if term text starts with search query (case-insensitive)"""
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        # Handle both DRF Request and Django WSGIRequest
+        if hasattr(request, "query_params"):
+            search_query = request.query_params.get("search", "").strip()
+        else:
+            search_query = request.GET.get("search", "").strip()
+
+        if not search_query:
+            return False
+
+        # Case-insensitive prefix match
+        return obj.text.lower().startswith(search_query.lower())
 
 
 # EntryDraft serializers
@@ -184,6 +211,7 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
     user_has_approved = serializers.SerializerMethodField()
     remaining_approvals = serializers.SerializerMethodField()
     approval_percentage = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
 
     class Meta:
         model = EntryDraft
@@ -209,10 +237,15 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
             "user_has_approved",
             "remaining_approvals",
             "approval_percentage",
+            "comment_count",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
+
+    def get_comment_count(self, obj):
+        """Get the count of comments on this draft"""
+        return obj.comments.count()
 
 
 class EntryDraftCreateSerializer(serializers.Serializer):
@@ -373,6 +406,7 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
     user_has_approved = serializers.SerializerMethodField()
     remaining_approvals = serializers.SerializerMethodField()
     approval_percentage = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
 
     class Meta:
         model = EntryDraft
@@ -395,10 +429,15 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
             "user_has_approved",
             "remaining_approvals",
             "approval_percentage",
+            "comment_count",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["timestamp", "created_at", "updated_at"]
+
+    def get_comment_count(self, obj):
+        """Get the count of comments on this draft"""
+        return obj.comments.count()
 
 
 class EntryDetailSerializer(serializers.ModelSerializer):
@@ -502,22 +541,40 @@ class CommentListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     replies = serializers.SerializerMethodField()
+    draft_id = serializers.IntegerField(source="draft.id", read_only=True)
+    mentioned_users = UserSerializer(many=True, read_only=True)
+    reaction_count = serializers.SerializerMethodField()
+    user_has_reacted = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = [
             "id",
-            "content_type",
-            "object_id",
+            "draft_id",
             "parent",
             "text",
             "author",
+            "mentioned_users",
             "is_resolved",
             "replies",
+            "reaction_count",
+            "user_has_reacted",
             "created_at",
             "updated_at",
+            "edited_at",
         ]
-        read_only_fields = ["created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at", "edited_at"]
+
+    def get_reaction_count(self, obj):
+        """Get the count of reactions on this comment"""
+        return obj.reactions.count()
+
+    def get_user_has_reacted(self, obj):
+        """Check if current user has reacted to this comment"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.reactions.filter(user=request.user).exists()
 
     def get_replies(self, obj):
         """Recursively serialize replies"""
@@ -529,22 +586,90 @@ class CommentListSerializer(serializers.ModelSerializer):
 class CommentCreateSerializer(serializers.ModelSerializer):
     """Comment serializer for creation"""
 
+    draft_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = Comment
         fields = [
             "id",
-            "content_type",
-            "object_id",
+            "draft_id",
             "parent",
             "text",
             "is_resolved",
         ]
 
     def create(self, validated_data):
+        from glossary.models import EntryDraft
+
         request = self.context.get("request")
+        draft_id = validated_data.pop("draft_id")
+        text = validated_data.get("text", "")
+
+        try:
+            draft = EntryDraft.objects.get(id=draft_id)
+        except EntryDraft.DoesNotExist:
+            raise serializers.ValidationError({"draft_id": "Draft not found."})
+        validated_data["draft"] = draft
+
         if request and hasattr(request, "user"):
             validated_data["author"] = request.user
-        return super().create(validated_data)
+
+        # Create comment first
+        comment = super().create(validated_data)
+
+        # Parse @mentions and add to mentioned_users
+        mentioned_users = self._parse_mentions(text)
+        if mentioned_users:
+            comment.mentioned_users.set(mentioned_users)
+
+        return comment
+
+    def _parse_mentions(self, text: str) -> list:
+        """Parse @mentions from comment text and return list of User objects"""
+        import re
+
+        from glossary.models import User
+
+        # Pattern to match @username or @FirstName LastName
+        # Matches @ followed by word characters or spaces
+        pattern = r"@(\w+(?:\s+\w+)*)"
+        matches = re.findall(pattern, text)
+
+        if not matches:
+            return []
+
+        mentioned_users = []
+        for match in matches:
+            # Try to find user by username first
+            user = User.objects.filter(username=match).first()
+
+            # If not found, try to find by full name (first_name + last_name)
+            if not user:
+                name_parts = match.split()
+                if len(name_parts) >= 2:
+                    user = User.objects.filter(
+                        first_name__iexact=name_parts[0],
+                        last_name__iexact=" ".join(name_parts[1:]),
+                    ).first()
+                elif len(name_parts) == 1:
+                    # Try first name or last name
+                    user = (
+                        User.objects.filter(first_name__iexact=name_parts[0]).first()
+                        or User.objects.filter(last_name__iexact=name_parts[0]).first()
+                    )
+
+            if user:
+                mentioned_users.append(user)
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_users = []
+        for user in mentioned_users:
+            if user.id not in seen:
+                seen.add(user.id)
+                unique_users.append(user)
+
+        return unique_users
 
 
 # PerspectiveCurator serializers
@@ -580,3 +705,21 @@ class PerspectiveCuratorSerializer(serializers.ModelSerializer):
             validated_data["assigned_by"] = request.user
             validated_data["created_by"] = request.user
         return super().create(validated_data)
+
+
+# Notification serializers
+class NotificationSerializer(serializers.ModelSerializer):
+    """Notification serializer"""
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "type",
+            "message",
+            "related_draft",
+            "related_comment",
+            "is_read",
+            "created_at",
+        ]
+        read_only_fields = ["created_at"]

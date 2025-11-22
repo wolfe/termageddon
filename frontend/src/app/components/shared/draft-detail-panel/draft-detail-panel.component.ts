@@ -38,6 +38,7 @@ import {
   getApprovalAccessLevel,
 } from '../../../utils/draft-status.util';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
+import { diffHtml, DiffResult } from '../../../utils/diff.util';
 
 type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
 
@@ -90,6 +91,29 @@ export class DraftDetailPanelComponent
 
   // Additional state specific to draft detail panel
   latestDraft: EntryDraft | null = null;
+  showResolvedComments: boolean = false;
+  diffContent: DiffResult | null = null;
+
+  override loadComments(entryId: number, page?: number, append: boolean = false): void {
+    // In version history view, show resolved comments by default
+    const showResolved = this.showVersionHistorySidebar ? true : this.showResolvedComments;
+    // If viewing a specific historical draft, pass its ID
+    const draftId = this.selectedHistoricalDraft ? this.selectedHistoricalDraft.id : undefined;
+    super.loadComments(entryId, page, append, draftId, showResolved);
+  }
+
+  toggleResolvedComments(): void {
+    this.showResolvedComments = !this.showResolvedComments;
+    // Reload comments with new filter
+    if (this.draft?.entry?.id) {
+      this.commentsLoadedForEntryId = null; // Force reload
+      this.loadComments(this.draft.entry.id);
+    }
+  }
+
+  getResolvedCommentsCount(): number {
+    return this.comments.filter(c => c.is_resolved).length;
+  }
 
   constructor(
     entryDetailService: EntryDetailService,
@@ -136,6 +160,8 @@ export class DraftDetailPanelComponent
           this.loadEntryData();
         }
         this.selectedHistoricalDraft = null;
+        // Recalculate diff when draft changes
+        setTimeout(() => this.calculateDiff(), 100);
       }
     }
 
@@ -167,11 +193,63 @@ export class DraftDetailPanelComponent
         this.latestDraft = response.results.length > 0 ? response.results[0] : null;
         this.hasNextDraftHistoryPage = !!response.next;
         this.draftHistoryNextPage = response.next;
+        // Calculate diff after loading history
+        this.calculateDiff();
       },
       error: error => {
         console.error('Error loading draft history:', error);
       },
     });
+  }
+
+  /**
+   * Calculate diff between current draft and previous/published version
+   */
+  calculateDiff(): void {
+    // Use latest draft for comparison, fallback to current draft
+    const latestContent = this.latestDraft?.content || this.draft?.content;
+    if (!latestContent) {
+      this.diffContent = null;
+      return;
+    }
+
+    let compareContent = '';
+
+    if (this.showVersionHistorySidebar && this.selectedHistoricalDraft) {
+      // In Version History: compare selected historical draft with latest draft
+      compareContent = this.selectedHistoricalDraft.content;
+    } else {
+      // Outside Version History: compare with published version
+      const publishedDraft = this.getPublishedDraft();
+      if (publishedDraft) {
+        compareContent = publishedDraft.content;
+      }
+    }
+
+    if (!compareContent) {
+      this.diffContent = null;
+      return;
+    }
+
+    // Compare old content (compareContent) with new content (latestContent)
+    this.diffContent = diffHtml(compareContent, latestContent);
+  }
+
+  /**
+   * Get content to display (with diff if available)
+   */
+  getDisplayContent(): string {
+    if (this.diffContent && this.diffContent.hasChanges && !this.isEditMode) {
+      return this.diffContent.html;
+    }
+    // Use latest draft content if available, otherwise fall back to current draft
+    if (this.latestDraft) {
+      return this.latestDraft.content;
+    }
+    if (this.draft) {
+      return this.draft.content;
+    }
+    return '';
   }
   getDraftStatus = getDraftStatus;
   getDraftStatusClass = getDraftStatusClass;
@@ -275,6 +353,12 @@ export class DraftDetailPanelComponent
 
   override onVersionHistoryClosed(): void {
     this.showVersionHistorySidebar = false;
+  }
+
+  override onDraftSelected(draft: EntryDraft): void {
+    super.onDraftSelected(draft);
+    // Recalculate diff when a historical draft is selected
+    setTimeout(() => this.calculateDiff(), 100);
   }
 
   isEditing(): boolean {
@@ -433,6 +517,23 @@ export class DraftDetailPanelComponent
   // Implementation of abstract method from BaseEntryDetailComponent
   protected getDisplayDraft(): Entry | ReviewDraft | null {
     return this.draft;
+  }
+
+  /**
+   * Get the current draft ID for comment creation
+   * Uses selectedHistoricalDraft if viewing version history, otherwise uses the main draft
+   */
+  getCurrentDraftId(): number {
+    if (this.selectedHistoricalDraft) {
+      return this.selectedHistoricalDraft.id;
+    }
+    if (this.draft) {
+      return this.draft.id;
+    }
+    if (this.latestDraft) {
+      return this.latestDraft.id;
+    }
+    return 0;
   }
 
   private setupEntryLinkHandlers(): void {

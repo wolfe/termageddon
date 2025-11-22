@@ -31,7 +31,7 @@
   <!-- Comments List -->
   <div class="comments-list">
     <div *ngFor="let comment of getTopLevelComments()" class="comment-item">
-      <div class="comment-main" [class.resolved]="comment.is_resolved">
+      <div class="comment-main" [class.resolved]="comment.is_resolved" [class.current-draft-comment]="comment.draft_position === 'current draft'">
         <div class="comment-header">
           <div class="comment-author">
             <app-user-avatar [user]="comment.author" color="blue" size="medium"></app-user-avatar>
@@ -63,6 +63,14 @@
           </div>
           <div class="comment-actions">
             <button
+              *ngIf="canEdit(comment) && editingComment?.id !== comment.id"
+              (click)="startEdit(comment)"
+              [disabled]="loading"
+              class="btn btn-sm btn-secondary"
+            >
+              Edit
+            </button>
+            <button
               *ngIf="canResolve(comment)"
               (click)="comment.is_resolved ? unresolveComment(comment) : resolveComment(comment)"
               [disabled]="loading"
@@ -78,11 +86,38 @@
             >
               Reply
             </button>
+            <button
+              (click)="toggleReaction(comment)"
+              class="btn btn-sm btn-secondary reaction-btn"
+              [class.reacted]="comment.user_has_reacted"
+              [title]="comment.user_has_reacted ? 'Remove thumbs up' : 'Thumbs up'"
+            >
+              👍 {{ comment.reaction_count || 0 }}
+            </button>
           </div>
         </div>
 
         <div class="comment-content">
-          {{ comment.text }}
+          <!-- Edit Mode -->
+          <div *ngIf="editingComment?.id === comment.id" class="edit-form">
+            <textarea
+              [(ngModel)]="editText"
+              class="edit-textarea"
+              rows="3"
+            ></textarea>
+            <div class="edit-actions">
+              <button
+                (click)="submitEdit()"
+                [disabled]="!editText.trim() || loading"
+                class="btn btn-primary btn-sm"
+              >
+                {{ loading ? 'Saving...' : 'Save' }}
+              </button>
+              <button (click)="cancelEdit()" class="btn btn-secondary btn-sm">Cancel</button>
+            </div>
+          </div>
+          <!-- View Mode -->
+          <div *ngIf="editingComment?.id !== comment.id" [innerHTML]="formatCommentText(comment)"></div>
         </div>
 
         <div *ngIf="comment.is_resolved" class="resolved-badge">✓ Resolved</div>
@@ -123,7 +158,26 @@
             </div>
 
             <div class="reply-content">
-              {{ reply.text }}
+              <!-- Edit Mode for Replies -->
+              <div *ngIf="editingComment?.id === reply.id" class="edit-form">
+                <textarea
+                  [(ngModel)]="editText"
+                  class="edit-textarea"
+                  rows="2"
+                ></textarea>
+                <div class="edit-actions">
+                  <button
+                    (click)="submitEdit()"
+                    [disabled]="!editText.trim() || loading"
+                    class="btn btn-primary btn-sm"
+                  >
+                    {{ loading ? 'Saving...' : 'Save' }}
+                  </button>
+                  <button (click)="cancelEdit()" class="btn btn-secondary btn-sm">Cancel</button>
+                </div>
+              </div>
+              <!-- View Mode for Replies -->
+              <div *ngIf="editingComment?.id !== reply.id" [innerHTML]="formatCommentText(reply)"></div>
             </div>
           </div>
         </div>

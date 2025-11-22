@@ -2,7 +2,6 @@ import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
 from glossary.models import Comment, EntryDraft
@@ -206,10 +205,8 @@ class TestEntryCreationIntegration:
 
         # Add comment
         comment_url = reverse("comment-list")
-        content_type = ContentType.objects.get_for_model(EntryDraft)
         comment_data = {
-            "content_type": content_type.id,
-            "object_id": draft_id,
+            "draft_id": draft_id,
             "text": "This is a test comment",
         }
 
@@ -220,7 +217,7 @@ class TestEntryCreationIntegration:
         # Verify comment was created
         comment = Comment.objects.get(id=comment_id)
         assert comment.text == "This is a test comment"
-        assert comment.content_object.id == draft_id
+        assert comment.draft.id == draft_id
 
     def test_entry_creation_workflow_with_perspective_curator(
         self, authenticated_client

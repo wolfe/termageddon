@@ -6,8 +6,6 @@ from unidecode import unidecode
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
@@ -240,6 +238,11 @@ class EntryDraft(AuditedModel):
         related_name="replaced_by",
         help_text="The draft that this draft replaces in the version history",
     )
+    is_archived: models.BooleanField = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Whether this draft has been archived (unpublished drafts older than 1 month)",
+    )
 
     class Meta:
         db_table = "glossary_entry_draft"
@@ -337,13 +340,14 @@ class EntryDraft(AuditedModel):
 
 
 class Comment(AuditedModel):
-    """Comments can be attached to any model using GenericForeignKey"""
+    """Comments are attached to EntryDraft models"""
 
-    content_type: models.ForeignKey[ContentType, ContentType] = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE
+    draft: models.ForeignKey[EntryDraft, EntryDraft] = models.ForeignKey(
+        EntryDraft,
+        on_delete=models.CASCADE,
+        related_name="comments",
+        help_text="The draft this comment is attached to",
     )
-    object_id: models.PositiveIntegerField = models.PositiveIntegerField(db_index=True)
-    content_object: GenericForeignKey = GenericForeignKey("content_type", "object_id")
 
     parent: models.ForeignKey[Comment, Comment] = models.ForeignKey(
         "self",
@@ -356,20 +360,131 @@ class Comment(AuditedModel):
     author: models.ForeignKey[User, User] = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="comments"
     )
+    mentioned_users: models.ManyToManyField[User, User] = models.ManyToManyField(
+        User,
+        related_name="mentioned_in_comments",
+        blank=True,
+        help_text="Users mentioned in this comment via @mention",
+    )
     is_resolved: models.BooleanField = models.BooleanField(default=False, db_index=True)
+    edited_at: models.DateTimeField = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "glossary_comment"
         ordering = ["created_at"]
 
     def __str__(self):
-        return f"Comment by {self.author.username} on {self.content_object}"
+        return f"Comment by {self.author.username} on draft {self.draft.id}"
 
     def clean(self):
         """Validate that only top-level comments can be resolved"""
         super().clean()
         if self.parent and self.is_resolved:
             raise ValidationError("Only top-level comments can be resolved.")
+
+    def save(self, *args, **kwargs):
+        # Track if text is being updated (for edited_at timestamp)
+        if self.pk:
+            try:
+                old_comment = Comment.objects.get(pk=self.pk)
+                if old_comment.text != self.text:
+                    from django.utils import timezone
+
+                    self.edited_at = timezone.now()
+            except Comment.DoesNotExist:
+                pass
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class Reaction(AuditedModel):
+    """Reactions to comments (e.g., thumbs up)"""
+
+    comment: models.ForeignKey[Comment, Comment] = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name="reactions",
+        help_text="The comment this reaction is for",
+    )
+    user: models.ForeignKey[User, User] = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="reactions",
+        help_text="The user who reacted",
+    )
+    reaction_type: models.CharField = models.CharField(
+        max_length=20,
+        default="thumbs_up",
+        help_text="Type of reaction (e.g., 'thumbs_up')",
+    )
+
+    class Meta:
+        db_table = "glossary_reaction"
+        unique_together = [["comment", "user", "reaction_type"]]
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} {self.reaction_type} on comment {self.comment.id}"
+
+    def clean(self):
+        """Validate reaction data"""
+        super().clean()
+        if self.reaction_type not in ["thumbs_up"]:
+            raise ValidationError("Invalid reaction type.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class Notification(AuditedModel):
+    """In-app notifications for users"""
+
+    user: models.ForeignKey[User, User] = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        help_text="The user who receives this notification",
+    )
+    type: models.CharField = models.CharField(
+        max_length=50,
+        help_text=(
+            "Type of notification (e.g., 'draft_edited', 'draft_approved', "
+            "'mentioned_in_comment', 'review_requested', 'comment_reply')"
+        ),
+    )
+    message: models.TextField = models.TextField(help_text="Notification message text")
+    related_draft: models.ForeignKey[EntryDraft, EntryDraft] = models.ForeignKey(
+        EntryDraft,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        null=True,
+        blank=True,
+        help_text="Related draft if applicable",
+    )
+    related_comment: models.ForeignKey[Comment, Comment] = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        null=True,
+        blank=True,
+        help_text="Related comment if applicable",
+    )
+    is_read: models.BooleanField = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Whether the notification has been read",
+    )
+
+    class Meta:
+        db_table = "glossary_notification"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_read", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.type}"
 
     def save(self, *args, **kwargs):
         self.full_clean()

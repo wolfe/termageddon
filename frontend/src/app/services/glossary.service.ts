@@ -17,6 +17,7 @@ import {
   CreateTermAndEntryRequest,
   EntryLookupResponse,
   CreateEntryRequest,
+  Notification,
   ReviewDraft,
 } from '../models';
 import { BaseService } from './base.service';
@@ -146,12 +147,41 @@ export class GlossaryService extends BaseService {
     return this.post<Comment>('/comments/', comment);
   }
 
+  updateComment(commentId: number, text: string): Observable<Comment> {
+    return this.patch<Comment>(`/comments/${commentId}/`, { text });
+  }
+
   resolveComment(commentId: number): Observable<Comment> {
     return this.postAction<Comment>(`/comments/${commentId}/resolve/`);
   }
 
   unresolveComment(commentId: number): Observable<Comment> {
     return this.postAction<Comment>(`/comments/${commentId}/unresolve/`);
+  }
+
+  reactToComment(commentId: number, reactionType: string = 'thumbs_up'): Observable<Comment> {
+    return this.post<Comment>(`/comments/${commentId}/react/`, { reaction_type: reactionType });
+  }
+
+  unreactToComment(commentId: number, reactionType: string = 'thumbs_up'): Observable<Comment> {
+    return this.post<Comment>(`/comments/${commentId}/unreact/`, { reaction_type: reactionType });
+  }
+
+  // Notification endpoints
+  getNotifications(page?: number): Observable<PaginatedResponse<Notification>> {
+    const params: any = {};
+    if (page) {
+      params.page = page;
+    }
+    return this.getPaginated<Notification>('/notifications/', params);
+  }
+
+  markNotificationRead(notificationId: number): Observable<Notification> {
+    return this.patch<Notification>(`/notifications/${notificationId}/mark_read/`, {});
+  }
+
+  markAllNotificationsRead(): Observable<any> {
+    return this.post<any>('/notifications/mark_all_read/', {});
   }
 
   endorseEntry(entryId: number): Observable<Entry> {
@@ -218,10 +248,16 @@ export class GlossaryService extends BaseService {
   /**
    * Get comments with draft position indicators for an entry (paginated)
    */
-  getCommentsWithDraftPositions(entryId: number, page?: number): Observable<PaginatedResponse<Comment>> {
+  getCommentsWithDraftPositions(entryId: number, page?: number, draftId?: number, showResolved?: boolean): Observable<PaginatedResponse<Comment>> {
     const params: any = { entry: entryId };
     if (page) {
       params.page = page;
+    }
+    if (draftId) {
+      params.draft_id = draftId;
+    }
+    if (showResolved !== undefined) {
+      params.show_resolved = showResolved.toString();
     }
     return this.getPaginated<Comment>(`/comments/with_draft_positions/`, params);
   }

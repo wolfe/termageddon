@@ -2,10 +2,8 @@ import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
-from glossary.models import Entry
 from glossary.tests.conftest import (
     EntryDraftFactory,
     EntryFactory,
@@ -164,19 +162,17 @@ class TestErrorHandling:
         """Test edge cases in comment creation"""
         EntryFactory()  # Create entry for test
 
-        # Test comment on non-existent object
+        # Test comment on non-existent draft
         url = reverse("comment-list")
-        content_type = ContentType.objects.get_for_model(Entry)
         data = {
-            "content_type": content_type.id,
-            "object_id": 99999,  # Non-existent entry
+            "draft_id": 99999,  # Non-existent draft
             "text": "Test comment",
         }
 
         response = authenticated_client.post(url, data)
         assert (
-            response.status_code == status.HTTP_201_CREATED
-        )  # Comment creation succeeds even with non-existent object
+            response.status_code == status.HTTP_400_BAD_REQUEST
+        )  # Comment creation fails with non-existent draft
 
     def test_pagination_edge_cases(self, authenticated_client):
         """Test edge cases in pagination"""

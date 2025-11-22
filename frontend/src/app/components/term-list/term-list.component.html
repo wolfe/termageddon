@@ -48,6 +48,7 @@
                 [class.bg-termageddon-gray-light]="
                   selectedEntry?.term?.id === termEntries[0].term.id
                 "
+                [class.search-highlight]="termEntries[0].term.is_highlighted"
                 class="font-semibold text-sm text-termageddon-gray-dark cursor-pointer hover:text-termageddon-primary"
               >
                 {{ termEntries[0].term.text }}

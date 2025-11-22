@@ -21,6 +21,7 @@ export interface Term {
   text: string;
   text_normalized: string;
   is_official: boolean;
+  is_highlighted?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +53,7 @@ export interface EntryDraft {
   user_has_approved?: boolean;
   remaining_approvals?: number;
   approval_percentage?: number;
+  comment_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -71,19 +73,31 @@ export interface Entry {
 
 export interface Comment {
   id: number;
-  content_type: number;
-  object_id: number;
+  draft_id: number;
   parent?: number;
   text: string;
   author: User;
+  mentioned_users?: User[];
   is_resolved: boolean;
   replies: Comment[];
+  reaction_count?: number;
+  user_has_reacted?: boolean;
   created_at: string;
   updated_at: string;
+  edited_at?: string;
   // New fields for draft position tracking
   draft_position?: string;
-  draft_id?: number;
   draft_timestamp?: string;
+}
+
+export interface Notification {
+  id: number;
+  type: string;
+  message: string;
+  related_draft?: number;
+  related_comment?: number;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -109,8 +123,7 @@ export interface CreateEntryDraftRequest {
 }
 
 export interface CreateCommentRequest {
-  content_type: number;
-  object_id: number;
+  draft_id: number;
   parent?: number;
   text: string;
 }

@@ -150,7 +150,7 @@
               class="prose max-w-none bg-blue-50 p-4 rounded-lg"
               data-testid="latest-draft-content"
             >
-              <div #contentContainer [innerHTML]="getLatestDraftContent()"></div>
+              <div #contentContainer [innerHTML]="getDisplayContent()"></div>
             </div>
             @if (latestDraft) {
               <div class="mt-3 text-sm text-gray-600">
@@ -263,7 +263,17 @@
 
           <!-- Comments Section -->
           <div class="mt-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Comments</h3>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Comments</h3>
+              @if (getResolvedCommentsCount() > 0 && !showVersionHistorySidebar) {
+                <button
+                  (click)="toggleResolvedComments()"
+                  class="btn btn-sm btn-secondary"
+                >
+                  {{ showResolvedComments ? 'Hide' : 'Show' }} {{ getResolvedCommentsCount() }} resolved
+                </button>
+              }
+            </div>
             @if (isLoadingComments) {
               <div class="text-center text-gray-500 py-4">
                 <p>Loading comments...</p>
@@ -271,8 +281,7 @@
             } @else {
               <app-comment-thread
                 [comments]="comments"
-                [objectId]="draft.entry.id"
-                [contentType]="10"
+                [draftId]="getCurrentDraftId()"
                 (commentAdded)="onCommentAdded($event)"
                 (commentResolved)="onCommentResolved($event)"
                 (commentUnresolved)="onCommentUnresolved($event)"

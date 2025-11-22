@@ -71,7 +71,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   /**
    * Load comments for the entry (with pagination support)
    */
-  protected loadComments(entryId: number, page?: number, append: boolean = false): void {
+  protected loadComments(entryId: number, page?: number, append: boolean = false, draftId?: number, showResolved?: boolean): void {
     // Don't reload if we're already loading or have already loaded comments for this entry
     // Only skip if we've successfully loaded comments (not just attempted) and not appending
     if (this.isLoadingComments) {
@@ -83,7 +83,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
 
     this.isLoadingComments = true;
     this.entryDetailService
-      .loadCommentsWithPositions(entryId, page)
+      .loadCommentsWithPositions(entryId, page, draftId, showResolved)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: response => {

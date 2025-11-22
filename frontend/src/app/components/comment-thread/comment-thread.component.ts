@@ -17,8 +17,7 @@ import { getInitials, getUserDisplayName } from '../../utils/user.util';
 })
 export class CommentThreadComponent implements OnInit, OnChanges {
   @Input() comments: Comment[] = [];
-  @Input() objectId: number = 0;
-  @Input() contentType: number = 0;
+  @Input() draftId: number = 0;
   @Output() commentAdded = new EventEmitter<Comment>();
   @Output() commentResolved = new EventEmitter<Comment>();
   @Output() commentUnresolved = new EventEmitter<Comment>();
@@ -26,6 +25,8 @@ export class CommentThreadComponent implements OnInit, OnChanges {
   newCommentText = '';
   replyingTo: Comment | null = null;
   replyText = '';
+  editingComment: Comment | null = null;
+  editText = '';
   loading = false;
   error: string | null = null;
   collapsedComments: Set<number> = new Set(); // Track which comments are collapsed
@@ -78,8 +79,7 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     this.error = null;
 
     const commentData: CreateCommentRequest = {
-      content_type: this.contentType,
-      object_id: this.objectId,
+      draft_id: this.draftId,
       parent: this.replyingTo.id,
       text: this.replyText.trim(),
     };
@@ -105,8 +105,7 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     this.error = null;
 
     const commentData: CreateCommentRequest = {
-      content_type: this.contentType,
-      object_id: this.objectId,
+      draft_id: this.draftId,
       text: this.newCommentText.trim(),
     };
 
@@ -171,6 +170,45 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     return !comment.is_resolved && this.permissionService.currentUser !== null;
   }
 
+  canEdit(comment: Comment): boolean {
+    if (!this.permissionService.currentUser) return false;
+    return comment.author.id === this.permissionService.currentUser.id;
+  }
+
+  startEdit(comment: Comment) {
+    this.editingComment = comment;
+    this.editText = comment.text;
+  }
+
+  cancelEdit() {
+    this.editingComment = null;
+    this.editText = '';
+  }
+
+  submitEdit() {
+    if (!this.editingComment || !this.editText.trim()) return;
+
+    this.loading = true;
+    this.error = null;
+
+    this.glossaryService.updateComment(this.editingComment.id, this.editText.trim()).subscribe({
+      next: updatedComment => {
+        // Update the comment in the local array
+        const index = this.comments.findIndex(c => c.id === updatedComment.id);
+        if (index !== -1) {
+          this.comments[index] = updatedComment;
+        }
+        this.cancelEdit();
+        this.loading = false;
+      },
+      error: error => {
+        console.error('Error updating comment:', error);
+        this.error = 'Failed to update comment';
+        this.loading = false;
+      },
+    });
+  }
+
   getInitials = getInitials;
   getUserDisplayName = getUserDisplayName;
 
@@ -214,5 +252,54 @@ export class CommentThreadComponent implements OnInit, OnChanges {
       default:
         return 'bg-ui-background-elevated text-ui-text-muted';
     }
+  }
+
+  /**
+   * Format comment text with @mention highlighting
+   */
+  formatCommentText(comment: Comment): string {
+    let text = comment.text;
+
+    // Escape HTML first
+    const div = document.createElement('div');
+    div.textContent = text;
+    text = div.innerHTML;
+
+    // Highlight @mentions
+    text = text.replace(/@(\w+(?:\s+\w+)*)/g, '<span class="mention-highlight">@$1</span>');
+
+    // Add edited indicator if needed
+    if (comment.edited_at) {
+      text += ' <span class="edited-indicator" title="Edited">(edited)</span>';
+    }
+
+    return text;
+  }
+
+  toggleReaction(comment: Comment) {
+    if (!this.permissionService.currentUser) return;
+
+    this.loading = true;
+    this.error = null;
+
+    const action = comment.user_has_reacted
+      ? this.glossaryService.unreactToComment(comment.id)
+      : this.glossaryService.reactToComment(comment.id);
+
+    action.subscribe({
+      next: updatedComment => {
+        // Update the comment in the local array
+        const index = this.comments.findIndex(c => c.id === updatedComment.id);
+        if (index !== -1) {
+          this.comments[index] = updatedComment;
+        }
+        this.loading = false;
+      },
+      error: error => {
+        console.error('Error toggling reaction:', error);
+        this.error = 'Failed to update reaction';
+        this.loading = false;
+      },
+    });
   }
 }

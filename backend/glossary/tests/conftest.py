@@ -73,7 +73,7 @@ class CommentFactory(DjangoModelFactory):
     text = factory.Faker("text", max_nb_chars=200)
     author = factory.SubFactory(UserFactory)
     created_by = factory.SubFactory(UserFactory)
-    content_object = factory.SubFactory(EntryFactory)
+    draft = factory.SubFactory(EntryDraftFactory)
 
 
 class PerspectiveCuratorFactory(DjangoModelFactory):

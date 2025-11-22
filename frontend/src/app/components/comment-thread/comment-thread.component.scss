@@ -206,6 +206,21 @@
   margin-top: 0.5rem;
   margin-bottom: 0.75rem;
   margin-left: 2.5rem; /* Align with author info, accounting for avatar width + gap */
+
+  ::ng-deep .mention-highlight {
+    background-color: #dbeafe; /* blue-100 */
+    color: #1e40af; /* blue-800 */
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .edited-indicator {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+    margin-left: 0.5rem;
+  }
 }
 
 .resolved-badge {
@@ -358,5 +373,17 @@
   &.btn-sm {
     padding: 0.25rem 0.75rem;
     font-size: 0.75rem;
+  }
+}
+
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &.reacted {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1e40af;
   }
 }

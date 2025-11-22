@@ -1,10 +1,8 @@
 import pytest
 
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
 from glossary.models import (
-    Entry,
     EntryDraft,
     Perspective,
 )
@@ -237,14 +235,11 @@ class TestCommentModel:
     def test_comment_str_representation(self):
         """Test __str__ method"""
         user = UserFactory(username="alice")
-        entry = EntryFactory()
-        comment = CommentFactory(author=user)
-        # Set content_object manually for GenericForeignKey
-        comment.content_type = ContentType.objects.get_for_model(Entry)
-        comment.object_id = entry.id
-        comment.save()
+        draft = EntryDraftFactory()
+        comment = CommentFactory(author=user, draft=draft)
 
         assert "alice" in str(comment)
+        assert str(draft.id) in str(comment)
 
     def test_comment_with_replies(self):
         """Test nested comments (replies)"""

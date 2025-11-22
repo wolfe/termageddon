@@ -19,8 +19,8 @@ export class EntryDetailService {
   /**
    * Load comments with draft position indicators for an entry (paginated)
    */
-  loadCommentsWithPositions(entryId: number, page?: number): Observable<PaginatedResponse<Comment>> {
-    return this.glossaryService.getCommentsWithDraftPositions(entryId, page);
+  loadCommentsWithPositions(entryId: number, page?: number, draftId?: number, showResolved?: boolean): Observable<PaginatedResponse<Comment>> {
+    return this.glossaryService.getCommentsWithDraftPositions(entryId, page, draftId, showResolved);
   }
 
   /**

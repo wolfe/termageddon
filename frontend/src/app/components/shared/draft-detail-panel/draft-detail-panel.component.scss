@@ -57,3 +57,17 @@
 .button-disabled {
   @apply bg-gray-400 cursor-not-allowed;
 }
+
+// Diff highlighting styles
+::ng-deep .diff-add {
+  background-color: #d1fae5; /* green-100 */
+  color: #065f46; /* green-800 */
+  padding: 2px 0;
+}
+
+::ng-deep .diff-del {
+  background-color: #fee2e2; /* red-100 */
+  color: #991b1b; /* red-800 */
+  text-decoration: line-through;
+  padding: 2px 0;
+}
