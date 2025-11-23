@@ -68,6 +68,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   private shouldLoadEntries: boolean = true;
   private destroy$ = new Subject<void>();
   private commentsLoadedForEntryId: number | null = null;
+  private commentsLoadedForDraftId: number | null = null;
 
   constructor(
     public sanitizer: DomSanitizer,
@@ -167,21 +168,28 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   loadComments(): void {
     if (!this.entry?.id) return;
 
-    // Don't reload if we're already loading or have already loaded comments for this entry
-    // Only skip if we've successfully loaded comments (not just attempted)
+    // Don't reload if we're already loading
     if (this.isLoadingComments) {
       return;
     }
-    if (this.commentsLoadedForEntryId === this.entry.id) {
+
+    // Determine which draft ID to use (historical draft if selected, otherwise undefined)
+    const draftId = this.selectedHistoricalDraft?.id;
+
+    // Don't reload if we've already loaded comments for this entry and draft combination
+    if (this.commentsLoadedForEntryId === this.entry.id && this.commentsLoadedForDraftId === (draftId || null)) {
       return;
     }
 
     this.isLoadingComments = true;
+    // Pass the selected historical draft ID if viewing version history
+    const showResolved = this.showVersionHistory ? true : false;
     // Use EntryDetailService instead of direct glossaryService call
-    this.entryDetailService.loadCommentsWithPositions(this.entry.id).subscribe({
+    this.entryDetailService.loadCommentsWithPositions(this.entry.id, undefined, draftId, showResolved).subscribe({
       next: response => {
         this.comments = response.results;
         this.commentsLoadedForEntryId = this.entry.id;
+        this.commentsLoadedForDraftId = draftId || null;
         this.hasNextCommentsPage = !!response.next;
         this.commentsNextPage = response.next;
         this.isLoadingComments = false;
@@ -435,6 +443,11 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   onDraftSelected(draft: EntryDraft): void {
     // Update the view to show the selected draft
     this.selectedHistoricalDraft = draft;
+    // Reload comments for the selected historical draft
+    if (this.entry?.id) {
+      this.commentsLoadedForEntryId = null; // Force reload
+      this.loadComments();
+    }
   }
 
   private setupEntryLinkHandlers(): void {
