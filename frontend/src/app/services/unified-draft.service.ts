@@ -77,6 +77,8 @@ export class UnifiedDraftService {
         return this.reviewService.getDraftsCanApprove(showAll, perspectiveId, sortBy);
       case 'already_approved':
         return this.reviewService.getApprovedDrafts(perspectiveId, sortBy);
+      case 'all_except_own':
+        return this.reviewService.getAllDraftsExceptOwn(perspectiveId, sortBy);
       default:
         return this.reviewService.getPendingDrafts(perspectiveId, sortBy);
     }

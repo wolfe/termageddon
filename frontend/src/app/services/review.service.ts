@@ -170,6 +170,28 @@ export class ReviewService {
   }
 
   /**
+   * Get all drafts except user's own (for "Show all drafts" option)
+   */
+  getAllDraftsExceptOwn(
+    perspectiveId?: number,
+    sortBy?: string
+  ): Observable<PaginatedResponse<ReviewDraft>> {
+    const params = new URLSearchParams();
+    params.set('eligibility', 'all_except_own');
+    params.set('show_all', 'true');
+    params.set('expand', 'entry,entry.term,entry.perspective');
+    if (perspectiveId) {
+      params.set('perspective', perspectiveId.toString());
+    }
+    if (sortBy) {
+      params.set('ordering', sortBy);
+    }
+    return this.http.get<PaginatedResponse<ReviewDraft>>(
+      `${this.API_URL}/entry-drafts/?${params.toString()}`
+    );
+  }
+
+  /**
    * Search drafts with full-text search
    */
   searchDrafts(

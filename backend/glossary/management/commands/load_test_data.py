@@ -24,11 +24,12 @@ class Command(BaseCommand):
         if is_published:
             # Published drafts: 1-5 months ago
             days_offset = random.randint(30, 150)
+            return base_timestamp - timedelta(days=days_offset)
         else:
-            # Unpublished drafts: 0-3 months ago
-            days_offset = random.randint(0, 90)
-
-        return base_timestamp - timedelta(days=days_offset)
+            # Unpublished drafts: recent (0-20 days ago) so they're not archived
+            # This ensures they show up in Review and My Drafts panels
+            days_offset = random.randint(0, 20)
+            return timezone.now() - timedelta(days=days_offset)
 
     def select_approvers(self, perspective, author, all_users, num_approvers):
         """Select approvers with preference for curators and domain-aligned users"""
@@ -76,9 +77,9 @@ class Command(BaseCommand):
         num_revisions = random.randint(2, 3)
         drafts = []
 
-        # Start with a base timestamp and make each draft progressively newer
-        # This ensures ID sequencing matches created_at sequencing
-        current_timestamp = base_timestamp - timedelta(days=random.randint(60, 120))
+        # Start with a recent timestamp (0-20 days ago) for unpublished drafts
+        # This ensures they show up in Review and My Drafts panels
+        current_timestamp = timezone.now() - timedelta(days=random.randint(0, 20))
 
         for i in range(num_revisions):
             # Each revision gets progressively newer created_at (sequential, not random)
@@ -127,6 +128,32 @@ class Command(BaseCommand):
                 0, len(drafts) - 2
             )  # At least one draft after published
             published_draft_index = random.randint(0, max_published_index)
+
+        # If we have a published draft, update timestamps so published is older
+        # and unpublished drafts after it are newer
+        if published_draft_index is not None:
+            # Published draft gets older timestamp (1-5 months ago)
+            published_timestamp = base_timestamp - timedelta(
+                days=random.randint(30, 150)
+            )
+            # Update published draft timestamp
+            EntryDraft.objects.filter(pk=drafts[published_draft_index].pk).update(
+                created_at=published_timestamp
+            )
+            drafts[published_draft_index].refresh_from_db()
+
+            # Update all drafts before published to be older than published
+            for i in range(published_draft_index):
+                older_timestamp = published_timestamp - timedelta(
+                    days=random.randint(1, 30)
+                )
+                EntryDraft.objects.filter(pk=drafts[i].pk).update(
+                    created_at=older_timestamp
+                )
+                drafts[i].refresh_from_db()
+
+            # Ensure all drafts after published are newer (they already are, but verify)
+            # The unpublished drafts already have recent timestamps, which is correct
 
         for i, draft in enumerate(drafts):
             if i == published_draft_index:
