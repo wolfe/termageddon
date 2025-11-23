@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
@@ -11,6 +11,7 @@ import { EntryLinkSelectorDialogComponent } from '../shared/entry-link-selector-
   imports: [CommonModule, FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
   templateUrl: './definition-form.component.html',
   styleUrls: ['./definition-form.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class DefinitionFormComponent implements OnInit, OnDestroy {
   @Input() content: string = '';

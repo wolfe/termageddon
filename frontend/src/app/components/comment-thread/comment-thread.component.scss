@@ -207,13 +207,7 @@
   margin-bottom: 0.75rem;
   margin-left: 2.5rem; /* Align with author info, accounting for avatar width + gap */
 
-  ::ng-deep .mention-highlight {
-    background-color: #dbeafe; /* blue-100 */
-    color: #1e40af; /* blue-800 */
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-weight: 500;
-  }
+  // Mention highlight styles moved to global styles.scss
 
   .edited-indicator {
     font-size: 0.75rem;

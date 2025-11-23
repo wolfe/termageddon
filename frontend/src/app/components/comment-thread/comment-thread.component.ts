@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Comment, User, CreateCommentRequest } from '../../models';
@@ -33,7 +33,8 @@ export class CommentThreadComponent implements OnInit, OnChanges {
 
   constructor(
     private glossaryService: GlossaryService,
-    public permissionService: PermissionService
+    public permissionService: PermissionService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -276,27 +277,51 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     return text;
   }
 
-  toggleReaction(comment: Comment) {
+  toggleReaction(comment: Comment, event?: Event) {
     if (!this.permissionService.currentUser) return;
+
+    // Prevent event propagation to avoid double-click issues
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+
+    // Optimistically update the UI immediately for better UX
+    const wasReacted = comment.user_has_reacted;
+    const currentCount = comment.reaction_count || 0;
+
+    // Update immediately
+    comment.user_has_reacted = !wasReacted;
+    comment.reaction_count = wasReacted ? Math.max(0, currentCount - 1) : currentCount + 1;
 
     this.loading = true;
     this.error = null;
 
-    const action = comment.user_has_reacted
+    const action = wasReacted
       ? this.glossaryService.unreactToComment(comment.id)
       : this.glossaryService.reactToComment(comment.id);
 
     action.subscribe({
       next: updatedComment => {
-        // Update the comment in the local array
+        // Update the comment in the local array with server response
         const index = this.comments.findIndex(c => c.id === updatedComment.id);
         if (index !== -1) {
-          this.comments[index] = updatedComment;
+          // Create a new array to trigger change detection
+          this.comments = [
+            ...this.comments.slice(0, index),
+            updatedComment,
+            ...this.comments.slice(index + 1)
+          ];
+          // Force change detection to ensure UI updates
+          this.cdr.markForCheck();
         }
         this.loading = false;
       },
       error: error => {
         console.error('Error toggling reaction:', error);
+        // Revert optimistic update on error
+        comment.user_has_reacted = wasReacted;
+        comment.reaction_count = currentCount;
         this.error = 'Failed to update reaction';
         this.loading = false;
       },

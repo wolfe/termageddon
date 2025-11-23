@@ -8,7 +8,12 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
 @Component({
   selector: 'app-new-entry-detail-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, DefinitionFormComponent, PerspectivePillComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DefinitionFormComponent,
+    PerspectivePillComponent,
+  ],
   template: `
     <div class="new-entry-detail-panel">
       <!-- Header -->

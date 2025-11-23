@@ -1,8 +1,26 @@
 /* Master Detail Layout - using shared three-panel styles */
 /* Component-specific styles only */
 
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* Constrain the container to respect host height */
+.three-panel-container {
+  height: 100%;
+  min-height: 0;
+}
+
 /* Ensure detail panel content takes full height */
 .three-panel-detail {
   min-height: 0; /* Allow flex children to shrink */
-  height: 100vh; /* Use viewport height */
+  /* Height is handled by parent flex container, no need to override */
+}
+
+/* Constrain wrapper div created by ng-content */
+.three-panel-detail > * {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
 }

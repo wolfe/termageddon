@@ -357,11 +357,6 @@ export class DraftDetailPanelComponent
 
   override onDraftSelected(draft: EntryDraft): void {
     super.onDraftSelected(draft);
-    // Reload comments for the selected historical draft
-    if (this.draft?.entry?.id) {
-      this.commentsLoadedForEntryId = null; // Force reload
-      this.loadComments(this.draft.entry.id);
-    }
     // Recalculate diff when a historical draft is selected
     setTimeout(() => this.calculateDiff(), 100);
   }

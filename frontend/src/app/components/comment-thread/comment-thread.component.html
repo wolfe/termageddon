@@ -1,28 +1,4 @@
 <div class="comment-thread">
-  <!-- New Comment Form -->
-  <div class="new-comment-form">
-    <div class="form-header">
-      <h4>Add a Comment</h4>
-    </div>
-    <div class="form-body">
-      <textarea
-        [(ngModel)]="newCommentText"
-        placeholder="Write your comment here..."
-        class="comment-textarea"
-        rows="3"
-      ></textarea>
-      <div class="form-actions">
-        <button
-          (click)="submitNewComment()"
-          [disabled]="!newCommentText.trim() || loading"
-          class="btn btn-primary"
-        >
-          {{ loading ? 'Posting...' : 'Post Comment' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Error Message -->
   <div *ngIf="error" class="error-message">
     {{ error }}
@@ -87,7 +63,7 @@
               Reply
             </button>
             <button
-              (click)="toggleReaction(comment)"
+              (click)="toggleReaction(comment, $event)"
               class="btn btn-sm btn-secondary reaction-btn"
               [class.reacted]="comment.user_has_reacted"
               [title]="comment.user_has_reacted ? 'Remove thumbs up' : 'Thumbs up'"
@@ -187,6 +163,27 @@
     <!-- No Comments -->
     <div *ngIf="getTopLevelComments().length === 0" class="no-comments">
       <p>No comments yet. Be the first to comment!</p>
+    </div>
+  </div>
+
+  <!-- New Comment Form -->
+  <div class="new-comment-form">
+    <div class="form-body">
+      <textarea
+        [(ngModel)]="newCommentText"
+        placeholder="Write your comment here..."
+        class="comment-textarea"
+        rows="3"
+      ></textarea>
+      <div class="form-actions">
+        <button
+          (click)="submitNewComment()"
+          [disabled]="!newCommentText.trim() || loading"
+          class="btn btn-primary"
+        >
+          {{ loading ? 'Posting...' : 'Post Comment' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

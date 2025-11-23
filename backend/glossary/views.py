@@ -921,9 +921,12 @@ class CommentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Create reaction
+        # Create reaction with created_by set
         Reaction.objects.create(
-            comment=comment, user=request.user, reaction_type=reaction_type
+            comment=comment,
+            user=request.user,
+            reaction_type=reaction_type,
+            created_by=request.user,
         )
 
         serializer = self.get_serializer(comment)

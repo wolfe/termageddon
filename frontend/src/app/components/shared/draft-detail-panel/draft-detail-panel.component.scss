@@ -2,9 +2,18 @@
 @import '../../../styles/shared-components.scss';
 
 /* Component-specific styles */
+:host {
+  display: block;
+  height: 100%;
+}
+
 .draft-detail-panel {
   @apply flex flex-col h-full;
+  overflow: hidden; // Prevent content from expanding parent
 }
+
+// Ensure root container constrains its children
+// This is handled by the component's root class, no need for !important overrides
 
 .draft-header {
   @apply p-4 border-b border-gray-300;
@@ -58,16 +67,44 @@
   @apply bg-gray-400 cursor-not-allowed;
 }
 
-// Diff highlighting styles
-::ng-deep .diff-add {
-  background-color: #d1fae5; /* green-100 */
-  color: #065f46; /* green-800 */
-  padding: 2px 0;
+// Diff highlighting styles moved to global styles.scss
+
+// Grid layout for 50/50 split
+.view-mode-grid {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 0;
+  min-height: 0; // Allow grid to shrink
+  overflow: hidden;
+  flex: 1 1 0%;
 }
 
-::ng-deep .diff-del {
-  background-color: #fee2e2; /* red-100 */
-  color: #991b1b; /* red-800 */
-  text-decoration: line-through;
-  padding: 2px 0;
+.view-mode-grid > * {
+  min-height: 0; // Critical for grid children to respect constraints
+  overflow: hidden; // Prevent content from expanding grid
+}
+
+.definitions-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; // Explicitly set to respect grid constraints
+  overflow: hidden; // Prevent content from expanding grid
+}
+
+.definitions-scrollable {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.comments-grid {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.comments-scrollable {
+  min-height: 0;
+  overflow-y: auto;
 }

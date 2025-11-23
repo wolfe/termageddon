@@ -2,3 +2,7 @@
 @import '../../styles/shared-components.scss';
 
 /* Component-specific overrides only */
+:host {
+  display: block;
+  height: 100%;
+}

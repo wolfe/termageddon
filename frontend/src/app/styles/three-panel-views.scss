@@ -4,7 +4,9 @@
 .three-panel-container {
   @apply flex;
   @apply bg-gray-50; /* Off-white background */
-  height: calc(100vh - 80px); /* Use viewport height minus navigation */
+  @apply flex-1; /* Use flex-1 to fill available space in parent flex container */
+  @apply min-h-0; /* Allow flex children to shrink */
+  @apply overflow-hidden; /* Prevent overflow */
 }
 
 /* Sidebar styling */
@@ -17,6 +19,13 @@
   @apply flex-1 overflow-hidden relative;
   @apply bg-gray-50; /* Off-white background */
   height: 100%; /* Take full height of parent */
+}
+
+/* Constrain wrapper divs created by ng-content in detail panel */
+.three-panel-detail > * {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Empty state styling - centered with logo */

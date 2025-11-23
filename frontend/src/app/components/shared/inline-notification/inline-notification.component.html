@@ -1,10 +1,10 @@
 @if (notification) {
-  <div
-    [class]="getNotificationClass(notification)"
-    [class.notification-visible]="isVisible"
-    [class.notification-fading]="isFading"
-    [class.notification-resetting]="isResetting"
-  >
+<div
+  [class]="getNotificationClass(notification)"
+  [class.notification-visible]="isVisible && !isFading && !isResetting"
+  [class.notification-fading]="isFading"
+  [class.notification-resetting]="isResetting"
+>
     <span class="notification-icon">{{ getIconClass(notification) }}</span>
     <span class="notification-message">{{ notification.message }}</span>
   </div>
