@@ -18,6 +18,7 @@ import { getInitials, getUserDisplayName } from '../../utils/user.util';
 export class CommentThreadComponent implements OnInit, OnChanges {
   @Input() comments: Comment[] = [];
   @Input() draftId: number = 0;
+  @Input() readOnly: boolean = false;
   @Output() commentAdded = new EventEmitter<Comment>();
   @Output() commentResolved = new EventEmitter<Comment>();
   @Output() commentUnresolved = new EventEmitter<Comment>();
@@ -29,6 +30,7 @@ export class CommentThreadComponent implements OnInit, OnChanges {
   editText = '';
   loading = false;
   error: string | null = null;
+  reactionLoadingCommentId: number | null = null; // Track which comment is loading a reaction
   collapsedComments: Set<number> = new Set(); // Track which comments are collapsed
 
   constructor(
@@ -42,9 +44,19 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     this.initializeCollapsedState();
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: any) {
     // Re-initialize collapsed state when comments change
     this.initializeCollapsedState();
+
+    // If readOnly becomes true, cancel any active editing or replying
+    if (changes.readOnly && changes.readOnly.currentValue === true) {
+      if (this.editingComment) {
+        this.cancelEdit();
+      }
+      if (this.replyingTo) {
+        this.cancelReply();
+      }
+    }
   }
 
   private initializeCollapsedState(): void {
@@ -60,7 +72,8 @@ export class CommentThreadComponent implements OnInit, OnChanges {
   }
 
   getReplies(comment: Comment): Comment[] {
-    return this.comments.filter(c => c.parent === comment.id);
+    // Use nested replies structure from backend
+    return comment.replies || [];
   }
 
   startReply(comment: Comment) {
@@ -277,8 +290,63 @@ export class CommentThreadComponent implements OnInit, OnChanges {
     return text;
   }
 
-  toggleReaction(comment: Comment, event?: Event) {
+  /**
+   * Find and update a comment in the comments array
+   * Handles both flat array structure and nested replies structure
+   * Updates the comment in place to maintain shared reference with parent component
+   */
+  private updateCommentInArray(updatedComment: Comment): boolean {
+    // First, try to find in the flat array (top-level comments)
+    const index = this.comments.findIndex(c => c.id === updatedComment.id);
+    if (index !== -1) {
+      // Update the comment object in place
+      // Since comments is an @Input(), both parent and child share the same array/object references
+      // Updating in place ensures both see the changes
+      const existingComment = this.comments[index];
+
+      // Update all fields from the server response
+      existingComment.reaction_count = updatedComment.reaction_count;
+      existingComment.user_has_reacted = updatedComment.user_has_reacted;
+
+      // Update other fields that might have changed
+      if (updatedComment.text !== undefined) {
+        existingComment.text = updatedComment.text;
+      }
+      if (updatedComment.is_resolved !== undefined) {
+        existingComment.is_resolved = updatedComment.is_resolved;
+      }
+      // Update nested replies if present in the response
+      if (updatedComment.replies) {
+        existingComment.replies = updatedComment.replies;
+      }
+
+      return true;
+    }
+
+    // If not found in top-level, check nested replies
+    for (const comment of this.comments) {
+      if (comment.replies && comment.replies.length > 0) {
+        const replyIndex = comment.replies.findIndex((r: Comment) => r.id === updatedComment.id);
+        if (replyIndex !== -1) {
+          // Update the reply in place
+          const existingReply = comment.replies[replyIndex];
+          existingReply.reaction_count = updatedComment.reaction_count;
+          existingReply.user_has_reacted = updatedComment.user_has_reacted;
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  reactToComment(comment: Comment, event?: Event) {
     if (!this.permissionService.currentUser) return;
+
+    // Don't allow reacting if already reacted (one-way only)
+    if (comment.user_has_reacted) {
+      return;
+    }
 
     // Prevent event propagation to avoid double-click issues
     if (event) {
@@ -286,44 +354,77 @@ export class CommentThreadComponent implements OnInit, OnChanges {
       event.preventDefault();
     }
 
-    // Optimistically update the UI immediately for better UX
-    const wasReacted = comment.user_has_reacted;
+    // Prevent multiple simultaneous requests for the same comment
+    if (this.reactionLoadingCommentId === comment.id) {
+      console.warn('Reaction request already in progress for comment:', comment.id);
+      return;
+    }
+
+    // Store original state for potential revert
     const currentCount = comment.reaction_count || 0;
 
-    // Update immediately
-    comment.user_has_reacted = !wasReacted;
-    comment.reaction_count = wasReacted ? Math.max(0, currentCount - 1) : currentCount + 1;
+    // Optimistically update the UI immediately for better UX
+    comment.user_has_reacted = true;
+    comment.reaction_count = currentCount + 1;
 
     this.loading = true;
+    this.reactionLoadingCommentId = comment.id;
     this.error = null;
 
-    const action = wasReacted
-      ? this.glossaryService.unreactToComment(comment.id)
-      : this.glossaryService.reactToComment(comment.id);
-
-    action.subscribe({
+    this.glossaryService.reactToComment(comment.id).subscribe({
       next: updatedComment => {
-        // Update the comment in the local array with server response
-        const index = this.comments.findIndex(c => c.id === updatedComment.id);
-        if (index !== -1) {
-          // Create a new array to trigger change detection
-          this.comments = [
-            ...this.comments.slice(0, index),
-            updatedComment,
-            ...this.comments.slice(index + 1)
-          ];
-          // Force change detection to ensure UI updates
-          this.cdr.markForCheck();
+        // Log API response for debugging
+        console.log('Reaction API response:', {
+          commentId: updatedComment.id,
+          reaction_count: updatedComment.reaction_count,
+          user_has_reacted: updatedComment.user_has_reacted,
+          fullResponse: updatedComment
+        });
+
+        // Update the comment in the array with server response
+        const updated = this.updateCommentInArray(updatedComment);
+        if (!updated) {
+          console.warn('Comment not found in array after reaction update:', updatedComment.id);
+          // Revert optimistic update if comment not found
+          comment.user_has_reacted = false;
+          comment.reaction_count = currentCount;
         }
+
+        // Force change detection to ensure UI updates
+        this.cdr.markForCheck();
         this.loading = false;
+        this.reactionLoadingCommentId = null;
       },
       error: error => {
-        console.error('Error toggling reaction:', error);
+        console.error('Error adding reaction:', error);
         // Revert optimistic update on error
-        comment.user_has_reacted = wasReacted;
+        comment.user_has_reacted = false;
         comment.reaction_count = currentCount;
-        this.error = 'Failed to update reaction';
+
+        // Show user-friendly error message
+        let errorMessage = 'Failed to add reaction. Please try again.';
+        if (error?.error?.detail) {
+          errorMessage = error.error.detail;
+        } else if (error?.status === 400) {
+          errorMessage = 'Unable to add reaction. You may have already reacted.';
+        } else if (error?.status === 403) {
+          errorMessage = 'You do not have permission to react to this comment.';
+        } else if (error?.status === 0 || error?.status >= 500) {
+          errorMessage = 'Server error. Please check your connection and try again.';
+        }
+
+        this.error = errorMessage;
         this.loading = false;
+        this.reactionLoadingCommentId = null;
+        this.cdr.markForCheck();
+
+        // Clear error after 5 seconds
+        setTimeout(() => {
+          if (this.error === errorMessage) {
+            this.error = null;
+            this.cdr.markForCheck();
+          }
+        }, 5000);
       },
     });
   }

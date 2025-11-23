@@ -929,8 +929,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def react(self, request, pk=None):
         """Add a reaction to a comment"""
+        import logging
+
+        from django.db import IntegrityError
+
         from glossary.models import Reaction
 
+        logger = logging.getLogger(__name__)
         comment = self.get_object()
         reaction_type = request.data.get("reaction_type", "thumbs_up")
 
@@ -940,27 +945,64 @@ class CommentViewSet(viewsets.ModelViewSet):
         ).first()
 
         if existing_reaction:
-            return Response(
-                {"detail": "You have already reacted to this comment."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            # User already reacted - return current state instead of error
+            # This handles race conditions where multiple requests come in
+            comment.refresh_from_db()
+            if hasattr(comment, "_prefetched_objects_cache"):
+                comment._prefetched_objects_cache = {}
+            serializer = self.get_serializer(comment)
+            return Response(serializer.data)
 
         # Create reaction with created_by set
-        Reaction.objects.create(
-            comment=comment,
-            user=request.user,
-            reaction_type=reaction_type,
-            created_by=request.user,
-        )
+        # Use get_or_create to handle race conditions gracefully
+        try:
+            reaction, created = Reaction.objects.get_or_create(
+                comment=comment,
+                user=request.user,
+                reaction_type=reaction_type,
+                defaults={"created_by": request.user},
+            )
+            if not created:
+                # Reaction already exists (race condition)
+                comment.refresh_from_db()
+                if hasattr(comment, "_prefetched_objects_cache"):
+                    comment._prefetched_objects_cache = {}
+                serializer = self.get_serializer(comment)
+                return Response(serializer.data)
+        except IntegrityError:
+            # Handle unique constraint violation (race condition)
+            comment.refresh_from_db()
+            if hasattr(comment, "_prefetched_objects_cache"):
+                comment._prefetched_objects_cache = {}
+            serializer = self.get_serializer(comment)
+            return Response(serializer.data)
+
+        # Refresh comment from DB and clear prefetch cache to get updated reaction data
+        comment.refresh_from_db()
+        # Clear the prefetched reactions cache to ensure fresh data
+        if hasattr(comment, "_prefetched_objects_cache"):
+            comment._prefetched_objects_cache = {}
 
         serializer = self.get_serializer(comment)
-        return Response(serializer.data)
+        response_data = serializer.data
+
+        # Log the response for debugging
+        logger.info(
+            f"Reaction added: comment_id={comment.id}, user={request.user.username}, "
+            f"reaction_count={response_data.get('reaction_count')}, "
+            f"user_has_reacted={response_data.get('user_has_reacted')}"
+        )
+
+        return Response(response_data)
 
     @action(detail=True, methods=["post"])
     def unreact(self, request, pk=None):
         """Remove a reaction from a comment"""
+        import logging
+
         from glossary.models import Reaction
 
+        logger = logging.getLogger(__name__)
         comment = self.get_object()
         reaction_type = request.data.get("reaction_type", "thumbs_up")
 
@@ -970,15 +1012,33 @@ class CommentViewSet(viewsets.ModelViewSet):
         ).first()
 
         if not reaction:
-            return Response(
-                {"detail": "You have not reacted to this comment."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            # User hasn't reacted - return current state instead of error
+            # This handles race conditions where multiple requests come in
+            comment.refresh_from_db()
+            if hasattr(comment, "_prefetched_objects_cache"):
+                comment._prefetched_objects_cache = {}
+            serializer = self.get_serializer(comment)
+            return Response(serializer.data)
 
         reaction.delete()
 
+        # Refresh comment from DB and clear prefetch cache to get updated reaction data
+        comment.refresh_from_db()
+        # Clear the prefetched reactions cache to ensure fresh data
+        if hasattr(comment, "_prefetched_objects_cache"):
+            comment._prefetched_objects_cache = {}
+
         serializer = self.get_serializer(comment)
-        return Response(serializer.data)
+        response_data = serializer.data
+
+        # Log the response for debugging
+        logger.info(
+            f"Reaction removed: comment_id={comment.id}, user={request.user.username}, "
+            f"reaction_count={response_data.get('reaction_count')}, "
+            f"user_has_reacted={response_data.get('user_has_reacted')}"
+        )
+
+        return Response(response_data)
 
     def _get_relevant_drafts(self, entry_id):
         """Get drafts relevant for comment loading (after last published or all if none published)"""

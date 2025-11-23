@@ -224,7 +224,8 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   onCommentAdded(comment: Comment): void {
-    this.comments.push(comment);
+    // Use the service method to properly handle nested replies
+    this.comments = this.entryDetailService.onCommentAdded(this.comments, comment);
   }
 
   onCommentResolved(comment: Comment): void {

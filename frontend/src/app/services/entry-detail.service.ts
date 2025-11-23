@@ -79,8 +79,22 @@ export class EntryDetailService {
 
   /**
    * Handle comment added - update local comments array
+   * If it's a reply, add it to the parent comment's replies array
    */
   onCommentAdded(comments: Comment[], comment: Comment): Comment[] {
+    // If it's a reply, add it to the parent's replies array
+    if (comment.parent) {
+      return comments.map(c => {
+        if (c.id === comment.parent) {
+          return {
+            ...c,
+            replies: [...(c.replies || []), comment]
+          };
+        }
+        return c;
+      });
+    }
+    // If it's a top-level comment, add it to the array
     return [...comments, comment];
   }
 

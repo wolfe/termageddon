@@ -260,10 +260,12 @@
 }
 
 .replies {
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   margin-left: 0.75rem;
   padding-left: 0.75rem;
+  padding-top: 0.75rem;
   border-left: 2px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
 }
 
 .reply-item {
@@ -282,12 +284,21 @@
 }
 
 .reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 0.25rem;
 }
 
 .reply-author {
   display: flex;
   align-items: flex-start;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.reply-actions {
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -370,14 +381,63 @@
   }
 }
 
+.reaction-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
 .reaction-btn {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
   &.reacted {
     background: #dbeafe;
     border-color: #3b82f6;
     color: #1e40af;
+    font-weight: 600;
+    cursor: default;
+
+    &:disabled {
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
+  }
+
+  &.loading {
+    opacity: 0.7;
+    cursor: wait;
+    pointer-events: none;
+  }
+
+  &:disabled:not(.loading) {
+    cursor: not-allowed;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

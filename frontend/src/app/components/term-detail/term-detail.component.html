@@ -298,6 +298,7 @@
             <app-comment-thread
               [comments]="comments"
               [draftId]="selectedHistoricalDraft?.id || entry.active_draft?.id || 0"
+              [readOnly]="showVersionHistory"
               (commentAdded)="onCommentAdded($event)"
               (commentResolved)="onCommentResolved($event)"
               (commentUnresolved)="onCommentUnresolved($event)"

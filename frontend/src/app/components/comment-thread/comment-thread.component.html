@@ -39,7 +39,7 @@
           </div>
           <div class="comment-actions">
             <button
-              *ngIf="canEdit(comment) && editingComment?.id !== comment.id"
+              *ngIf="!readOnly && canEdit(comment) && editingComment?.id !== comment.id"
               (click)="startEdit(comment)"
               [disabled]="loading"
               class="btn btn-sm btn-secondary"
@@ -47,7 +47,7 @@
               Edit
             </button>
             <button
-              *ngIf="canResolve(comment)"
+              *ngIf="!readOnly && canResolve(comment)"
               (click)="comment.is_resolved ? unresolveComment(comment) : resolveComment(comment)"
               [disabled]="loading"
               class="btn btn-sm"
@@ -56,26 +56,34 @@
               {{ comment.is_resolved ? 'Unresolve' : 'Resolve' }}
             </button>
             <button
-              *ngIf="canReply(comment)"
+              *ngIf="!readOnly && canReply(comment)"
               (click)="startReply(comment)"
               class="btn btn-sm btn-secondary"
             >
               Reply
             </button>
             <button
-              (click)="toggleReaction(comment, $event)"
+              *ngIf="!readOnly"
+              (click)="reactToComment(comment, $event)"
               class="btn btn-sm btn-secondary reaction-btn"
               [class.reacted]="comment.user_has_reacted"
-              [title]="comment.user_has_reacted ? 'Remove thumbs up' : 'Thumbs up'"
+              [class.loading]="reactionLoadingCommentId === comment.id"
+              [disabled]="comment.user_has_reacted || reactionLoadingCommentId === comment.id"
+              [title]="comment.user_has_reacted ? 'You have already reacted to this comment' : 'Thumbs up'"
             >
-              👍 {{ comment.reaction_count || 0 }}
+              <span *ngIf="reactionLoadingCommentId === comment.id" class="loading-spinner"></span>
+              <span *ngIf="reactionLoadingCommentId !== comment.id">👍</span>
+              {{ comment.reaction_count || 0 }}
             </button>
+            <span *ngIf="readOnly" class="reaction-display">
+              👍 {{ comment.reaction_count || 0 }}
+            </span>
           </div>
         </div>
 
         <div class="comment-content">
           <!-- Edit Mode -->
-          <div *ngIf="editingComment?.id === comment.id" class="edit-form">
+          <div *ngIf="!readOnly && editingComment?.id === comment.id" class="edit-form">
             <textarea
               [(ngModel)]="editText"
               class="edit-textarea"
@@ -97,63 +105,89 @@
         </div>
 
         <div *ngIf="comment.is_resolved" class="resolved-badge">✓ Resolved</div>
-      </div>
 
-      <!-- Reply Form -->
-      <div *ngIf="replyingTo?.id === comment.id" class="reply-form">
-        <textarea
-          [(ngModel)]="replyText"
-          placeholder="Write your reply..."
-          class="reply-textarea"
-          rows="2"
-        ></textarea>
-        <div class="reply-actions">
-          <button
-            (click)="submitReply()"
-            [disabled]="!replyText.trim() || loading"
-            class="btn btn-primary btn-sm"
-          >
-            {{ loading ? 'Posting...' : 'Post Reply' }}
-          </button>
-          <button (click)="cancelReply()" class="btn btn-secondary btn-sm">Cancel</button>
+        <!-- Reply Form -->
+        <div *ngIf="!readOnly && replyingTo?.id === comment.id" class="reply-form">
+          <textarea
+            [(ngModel)]="replyText"
+            placeholder="Write your reply..."
+            class="reply-textarea"
+            rows="2"
+          ></textarea>
+          <div class="reply-actions">
+            <button
+              (click)="submitReply()"
+              [disabled]="!replyText.trim() || loading"
+              class="btn btn-primary btn-sm"
+            >
+              {{ loading ? 'Posting...' : 'Post Reply' }}
+            </button>
+            <button (click)="cancelReply()" class="btn btn-secondary btn-sm">Cancel</button>
+          </div>
         </div>
-      </div>
 
-      <!-- Replies -->
-      <div class="replies" *ngIf="getReplies(comment).length > 0 && !isCommentCollapsed(comment)">
-        <div *ngFor="let reply of getReplies(comment)" class="reply-item">
-          <div class="reply-main">
-            <div class="reply-header">
-              <div class="reply-author">
-                <app-user-avatar [user]="reply.author" color="blue" size="small"></app-user-avatar>
-                <div class="author-info">
-                  <span class="author-name">{{ getUserDisplayName(reply.author) }}</span>
-                  <span class="reply-date">{{ reply.created_at | relativeTime }}</span>
+        <!-- Replies -->
+        <div class="replies" *ngIf="getReplies(comment).length > 0 && !isCommentCollapsed(comment)">
+          <div *ngFor="let reply of getReplies(comment)" class="reply-item">
+            <div class="reply-main">
+              <div class="reply-header">
+                <div class="reply-author">
+                  <app-user-avatar [user]="reply.author" color="blue" size="small"></app-user-avatar>
+                  <div class="author-info">
+                    <span class="author-name">{{ getUserDisplayName(reply.author) }}</span>
+                    <span class="reply-date">{{ reply.created_at | relativeTime }}</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="reply-content">
-              <!-- Edit Mode for Replies -->
-              <div *ngIf="editingComment?.id === reply.id" class="edit-form">
-                <textarea
-                  [(ngModel)]="editText"
-                  class="edit-textarea"
-                  rows="2"
-                ></textarea>
-                <div class="edit-actions">
+                <div class="reply-actions">
                   <button
-                    (click)="submitEdit()"
-                    [disabled]="!editText.trim() || loading"
-                    class="btn btn-primary btn-sm"
+                    *ngIf="!readOnly && canEdit(reply) && editingComment?.id !== reply.id"
+                    (click)="startEdit(reply)"
+                    [disabled]="loading"
+                    class="btn btn-sm btn-secondary"
                   >
-                    {{ loading ? 'Saving...' : 'Save' }}
+                    Edit
                   </button>
-                  <button (click)="cancelEdit()" class="btn btn-secondary btn-sm">Cancel</button>
+                  <button
+                    *ngIf="!readOnly"
+                    (click)="reactToComment(reply, $event)"
+                    class="btn btn-sm btn-secondary reaction-btn"
+                    [class.reacted]="reply.user_has_reacted"
+                    [class.loading]="reactionLoadingCommentId === reply.id"
+                    [disabled]="reply.user_has_reacted || reactionLoadingCommentId === reply.id"
+                    [title]="reply.user_has_reacted ? 'You have already reacted to this comment' : 'Thumbs up'"
+                  >
+                    <span *ngIf="reactionLoadingCommentId === reply.id" class="loading-spinner"></span>
+                    <span *ngIf="reactionLoadingCommentId !== reply.id">👍</span>
+                    {{ reply.reaction_count || 0 }}
+                  </button>
+                  <span *ngIf="readOnly" class="reaction-display">
+                    👍 {{ reply.reaction_count || 0 }}
+                  </span>
                 </div>
               </div>
-              <!-- View Mode for Replies -->
-              <div *ngIf="editingComment?.id !== reply.id" [innerHTML]="formatCommentText(reply)"></div>
+
+              <div class="reply-content">
+                <!-- Edit Mode for Replies -->
+                <div *ngIf="!readOnly && editingComment?.id === reply.id" class="edit-form">
+                  <textarea
+                    [(ngModel)]="editText"
+                    class="edit-textarea"
+                    rows="2"
+                  ></textarea>
+                  <div class="edit-actions">
+                    <button
+                      (click)="submitEdit()"
+                      [disabled]="!editText.trim() || loading"
+                      class="btn btn-primary btn-sm"
+                    >
+                      {{ loading ? 'Saving...' : 'Save' }}
+                    </button>
+                    <button (click)="cancelEdit()" class="btn btn-secondary btn-sm">Cancel</button>
+                  </div>
+                </div>
+                <!-- View Mode for Replies -->
+                <div *ngIf="editingComment?.id !== reply.id" [innerHTML]="formatCommentText(reply)"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -162,12 +196,12 @@
 
     <!-- No Comments -->
     <div *ngIf="getTopLevelComments().length === 0" class="no-comments">
-      <p>No comments yet. Be the first to comment!</p>
+      <p>{{ readOnly ? 'No comments on this version.' : 'No comments yet. Be the first to comment!' }}</p>
     </div>
   </div>
 
   <!-- New Comment Form -->
-  <div class="new-comment-form">
+  <div *ngIf="!readOnly" class="new-comment-form">
     <div class="form-body">
       <textarea
         [(ngModel)]="newCommentText"
