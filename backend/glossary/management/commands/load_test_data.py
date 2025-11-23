@@ -1,5 +1,6 @@
 import csv
 import random
+import re
 from datetime import timedelta
 from pathlib import Path
 
@@ -377,6 +378,7 @@ class Command(BaseCommand):
             base_timestamp = timezone.now() - timedelta(days=180)
 
             unique_authors = set(row["author"] for row in data)
+            is_real_data_mode = csv_path.endswith("real_data.csv")
 
             # Create user accounts for authors
             users = {}
@@ -438,11 +440,21 @@ class Command(BaseCommand):
             # Create perspectives from CSV
             unique_perspectives = set(row["perspective"] for row in data)
             perspectives = {}
+
+            # Define specific descriptions for known perspectives
+            perspective_descriptions = {
+                "EES": "Verisk's view of industry terms",
+                "Tools": "Software tools used by Verisk",
+            }
+
             for perspective_name in unique_perspectives:
+                description = perspective_descriptions.get(
+                    perspective_name, f"Terms related to {perspective_name}"
+                )
                 perspective, created = Perspective.objects.get_or_create(
                     name=perspective_name,
                     defaults={
-                        "description": f"Terms related to {perspective_name}",
+                        "description": description,
                         "created_by": admin,
                     },
                 )
@@ -494,6 +506,14 @@ class Command(BaseCommand):
             drafts_created = 0
             revision_chains_created = 0
 
+            # Track drafts by entry for linking multiple drafts
+            entry_drafts = (
+                {}
+            )  # (term_text, perspective_name) -> list of drafts in order
+
+            # Track all entries for cross-reference resolution
+            all_entries = {}  # (term_text, perspective_name) -> Entry
+
             for row in data:
                 perspective = perspectives[row["perspective"]]
                 author = users[row["author"]]
@@ -512,52 +532,98 @@ class Command(BaseCommand):
                 if entry_created:
                     entries_created += 1
 
+                # Store entry for cross-reference resolution
+                entry_key = (row["term"], row["perspective"])
+                all_entries[entry_key] = entry
+
+                # Prepare content - check if already has HTML tags
+                content = row["definition"].strip()
+                if not content.startswith("<"):
+                    # Wrap in paragraph if not already HTML
+                    content = f"<p>{content}</p>"
+
+                # Check if this is a second draft for the same entry
+                entry_key = (row["term"], row["perspective"])
+                previous_drafts = entry_drafts.get(entry_key, [])
+
                 # Check if this author already has an unpublished draft for this entry
                 existing_draft = EntryDraft.objects.filter(
                     entry=entry, author=author, is_deleted=False, is_published=False
                 ).first()
 
-                # Decide whether to create revision chain (~15% chance)
-                create_revision_chain = random.random() < 0.15 and not existing_draft
+                # For real data mode: detect if this is a second draft (EES terms have 2 rows)
+                # If we already have a draft for this entry from this author, this is the second draft
+                is_second_draft = (
+                    len(previous_drafts) > 0 and previous_drafts[-1].author == author
+                )
+
+                # Decide whether to create revision chain (~15% chance for test data, not for real data)
+                create_revision_chain = (
+                    not is_real_data_mode
+                    and random.random() < 0.15
+                    and not existing_draft
+                    and not is_second_draft
+                )
 
                 if create_revision_chain:
-                    # Create revision chain
+                    # Create revision chain (test data mode only)
                     drafts = self.create_draft_revision_chain(
                         entry, author, admin, base_timestamp, users, perspective
                     )
                     drafts_created += len(drafts)
                     revision_chains_created += 1
+                    entry_drafts[entry_key] = entry_drafts.get(entry_key, []) + drafts
                     continue  # Skip single draft creation
-                elif existing_draft:
+                elif existing_draft and not is_second_draft:
                     # Update existing draft instead of creating new one
-                    existing_draft.content = f"<p>{row['definition']}</p>"
+                    existing_draft.content = content
                     existing_draft.save()
                     draft = existing_draft
                 else:
                     # Create new entry draft
                     draft = EntryDraft.objects.create(
                         entry=entry,
-                        content=f"<p>{row['definition']}</p>",
+                        content=content,
                         author=author,
                         created_by=admin,
                     )
                 drafts_created += 1
 
-                # Create realistic approval states
+                # Track this draft
+                if entry_key not in entry_drafts:
+                    entry_drafts[entry_key] = []
+                entry_drafts[entry_key].append(draft)
+
+                # Link to previous draft if this is a second draft
+                if is_second_draft and len(previous_drafts) > 0:
+                    previous_draft = previous_drafts[-1]
+                    draft.replaces_draft = previous_draft
+                    draft.save()
+
+                # Determine if this draft should be published
                 all_users = list(users.values())
                 potential_approvers = [u for u in all_users if u != author]
-                approval_state = random.choices(
-                    ["no_approvals", "one_approval", "two_approvals", "published"],
-                    weights=[
-                        15,
-                        20,
-                        25,
-                        40,
-                    ],  # 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
-                )[0]
 
-                # Determine if this will be published (affects created_at)
-                will_be_published = approval_state == "published"
+                if is_real_data_mode:
+                    # Real data mode: all terms start out published
+                    # For EES terms: second (improved) draft is published, first draft is not
+                    # For Tools terms: single draft is published
+                    if is_second_draft:
+                        # Second draft for EES terms - publish it
+                        will_be_published = True
+                    elif row["perspective"] == "Tools":
+                        # Tools terms - publish the single draft
+                        will_be_published = True
+                    else:
+                        # First draft for EES terms - don't publish (will be superseded)
+                        will_be_published = False
+                else:
+                    # Test data mode: determine approval state and publishing
+                    approval_state = random.choices(
+                        ["no_approvals", "one_approval", "two_approvals", "published"],
+                        weights=[15, 20, 25, 40],
+                    )[0]
+                    will_be_published = approval_state == "published"
 
                 # Assign realistic created_at
                 realistic_timestamp = self.generate_realistic_timestamp(
@@ -570,21 +636,35 @@ class Command(BaseCommand):
                 )
                 draft.refresh_from_db()
 
-                if approval_state == "one_approval" and len(potential_approvers) >= 1:
-                    approvers = self.select_approvers(perspective, author, all_users, 1)
-                    draft.approvers.add(*approvers)
-                elif (
-                    approval_state in ["two_approvals", "published"]
-                    and len(potential_approvers) >= 2
-                ):
-                    approvers = self.select_approvers(perspective, author, all_users, 2)
-                    draft.approvers.add(*approvers)
-
-                    # If published, mark as published and set published_at
-                    if approval_state == "published":
+                if is_real_data_mode:
+                    # Real data mode: just set published flag directly, no approval workflow
+                    if will_be_published:
                         draft.is_published = True
                         draft.published_at = realistic_timestamp
                         draft.save()
+                else:
+                    # Test data mode: use approval workflow
+                    if (
+                        approval_state == "one_approval"
+                        and len(potential_approvers) >= 1
+                    ):
+                        approvers = self.select_approvers(
+                            perspective, author, all_users, 1
+                        )
+                        draft.approvers.add(*approvers)
+                    elif approval_state in ["two_approvals", "published"]:
+                        # Need at least 2 approvers for published drafts
+                        if len(potential_approvers) >= 2:
+                            approvers = self.select_approvers(
+                                perspective, author, all_users, 2
+                            )
+                            draft.approvers.add(*approvers)
+
+                        # If published, mark as published and set published_at
+                        if approval_state == "published":
+                            draft.is_published = True
+                            draft.published_at = realistic_timestamp
+                            draft.save()
 
                         # Add endorsements: ~30% of published drafts get endorsed by a curator
                         if random.random() < 0.3:
@@ -597,6 +677,52 @@ class Command(BaseCommand):
                                     draft.endorsed_by = endorser
                                     draft.endorsed_at = realistic_timestamp
                                     draft.save()
+
+            # Resolve cross-reference placeholders after all entries are created
+            self.stdout.write(self.style.SUCCESS("Resolving cross-references..."))
+            cross_ref_count = 0
+            for draft in EntryDraft.objects.all():
+                content = draft.content
+                if "[[" in content:
+                    # Find all cross-reference placeholders: [[Term|Perspective]]
+                    pattern = r"\[\[([^\|]+)\|([^\]]+)\]\]"
+                    matches = re.findall(pattern, content)
+
+                    for term_text, perspective_name in matches:
+                        # Look up entry
+                        entry_key = (term_text.strip(), perspective_name.strip())
+                        referenced_entry = all_entries.get(entry_key)
+
+                        if referenced_entry:
+                            # Replace placeholder with HTML link
+                            placeholder = f"[[{term_text}|{perspective_name}]]"
+                            link_text = f"{term_text} 📖"
+                            link_html = (
+                                f'<a href="/entry/{referenced_entry.id}" '
+                                f'data-entry-id="{referenced_entry.id}">'
+                                f"{link_text}</a>"
+                            )
+                            content = content.replace(placeholder, link_html)
+                            cross_ref_count += 1
+                        else:
+                            # Log warning for missing references
+                            self.stdout.write(
+                                self.style.WARNING(
+                                    f"  Warning: Could not resolve cross-reference "
+                                    f"[[{term_text}|{perspective_name}]] "
+                                    f"in draft {draft.id}"
+                                )
+                            )
+
+                    # Update draft content if changed
+                    if content != draft.content:
+                        draft.content = content
+                        draft.save()
+
+            if cross_ref_count > 0:
+                self.stdout.write(
+                    self.style.SUCCESS(f"  Resolved {cross_ref_count} cross-references")
+                )
 
             # Validate data consistency
             validation_errors = self.validate_data_consistency()

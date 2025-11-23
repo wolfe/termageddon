@@ -51,9 +51,30 @@ cleanup() {
 # Set up trap for cleanup on script exit
 trap cleanup EXIT INT TERM
 
+# Parse command-line argument
+MODE="${1:-test}"  # Default to "test" if no argument provided
+
+if [ "$MODE" != "test" ] && [ "$MODE" != "real" ]; then
+    echo -e "${RED}Error: Invalid mode. Use 'test' or 'real'${NC}"
+    echo -e "${YELLOW}Usage: $0 [test|real]${NC}"
+    exit 1
+fi
+
+# Set CSV file based on mode
+if [ "$MODE" == "real" ]; then
+    CSV_FILE="test_data/real_data.csv"
+    DATA_TYPE="real"
+    DATA_DESCRIPTION="Real glossary data (EES and Tools perspectives)"
+else
+    CSV_FILE="test_data/test_data.csv"
+    DATA_TYPE="test"
+    DATA_DESCRIPTION="Test data (multiple perspectives, random approval states)"
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║     Termageddon Demo Launcher         ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
+echo -e "${YELLOW}Mode: ${MODE}${NC}"
 echo ""
 
 # Step 0: Clean up any existing processes
@@ -106,10 +127,14 @@ echo -e "${BLUE}  → Collecting static files...${NC}"
 python manage.py collectstatic --noinput > /dev/null 2>&1
 echo -e "${GREEN}  ✓ Static files collected${NC}"
 
-# Load test data
-echo -e "${BLUE}  → Loading test data...${NC}"
-python manage.py load_test_data > /dev/null 2>&1
-echo -e "${GREEN}  ✓ Test data loaded (360 entries, 10 users)${NC}"
+# Load data
+echo -e "${BLUE}  → Loading ${DATA_TYPE} data from ${CSV_FILE}...${NC}"
+python manage.py load_test_data --csv-path "$CSV_FILE" > /dev/null 2>&1
+if [ "$MODE" == "real" ]; then
+    echo -e "${GREEN}  ✓ Real data loaded (EES and Tools perspectives)${NC}"
+else
+    echo -e "${GREEN}  ✓ Test data loaded (360 entries, 10 users)${NC}"
+fi
 
 echo ""
 
@@ -290,26 +315,35 @@ echo ""
 echo -e "${YELLOW}Login Credentials:${NC}"
 echo -e "  ${BLUE}Admin:${NC}     admin / admin"
 echo ""
-echo -e "${YELLOW}Test Users (password = ImABird, most users):${NC}"
-echo -e "  ${BLUE}•${NC} mariacarter     (Maria Carter) - ${GREEN}Perspective Curator: Physics, Chemistry${NC}"
-echo -e "  ${BLUE}•${NC} bencarter       (Ben Carter) - ${GREEN}Perspective Curator: Chemistry, Biology${NC}"
-echo -e "  ${BLUE}•${NC} sofiarossi      (Sofia Rossi) - ${GREEN}Perspective Curator: Computer Science, Graph Theory${NC}"
-echo -e "  ${BLUE}•${NC} leoschmidt      (Leo Schmidt) - ${GREEN}Perspective Curator: Biology, Geology${NC}"
-echo -e "  ${BLUE}•${NC} kenjitanaka     (Kenji Tanaka) - ${GREEN}Perspective Curator: Physics, Geology${NC}"
-echo -e "  ${BLUE}•${NC} aishakhan       (Aisha Khan)"
-echo -e "  ${BLUE}•${NC} samuelgreene    (Samuel Greene)"
-echo -e "  ${BLUE}•${NC} ivanpetrov      (Ivan Petrov)"
-echo -e "  ${BLUE}•${NC} chloedubois     (Chloe Dubois)"
-echo -e "  ${BLUE}•${NC} evelynreed      (Evelyn Reed) - ${YELLOW}Regular user (not test user)${NC}"
-echo ""
-echo -e "${YELLOW}Test Data:${NC}"
-echo -e "  ${BLUE}•${NC} 360 glossary entries with realistic approval states:"
-echo -e "    ${BLUE}  -${NC} ~20% No approvals (draft state)"
-echo -e "    ${BLUE}  -${NC} ~25% One approval (pending)"
-echo -e "    ${BLUE}  -${NC} ~35% Two approvals (ready to publish)"
-echo -e "    ${BLUE}  -${NC} ~20% Published (active definitions)"
-echo -e "  ${BLUE}•${NC} 9 perspectives (Physics, Chemistry, Biology, etc.)"
-echo -e "  ${BLUE}•${NC} 10 test users (5 perspective curators, 5 regular users)"
+if [ "$MODE" == "real" ]; then
+    echo -e "${YELLOW}Data Summary:${NC}"
+    echo -e "  ${BLUE}•${NC} EES perspective: Verisk's view of industry terms"
+    echo -e "  ${BLUE}•${NC} Tools perspective: Software tools used by Verisk"
+    echo -e "  ${BLUE}•${NC} All entries created by admin user"
+    echo -e "  ${BLUE}•${NC} EES terms have 2 drafts (original and improved with cross-references)"
+    echo -e "  ${BLUE}•${NC} Tools terms include Termageddon-related definitions"
+else
+    echo -e "${YELLOW}Test Users (password = ImABird, most users):${NC}"
+    echo -e "  ${BLUE}•${NC} mariacarter     (Maria Carter) - ${GREEN}Perspective Curator: Physics, Chemistry${NC}"
+    echo -e "  ${BLUE}•${NC} bencarter       (Ben Carter) - ${GREEN}Perspective Curator: Chemistry, Biology${NC}"
+    echo -e "  ${BLUE}•${NC} sofiarossi      (Sofia Rossi) - ${GREEN}Perspective Curator: Computer Science, Graph Theory${NC}"
+    echo -e "  ${BLUE}•${NC} leoschmidt      (Leo Schmidt) - ${GREEN}Perspective Curator: Biology, Geology${NC}"
+    echo -e "  ${BLUE}•${NC} kenjitanaka     (Kenji Tanaka) - ${GREEN}Perspective Curator: Physics, Geology${NC}"
+    echo -e "  ${BLUE}•${NC} aishakhan       (Aisha Khan)"
+    echo -e "  ${BLUE}•${NC} samuelgreene    (Samuel Greene)"
+    echo -e "  ${BLUE}•${NC} ivanpetrov      (Ivan Petrov)"
+    echo -e "  ${BLUE}•${NC} chloedubois     (Chloe Dubois)"
+    echo -e "  ${BLUE}•${NC} evelynreed      (Evelyn Reed) - ${YELLOW}Regular user (not test user)${NC}"
+    echo ""
+    echo -e "${YELLOW}Test Data:${NC}"
+    echo -e "  ${BLUE}•${NC} 360 glossary entries with realistic approval states:"
+    echo -e "    ${BLUE}  -${NC} ~20% No approvals (draft state)"
+    echo -e "    ${BLUE}  -${NC} ~25% One approval (pending)"
+    echo -e "    ${BLUE}  -${NC} ~35% Two approvals (ready to publish)"
+    echo -e "    ${BLUE}  -${NC} ~20% Published (active definitions)"
+    echo -e "  ${BLUE}•${NC} 9 perspectives (Physics, Chemistry, Biology, etc.)"
+    echo -e "  ${BLUE}•${NC} 10 test users (5 perspective curators, 5 regular users)"
+fi
 echo ""
 echo -e "${RED}Press Ctrl+C to stop the demo${NC}"
 echo ""
