@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -1078,6 +1080,82 @@ class TestEntryDraftEligibilityFiltering:
         assert draft2.id not in result_ids  # Not related
         assert draft3.id in result_ids  # Requested reviewer
         assert draft4.id in result_ids  # Related term
+
+    def test_exclude_drafts_before_published_draft(self, authenticated_client):
+        """Test that drafts before the latest published draft are excluded from list view"""
+        entry = EntryFactory()
+        other_user = UserFactory()
+
+        # Create a published draft (this is the "current" published version)
+        published_draft = EntryDraftFactory(
+            entry=entry, author=other_user, is_published=True
+        )
+
+        # Create an older unpublished draft (before published) - should be excluded
+        old_draft = EntryDraftFactory(
+            entry=entry, author=other_user, is_published=False
+        )
+        # Manually set timestamp to be before published draft
+        old_draft.timestamp = published_draft.timestamp - timedelta(days=1)
+        old_draft.save()
+
+        # Create a newer unpublished draft (after published) - should be included
+        new_draft = EntryDraftFactory(
+            entry=entry, author=other_user, is_published=False
+        )
+        # Manually set timestamp to be after published draft
+        new_draft.timestamp = published_draft.timestamp + timedelta(days=1)
+        new_draft.save()
+
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {"show_all": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+
+        # Published draft should be excluded (is_published=True filter)
+        assert published_draft.id not in result_ids
+        # Old draft (before published) should be excluded
+        assert old_draft.id not in result_ids
+        # New draft (after published) should be included
+        assert new_draft.id in result_ids
+
+    def test_exclude_drafts_before_published_draft_own_eligibility(
+        self, authenticated_client
+    ):
+        """Test that drafts before published draft are excluded even with eligibility=own"""
+        entry = EntryFactory()
+
+        # Create a published draft by another user
+        other_user = UserFactory()
+        published_draft = EntryDraftFactory(
+            entry=entry, author=other_user, is_published=True
+        )
+
+        # Create an older unpublished draft by current user (before published) - should be excluded
+        old_draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=False
+        )
+        old_draft.timestamp = published_draft.timestamp - timedelta(days=1)
+        old_draft.save()
+
+        # Create a newer unpublished draft by current user (after published) - should be included
+        new_draft = EntryDraftFactory(
+            entry=entry, author=authenticated_client.user, is_published=False
+        )
+        new_draft.timestamp = published_draft.timestamp + timedelta(days=1)
+        new_draft.save()
+
+        url = reverse("entrydraft-list")
+        response = authenticated_client.get(url, {"eligibility": "own"})
+
+        assert response.status_code == status.HTTP_200_OK
+        result_ids = [d["id"] for d in response.data["results"]]
+
+        # Old draft (before published) should be excluded
+        assert old_draft.id not in result_ids
+        # New draft (after published) should be included
+        assert new_draft.id in result_ids
 
 
 @pytest.mark.django_db

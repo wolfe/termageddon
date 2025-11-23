@@ -573,10 +573,33 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         # Only apply filtering for list actions, not detail actions (like approve)
 
         # Always exclude published drafts from review (they're not drafts anymore)
+        # Also exclude drafts that come before the latest published draft for each entry
         # Only apply this filter for list actions, not for individual draft retrieval
         # Composite index: EntryDraft(is_published, timestamp) optimizes this common filter+order pattern
         if self.action == "list":
             queryset = queryset.filter(is_published=False)
+
+            # Filter out drafts that come before the latest published draft for each entry
+            # This ensures we only show drafts after the currently published version
+            from django.db.models import OuterRef, Subquery
+
+            # For each draft, get the latest published draft's timestamp for the same entry
+            # If there's a published draft and this draft's timestamp <= it, exclude this draft
+            latest_published_timestamp = (
+                EntryDraft.objects.filter(
+                    entry=OuterRef("entry"),
+                    is_published=True,
+                    is_deleted=False,
+                )
+                .order_by("-timestamp")
+                .values("timestamp")[:1]
+            )
+
+            # Exclude drafts that have a timestamp <= the latest published draft's timestamp
+            # Only applies when there is a published draft (subquery returns a value)
+            queryset = queryset.exclude(
+                timestamp__lte=Subquery(latest_published_timestamp)
+            )
 
         # Apply additional filtering when show_all is false, but respect eligibility parameter
         # Only apply default filtering for list actions, not for individual draft retrieval

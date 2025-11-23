@@ -76,9 +76,15 @@ class Command(BaseCommand):
         num_revisions = random.randint(2, 3)
         drafts = []
 
+        # Start with a base timestamp and make each draft progressively newer
+        # This ensures ID sequencing matches timestamp sequencing
+        current_timestamp = base_timestamp - timedelta(days=random.randint(60, 120))
+
         for i in range(num_revisions):
-            # Each revision gets progressively newer timestamp
-            revision_timestamp = base_timestamp - timedelta(days=random.randint(0, 30))
+            # Each revision gets progressively newer timestamp (sequential, not random)
+            # Add 1-7 days between each revision to make the sequence clear
+            days_between = random.randint(1, 7)
+            revision_timestamp = current_timestamp + timedelta(days=days_between * i)
 
             # Create draft with revision content
             content_variations = [
@@ -96,8 +102,15 @@ class Command(BaseCommand):
                 ),
                 author=author,
                 created_by=admin,
-                timestamp=revision_timestamp,
             )
+
+            # Override auto_now_add timestamp by updating directly
+            # Also update created_at to match so admin display is consistent
+            # This bypasses auto_now_add behavior
+            EntryDraft.objects.filter(pk=draft.pk).update(
+                timestamp=revision_timestamp, created_at=revision_timestamp
+            )
+            draft.refresh_from_db()
 
             # Link to previous draft if not the first
             if i > 0:
@@ -107,10 +120,16 @@ class Command(BaseCommand):
             drafts.append(draft)
 
         # Assign approval states to the chain
-        # Ensure at most one published draft per entry, and it can appear at any position
+        # Published draft should be one of the earlier drafts (not the latest)
+        # This ensures unpublished edits come after the published version
         published_draft_index = None
         if random.random() < 0.6:  # 60% chance of having a published draft in the chain
-            published_draft_index = random.randint(0, len(drafts) - 1)
+            # Published draft should be in the first half of the chain
+            # This ensures there are unpublished drafts after it
+            max_published_index = max(
+                0, len(drafts) - 2
+            )  # At least one draft after published
+            published_draft_index = random.randint(0, max_published_index)
 
         for i, draft in enumerate(drafts):
             if i == published_draft_index:
@@ -521,9 +540,12 @@ class Command(BaseCommand):
                     base_timestamp, will_be_published
                 )
 
-                # Update draft with timestamp
-                draft.timestamp = realistic_timestamp
-                draft.save()
+                # Update draft with timestamp (bypass auto_now_add by using update)
+                # Also update created_at to match so admin display is consistent
+                EntryDraft.objects.filter(pk=draft.pk).update(
+                    timestamp=realistic_timestamp, created_at=realistic_timestamp
+                )
+                draft.refresh_from_db()
 
                 if approval_state == "one_approval" and len(potential_approvers) >= 1:
                     approvers = self.select_approvers(perspective, author, all_users, 1)
