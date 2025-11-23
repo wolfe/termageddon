@@ -66,7 +66,6 @@ describe('EntryDetailService', () => {
           is_endorsed: false,
           approval_count: 0,
           created_at: '2024-01-02T00:00:00Z',
-          created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
           author: {
             id: 1,
@@ -88,7 +87,6 @@ describe('EntryDetailService', () => {
           is_published: true,
           is_endorsed: false,
           approval_count: 2,
-          created_at: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
           author: {
@@ -134,7 +132,6 @@ describe('EntryDetailService', () => {
         is_approved: false,
         is_published: false,
         approval_count: 0,
-        created_at: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         author: {
@@ -218,7 +215,6 @@ describe('EntryDetailService', () => {
         is_approved: false,
         is_published: false,
         approval_count: 0,
-        created_at: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         author: {

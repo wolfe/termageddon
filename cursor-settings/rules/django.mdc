@@ -6,6 +6,25 @@ alwaysApply: false
 
 # Django rules
 
+## Virtual Environment
+
+**IMPORTANT**: This project uses a virtual environment located at `backend/venv`. Always activate it before running Django commands:
+
+```bash
+cd backend
+source venv/bin/activate  # On macOS/Linux
+# OR
+venv\Scripts\activate  # On Windows
+```
+
+When running Django management commands, either:
+1. Activate the venv first: `source venv/bin/activate && python manage.py <command>`
+2. Use the venv's Python directly: `venv/bin/python manage.py <command>`
+
+**Never run `python manage.py` commands without activating the venv or using the venv's Python interpreter.**
+
+## Development Practices
+
 - Use `python manage.py startapp` to create new apps within your project
 - Keep models in `models.py` and register them in `admin.py` for admin interface
 - Use Django's ORM instead of raw SQL queries

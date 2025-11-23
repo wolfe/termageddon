@@ -596,10 +596,11 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             )
 
             # Exclude drafts that have a created_at <= the latest published draft's created_at
-            # Only applies when there is a published draft (subquery returns a value)
+            # Only exclude when there is actually a published draft (subquery is not null)
             queryset = queryset.exclude(
-                created_at__lte=Subquery(latest_published_timestamp)
-            )
+                created_at__lte=Subquery(latest_published_timestamp),
+                entry__drafts__is_published=True,
+            ).distinct()
 
         # Apply additional filtering when show_all is false, but respect eligibility parameter
         # Only apply default filtering for list actions, not for individual draft retrieval
