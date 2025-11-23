@@ -1095,16 +1095,16 @@ class TestEntryDraftEligibilityFiltering:
         old_draft = EntryDraftFactory(
             entry=entry, author=other_user, is_published=False
         )
-        # Manually set timestamp to be before published draft
-        old_draft.timestamp = published_draft.timestamp - timedelta(days=1)
+        # Manually set created_at to be before published draft
+        old_draft.created_at = published_draft.created_at - timedelta(days=1)
         old_draft.save()
 
         # Create a newer unpublished draft (after published) - should be included
         new_draft = EntryDraftFactory(
             entry=entry, author=other_user, is_published=False
         )
-        # Manually set timestamp to be after published draft
-        new_draft.timestamp = published_draft.timestamp + timedelta(days=1)
+        # Manually set created_at to be after published draft
+        new_draft.created_at = published_draft.created_at + timedelta(days=1)
         new_draft.save()
 
         url = reverse("entrydraft-list")
@@ -1136,14 +1136,14 @@ class TestEntryDraftEligibilityFiltering:
         old_draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
-        old_draft.timestamp = published_draft.timestamp - timedelta(days=1)
+        old_draft.created_at = published_draft.created_at - timedelta(days=1)
         old_draft.save()
 
         # Create a newer unpublished draft by current user (after published) - should be included
         new_draft = EntryDraftFactory(
             entry=entry, author=authenticated_client.user, is_published=False
         )
-        new_draft.timestamp = published_draft.timestamp + timedelta(days=1)
+        new_draft.created_at = published_draft.created_at + timedelta(days=1)
         new_draft.save()
 
         url = reverse("entrydraft-list")

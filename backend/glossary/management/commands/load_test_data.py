@@ -77,11 +77,11 @@ class Command(BaseCommand):
         drafts = []
 
         # Start with a base timestamp and make each draft progressively newer
-        # This ensures ID sequencing matches timestamp sequencing
+        # This ensures ID sequencing matches created_at sequencing
         current_timestamp = base_timestamp - timedelta(days=random.randint(60, 120))
 
         for i in range(num_revisions):
-            # Each revision gets progressively newer timestamp (sequential, not random)
+            # Each revision gets progressively newer created_at (sequential, not random)
             # Add 1-7 days between each revision to make the sequence clear
             days_between = random.randint(1, 7)
             revision_timestamp = current_timestamp + timedelta(days=days_between * i)
@@ -104,12 +104,9 @@ class Command(BaseCommand):
                 created_by=admin,
             )
 
-            # Override auto_now_add timestamp by updating directly
-            # Also update created_at to match so admin display is consistent
+            # Override auto_now_add created_at by updating directly
             # This bypasses auto_now_add behavior
-            EntryDraft.objects.filter(pk=draft.pk).update(
-                timestamp=revision_timestamp, created_at=revision_timestamp
-            )
+            EntryDraft.objects.filter(pk=draft.pk).update(created_at=revision_timestamp)
             draft.refresh_from_db()
 
             # Link to previous draft if not the first
@@ -158,7 +155,7 @@ class Command(BaseCommand):
             # Mark as published if needed
             if approval_state == "published":
                 draft.is_published = True
-                draft.published_at = draft.timestamp
+                draft.published_at = draft.created_at
                 draft.save()
 
                 # Add endorsement chance
@@ -170,7 +167,7 @@ class Command(BaseCommand):
                         endorser = random.choice(curators).user
                         if endorser != author:
                             draft.endorsed_by = endorser
-                            draft.endorsed_at = draft.timestamp
+                            draft.endorsed_at = draft.created_at
                             draft.save()
 
         return drafts
@@ -215,14 +212,14 @@ class Command(BaseCommand):
                 f"Found {invalid_endorsements} drafts endorsed by non-curators"
             )
 
-        # Check timestamp consistency in revision chains
+        # Check created_at consistency in revision chains
         inconsistent_chains = 0
         for draft in EntryDraft.objects.filter(replaces_draft__isnull=False):
-            if draft.timestamp <= draft.replaces_draft.timestamp:
+            if draft.created_at <= draft.replaces_draft.created_at:
                 inconsistent_chains += 1
         if inconsistent_chains > 0:
             validation_errors.append(
-                f"Found {inconsistent_chains} revision chains with inconsistent timestamps"
+                f"Found {inconsistent_chains} revision chains with inconsistent created_at"
             )
 
         return validation_errors
@@ -268,12 +265,12 @@ class Command(BaseCommand):
                     break  # Count each draft only once
         metrics["curator_involvement"] = curator_approvals
 
-        # Timestamp distribution
-        oldest_draft = EntryDraft.objects.order_by("timestamp").first()
-        newest_draft = EntryDraft.objects.order_by("-timestamp").first()
+        # Created_at distribution
+        oldest_draft = EntryDraft.objects.order_by("created_at").first()
+        newest_draft = EntryDraft.objects.order_by("-created_at").first()
         if oldest_draft and newest_draft:
             metrics["timestamp_span_days"] = (
-                newest_draft.timestamp - oldest_draft.timestamp
+                newest_draft.created_at - oldest_draft.created_at
             ).days
 
         # Entry-level validation metrics
@@ -346,7 +343,7 @@ class Command(BaseCommand):
                 reader = csv.DictReader(f)
                 data = list(reader)
 
-            # Shuffle data to break alphabetical correlation with timestamps
+            # Shuffle data to break alphabetical correlation with created_at
             random.shuffle(data)
 
             # Generate base timestamp (6 months ago)
@@ -532,18 +529,17 @@ class Command(BaseCommand):
                     ],  # 15% no approvals, 20% one approval, 25% two approvals unpublished, 40% published
                 )[0]
 
-                # Determine if this will be published (affects timestamp)
+                # Determine if this will be published (affects created_at)
                 will_be_published = approval_state == "published"
 
-                # Assign realistic timestamp
+                # Assign realistic created_at
                 realistic_timestamp = self.generate_realistic_timestamp(
                     base_timestamp, will_be_published
                 )
 
-                # Update draft with timestamp (bypass auto_now_add by using update)
-                # Also update created_at to match so admin display is consistent
+                # Update draft with created_at (bypass auto_now_add by using update)
                 EntryDraft.objects.filter(pk=draft.pk).update(
-                    timestamp=realistic_timestamp, created_at=realistic_timestamp
+                    created_at=realistic_timestamp
                 )
                 draft.refresh_from_db()
 

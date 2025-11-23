@@ -31,7 +31,6 @@ export interface EntryDraft {
   entry: number;
   content: string;
   author: User;
-  timestamp: string;
   approvers: User[];
   requested_reviewers: User[];
   endorsed_by?: User;
@@ -87,7 +86,7 @@ export interface Comment {
   edited_at?: string;
   // New fields for draft position tracking
   draft_position?: string;
-  draft_timestamp?: string;
+  draft_timestamp?: string; // This is actually created_at from the draft, kept for backward compatibility
 }
 
 export interface Notification {
@@ -134,7 +133,6 @@ export interface ReviewDraft {
   entry: Entry;
   content: string;
   author: User;
-  timestamp: string;
   approvers: User[];
   requested_reviewers: User[];
   is_approved: boolean;

@@ -168,7 +168,7 @@
               </p>
               <p class="mt-1">
                 <strong>Last Updated:</strong>
-                {{ latestDraft.timestamp | date: 'medium' }}
+                {{ latestDraft.created_at | date: 'medium' }}
               </p>
             </div>
           }
@@ -200,7 +200,7 @@
               </p>
               <p class="mt-1">
                 <strong>Created:</strong>
-                {{ selectedHistoricalDraft.timestamp | date: 'medium' }}
+                {{ selectedHistoricalDraft.created_at | date: 'medium' }}
               </p>
               @if (selectedHistoricalDraft.is_published) {
                 <p class="mt-1">
@@ -248,7 +248,7 @@
                 </p>
                 <p class="mt-1">
                   <strong>Published:</strong>
-                  {{ getPublishedDraft()!.timestamp | date: 'medium' }}
+                  {{ getPublishedDraft()!.created_at | date: 'medium' }}
                 </p>
               </div>
             }
@@ -280,7 +280,7 @@
             </p>
             <p class="mt-1">
               <strong>Last Updated:</strong>
-              {{ entry.active_draft.timestamp | date: 'medium' }}
+              {{ entry.active_draft.created_at | date: 'medium' }}
             </p>
           </div>
         }

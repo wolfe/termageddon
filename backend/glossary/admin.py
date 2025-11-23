@@ -65,8 +65,14 @@ bulk_approve_drafts.short_description = "Approve selected drafts"
 class EntryDraftInline(admin.TabularInline):
     model = EntryDraft
     extra = 0
-    fields = ("author", "content", "timestamp", "approval_count_display", "is_approved")
-    readonly_fields = ("timestamp", "approval_count_display", "is_approved")
+    fields = (
+        "author",
+        "content",
+        "created_at",
+        "approval_count_display",
+        "is_approved",
+    )
+    readonly_fields = ("created_at", "approval_count_display", "is_approved")
     can_delete = False
 
     def approval_count_display(self, obj):
@@ -167,15 +173,14 @@ class EntryDraftAdmin(admin.ModelAdmin):
         "id",
         "entry",
         "author",
-        "timestamp",
+        "created_at",
         "approval_count_display",
         "is_approved_display",
         "is_deleted",
     )
-    list_filter = ("timestamp", "is_deleted", "entry__perspective")
+    list_filter = ("created_at", "is_deleted", "entry__perspective")
     search_fields = ("entry__term__text", "author__username", "content")
     readonly_fields = (
-        "timestamp",
         "approval_count_display",
         "is_approved_display",
         "created_at",

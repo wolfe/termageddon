@@ -240,13 +240,13 @@ export class PanelCommonService implements OnDestroy {
       const entryId = draft.entry.id;
       const existing = latestByEntry.get(entryId);
 
-      if (!existing || new Date(draft.timestamp) > new Date(existing.timestamp)) {
+      if (!existing || new Date(draft.created_at) > new Date(existing.created_at)) {
         latestByEntry.set(entryId, draft);
       }
     });
 
     return Array.from(latestByEntry.values()).sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }
 

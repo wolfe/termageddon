@@ -177,12 +177,12 @@ class Entry(AuditedModel):
             )
 
     def get_latest_draft(self):
-        """Get the most recent draft by timestamp (any state)"""
-        return self.drafts.order_by("-timestamp").first()
+        """Get the most recent draft by created_at (any state)"""
+        return self.drafts.order_by("-created_at").first()
 
     def get_latest_published_draft(self):
         """Get the most recent published draft"""
-        return self.drafts.filter(is_published=True).order_by("-timestamp").first()
+        return self.drafts.filter(is_published=True).order_by("-created_at").first()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -200,9 +200,6 @@ class EntryDraft(AuditedModel):
     )
     author: models.ForeignKey[User, User] = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="authored_drafts"
-    )
-    timestamp: models.DateTimeField = models.DateTimeField(
-        auto_now_add=True, db_index=True
     )
     approvers: models.ManyToManyField[User, User] = models.ManyToManyField(
         User, related_name="approved_drafts", blank=True
@@ -246,7 +243,7 @@ class EntryDraft(AuditedModel):
 
     class Meta:
         db_table = "glossary_entry_draft"
-        ordering = ["-timestamp"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.entry} - draft{self.id} by {self.author.username}"

@@ -97,7 +97,7 @@ describe('UrlHelperService', () => {
         is_approved: false,
         is_published: false,
         approval_count: 0,
-        timestamp: '2024-01-01T00:00:00Z',
+        created_at: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         author: {
@@ -145,7 +145,7 @@ describe('UrlHelperService', () => {
         is_approved: false,
         is_published: false,
         approval_count: 0,
-        timestamp: '2024-01-01T00:00:00Z',
+        created_at: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         author: {

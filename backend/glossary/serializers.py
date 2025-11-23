@@ -220,7 +220,6 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
             "entry",
             "content",
             "author",
-            "timestamp",
             "approvers",
             "requested_reviewers",
             "endorsed_by",
@@ -241,7 +240,7 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["timestamp", "created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at"]
 
     def get_comment_count(self, obj):
         """Get the count of comments on this draft"""
@@ -415,7 +414,6 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
             "entry",
             "content",
             "author",
-            "timestamp",
             "approvers",
             "requested_reviewers",
             "is_approved",
@@ -433,7 +431,7 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["timestamp", "created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at"]
 
     def get_comment_count(self, obj):
         """Get the count of comments on this draft"""
@@ -498,7 +496,7 @@ class EntryDetailSerializer(serializers.ModelSerializer):
             EntryDraft.objects.filter(entry=obj, is_deleted=False)
             .select_related("author")
             .prefetch_related("approvers")
-            .order_by("-timestamp")
+            .order_by("-created_at")
         )
         return EntryDraftListSerializer(drafts, many=True, context=self.context).data
 

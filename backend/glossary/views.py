@@ -144,7 +144,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         # For list view, only show entries with published drafts
-        # Composite index: EntryDraft(entry, is_published, timestamp) optimizes this query
+        # Composite index: EntryDraft(entry, is_published, created_at) optimizes this query
         if self.action == "list":
             queryset = queryset.filter(drafts__is_published=True).distinct()
 
@@ -457,11 +457,11 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     filterset_fields = ["entry", "author"]
     ordering_fields = [
         "entry__term__text_normalized",
-        "timestamp",
+        "created_at",
         "updated_at",
         "published_at",
     ]
-    ordering = ["-timestamp"]
+    ordering = ["-created_at"]
     http_method_names = [
         "get",
         "post",
@@ -542,24 +542,24 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 ).distinct()
             elif eligibility == "own":
                 # User's own drafts - only show latest draft per entry
-                # Composite index: EntryDraft(author, is_published, timestamp) optimizes author filtering with ordering
+                # Composite index: EntryDraft(author, is_published, created_at) optimizes author filtering with ordering
                 from django.db.models import Max
 
                 queryset = queryset.filter(author=self.request.user)
 
-                # Get the latest timestamp per entry for this user's drafts
+                # Get the latest created_at per entry for this user's drafts
                 latest_timestamps = (
                     queryset.values("entry")
-                    .annotate(latest_timestamp=Max("timestamp"))
+                    .annotate(latest_timestamp=Max("created_at"))
                     .values_list("entry", "latest_timestamp")
                 )
 
-                # Filter to only include drafts with the latest timestamp for each entry
+                # Filter to only include drafts with the latest created_at for each entry
                 from django.db.models import Q
 
                 latest_filter = Q()
                 for entry_id, latest_timestamp in latest_timestamps:
-                    latest_filter |= Q(entry_id=entry_id, timestamp=latest_timestamp)
+                    latest_filter |= Q(entry_id=entry_id, created_at=latest_timestamp)
 
                 queryset = queryset.filter(latest_filter)
             elif eligibility == "already_approved":
@@ -575,7 +575,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         # Always exclude published drafts from review (they're not drafts anymore)
         # Also exclude drafts that come before the latest published draft for each entry
         # Only apply this filter for list actions, not for individual draft retrieval
-        # Composite index: EntryDraft(is_published, timestamp) optimizes this common filter+order pattern
+        # Composite index: EntryDraft(is_published, created_at) optimizes this common filter+order pattern
         if self.action == "list":
             queryset = queryset.filter(is_published=False)
 
@@ -583,22 +583,22 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             # This ensures we only show drafts after the currently published version
             from django.db.models import OuterRef, Subquery
 
-            # For each draft, get the latest published draft's timestamp for the same entry
-            # If there's a published draft and this draft's timestamp <= it, exclude this draft
+            # For each draft, get the latest published draft's created_at for the same entry
+            # If there's a published draft and this draft's created_at <= it, exclude this draft
             latest_published_timestamp = (
                 EntryDraft.objects.filter(
                     entry=OuterRef("entry"),
                     is_published=True,
                     is_deleted=False,
                 )
-                .order_by("-timestamp")
-                .values("timestamp")[:1]
+                .order_by("-created_at")
+                .values("created_at")[:1]
             )
 
-            # Exclude drafts that have a timestamp <= the latest published draft's timestamp
+            # Exclude drafts that have a created_at <= the latest published draft's created_at
             # Only applies when there is a published draft (subquery returns a value)
             queryset = queryset.exclude(
-                timestamp__lte=Subquery(latest_published_timestamp)
+                created_at__lte=Subquery(latest_published_timestamp)
             )
 
         # Apply additional filtering when show_all is false, but respect eligibility parameter
@@ -674,7 +674,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
         entry = serializer.validated_data["entry"]
         latest_draft = (
             EntryDraft.objects.filter(entry=entry, is_deleted=False)
-            .order_by("-timestamp")
+            .order_by("-created_at")
             .first()
         )
 
@@ -808,12 +808,12 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            # Composite index: EntryDraft(entry, is_deleted, timestamp) optimizes history queries
+            # Composite index: EntryDraft(entry, is_deleted, created_at) optimizes history queries
             drafts = (
                 EntryDraft.objects.filter(entry_id=entry_id, is_deleted=False)
                 .select_related("author", "entry__term", "entry__perspective")
                 .prefetch_related("approvers", "requested_reviewers")
-                .order_by("-timestamp")
+                .order_by("-created_at")
             )
 
             # Apply pagination
@@ -983,12 +983,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         """Get drafts relevant for comment loading (after last published or all if none published)"""
         drafts = EntryDraft.objects.filter(
             entry_id=entry_id, is_deleted=False
-        ).order_by("-timestamp")
+        ).order_by("-created_at")
 
         last_published_draft = drafts.filter(is_published=True).first()
         if last_published_draft:
             # Only show comments on drafts created after the last published draft
-            return drafts.filter(timestamp__gt=last_published_draft.timestamp)
+            return drafts.filter(created_at__gt=last_published_draft.created_at)
         return drafts
 
     def _calculate_draft_comment_position(self, comment_draft, drafts, latest_draft):
@@ -999,7 +999,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             return "published"
 
         # Count how many drafts ago this was
-        drafts_after = drafts.filter(timestamp__gt=comment_draft.timestamp).count()
+        drafts_after = drafts.filter(created_at__gt=comment_draft.created_at).count()
         if drafts_after == 0:
             return "current draft"
         return f"{drafts_after} drafts ago"
@@ -1060,7 +1060,7 @@ class CommentViewSet(viewsets.ModelViewSet):
                 comment_data = self.get_serializer(comment).data
                 comment_data["draft_position"] = draft_position
                 comment_data["draft_id"] = comment.draft.id
-                comment_data["draft_timestamp"] = comment.draft.timestamp
+                comment_data["draft_timestamp"] = comment.draft.created_at
                 comments_with_positions.append(comment_data)
 
             # Apply pagination to the processed comments

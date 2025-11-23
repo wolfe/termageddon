@@ -78,7 +78,7 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   // Sort options
   sortOptions: SortOption[] = [
     { value: '-published_at', label: 'Newest Published' },
-    { value: '-timestamp', label: 'Newest Edits' },
+    { value: '-created_at', label: 'Newest Edits' },
     { value: 'entry__term__text_normalized', label: 'Term A-Z' },
     { value: '-entry__term__text_normalized', label: 'Term Z-A' },
   ];

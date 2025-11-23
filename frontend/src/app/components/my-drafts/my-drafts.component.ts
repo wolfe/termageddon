@@ -65,13 +65,13 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
   // Unified filter state
   perspectives: Perspective[] = [];
   selectedPerspectiveId: number | null = null;
-  selectedSortBy: string = '-timestamp'; // Default to newest edits first
+  selectedSortBy: string = '-created_at'; // Default to newest edits first
   pendingPerspectiveId: number | null = null; // Store perspective ID from URL if perspectives not loaded yet
 
   // Sort options
   sortOptions: SortOption[] = [
     { value: '-published_at', label: 'Newest Published' },
-    { value: '-timestamp', label: 'Newest Edits' },
+    { value: '-created_at', label: 'Newest Edits' },
     { value: 'entry__term__text_normalized', label: 'Term A-Z' },
     { value: '-entry__term__text_normalized', label: 'Term Z-A' },
   ];
@@ -269,12 +269,12 @@ export class MyDraftsComponent implements OnInit, OnDestroy {
       if (entryId) {
         // Use setTimeout to ensure loadMyDrafts completes first
         setTimeout(() => {
-          // Find the newest draft for this entry (should be first if sorted by timestamp)
+          // Find the newest draft for this entry (should be first if sorted by created_at)
           const entryDrafts = this.state.filteredDrafts.filter(
             d => d.entry?.id === entryId
           );
           if (entryDrafts.length > 0) {
-            // Select the newest draft (first in list when sorted by -timestamp)
+            // Select the newest draft (first in list when sorted by -created_at)
             const newestDraft = entryDrafts[0];
             this.selectDraft(newestDraft);
           }

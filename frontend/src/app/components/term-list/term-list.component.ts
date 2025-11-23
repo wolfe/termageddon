@@ -62,7 +62,7 @@ export class TermListComponent implements OnInit, OnDestroy {
   // Sort options for SearchFilterBarComponent
   sortOptions: SortOption[] = [
     { value: '-published_at', label: 'Newest Published' },
-    { value: '-timestamp', label: 'Newest Edits' },
+    { value: '-created_at', label: 'Newest Edits' },
     { value: 'term__text_normalized', label: 'Term A-Z' },
     { value: '-term__text_normalized', label: 'Term Z-A' },
   ];

@@ -17,7 +17,7 @@ class Command(BaseCommand):
         drafts_to_archive = EntryDraft.objects.filter(
             is_published=False,
             is_archived=False,
-            timestamp__lt=one_month_ago,
+            created_at__lt=one_month_ago,
             is_deleted=False,
         )
 

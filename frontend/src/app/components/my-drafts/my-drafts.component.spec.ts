@@ -95,7 +95,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-03T00:00:00Z',
+            created_at: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
             entry: {
@@ -118,7 +118,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T12:00:00Z',
+            created_at: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
             entry: {
@@ -152,7 +152,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-03T00:00:00Z',
+          created_at: '2024-01-03T00:00:00Z',
           created_at: '2024-01-03T00:00:00Z',
           updated_at: '2024-01-03T00:00:00Z',
           entry: {
@@ -171,7 +171,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-02T12:00:00Z',
+          created_at: '2024-01-02T12:00:00Z',
           created_at: '2024-01-02T12:00:00Z',
           updated_at: '2024-01-02T12:00:00Z',
           entry: {
@@ -227,12 +227,12 @@ describe('MyDraftsComponent', () => {
       drafts.forEach(draft => {
         const entryId = draft.entry.id;
         const existing = latestDraftsMap.get(entryId);
-        if (!existing || new Date(draft.timestamp) > new Date(existing.timestamp)) {
+        if (!existing || new Date(draft.created_at) > new Date(existing.created_at)) {
           latestDraftsMap.set(entryId, draft);
         }
       });
       return Array.from(latestDraftsMap.values()).sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
     panelCommonSpy.filterDraftsBySearch.and.returnValue([]);
@@ -282,7 +282,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-03T00:00:00Z',
+          created_at: '2024-01-03T00:00:00Z',
           created_at: '2024-01-03T00:00:00Z',
           updated_at: '2024-01-03T00:00:00Z',
           author: {
@@ -324,7 +324,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
+          created_at: '2024-01-02T00:00:00Z',
           created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
           author: {
@@ -366,7 +366,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-02T12:00:00Z',
+          created_at: '2024-01-02T12:00:00Z',
           created_at: '2024-01-02T12:00:00Z',
           updated_at: '2024-01-02T12:00:00Z',
           author: {
@@ -413,7 +413,7 @@ describe('MyDraftsComponent', () => {
       expect(result[1].content).toBe('Latest draft for entry 2');
     });
 
-    it('should sort results by timestamp (newest first)', () => {
+    it('should sort results by created_at (newest first)', () => {
       const drafts: ReviewDraft[] = [
         {
           id: 1,
@@ -421,7 +421,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
           author: {
@@ -463,7 +463,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-02T00:00:00Z',
+          created_at: '2024-01-02T00:00:00Z',
           created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
           author: {
@@ -526,7 +526,7 @@ describe('MyDraftsComponent', () => {
           is_approved: false,
           is_published: false,
           approval_count: 0,
-          timestamp: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
           author: {
@@ -585,7 +585,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-03T00:00:00Z',
+            created_at: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
             author: {
@@ -627,7 +627,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T00:00:00Z',
+            created_at: '2024-01-02T00:00:00Z',
             created_at: '2024-01-02T00:00:00Z',
             updated_at: '2024-01-02T00:00:00Z',
             author: {
@@ -669,7 +669,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T12:00:00Z',
+            created_at: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
             author: {
@@ -733,7 +733,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-03T00:00:00Z',
+            created_at: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
             author: {
@@ -775,7 +775,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T00:00:00Z',
+            created_at: '2024-01-02T00:00:00Z',
             created_at: '2024-01-02T00:00:00Z',
             updated_at: '2024-01-02T00:00:00Z',
             author: {
@@ -817,7 +817,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T12:00:00Z',
+            created_at: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
             author: {
@@ -882,7 +882,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-03T00:00:00Z',
+            created_at: '2024-01-03T00:00:00Z',
             created_at: '2024-01-03T00:00:00Z',
             updated_at: '2024-01-03T00:00:00Z',
             author: {
@@ -924,7 +924,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T00:00:00Z',
+            created_at: '2024-01-02T00:00:00Z',
             created_at: '2024-01-02T00:00:00Z',
             updated_at: '2024-01-02T00:00:00Z',
             author: {
@@ -966,7 +966,7 @@ describe('MyDraftsComponent', () => {
             is_approved: false,
             is_published: false,
             approval_count: 0,
-            timestamp: '2024-01-02T12:00:00Z',
+            created_at: '2024-01-02T12:00:00Z',
             created_at: '2024-01-02T12:00:00Z',
             updated_at: '2024-01-02T12:00:00Z',
             author: {
@@ -1032,7 +1032,7 @@ describe('MyDraftsComponent', () => {
         is_approved: false,
         is_published: false,
         approval_count: 0,
-        timestamp: '2024-01-01T00:00:00Z',
+        created_at: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         author: {

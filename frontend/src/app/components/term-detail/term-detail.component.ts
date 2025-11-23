@@ -210,7 +210,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     this.entryDetailService.loadDraftHistory(this.entry.id).subscribe({
       next: response => {
         this.draftHistory = response.results;
-        // Set the latest draft (first in the list since it's ordered by timestamp desc)
+        // Set the latest draft (first in the list since it's ordered by created_at desc)
         this.latestDraft = response.results.length > 0 ? response.results[0] : null;
         this.hasNextDraftHistoryPage = !!response.next;
         this.draftHistoryNextPage = response.next;

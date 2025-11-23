@@ -370,7 +370,7 @@ describe('GlossaryService', () => {
           is_endorsed: false,
           approval_count: 0,
           status: 'Pending (0/2)',
-          timestamp: '2024-01-02T00:00:00Z',
+          created_at: '2024-01-02T00:00:00Z',
           created_at: '2024-01-02T00:00:00Z',
           updated_at: '2024-01-02T00:00:00Z',
           author: {
@@ -394,7 +394,7 @@ describe('GlossaryService', () => {
           is_endorsed: false,
           approval_count: 2,
           status: 'Published',
-          timestamp: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
           author: {
@@ -445,7 +445,7 @@ describe('GlossaryService', () => {
           replies: [],
           draft_position: 'current draft',
           draft_id: 1,
-          draft_timestamp: '2024-01-02T00:00:00Z',
+          draft_created_at: '2024-01-02T00:00:00Z',
         },
       ];
 
@@ -624,7 +624,7 @@ describe('GlossaryService', () => {
         is_endorsed: false,
         approval_count: 0,
         status: 'Pending (0/2)',
-        timestamp: '2024-01-01T00:00:00Z',
+        created_at: '2024-01-01T00:00:00Z',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         author: {

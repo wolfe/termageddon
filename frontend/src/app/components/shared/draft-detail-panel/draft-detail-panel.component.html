@@ -78,7 +78,7 @@
       <!-- Metadata -->
       <div class="flex items-center space-x-4 text-sm text-gray-600 mt-3">
         <span>Author: {{ getUserDisplayName(draft.author) }}</span>
-        <span>Created: {{ draft.timestamp | date: 'MMM d, y, h:mm a' }}</span>
+        <span>Created: {{ draft.created_at | date: 'MMM d, y, h:mm a' }}</span>
         @if (getMainDraftApprovers().length > 0 || getMainDraftRequestedReviewers().length > 0) {
           <div class="flex items-center space-x-2">
             <span>{{ getApprovalStatusText() }}</span>
@@ -164,7 +164,7 @@
                     </p>
                     <p class="mt-1">
                       <strong>Last Updated:</strong>
-                      {{ latestDraft.timestamp | date: 'MMM d, y, h:mm a' }}
+                      {{ latestDraft.created_at | date: 'MMM d, y, h:mm a' }}
                     </p>
                   </div>
                 } @else if (draft) {
@@ -175,7 +175,7 @@
                     </p>
                     <p class="mt-1">
                       <strong>Last Updated:</strong>
-                      {{ draft.timestamp | date: 'MMM d, y, h:mm a' }}
+                      {{ draft.created_at | date: 'MMM d, y, h:mm a' }}
                     </p>
                   </div>
                 }
@@ -204,7 +204,7 @@
                     </p>
                     <p class="mt-1">
                       <strong>Created:</strong>
-                      {{ selectedHistoricalDraft.timestamp | date: 'MMM d, y, h:mm a' }}
+                      {{ selectedHistoricalDraft.created_at | date: 'MMM d, y, h:mm a' }}
                     </p>
                     @if (selectedHistoricalDraft.is_published) {
                       <p class="mt-1">

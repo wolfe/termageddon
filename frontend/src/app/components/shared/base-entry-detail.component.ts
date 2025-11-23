@@ -318,8 +318,8 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get timestamp from a draft or entry - NO FALLBACKS
-   * If timestamp is missing, this will throw an error exposing the backend bug
+   * Get created_at from a draft or entry - NO FALLBACKS
+   * If created_at is missing, this will throw an error exposing the backend bug
    */
   protected getTimestamp(obj: any): string {
     if (!obj) {
@@ -327,20 +327,20 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
     }
 
     if ('active_draft' in obj && obj.active_draft) {
-      if (!obj.active_draft.timestamp) {
-        throw new Error('Entry.active_draft.timestamp is missing - backend bug');
+      if (!obj.active_draft.created_at) {
+        throw new Error('Entry.active_draft.created_at is missing - backend bug');
       }
-      return obj.active_draft.timestamp;
+      return obj.active_draft.created_at;
     }
 
-    if ('timestamp' in obj) {
-      if (!obj.timestamp) {
-        throw new Error('Draft.timestamp is missing - backend bug');
+    if ('created_at' in obj) {
+      if (!obj.created_at) {
+        throw new Error('Draft.created_at is missing - backend bug');
       }
-      return obj.timestamp;
+      return obj.created_at;
     }
 
-    throw new Error('Object has no timestamp field - backend data structure issue');
+    throw new Error('Object has no created_at field - backend data structure issue');
   }
 
   /**

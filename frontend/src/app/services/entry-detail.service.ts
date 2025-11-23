@@ -31,10 +31,10 @@ export class EntryDetailService {
       map(response => {
         if (response.results.length === 0) return null;
 
-        // Sort by timestamp descending and return the latest
+        // Sort by created_at descending and return the latest
         const sortedDrafts = response.results.sort(
           (a: EntryDraft, b: EntryDraft) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         return sortedDrafts[0];
       })

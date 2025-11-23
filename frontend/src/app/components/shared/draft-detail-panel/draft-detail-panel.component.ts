@@ -320,7 +320,7 @@ export class DraftDetailPanelComponent
             // Update the draft with the new draft data
             Object.assign(this.draft, {
               id: newDraft.id,
-              timestamp: newDraft.timestamp,
+              created_at: newDraft.created_at,
               content: newDraft.content,
               is_approved: newDraft.is_approved,
               approval_count: newDraft.approval_count,
@@ -483,8 +483,8 @@ export class DraftDetailPanelComponent
 
   getPublishedDraftTimestamp(): string {
     const published = this.getPublishedDraft();
-    if (!published?.timestamp) return '';
-    return published.timestamp;
+    if (!published?.created_at) return '';
+    return published.created_at;
   }
 
   // Generate compact approval status text

@@ -35,6 +35,8 @@ class Migration(migrations.Migration):
             ),
         ),
         # EntryDraft.timestamp - for default ordering (critical, used in almost all queries)
+        # NOTE: This field was removed in migration 0013_remove_timestamp_field.py
+        # and replaced with created_at
         migrations.AlterField(
             model_name="entrydraft",
             name="timestamp",
