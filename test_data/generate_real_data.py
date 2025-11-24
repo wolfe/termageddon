@@ -103,17 +103,46 @@ def improve_definition(original, term_text, all_terms):
                 if len(other_term) < 3:
                     continue
 
+                # Skip if text already contains cross-reference placeholders
+                # (to avoid nested cross-references like [[[[term|EES]] data|EES]])
+                if '[[' in text_content and ']]' in text_content:
+                    # Check if this term is already inside a cross-reference
+                    # Find all existing cross-references
+                    existing_refs = re.findall(r'\[\[([^\|]+)\|([^\]]+)\]\]', text_content)
+                    term_in_ref = False
+                    for ref_term, _ in existing_refs:
+                        if other_term.lower() in ref_term.lower() or ref_term.lower() in other_term.lower():
+                            term_in_ref = True
+                            break
+                    if term_in_ref:
+                        continue
+
                 # Check if term appears in text (case-insensitive word boundary)
                 pattern = r'\b' + re.escape(other_term) + r'\b'
                 if re.search(pattern, text_content, re.IGNORECASE):
                     # Only replace if not already a cross-reference
                     if f'[[{other_term}|' not in text_content:
-                        text_content = re.sub(
-                            pattern,
-                            f'[[{other_term}|{other_perspective}]]',
-                            text_content,
-                            flags=re.IGNORECASE
-                        )
+                        # Also check that we're not inside an existing cross-reference
+                        # by checking if the match is between [[ and ]]
+                        matches = list(re.finditer(pattern, text_content, re.IGNORECASE))
+                        for match in reversed(matches):  # Process from end to avoid index shifts
+                            start, end = match.span()
+                            # Check if this position is inside a cross-reference
+                            before = text_content[:start]
+                            after = text_content[end:]
+                            # Count [[ before and ]] after
+                            open_count = before.count('[[') - before.count(']]')
+                            close_count = after.count(']]') - after.count('[[')
+                            # If we're inside a cross-reference, skip this match
+                            if open_count > 0 and close_count > 0:
+                                continue
+                            # Replace this occurrence
+                            text_content = (
+                                text_content[:start] +
+                                f'[[{other_term}|{other_perspective}]]' +
+                                text_content[end:]
+                            )
+                            break  # Only replace first match per term
             result_parts.append(text_content)
 
     improved = ''.join(result_parts)
@@ -324,7 +353,7 @@ def create_tools_entries():
     entries = [
         (
             "Termageddon",
-            "A glossary management system developed by Verisk for creating, reviewing, and publishing term definitions across multiple perspectives. Termageddon enables collaborative editing with an approval workflow, version history, and cross-referencing between entries."
+            "A glossary management system developed by David Wolfe for creating, reviewing, and publishing term definitions across multiple perspectives. Termageddon enables collaborative editing with an approval workflow, version history, and cross-referencing between entries."
         ),
         (
             "entry draft",

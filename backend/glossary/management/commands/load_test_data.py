@@ -626,9 +626,40 @@ class Command(BaseCommand):
                     will_be_published = approval_state == "published"
 
                 # Assign realistic created_at
-                realistic_timestamp = self.generate_realistic_timestamp(
-                    base_timestamp, will_be_published
-                )
+                # For real data mode with two drafts: ensure proper chronological order
+                # All timestamps must be at least 1 day before today
+                now = timezone.now()
+                max_timestamp = now - timedelta(days=1)
+
+                if is_real_data_mode and is_second_draft and len(previous_drafts) > 0:
+                    # Second draft should be after the first draft
+                    # Get the first draft's timestamp from DB to ensure we have the updated value
+                    first_draft = previous_drafts[-1]
+                    first_draft.refresh_from_db()
+                    first_draft_timestamp = first_draft.created_at
+                    # Generate timestamp 1-4 weeks after the first draft
+                    days_after_first = random.randint(7, 28)
+                    realistic_timestamp = first_draft_timestamp + timedelta(
+                        days=days_after_first
+                    )
+                    # Cap to ensure it's not in the future
+                    if realistic_timestamp > max_timestamp:
+                        realistic_timestamp = max_timestamp
+                elif (
+                    is_real_data_mode
+                    and not is_second_draft
+                    and row["perspective"] == "EES"
+                ):
+                    # First draft for EES terms: make it older (3-4 months ago)
+                    days_offset = random.randint(90, 120)
+                    realistic_timestamp = now - timedelta(days=days_offset)
+                else:
+                    realistic_timestamp = self.generate_realistic_timestamp(
+                        base_timestamp, will_be_published
+                    )
+                    # Cap to ensure it's not in the future
+                    if realistic_timestamp > max_timestamp:
+                        realistic_timestamp = max_timestamp
 
                 # Update draft with created_at (bypass auto_now_add by using update)
                 EntryDraft.objects.filter(pk=draft.pk).update(

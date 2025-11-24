@@ -540,9 +540,12 @@ export class DraftDetailPanelComponent
     // Add click listener to handle entry links
     const handleLinkClick = (event: Event) => {
       const target = event.target as HTMLElement;
-      if (target.tagName === 'A' && target.hasAttribute('data-entry-id')) {
+      // Find the closest anchor element (in case click is on child like emoji)
+      const link = target.closest('a[data-entry-id]') as HTMLAnchorElement;
+      if (link) {
         event.preventDefault();
-        const entryId = parseInt(target.getAttribute('data-entry-id') || '0', 10);
+        event.stopPropagation();
+        const entryId = parseInt(link.getAttribute('data-entry-id') || '0', 10);
         if (entryId) {
           this.navigationService.navigateToEntry(entryId);
         }
@@ -550,11 +553,11 @@ export class DraftDetailPanelComponent
     };
 
     // Use native click handler on content area
-    document.addEventListener('click', handleLinkClick);
+    document.addEventListener('click', handleLinkClick, true); // Use capture phase
 
     // Clean up on destroy
     this.destroy$.subscribe(() => {
-      document.removeEventListener('click', handleLinkClick);
+      document.removeEventListener('click', handleLinkClick, true);
     });
   }
 }

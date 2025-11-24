@@ -14,14 +14,18 @@ export class NavigationService {
 
   /**
    * Navigate to entry using smart routing
+   * For cross-reference links, always route to glossary view
    */
   navigateToEntry(entryId: number, entry?: Entry, editMode: boolean = false): void {
     if (editMode) {
       const url = this.urlHelper.buildEditEntryUrl(entryId, entry);
       this.router.navigateByUrl(url);
     } else {
-      const url = this.urlHelper.buildEntryUrl(entryId, entry);
-      this.router.navigateByUrl(url);
+      // Always route to glossary view for cross-reference links
+      // This ensures consistent behavior regardless of entry state
+      this.router.navigate(['/glossary'], {
+        queryParams: { entryId: entryId },
+      });
     }
   }
 

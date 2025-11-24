@@ -281,6 +281,9 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
       .createNewDraft(entryId, content, this.permissionService.currentUser?.id || 0)
       .subscribe({
         next: newDraft => {
+          // Navigate to draft panel view of the saved draft
+          this.navigationService.navigateToDraft(newDraft.id);
+
           // Use unified refresh pattern
           this.entryDetailService.refreshAfterDraftCreated(entryId).subscribe({
             next: (response: { draftHistory: EntryDraft[]; entry: Entry }) => {
@@ -455,9 +458,12 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     // Add click listener to handle entry links
     const handleLinkClick = (event: Event) => {
       const target = event.target as HTMLElement;
-      if (target.tagName === 'A' && target.hasAttribute('data-entry-id')) {
+      // Find the closest anchor element (in case click is on child like emoji)
+      const link = target.closest('a[data-entry-id]') as HTMLAnchorElement;
+      if (link) {
         event.preventDefault();
-        const entryId = parseInt(target.getAttribute('data-entry-id') || '0', 10);
+        event.stopPropagation();
+        const entryId = parseInt(link.getAttribute('data-entry-id') || '0', 10);
         if (entryId) {
           this.navigationService.navigateToEntry(entryId);
         }
@@ -465,11 +471,11 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     };
 
     // Use native click handler on content area
-    document.addEventListener('click', handleLinkClick);
+    document.addEventListener('click', handleLinkClick, true); // Use capture phase
 
     // Clean up on destroy
     this.destroy$.subscribe(() => {
-      document.removeEventListener('click', handleLinkClick);
+      document.removeEventListener('click', handleLinkClick, true);
     });
   }
 }
