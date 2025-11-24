@@ -405,6 +405,66 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     return publishedDraft?.content || '';
   }
 
+  /**
+   * Check if there's a newer unpublished draft than the currently published one
+   */
+  hasNewerUnpublishedDraft(): boolean {
+    // Must have draft history loaded
+    if (!this.draftHistory || this.draftHistory.length === 0) {
+      return false;
+    }
+
+    // Check if we're viewing a published entry
+    const publishedDraft = this.getPublishedDraft();
+    if (!publishedDraft) {
+      return false;
+    }
+
+    // Check if there's a latest draft that's unpublished
+    if (!this.latestDraft || this.latestDraft.is_published) {
+      return false;
+    }
+
+    // Ensure latest draft is newer than published draft
+    const publishedDate = new Date(publishedDraft.created_at);
+    const latestDate = new Date(this.latestDraft.created_at);
+    return latestDate > publishedDate;
+  }
+
+  /**
+   * Get the newer unpublished draft if one exists
+   */
+  getNewerUnpublishedDraft(): EntryDraft | null {
+    if (this.hasNewerUnpublishedDraft() && this.latestDraft) {
+      return this.latestDraft;
+    }
+    return null;
+  }
+
+  /**
+   * Navigate to the newer unpublished draft
+   */
+  navigateToNewerDraft(): void {
+    const newerDraft = this.getNewerUnpublishedDraft();
+    if (newerDraft) {
+      this.navigationService.navigateToDraft(newerDraft.id);
+    }
+  }
+
+  /**
+   * Get tooltip text for newer draft indicator
+   */
+  getNewerDraftTooltip(): string {
+    const newerDraft = this.getNewerUnpublishedDraft();
+    if (!newerDraft) {
+      return '';
+    }
+
+    const authorName = `${newerDraft.author.first_name} ${newerDraft.author.last_name}`;
+    const date = new Date(newerDraft.created_at).toLocaleString();
+    return `A newer draft is available\nBy ${authorName} on ${date}\nClick to view`;
+  }
+
   switchToPerspective(entry: Entry): void {
     this.entry = entry;
     this.loadComments();
