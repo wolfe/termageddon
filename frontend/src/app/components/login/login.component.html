@@ -6,8 +6,46 @@
       <p class="text-termageddon-gray-dark mt-2">Glossary Management System</p>
     </div>
 
-    <!-- Login Form -->
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <!-- Okta Login Button -->
+    <div class="mb-6">
+      <button
+        type="button"
+        (click)="loginWithOkta()"
+        [disabled]="isLoading"
+        class="w-full bg-termageddon-primary text-white py-2 px-4 rounded-md hover:bg-termageddon-accent focus:outline-none focus:ring-2 focus:ring-termageddon-accent disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        @if (isLoading) {
+          <span>Logging in...</span>
+        } @else {
+          <span>Login with Okta</span>
+        }
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="relative mb-6">
+      <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-gray-300"></div>
+      </div>
+      <div class="relative flex justify-center text-sm">
+        <span class="px-2 bg-white text-termageddon-gray-dark">or</span>
+      </div>
+    </div>
+
+    <!-- Test User Login Toggle -->
+    <div class="mb-4">
+      <button
+        type="button"
+        (click)="toggleTestUserLogin()"
+        class="text-sm text-termageddon-primary hover:text-termageddon-accent focus:outline-none"
+      >
+        {{ showTestUserLogin ? 'Hide' : 'Show' }} Test User Login
+      </button>
+    </div>
+
+    <!-- Test User Login Form -->
+    @if (showTestUserLogin) {
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <!-- Username Field -->
       <div class="mb-4">
         <label for="username" class="block text-sm font-medium text-termageddon-gray-dark mb-1">
@@ -57,38 +95,48 @@
         </div>
       }
 
-      <!-- Submit Button -->
-      <button
-        type="submit"
-        data-testid="login-submit-button"
-        [disabled]="loginForm.invalid || isLoading"
-        class="w-full bg-termageddon-accent text-white py-2 px-4 rounded-md hover:bg-termageddon-primary focus:outline-none focus:ring-2 focus:ring-termageddon-accent disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        @if (isLoading) {
-          <span>Logging in...</span>
-        } @else {
-          <span>Login</span>
-        }
-      </button>
-    </form>
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          data-testid="login-submit-button"
+          [disabled]="loginForm.invalid || isLoading"
+          class="w-full bg-termageddon-accent text-white py-2 px-4 rounded-md hover:bg-termageddon-primary focus:outline-none focus:ring-2 focus:ring-termageddon-accent disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (isLoading) {
+            <span>Logging in...</span>
+          } @else {
+            <span>Login as Test User</span>
+          }
+        </button>
+      </form>
+    }
 
-    <!-- Test Users -->
-    <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-termageddon-blue">
-      <p class="font-semibold mb-2">Test Users:</p>
-      <p class="mb-1"><strong>Admin:</strong> admin</p>
-      <p class="mb-1"><strong>Perspective Curators:</strong></p>
-      <p class="ml-2 mb-1">• mariacarter (Maria Carter) - Physics, Chemistry</p>
-      <p class="ml-2 mb-1">• bencarter (Ben Carter) - Chemistry, Biology</p>
-      <p class="ml-2 mb-1">• sofiarossi (Sofia Rossi) - Computer Science, Graph Theory</p>
-      <p class="ml-2 mb-1">• leoschmidt (Leo Schmidt) - Biology, Geology</p>
-      <p class="ml-2 mb-1">• kenjitanaka (Kenji Tanaka) - Physics, Geology</p>
-      <p class="mb-1"><strong>Other Test Users:</strong></p>
-      <p class="ml-2 mb-1">• aishakhan (Aisha Khan)</p>
-      <p class="ml-2 mb-1">• samuelgreene (Samuel Greene)</p>
-      <p class="ml-2 mb-1">• ivanpetrov (Ivan Petrov)</p>
-      <p class="ml-2 mb-1">• chloedubois (Chloe Dubois)</p>
-      <p class="mb-1"><strong>Regular Users:</strong></p>
-      <p class="ml-2 mb-1">• evelynreed (Evelyn Reed)</p>
-    </div>
+    <!-- Error Message -->
+    @if (errorMessage) {
+      <div class="mt-4 p-3 bg-orange-100 border border-orange-400 text-orange-700 rounded">
+        {{ errorMessage }}
+      </div>
+    }
+
+    <!-- Test Users Info -->
+    @if (showTestUserLogin) {
+      <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-termageddon-blue">
+        <p class="font-semibold mb-2">Test Users:</p>
+        <p class="mb-1"><strong>Admin:</strong> admin</p>
+        <p class="mb-1"><strong>Perspective Curators:</strong></p>
+        <p class="ml-2 mb-1">• mariacarter (Maria Carter) - Physics, Chemistry</p>
+        <p class="ml-2 mb-1">• bencarter (Ben Carter) - Chemistry, Biology</p>
+        <p class="ml-2 mb-1">• sofiarossi (Sofia Rossi) - Computer Science, Graph Theory</p>
+        <p class="ml-2 mb-1">• leoschmidt (Leo Schmidt) - Biology, Geology</p>
+        <p class="ml-2 mb-1">• kenjitanaka (Kenji Tanaka) - Physics, Geology</p>
+        <p class="mb-1"><strong>Other Test Users:</strong></p>
+        <p class="ml-2 mb-1">• aishakhan (Aisha Khan)</p>
+        <p class="ml-2 mb-1">• samuelgreene (Samuel Greene)</p>
+        <p class="ml-2 mb-1">• ivanpetrov (Ivan Petrov)</p>
+        <p class="ml-2 mb-1">• chloedubois (Chloe Dubois)</p>
+        <p class="mb-1"><strong>Regular Users:</strong></p>
+        <p class="ml-2 mb-1">• evelynreed (Evelyn Reed)</p>
+      </div>
+    }
   </div>
 </div>

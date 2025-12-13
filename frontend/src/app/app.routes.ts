@@ -16,6 +16,11 @@ export const routes: Routes = [
     canActivate: [loginGuard],
   },
   {
+    path: 'callback',
+    component: MainLayoutComponent,
+    // No guard - Okta callback will be handled in MainLayoutComponent
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],

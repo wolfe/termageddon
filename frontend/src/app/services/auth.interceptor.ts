@@ -10,7 +10,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.getToken();
 
   // If no token and not a login request, redirect to login
-  if (!token && !req.url.includes('/auth/login/')) {
+  // Allow both regular login and Okta login endpoints
+  if (!token && !req.url.includes('/auth/login/') && !req.url.includes('/auth/okta-login/')) {
     router.navigate(['/login']);
     return throwError(() => new Error('No authentication token'));
   }

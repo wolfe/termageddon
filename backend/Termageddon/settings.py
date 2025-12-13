@@ -194,6 +194,10 @@ REST_FRAMEWORK = {
 # Custom Settings
 MIN_APPROVALS = 2  # For EntryVersion approval workflow
 
+# Okta OAuth Settings
+OKTA_CLIENT_ID = os.getenv("OKTA_CLIENT_ID", "")
+OKTA_ISSUER_URI = os.getenv("OKTA_ISSUER_URI", "")
+
 # drf-spectacular Settings
 SPECTACULAR_SETTINGS = {
     "TITLE": "Termageddon API",

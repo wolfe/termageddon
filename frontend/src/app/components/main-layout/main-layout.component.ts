@@ -26,6 +26,12 @@ export class MainLayoutComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Check if this is an Okta callback first
+    if (this.authService.isOktaCallback()) {
+      this.handleOktaCallback();
+      return;
+    }
+
     // Load current user
     this.permissionService.currentUser$.subscribe(user => {
       this.currentUser = user;
@@ -44,6 +50,26 @@ export class MainLayoutComponent implements OnInit {
       if (user?.is_test_user) {
         this.loadTestUsers();
       }
+    });
+  }
+
+  private handleOktaCallback(): void {
+    this.authService.handleOktaCallback().subscribe({
+      next: response => {
+        this.permissionService.setCurrentUser(response.user);
+        // Redirect to glossary after successful login
+        this.router.navigate(['/glossary']);
+      },
+      error: error => {
+        console.error('Okta callback error in MainLayoutComponent:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.error);
+        // On error, redirect to login page with error message
+        this.router.navigate(['/login'], {
+          queryParams: { error: 'okta_auth_failed' },
+        });
+      },
     });
   }
 

@@ -1,3 +1,5 @@
+import logging
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.authtoken.models import Token
@@ -1171,6 +1173,50 @@ class CustomAuthToken(ObtainAuthToken):
         from glossary.serializers import UserDetailSerializer
 
         return Response({"token": token.key, "user": UserDetailSerializer(user).data})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def okta_login_view(request):
+    """Okta OAuth login endpoint - exchanges Okta token for Django token"""
+    from glossary.okta_auth import (
+        OktaTokenError,
+        get_or_create_user_from_okta_token,
+        verify_okta_token,
+    )
+    from glossary.serializers import UserDetailSerializer
+
+    okta_token = request.data.get("okta_token")
+    if not okta_token:
+        return Response(
+            {"detail": "okta_token is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        # Verify and decode Okta token
+        token_data = verify_okta_token(okta_token)
+
+        # Get or create Django user
+        user = get_or_create_user_from_okta_token(token_data)
+
+        # Create or get Django token
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({"token": token.key, "user": UserDetailSerializer(user).data})
+
+    except OktaTokenError as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.exception("Error during Okta login")
+        return Response(
+            {"detail": f"Authentication failed: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["POST"])

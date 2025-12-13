@@ -548,6 +548,14 @@ class UserProfile(AuditedModel):
     is_test_user: models.BooleanField = models.BooleanField(
         default=False, help_text="Indicates this is a test user for easy switching"
     )
+    okta_id: models.CharField = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        help_text="Okta user ID (sub claim) for OAuth authentication",
+    )
 
     class Meta:
         db_table = "glossary_user_profile"
