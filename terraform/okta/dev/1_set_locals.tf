@@ -1,0 +1,1 @@
+../templates/1_set_locals.tf

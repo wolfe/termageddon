@@ -1,0 +1,1 @@
+../templates/4_auth_server.tf
