@@ -28,12 +28,8 @@ export class MainLayoutComponent implements OnInit {
   ngOnInit(): void {
     // Check if this is an Okta callback first
     const isCallback = this.authService.isOktaCallback();
-    console.log('MainLayoutComponent ngOnInit - isOktaCallback:', isCallback);
-    console.log('Current URL:', window.location.href);
-    console.log('Current pathname:', window.location.pathname);
 
     if (isCallback) {
-      console.log('Handling Okta callback in MainLayoutComponent');
       this.handleOktaCallback();
       return;
     }
@@ -43,9 +39,14 @@ export class MainLayoutComponent implements OnInit {
       this.currentUser = user;
 
       // If we have a token but no user data, refresh user info
-      if (this.authService.isAuthenticated() && !user) {
+      // But only if we're not in the middle of an Okta callback
+      if (this.authService.isAuthenticated() && !user && !isCallback) {
         this.permissionService.refreshUser().subscribe({
-          error: () => {
+          next: () => {
+            // User refreshed successfully
+          },
+          error: (error) => {
+            console.error('Failed to refresh user', error);
             // If can't get user, redirect to login
             this.router.navigate(['/login']);
           },
@@ -62,9 +63,44 @@ export class MainLayoutComponent implements OnInit {
   private handleOktaCallback(): void {
     this.authService.handleOktaCallback().subscribe({
       next: response => {
+        console.log('MainLayoutComponent: Okta callback successful', {
+          hasResponse: !!response,
+          hasToken: !!response.token,
+          hasUser: !!response.user,
+          userId: response.user?.id
+        });
+
+        // Set user first
         this.permissionService.setCurrentUser(response.user);
+
+        // Verify token is set (it should be set in authService tap operator)
+        // The token is set synchronously in the tap operator, so it should be available here
+        if (!this.authService.isAuthenticated()) {
+          // Try setting token directly from response as fallback
+          if (response.token) {
+            this.authService.setToken(response.token);
+          }
+
+          // Check again
+          if (!this.authService.isAuthenticated()) {
+            console.error('Token not set after successful login');
+            this.router.navigate(['/login'], {
+              queryParams: { error: 'Authentication token not set' }
+            });
+            return;
+          }
+        }
+
         // Redirect to glossary after successful login
-        this.router.navigate(['/glossary']);
+        // Use replaceUrl to avoid back button issues and clear callback URL
+        this.router.navigate(['/glossary'], { replaceUrl: true }).then(
+          (success) => {
+            if (!success) {
+              console.error('Navigation to glossary failed, redirecting to login');
+              this.router.navigate(['/login']);
+            }
+          }
+        );
       },
       error: error => {
         // Check if this is an expected error (user not assigned, access denied, etc.)
@@ -78,12 +114,6 @@ export class MainLayoutComponent implements OnInit {
         // Only log verbose details for unexpected errors
         if (!isExpectedError) {
           console.error('Unexpected Okta callback error:', error);
-          console.error('Error status:', error.status);
-          console.error('Error message:', error.message);
-          console.error('Error details:', error.error);
-        } else {
-          // For expected errors, just log a brief message
-          console.log('Okta authentication failed:', error?.message || 'User not authorized');
         }
 
         // On error, redirect to login page with error message
@@ -155,6 +185,7 @@ export class MainLayoutComponent implements OnInit {
       },
       error: () => {
         // Even if logout fails, clear local state
+        // Note: clearOktaState() is already called in authService.logout()
         this.permissionService.clearCurrentUser();
         this.authService.clearToken();
         this.router.navigate(['/login']);

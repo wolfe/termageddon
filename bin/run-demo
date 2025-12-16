@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Termageddon Demo Script
-# This script resets the database, launches backend and frontend, and opens Chrome
-
-set -e  # Exit on error
-
-# Get the directory where this script is located and project root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+# Launches backend and frontend servers with test data
 
 # Colors for output
 RED='\033[0;31m'
@@ -16,352 +10,219 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Store PIDs for cleanup
-BACKEND_PID=""
-FRONTEND_PID=""
-
-# Cleanup function
-cleanup() {
-    echo -e "\n${YELLOW}Shutting down servers and cleaning up...${NC}"
-
-    # Kill any existing processes on our ports
-    echo -e "${BLUE}  → Killing any existing processes on ports 8000 and 4200...${NC}"
-    lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-    lsof -ti:4200 | xargs kill -9 2>/dev/null || true
-
-    # Kill our tracked processes
-    if [ ! -z "$BACKEND_PID" ]; then
-        kill $BACKEND_PID 2>/dev/null || true
-        echo -e "${GREEN}✓ Backend stopped${NC}"
-    fi
-    if [ ! -z "$FRONTEND_PID" ]; then
-        kill $FRONTEND_PID 2>/dev/null || true
-        echo -e "${GREEN}✓ Frontend stopped${NC}"
-    fi
-
-    # Clear Angular dev server cache
-    echo -e "${BLUE}  → Clearing Angular dev server cache...${NC}"
-    cd "$PROJECT_ROOT/frontend"
-    npx ng cache clean 2>/dev/null || true
-    rm -rf .angular dist node_modules/.angular 2>/dev/null || true
-
-    echo -e "${GREEN}Demo stopped and cleaned up. Goodbye!${NC}"
+# Function to print colored output
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-# Set up trap for cleanup on script exit
-trap cleanup EXIT INT TERM
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
 
-# Parse command-line argument
-MODE="${1:-test}"  # Default to "test" if no argument provided
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
 
-if [ "$MODE" != "test" ] && [ "$MODE" != "real" ]; then
-    echo -e "${RED}Error: Invalid mode. Use 'test' or 'real'${NC}"
-    echo -e "${YELLOW}Usage: $0 [test|real]${NC}"
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Function to check if port is in use
+port_in_use() {
+    lsof -i:$1 > /dev/null 2>&1
+    return $?
+}
+
+# Function to kill process on port
+kill_port() {
+    local port=$1
+    local pid=$(lsof -t -i:$port 2>/dev/null)
+    if [ -n "$pid" ]; then
+        print_warning "Killing existing process on port $port (PID: $pid)"
+        kill $pid 2>/dev/null
+        sleep 2
+    fi
+}
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BACKEND_DIR="$PROJECT_ROOT/backend"
+FRONTEND_DIR="$PROJECT_ROOT/frontend"
+
+print_status "Starting Termageddon Demo..."
+print_status "Project root: $PROJECT_ROOT"
+
+# Check if backend directory exists
+if [ ! -d "$BACKEND_DIR" ]; then
+    print_error "Backend directory not found at: $BACKEND_DIR"
     exit 1
 fi
 
-# Set CSV file based on mode
-if [ "$MODE" == "real" ]; then
-    CSV_FILE="test_data/real_data.csv"
-    DATA_TYPE="real"
-    DATA_DESCRIPTION="Real glossary data (EES and Tools perspectives)"
-else
-    CSV_FILE="test_data/test_data.csv"
-    DATA_TYPE="test"
-    DATA_DESCRIPTION="Test data (multiple perspectives, random approval states)"
+# Check if frontend directory exists
+if [ ! -d "$FRONTEND_DIR" ]; then
+    print_error "Frontend directory not found at: $FRONTEND_DIR"
+    exit 1
 fi
 
-echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     Termageddon Demo Launcher         ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
-echo -e "${YELLOW}Mode: ${MODE}${NC}"
-echo ""
-
-# Step 0: Clean up any existing processes
-echo -e "${YELLOW}[0/5] Cleaning up any existing processes...${NC}"
-echo -e "${BLUE}  → Killing any processes on ports 8000 and 4200...${NC}"
-lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-lsof -ti:4200 | xargs kill -9 2>/dev/null || true
-
-# Clear Angular dev server cache
-echo -e "${BLUE}  → Clearing Angular dev server cache...${NC}"
-cd "$PROJECT_ROOT/frontend"
-npx ng cache clean 2>/dev/null || true
-rm -rf .angular dist node_modules/.angular 2>/dev/null || true
-echo -e "${GREEN}  ✓ Cleanup complete${NC}"
-echo ""
-
-# Step 1: Reset Django Database
-echo -e "${YELLOW}[1/6] Resetting Django database...${NC}"
-cd "$PROJECT_ROOT/backend"
-
-# Delete existing database
-if [ -f "db.sqlite3" ]; then
-    rm db.sqlite3
-    echo -e "${GREEN}  ✓ Deleted old database${NC}"
+# Check and kill if ports are already in use
+if port_in_use 8000; then
+    kill_port 8000
 fi
 
-# Check if virtual environment exists, create if not
+if port_in_use 4200; then
+    kill_port 4200
+fi
+
+# Setup backend
+print_status "Setting up backend..."
+cd "$BACKEND_DIR"
+
+# Remove old venv if it exists but is broken
+if [ -d "venv" ] && [ ! -f "venv/bin/python3" ]; then
+    print_status "Removing broken virtual environment..."
+    rm -rf venv
+fi
+
+# Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
-    echo -e "${BLUE}  → Creating virtual environment...${NC}"
+    print_status "Creating virtual environment..."
     python3 -m venv venv
-    echo -e "${GREEN}  ✓ Virtual environment created${NC}"
-
-    # Install dependencies
-    echo -e "${BLUE}  → Installing dependencies...${NC}"
-    source venv/bin/activate
-    pip install -r requirements.txt > /dev/null 2>&1
-    echo -e "${GREEN}  ✓ Dependencies installed${NC}"
-else
-    # Activate virtual environment
-    source venv/bin/activate
+    if [ $? -ne 0 ]; then
+        print_error "Failed to create virtual environment"
+        exit 1
+    fi
 fi
 
-# Run migrations
-echo -e "${BLUE}  → Running migrations...${NC}"
-python manage.py migrate --no-input > /dev/null 2>&1
-echo -e "${GREEN}  ✓ Migrations applied${NC}"
-
-# Collect static files
-echo -e "${BLUE}  → Collecting static files...${NC}"
-python manage.py collectstatic --noinput > /dev/null 2>&1
-echo -e "${GREEN}  ✓ Static files collected${NC}"
-
-# Load data
-echo -e "${BLUE}  → Loading ${DATA_TYPE} data from ${CSV_FILE}...${NC}"
-python manage.py load_test_data --csv-path "$CSV_FILE" > /dev/null 2>&1
-if [ "$MODE" == "real" ]; then
-    echo -e "${GREEN}  ✓ Real data loaded (EES and Tools perspectives)${NC}"
-else
-    echo -e "${GREEN}  ✓ Test data loaded (360 entries, 10 users)${NC}"
+# Activate virtual environment
+source venv/bin/activate
+if [ $? -ne 0 ]; then
+    print_error "Failed to activate virtual environment"
+    exit 1
 fi
 
-echo ""
-
-# Step 2: Start Backend Server
-echo -e "${YELLOW}[2/6] Starting Django backend server...${NC}"
-cd "$PROJECT_ROOT/backend"
-
-# Check if virtual environment exists, create if not
-if [ ! -d "venv" ]; then
-    echo -e "${BLUE}  → Creating virtual environment...${NC}"
-    python3 -m venv venv
-    echo -e "${GREEN}  ✓ Virtual environment created${NC}"
-
-    # Install dependencies
-    echo -e "${BLUE}  → Installing dependencies...${NC}"
-    source venv/bin/activate
-    pip install -r requirements.txt > /dev/null 2>&1
-    echo -e "${GREEN}  ✓ Dependencies installed${NC}"
-
-    # Collect static files
-    echo -e "${BLUE}  → Collecting static files...${NC}"
-    python manage.py collectstatic --noinput > /dev/null 2>&1
-    echo -e "${GREEN}  ✓ Static files collected${NC}"
-else
-    source venv/bin/activate
+# Install dependencies
+print_status "Installing backend dependencies..."
+pip install -q -r requirements.txt
+if [ $? -ne 0 ]; then
+    print_error "Failed to install backend dependencies"
+    exit 1
 fi
 
+# Check if database exists, if not run migrations
+if [ ! -f "db.sqlite3" ]; then
+    print_status "Running database migrations..."
+    python manage.py migrate
+    if [ $? -ne 0 ]; then
+        print_error "Failed to run migrations"
+        exit 1
+    fi
+    
+    # Load test data for new database
+    print_status "Loading test data..."
+    python manage.py load_test_data
+    if [ $? -ne 0 ]; then
+        print_error "Failed to load test data"
+        exit 1
+    fi
+else
+    print_status "Database already exists, skipping migrations and test data"
+fi
+
+# Start backend server in background
+print_status "Starting backend server..."
 python manage.py runserver > /dev/null 2>&1 &
 BACKEND_PID=$!
-echo -e "${GREEN}  ✓ Backend started on http://localhost:8000 (PID: $BACKEND_PID)${NC}"
-echo ""
 
-# Step 3: Start Frontend Server
-echo -e "${YELLOW}[3/6] Starting Angular frontend server...${NC}"
-cd "$PROJECT_ROOT/frontend"
-npm start > /dev/null 2>&1 &
+# Wait for backend to be ready
+print_status "Waiting for backend to start..."
+sleep 3
+
+# Check if backend is still running
+if ! kill -0 $BACKEND_PID 2>/dev/null; then
+    print_error "Backend server failed to start"
+    exit 1
+fi
+
+# Setup and start frontend
+print_status "Setting up frontend..."
+cd "$FRONTEND_DIR"
+
+# Always install dependencies to ensure they're up to date
+print_status "Installing frontend dependencies..."
+npm install
+if [ $? -ne 0 ]; then
+    print_error "Failed to install frontend dependencies"
+    kill $BACKEND_PID
+    exit 1
+fi
+
+# Start frontend server in foreground temporarily to see errors
+print_status "Starting frontend server..."
+npm start 2>&1 &
 FRONTEND_PID=$!
-echo -e "${GREEN}  ✓ Frontend building and starting on http://localhost:4200 (PID: $FRONTEND_PID)${NC}"
-echo ""
 
-# Step 4: Wait for servers to be ready
-echo -e "${YELLOW}[4/6] Waiting for servers to be ready...${NC}"
+# Wait for frontend to be ready
+print_status "Waiting for frontend to start..."
+sleep 10
 
-# Wait for backend
-echo -e "${BLUE}  → Waiting for backend (max 30s)...${NC}"
-for i in {1..30}; do
-    if curl -s http://localhost:8000/api/ > /dev/null 2>&1; then
-        echo -e "${GREEN}  ✓ Backend is ready!${NC}"
-        break
-    fi
-    if [ $i -eq 30 ]; then
-        echo -e "${RED}  ✗ Backend failed to start${NC}"
-        exit 1
-    fi
-    sleep 1
-done
+# Check if frontend is still running
+if ! kill -0 $FRONTEND_PID 2>/dev/null; then
+    print_error "Frontend server failed to start"
+    print_error "Check the output above for npm/Angular errors"
+    kill $BACKEND_PID 2>/dev/null
+    exit 1
+fi
 
-# Wait for frontend (it takes longer to build)
-echo -e "${BLUE}  → Waiting for frontend (max 60s)...${NC}"
-for i in {1..60}; do
-    if curl -s http://localhost:4200 > /dev/null 2>&1; then
-        echo -e "${GREEN}  ✓ Frontend is ready!${NC}"
-        break
-    fi
-    if [ $i -eq 60 ]; then
-        echo -e "${RED}  ✗ Frontend failed to start${NC}"
-        exit 1
-    fi
-    sleep 1
-done
-echo ""
+# Open browsers
+print_success "Opening browsers..."
+if command -v open > /dev/null 2>&1; then
+    # macOS
+    open "http://localhost:4200" 2>/dev/null
+    open "http://localhost:8000/admin" 2>/dev/null
+elif command -v xdg-open > /dev/null 2>&1; then
+    # Linux
+    xdg-open "http://localhost:4200" 2>/dev/null
+    xdg-open "http://localhost:8000/admin" 2>/dev/null
+elif command -v start > /dev/null 2>&1; then
+    # Windows
+    start "http://localhost:4200"
+    start "http://localhost:8000/admin"
+else
+    print_warning "Could not detect browser launcher"
+    print_status "Please open manually:"
+    print_status "  Frontend: http://localhost:4200"
+    print_status "  Admin: http://localhost:8000/admin"
+fi
 
-# Step 5: Pre-authenticate test user
-echo -e "${YELLOW}[5/6] Pre-authenticating test user...${NC}"
+print_success "Demo is running!"
+print_status "Frontend: http://localhost:4200"
+print_status "Backend: http://localhost:8000"
+print_status "Admin: http://localhost:8000/admin"
+print_status ""
+print_status "Login credentials:"
+print_status "  Admin: admin / admin"
+print_status "  Test Users: <username> / ImABird"
+print_status "    - mariacarter (Perspective Curator)"
+print_status "    - bencarter (Perspective Curator)"
+print_status "    - sofiarossi (Perspective Curator)"
+print_status "    - leoschmidt (Perspective Curator)"
+print_status "    - kenjitanaka (Perspective Curator)"
+print_status "    - aishakhan, samuelgreene, ivanpetrov, chloedubois"
+print_status ""
+print_status "Press Ctrl+C to stop servers"
 
-# Function to get auth token for a user
-get_auth_token() {
-    local username="$1"
-    local password="$2"
-
-    # Login via API and extract token
-    local response=$(curl -s -X POST http://localhost:8000/api/auth/login/ \
-        -H "Content-Type: application/json" \
-        -d "{\"username\": \"$username\", \"password\": \"$password\"}")
-
-    # Extract token using jq or sed (fallback)
-    if command -v jq &> /dev/null; then
-        echo "$response" | jq -r '.token'
-    else
-        # Fallback: extract token using sed
-        echo "$response" | sed -n 's/.*"token": *"\([^"]*\)".*/\1/p'
-    fi
+# Cleanup function
+cleanup() {
+    print_status "Stopping servers..."
+    kill $BACKEND_PID 2>/dev/null
+    kill $FRONTEND_PID 2>/dev/null
+    print_success "Servers stopped"
+    exit 0
 }
 
-# Get token for Maria Carter (demo user)
-echo -e "${BLUE}  → Getting auth token for Maria Carter...${NC}"
-MARIA_TOKEN=$(get_auth_token "mariacarter" "ImABird")
+# Set up trap for Ctrl+C
+trap cleanup INT TERM
 
-if [ -z "$MARIA_TOKEN" ] || [ "$MARIA_TOKEN" = "null" ]; then
-    echo -e "${RED}  ✗ Failed to get token for mariacarter${NC}"
-    MARIA_TOKEN=""
-else
-    echo -e "${GREEN}  ✓ Successfully authenticated Maria Carter${NC}"
-fi
-echo ""
-
-# Step 6: Open Chrome with demo window
-echo -e "${YELLOW}[6/6] Opening Chrome browser...${NC}"
-
-# Check if Chrome is installed
-if command -v open &> /dev/null && [ -d "/Applications/Google Chrome.app" ]; then
-    # macOS - Open windows for demo
-    echo -e "${BLUE}  → Opening Chrome windows for demo...${NC}"
-
-    # Window 1: Admin interface
-    open -a "Google Chrome" "http://localhost:8000/admin/"
-    sleep 2
-
-    # Window 2: Frontend as Maria Carter (pre-authenticated if token available)
-    if [ -n "$MARIA_TOKEN" ]; then
-        MARIA_URL="http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true"
-        echo -e "${BLUE}  → Opening Maria Carter window (pre-authenticated)...${NC}"
-    else
-        MARIA_URL="http://localhost:4200?demo=true"
-        echo -e "${BLUE}  → Opening Maria Carter window (manual login required)...${NC}"
-    fi
-    open -a "Google Chrome" "$MARIA_URL"
-
-    echo -e "${GREEN}  ✓ Chrome opened with 2 windows:${NC}"
-    echo -e "    ${BLUE}•${NC} Django Admin (admin/admin)"
-    if [ -n "$MARIA_TOKEN" ]; then
-        echo -e "    ${BLUE}•${NC} Frontend Window (Maria Carter - ${GREEN}pre-authenticated${NC})"
-    else
-        echo -e "    ${BLUE}•${NC} Frontend Window (login as mariacarter/ImABird)"
-    fi
-
-elif command -v google-chrome &> /dev/null; then
-    # Linux with google-chrome
-    google-chrome "http://localhost:8000/admin/" &
-    sleep 2
-    if [ -n "$MARIA_TOKEN" ]; then
-        google-chrome "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true" &
-    else
-        google-chrome "http://localhost:4200?demo=true" &
-    fi
-    echo -e "${GREEN}  ✓ Chrome opened with 2 windows${NC}"
-elif command -v chromium-browser &> /dev/null; then
-    # Linux with chromium
-    chromium-browser "http://localhost:8000/admin/" &
-    sleep 2
-    if [ -n "$MARIA_TOKEN" ]; then
-        chromium-browser "http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter&demo=true" &
-    else
-        chromium-browser "http://localhost:4200?demo=true" &
-    fi
-    echo -e "${GREEN}  ✓ Chromium opened with 2 windows${NC}"
-else
-    echo -e "${YELLOW}  ⚠ Chrome not found. Please open manually:${NC}"
-    echo -e "    ${BLUE}http://localhost:8000/admin/${NC}"
-    if [ -n "$MARIA_TOKEN" ]; then
-        echo -e "    ${BLUE}http://localhost:4200?token=$MARIA_TOKEN&username=mariacarter${NC} (Maria Carter - pre-authenticated)"
-    else
-        echo -e "    ${BLUE}http://localhost:4200${NC} (login as mariacarter/ImABird)"
-    fi
-fi
-echo ""
-
-# Step 6: Display summary
-echo -e "${YELLOW}[6/6] Displaying summary...${NC}"
-echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║          Demo is Running!              ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
-echo ""
-echo -e "${GREEN}✓ Backend API:${NC}       http://localhost:8000/api/"
-echo -e "${GREEN}✓ Django Admin:${NC}      http://localhost:8000/admin/"
-echo -e "${GREEN}✓ Frontend App:${NC}      http://localhost:4200"
-echo ""
-echo -e "${YELLOW}Login Credentials:${NC}"
-echo -e "  ${BLUE}Admin:${NC}     admin / admin"
-echo ""
-if [ "$MODE" == "real" ]; then
-    echo -e "${YELLOW}Data Summary:${NC}"
-    echo -e "  ${BLUE}•${NC} EES perspective: Verisk's view of industry terms"
-    echo -e "  ${BLUE}•${NC} Tools perspective: Software tools used by Verisk"
-    echo -e "  ${BLUE}•${NC} All entries created by admin user"
-    echo -e "  ${BLUE}•${NC} EES terms have 2 drafts (original and improved with cross-references)"
-    echo -e "  ${BLUE}•${NC} Tools terms include Termageddon-related definitions"
-else
-    echo -e "${YELLOW}Test Users (password = ImABird, most users):${NC}"
-    echo -e "  ${BLUE}•${NC} mariacarter     (Maria Carter) - ${GREEN}Perspective Curator: Physics, Chemistry${NC}"
-    echo -e "  ${BLUE}•${NC} bencarter       (Ben Carter) - ${GREEN}Perspective Curator: Chemistry, Biology${NC}"
-    echo -e "  ${BLUE}•${NC} sofiarossi      (Sofia Rossi) - ${GREEN}Perspective Curator: Computer Science, Graph Theory${NC}"
-    echo -e "  ${BLUE}•${NC} leoschmidt      (Leo Schmidt) - ${GREEN}Perspective Curator: Biology, Geology${NC}"
-    echo -e "  ${BLUE}•${NC} kenjitanaka     (Kenji Tanaka) - ${GREEN}Perspective Curator: Physics, Geology${NC}"
-    echo -e "  ${BLUE}•${NC} aishakhan       (Aisha Khan)"
-    echo -e "  ${BLUE}•${NC} samuelgreene    (Samuel Greene)"
-    echo -e "  ${BLUE}•${NC} ivanpetrov      (Ivan Petrov)"
-    echo -e "  ${BLUE}•${NC} chloedubois     (Chloe Dubois)"
-    echo -e "  ${BLUE}•${NC} evelynreed      (Evelyn Reed) - ${YELLOW}Regular user (not test user)${NC}"
-    echo ""
-    echo -e "${YELLOW}Test Data:${NC}"
-    echo -e "  ${BLUE}•${NC} 360 glossary entries with realistic approval states:"
-    echo -e "    ${BLUE}  -${NC} ~20% No approvals (draft state)"
-    echo -e "    ${BLUE}  -${NC} ~25% One approval (pending)"
-    echo -e "    ${BLUE}  -${NC} ~35% Two approvals (ready to publish)"
-    echo -e "    ${BLUE}  -${NC} ~20% Published (active definitions)"
-    echo -e "  ${BLUE}•${NC} 9 perspectives (Physics, Chemistry, Biology, etc.)"
-    echo -e "  ${BLUE}•${NC} 10 test users (5 perspective curators, 5 regular users)"
-fi
-echo ""
-echo -e "${RED}Press Ctrl+C to stop the demo${NC}"
-echo ""
-
-# Keep script running and show logs
-echo -e "${YELLOW}Watching for activity...${NC}"
-echo ""
-
-# Wait indefinitely (servers run in background)
-while true; do
-    # Check if servers are still running
-    if ! kill -0 $BACKEND_PID 2>/dev/null; then
-        echo -e "${RED}Backend server stopped unexpectedly!${NC}"
-        exit 1
-    fi
-    if ! kill -0 $FRONTEND_PID 2>/dev/null; then
-        echo -e "${RED}Frontend server stopped unexpectedly!${NC}"
-        exit 1
-    fi
-    sleep 5
-done
+# Wait for user interrupt
+wait

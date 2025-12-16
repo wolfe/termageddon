@@ -1,5 +1,5 @@
 resource "okta_auth_server" "termageddon_auth_server" {
-  audiences   = [var.termageddon_url]
+  audiences   = ["api://default"]
   description = "${local.termageddon_app_name} auth server"
   name        = local.termageddon_app_name
   issuer_mode = "CUSTOM_URL"

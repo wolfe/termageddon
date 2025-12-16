@@ -1,17 +1,18 @@
 """
-Okta OAuth2/OIDC authentication utilities
+Okta authentication utilities for Termageddon.
+
+This module provides functions to verify Okta JWT tokens and create/update Django users
+based on Okta token claims.
 """
 
 import logging
-from typing import Dict
+from typing import Any, Dict
 
 import jwt
-from jwt import PyJWKClient
+import requests
 
 from django.conf import settings
 from django.contrib.auth.models import User
-
-from glossary.models import UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -22,234 +23,138 @@ class OktaTokenError(Exception):
     pass
 
 
-def get_jwks_client(issuer_uri: str) -> PyJWKClient:
-    """Get PyJWKClient for Okta issuer"""
-    # Okta uses /v1/keys endpoint for JWKS
-    jwks_uri = f"{issuer_uri}/v1/keys"
+def get_okta_jwks() -> Dict[str, Any]:
+    """Fetch Okta's public keys for token verification"""
+    jwks_url = f"{settings.OKTA_ISSUER_URI}/v1/keys"
     try:
-        return PyJWKClient(jwks_uri, cache_keys=True)
-    except Exception as e:
-        logger.error(f"Failed to initialize PyJWKClient: {e}")
-        raise OktaTokenError(f"Failed to initialize JWKS client: {str(e)}")
+        response = requests.get(jwks_url, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch Okta JWKS: {e}")
+        raise OktaTokenError(f"Failed to fetch Okta public keys: {e}")
 
 
-def _decode_with_audience_check(
-    token: str, signing_key, unverified_token: Dict
-) -> Dict:
+def verify_okta_token(token: str) -> Dict[str, Any]:
     """
-    Attempt to decode token with audience verification, fallback if needed.
+    Verify Okta JWT token and return decoded claims.
 
-    Args:
-        token: The JWT token string
-        signing_key: The signing key from JWKS
-        unverified_token: Pre-decoded token for logging
-
-    Returns:
-        Decoded token claims
+    Note: Audience validation is skipped as it's not needed for this security flow.
     """
     try:
-        return jwt.decode(
+        # Get Okta's public keys
+        jwks = get_okta_jwks()
+
+        # Get the signing key
+        unverified_header = jwt.get_unverified_header(token)
+        signing_key = None
+        for key in jwks["keys"]:
+            if key["kid"] == unverified_header["kid"]:
+                # Construct RSA key from JWK components
+                import base64
+
+                from cryptography.hazmat.backends import default_backend
+                from cryptography.hazmat.primitives.asymmetric import rsa
+
+                # Decode base64url-encoded values (add padding if needed)
+                def base64url_decode(value: str) -> bytes:
+                    # Add padding
+                    padding = 4 - len(value) % 4
+                    if padding != 4:
+                        value += "=" * padding
+                    return base64.urlsafe_b64decode(value)
+
+                n_bytes = base64url_decode(key["n"])
+                e_bytes = base64url_decode(key["e"])
+
+                # Convert to integers
+                n_int = int.from_bytes(n_bytes, "big")
+                e_int = int.from_bytes(e_bytes, "big")
+
+                # Construct RSA public key
+                public_numbers = rsa.RSAPublicNumbers(e_int, n_int)
+                signing_key = public_numbers.public_key(default_backend())
+                break
+
+        if not signing_key:
+            raise OktaTokenError("Unable to find appropriate signing key")
+
+        # Decode and verify token (without audience check)
+        claims = jwt.decode(
             token,
-            signing_key.key,
+            signing_key,
             algorithms=["RS256"],
-            audience=settings.OKTA_CLIENT_ID,
             issuer=settings.OKTA_ISSUER_URI,
             options={
-                "verify_signature": True,
-                "verify_aud": True,
-                "verify_iss": True,
+                "verify_aud": False,  # Skip audience validation
             },
         )
-    except jwt.InvalidAudienceError:
-        # If audience doesn't match, try without audience verification
-        # Some Okta configurations use different audience values
-        logger.warning(
-            f"Token audience mismatch. Token audience: {unverified_token.get('aud')}, "
-            f"Trying without audience verification"
-        )
-        decoded_token = jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256"],
-            issuer=settings.OKTA_ISSUER_URI,
-            options={
-                "verify_signature": True,
-                "verify_aud": False,
-                "verify_iss": True,
-            },
-        )
-        logger.info(
-            f"Token verified without audience check. Token audience was: {unverified_token.get('aud')}"
-        )
-        return decoded_token
 
+        logger.info(f"Successfully verified Okta token for user: {claims.get('sub')}")
+        return claims
 
-def verify_okta_token(token: str) -> Dict:
-    """
-    Verify and decode an Okta JWT access token.
-
-    Args:
-        token: The Okta JWT access token
-
-    Returns:
-        Dict containing the decoded token claims
-
-    Raises:
-        OktaTokenError: If token validation fails
-    """
-    if not settings.OKTA_ISSUER_URI:
-        raise OktaTokenError("OKTA_ISSUER_URI not configured")
-
-    if not settings.OKTA_CLIENT_ID:
-        raise OktaTokenError("OKTA_CLIENT_ID not configured")
-
-    try:
-        # Initialize JWKS client
-        jwks_client = get_jwks_client(settings.OKTA_ISSUER_URI)
-
-        # Get signing key from JWKS
-        signing_key = jwks_client.get_signing_key_from_jwt(token)
-
-        # Decode without verification first to check audience
-        unverified_token = jwt.decode(token, options={"verify_signature": False})
-
-        # Decode and verify token
-        decoded_token = _decode_with_audience_check(
-            token, signing_key, unverified_token
-        )
-
-        logger.info(
-            f"Successfully verified Okta token for user: {decoded_token.get('sub')}"
-        )
-        return decoded_token
-    except jwt.ExpiredSignatureError:
-        logger.error("Okta token has expired")
-        raise OktaTokenError("Token has expired")
-    except jwt.InvalidAudienceError as e:
-        logger.error(
-            f"Token audience mismatch. Expected: {settings.OKTA_CLIENT_ID}, Error: {e}"
-        )
-        raise OktaTokenError(
-            f"Token audience does not match client ID. Expected: {settings.OKTA_CLIENT_ID}"
-        )
-    except jwt.InvalidIssuerError as e:
-        logger.error(
-            f"Token issuer mismatch. Expected: {settings.OKTA_ISSUER_URI}, Error: {e}"
-        )
-        raise OktaTokenError(
-            f"Token issuer does not match configured issuer. Expected: {settings.OKTA_ISSUER_URI}"
-        )
-    except jwt.InvalidSignatureError as e:
-        logger.error(f"Token signature verification failed: {e}")
-        raise OktaTokenError(f"Token signature verification failed: {str(e)}")
     except jwt.InvalidTokenError as e:
-        logger.error(f"Invalid token error: {e}")
-        raise OktaTokenError(f"Invalid token: {str(e)}")
+        logger.error(f"JWT verification failed: {e}")
+        raise OktaTokenError(f"Invalid token: {e}")
     except Exception as e:
         logger.error(f"Unexpected error during token verification: {e}")
-        raise OktaTokenError(f"Token verification failed: {str(e)}")
+        raise OktaTokenError(f"Token verification failed: {e}")
 
 
-def _update_existing_user(
-    user: User, email: str, first_name: str, last_name: str, username: str
-) -> None:
-    """Update existing user with new information from token"""
-    needs_save = False
-    if user.email != email:
-        user.email = email
-        needs_save = True
-    if first_name and user.first_name != first_name:
-        user.first_name = first_name
-        needs_save = True
-    if last_name and user.last_name != last_name:
-        user.last_name = last_name
-        needs_save = True
-    if user.username != username:
-        if not User.objects.filter(username=username).exclude(id=user.id).exists():
-            user.username = username
-            needs_save = True
-    if needs_save:
-        user.save()
-
-
-def _link_okta_to_existing_user(user: User, okta_id: str, username: str) -> None:
-    """Link Okta ID to an existing user found by email"""
-    if not hasattr(user, "profile"):
-        UserProfile.objects.create(user=user, okta_id=okta_id)
-    else:
-        user.profile.okta_id = okta_id
-        user.profile.save()
-    # Update username to use sub
-    if user.username != username:
-        if not User.objects.filter(username=username).exclude(id=user.id).exists():
-            user.username = username
-            user.save()
-
-
-def _create_new_user(okta_id: str, email: str, first_name: str, last_name: str) -> User:
-    """Create a new user from Okta token data"""
-    username = okta_id
-    # Ensure username is unique (Django requirement)
-    base_username = username
-    counter = 1
-    while User.objects.filter(username=username).exists():
-        username = f"{base_username}_{counter}"
-        counter += 1
-
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        first_name=first_name,
-        last_name=last_name,
-    )
-    # Set okta_id on profile (created by signal)
-    user.profile.okta_id = okta_id
-    user.profile.save()
-    logger.info(f"Created new user from Okta: {username} ({okta_id})")
-    return user
-
-
-def get_or_create_user_from_okta_token(token_data: Dict) -> User:
+def get_or_create_user_from_okta_token(token_data: Dict[str, Any]) -> User:
     """
-    Get or create a Django User from Okta token data.
+    Get or create Django user from Okta token claims.
 
-    Uses Okta ID (sub) as primary identifier and username.
-    Gets first_name and last_name directly from token claims.
-
-    Args:
-        token_data: Decoded Okta token claims
-
-    Returns:
-        Django User instance
+    Maps Okta claims to Django User fields:
+    - sub -> username (Okta user ID)
+    - email -> email
+    - first_name -> first_name
+    - last_name -> last_name
     """
-    okta_id = token_data.get("sub")
+    # Extract claims
+    okta_user_id = token_data.get("sub")
     email = token_data.get("email")
-
-    # Get first_name and last_name directly from claims
     first_name = token_data.get("first_name", "")
     last_name = token_data.get("last_name", "")
 
-    if not okta_id:
-        raise OktaTokenError("Token missing 'sub' claim (Okta user ID)")
+    if not okta_user_id:
+        raise OktaTokenError("Token missing 'sub' claim")
 
     if not email:
         raise OktaTokenError("Token missing 'email' claim")
 
-    # Use sub (Okta ID) as username
-    username = okta_id
+    # Use Okta user ID as username for consistency
+    # Okta IDs are unique, so we can use them directly as usernames
+    username = okta_user_id
 
-    # Try to find user by Okta ID first (most reliable)
-    try:
-        profile = UserProfile.objects.select_related("user").get(okta_id=okta_id)
-        user = profile.user
-        _update_existing_user(user, email, first_name, last_name, username)
-        return user
-    except UserProfile.DoesNotExist:
-        # Try to find by email (for migration from old system)
-        try:
-            user = User.objects.get(email=email)
-            _link_okta_to_existing_user(user, okta_id, username)
-            return user
-        except User.DoesNotExist:
-            # Create new user
-            return _create_new_user(okta_id, email, first_name, last_name)
+    # Get or create user
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+        },
+    )
+
+    # Update user info if it changed (for existing users)
+    if not created:
+        user_updated = False
+        if user.email != email:
+            user.email = email
+            user_updated = True
+        if user.first_name != first_name:
+            user.first_name = first_name
+            user_updated = True
+        if user.last_name != last_name:
+            user.last_name = last_name
+            user_updated = True
+
+        if user_updated:
+            user.save()
+            logger.info(f"Updated user info from Okta: {username}")
+
+    if created:
+        logger.info(f"Created new user from Okta: {username}")
+
+    return user

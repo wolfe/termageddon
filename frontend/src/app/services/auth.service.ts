@@ -1,8 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, from, map, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
-import OktaAuth from '@okta/okta-auth-js';
+import { Router } from '@angular/router';
+import { Observable, from, throwError } from 'rxjs';
+import { map, tap, switchMap, catchError, shareReplay, finalize } from 'rxjs/operators';
 import { LoginRequest, LoginResponse, PaginatedResponse, User } from '../models';
+import OktaAuth, { AccessToken } from '@okta/okta-auth-js';
 
 interface OktaConfig {
   client_id: string;
@@ -19,8 +21,9 @@ export class AuthService {
 
   private oktaAuth: OktaAuth | null = null;
   private oktaConfig$: Observable<OktaConfig> | null = null;
+  private isLoginInProgress: boolean = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   private getOktaConfig(): Observable<OktaConfig> {
     if (!this.oktaConfig$) {
@@ -32,17 +35,20 @@ export class AuthService {
   }
 
   private initializeOkta(config: OktaConfig, clearStorage: boolean = false): void {
-    // Clear any existing Okta auth instance and transactions
+    // Clear any existing Okta auth instance
     if (this.oktaAuth) {
       try {
         this.oktaAuth.tokenManager.clear();
       } catch (e) {
         // Ignore errors when clearing
       }
+      // Null out the instance to ensure fresh state
+      this.oktaAuth = null;
     }
 
     // Only clear stale transactions if explicitly requested (e.g., when starting new login)
-    // Don't clear when handling callback, as Okta needs the transaction data
+    // CRITICAL: Don't clear when handling callback, as Okta needs the transaction data
+    // to complete the OAuth flow. Clearing it will break the callback.
     if (clearStorage) {
       try {
         const storageKeys = Object.keys(localStorage);
@@ -51,20 +57,26 @@ export class AuthService {
             localStorage.removeItem(key);
           }
         });
+        // Also clear sessionStorage
+        const sessionStorageKeys = Object.keys(sessionStorage);
+        sessionStorageKeys.forEach(key => {
+          if (key.toLowerCase().includes('okta')) {
+            sessionStorage.removeItem(key);
+          }
+        });
       } catch (e) {
         // Ignore errors when clearing storage
       }
     }
 
+    // Always create a fresh instance
+    // Note: We don't set restoreOriginalUri here because we handle navigation
+    // ourselves after the backend login completes in MainLayoutComponent
     this.oktaAuth = new OktaAuth({
       issuer: config.issuer_uri,
       clientId: config.client_id,
       redirectUri: config.redirect_uri,
       scopes: ['openid', 'profile', 'email'],
-      restoreOriginalUri: async (oktaAuth, originalUri) => {
-        // Restore the original URI after redirect
-        window.location.href = originalUri || '/';
-      },
     });
   }
 
@@ -84,10 +96,14 @@ export class AuthService {
   logout(): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/auth/logout/`, {}).pipe(
       tap({
-        next: () => this.clearToken(),
-        error: error => {
-          // Clear token even if logout request fails
+        next: () => {
           this.clearToken();
+          this.clearOktaState();
+        },
+        error: error => {
+          // Clear token and Okta state even if logout request fails
+          this.clearToken();
+          this.clearOktaState();
         },
       })
     );
@@ -162,24 +178,48 @@ export class AuthService {
    * Login with Okta - redirects to Okta login page
    */
   loginWithOkta(): void {
+    // Prevent multiple simultaneous login attempts
+    if (this.isLoginInProgress) {
+      return;
+    }
+
+    // Don't proceed if we're already on a callback - that would break the callback
+    if (this.isOktaCallback()) {
+      return;
+    }
+
+    this.isLoginInProgress = true;
+
+    // Fetch config and initialize Okta if needed
+    // Note: We don't clear state here - signInWithRedirect() will create a new transaction
+    // State is only cleared on explicit logout
     this.getOktaConfig().subscribe({
       next: config => {
         try {
+          // Initialize Okta instance if needed
+          // Don't clear storage - let Okta handle transaction state internally
           if (!this.oktaAuth) {
-            // Clear storage when starting a new login
-            this.initializeOkta(config, true);
+            this.initializeOkta(config, false);
           }
+
           if (this.oktaAuth) {
             this.oktaAuth.signInWithRedirect().catch(error => {
-              console.error('Failed to initiate Okta sign-in:', error);
+              console.error('Okta signInWithRedirect failed', error);
+              this.isLoginInProgress = false;
             });
+            // Note: isLoginInProgress will be reset after redirect (page reload)
+          } else {
+            console.error('Okta auth instance not created');
+            this.isLoginInProgress = false;
           }
         } catch (error) {
           console.error('Error initializing Okta:', error);
+          this.isLoginInProgress = false;
         }
       },
       error: error => {
         console.error('Failed to load Okta configuration:', error);
+        this.isLoginInProgress = false;
       },
     });
   }
@@ -188,205 +228,80 @@ export class AuthService {
    * Handle Okta callback after redirect - exchanges Okta token for Django token
    */
   handleOktaCallback(): Observable<LoginResponse> {
+    // Fetch config and initialize Okta if needed
+    // CRITICAL: Do NOT clear storage when handling callback - Okta needs the transaction state
     return this.getOktaConfig().pipe(
       switchMap(config => {
-        // Check callback URL parameters
-        if (typeof window !== 'undefined') {
-          const urlParams = new URLSearchParams(window.location.search);
-
-          // Check if there's an error in the URL
-          if (urlParams.has('error')) {
-            const error = urlParams.get('error');
-            const errorDescription = urlParams.get('error_description');
-            const errorMsg = `Okta returned error: ${error}${errorDescription ? ' - ' + errorDescription : ''}`;
-            // This is an expected error from Okta, log briefly
-            console.log('Okta authentication error:', errorMsg);
-            return throwError(() => new Error(errorMsg));
-          }
-
-          // Check if we have a code
-          if (!urlParams.has('code')) {
-            return throwError(() => new Error('No authorization code in callback URL'));
-          }
-        }
-
         if (!this.oktaAuth) {
-          this.initializeOkta(config);
+          // Initialize without clearing storage - we need the transaction state
+          this.initializeOkta(config, false);
         }
 
         if (!this.oktaAuth) {
           return throwError(() => new Error('Okta Auth not initialized'));
         }
 
-        // handleLoginRedirect processes the callback and exchanges code for tokens
-        // It stores tokens in the token manager, then we retrieve them
-        return from(
-          this.oktaAuth.handleLoginRedirect().then(async () => {
-            if (!this.oktaAuth) {
-              throw new Error('Okta Auth not initialized');
-            }
-
-            // After handleLoginRedirect, tokens are stored in token manager
-            // Use getTokens() to retrieve all tokens asynchronously
-            const tokens = await this.oktaAuth.tokenManager.getTokens();
-
-            // Get access token - it's a Token object with .value property containing the JWT
-            let accessToken = tokens.accessToken;
-
-            if (!accessToken) {
-              // Try getting it directly
-              const tokenFromManager = await this.oktaAuth.tokenManager.get('accessToken');
-              if (tokenFromManager) {
-                accessToken = tokenFromManager as any;
-              }
-            }
-
-            if (!accessToken) {
-              // Only log if this is an unexpected error (not a user assignment issue)
-              const isUserAssignmentError = false; // This would be set if we detect it
-              if (!isUserAssignmentError) {
-                console.error('No access token found after handleLoginRedirect');
-              }
-
-              // Store debug info
-              try {
-                const tokenDetails: Record<string, any> = {};
-                if (tokens.accessToken) {
-                  const token = tokens.accessToken as any;
-                  tokenDetails['accessToken'] = {
-                    type: typeof token,
-                    keys: typeof token === 'object' ? Object.keys(token) : null,
-                    hasValue: typeof token === 'object' && 'value' in token
-                  };
-                }
-                if (tokens.idToken) {
-                  const token = tokens.idToken as any;
-                  tokenDetails['idToken'] = {
-                    type: typeof token,
-                    keys: typeof token === 'object' ? Object.keys(token) : null,
-                    hasValue: typeof token === 'object' && 'value' in token
-                  };
-                }
-                localStorage.setItem('okta_error_debug', JSON.stringify({
-                  error: 'No access token found',
-                  availableTokens: Object.keys(tokens),
-                  tokenDetails: tokenDetails
-                }));
-              } catch (e) {
-                // Ignore
-              }
-
-              throw new Error('No access token found in token manager after redirect');
-            }
-
-            return accessToken;
-          }).catch(error => {
-            // Transform error to user-friendly message
-            let userMessage = 'Okta authentication failed';
-            const isExpectedError = error.message && (
-              error.message.includes('not assigned to the client application') ||
-              error.message.includes('not assigned to the Okta application') ||
-              error.message.includes('access_denied') ||
-              error.message.includes('Access denied')
-            );
-
-            if (error.message) {
-              if (error.message.includes('not assigned to the client application') ||
-                  error.message.includes('not assigned to the Okta application')) {
-                userMessage = 'Your account is not assigned to this application. Please contact your administrator to request access.';
-              } else if (error.message.includes('access_denied') || error.message.includes('Access denied')) {
-                userMessage = 'Access denied. You may not have permission to access this application. Please contact your administrator.';
-              } else {
-                userMessage = error.message;
-              }
-            }
-
-            // Only log verbose details for unexpected errors
-            if (!isExpectedError) {
-              console.error('Unexpected error in handleLoginRedirect:', error);
-              console.error('Error message:', error.message);
-            } else {
-              // For expected errors, just log a brief message
-              console.log('Okta authentication failed:', userMessage);
-            }
-
-            // Store error for debugging (only for unexpected errors or if needed)
-            if (!isExpectedError) {
-              try {
-                localStorage.setItem('okta_error_debug', JSON.stringify({
-                  error: error.message,
-                  userMessage: userMessage,
-                  stack: error.stack,
-                  name: error.name,
-                  timestamp: new Date().toISOString()
-                }));
-              } catch (e) {
-                // Ignore
-              }
-            }
-
-            // Throw error with user-friendly message
-            const friendlyError = new Error(userMessage);
-            (friendlyError as any).originalError = error;
-            (friendlyError as any).isExpectedError = isExpectedError;
-            throw friendlyError;
-          })
-        );
+        return from(this.oktaAuth.handleRedirect());
       }),
-      switchMap(accessToken => {
-        if (!accessToken) {
-          console.error('No access token in token manager');
-          throw new Error('No access token received from Okta');
+      switchMap(() => {
+        return from(this.oktaAuth!.tokenManager.get('accessToken'));
+      }),
+      switchMap((token) => {
+        const accessToken = token as AccessToken | undefined;
+
+        if (!accessToken || !accessToken.accessToken) {
+          return throwError(() => new Error('No access token received from Okta'));
         }
-
-        // The token object structure - Okta returns Token object
-        // Token objects have a .value property that contains the actual JWT string
-        let tokenValue: string;
-        if (typeof accessToken === 'string') {
-          tokenValue = accessToken;
-        } else {
-          const tokenObj = accessToken as any;
-          // Okta Token object structure: { value: string, claims: object, ... }
-          // The actual JWT token string is in the .value property
-          tokenValue = tokenObj.value || tokenObj.accessToken || tokenObj.token || tokenObj.idToken;
-
-          // If still not found, log the object structure for debugging
-          if (!tokenValue) {
-            console.error('Token object structure:', Object.keys(tokenObj));
-            console.error('Full token object:', tokenObj);
-            // Try to stringify to see the full structure
-            try {
-              console.error('Token object JSON:', JSON.stringify(tokenObj, null, 2));
-            } catch (e) {
-              console.error('Could not stringify token object');
-            }
-            throw new Error(`No valid access token value found. Token object keys: ${Object.keys(tokenObj).join(', ')}`);
-          }
-        }
-
-        if (typeof tokenValue !== 'string') {
-          throw new Error(`Access token value is not a string: ${typeof tokenValue}`);
-        }
-
-        console.log('Extracted access token value, length:', tokenValue.length);
 
         // Exchange Okta token for Django token
         return this.http.post<LoginResponse>(`${this.API_URL}/auth/okta-login/`, {
-          okta_token: tokenValue,
-        });
+          okta_token: accessToken.accessToken
+        }).pipe(
+          tap({
+            next: (response) => {
+              // Set token immediately and synchronously
+              this.setToken(response.token);
+            },
+            error: (error) => {
+              console.error('Backend login failed', {
+                status: error.status,
+                statusText: error.statusText,
+                message: error.message
+              });
+              this.clearToken();
+            }
+          }),
+          map((response) => {
+            // Double-check token is set
+            if (!this.isAuthenticated()) {
+              console.error('Token not set after login, attempting to set again');
+              this.setToken(response.token);
+            }
+            return response;
+          })
+        );
       }),
-      tap({
-        next: response => {
-          this.setToken(response.token);
-        },
-        error: error => {
-          // Errors are already handled and transformed in the catch block above
-          // Just clear the token on any error
-          this.clearToken();
+      catchError((error: any) => {
+        // Clear token on any error
+        this.clearToken();
 
-          // Re-throw the error (it's already been transformed to be user-friendly)
-          throw error;
-        },
+        // Extract error message for display
+        let errorMessage = 'Okta authentication failed';
+        if (error?.error?.detail) {
+          errorMessage = error.error.detail;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+
+        // Navigate to login with error message
+        this.router.navigate(['/login'], {
+          queryParams: { error: encodeURIComponent(errorMessage) }
+        });
+
+        // Return error - navigation already handled, don't throw to avoid double handling
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -404,10 +319,16 @@ export class AuthService {
   }
 
   /**
-   * Clear all Okta-related storage and auth tokens (for debugging)
+   * Clear Okta state (tokens, storage, instance)
+   * WARNING: Do NOT call this during callback handling - it will break the OAuth flow
    */
-  clearAllStorage(): void {
+  private clearOktaState(): void {
     if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Don't clear state if we're on a callback - that would break the OAuth flow
+    if (this.isOktaCallback()) {
       return;
     }
 
@@ -416,37 +337,43 @@ export class AuthService {
       try {
         this.oktaAuth.tokenManager.clear();
       } catch (e) {
-        // Ignore errors when clearing
+        console.error('Error clearing Okta tokenManager', e);
       }
       this.oktaAuth = null;
     }
 
-    // Clear localStorage
-    const localStorageKeys: string[] = [];
+    // Clear localStorage Okta keys
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
-      if (key && (key.toLowerCase().includes('okta') || key === 'auth_token')) {
-        localStorageKeys.push(key);
+      if (key && key.toLowerCase().includes('okta')) {
         localStorage.removeItem(key);
       }
     }
 
-    // Clear sessionStorage
-    const sessionStorageKeys: string[] = [];
+    // Clear sessionStorage Okta keys
     for (let i = sessionStorage.length - 1; i >= 0; i--) {
       const key = sessionStorage.key(i);
       if (key && key.toLowerCase().includes('okta')) {
-        sessionStorageKeys.push(key);
         sessionStorage.removeItem(key);
       }
     }
 
     // Reset cached config
     this.oktaConfig$ = null;
+  }
 
-    console.log('Cleared storage:', {
-      localStorage: localStorageKeys,
-      sessionStorage: sessionStorageKeys,
-    });
+  /**
+   * Clear all Okta-related storage and auth tokens (for debugging)
+   */
+  clearAllStorage(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Clear Okta state
+    this.clearOktaState();
+
+    // Also clear auth token
+    this.clearToken();
   }
 }

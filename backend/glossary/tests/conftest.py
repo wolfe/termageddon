@@ -1,6 +1,8 @@
 import factory
+import pytest
 from factory.django import DjangoModelFactory
 from faker import Faker
+from rest_framework.test import APIClient
 
 from django.contrib.auth.models import User
 
@@ -14,6 +16,12 @@ from glossary.models import (
 )
 
 fake = Faker()
+
+
+@pytest.fixture
+def api_client():
+    """Fixture for API client"""
+    return APIClient()
 
 
 class UserFactory(DjangoModelFactory):

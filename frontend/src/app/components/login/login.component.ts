@@ -69,10 +69,9 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    // Check if this is an Okta callback
-    if (this.authService.isOktaCallback()) {
-      this.handleOktaCallback();
-    }
+    // Note: Okta callbacks are handled by MainLayoutComponent, not LoginComponent
+    // If we're on /login with callback params, it means the callback failed and redirected here
+    // Don't try to handle it again - just show the error if present
   }
 
   ngOnDestroy(): void {

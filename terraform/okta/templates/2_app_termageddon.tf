@@ -6,6 +6,7 @@ resource "okta_app_oauth" "termageddon_app" {
   label       = local.termageddon_app_name
   type        = "browser"
   omit_secret = true
+  logo        = "${path.module}/logo.png"
 
   // General Settings / APPLICATION
   grant_types    = ["refresh_token", "authorization_code"]

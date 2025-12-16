@@ -1179,6 +1179,9 @@ class CustomAuthToken(ObtainAuthToken):
 @permission_classes([AllowAny])
 def okta_login_view(request):
     """Okta OAuth login endpoint - exchanges Okta token for Django token"""
+    logger = logging.getLogger(__name__)
+    logger.info("okta_login_view: Received Okta login request")
+    
     from glossary.okta_auth import (
         OktaTokenError,
         get_or_create_user_from_okta_token,
@@ -1188,31 +1191,36 @@ def okta_login_view(request):
 
     okta_token = request.data.get("okta_token")
     if not okta_token:
+        logger.error("okta_login_view: No okta_token in request")
         return Response(
             {"detail": "okta_token is required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    logger.info("okta_login_view: Verifying Okta token")
     try:
         # Verify and decode Okta token
         token_data = verify_okta_token(okta_token)
+        logger.info(f"okta_login_view: Token verified for user: {token_data.get('sub')}")
 
         # Get or create Django user
         user = get_or_create_user_from_okta_token(token_data)
+        logger.info(f"okta_login_view: User retrieved/created: {user.username}")
 
         # Create or get Django token
         token, created = Token.objects.get_or_create(user=user)
+        logger.info(f"okta_login_view: Django token {'created' if created else 'retrieved'}")
 
         return Response({"token": token.key, "user": UserDetailSerializer(user).data})
 
     except OktaTokenError as e:
+        logger.error(f"okta_login_view: OktaTokenError: {str(e)}")
         return Response(
             {"detail": str(e)},
             status=status.HTTP_401_UNAUTHORIZED,
         )
     except Exception as e:
-        logger = logging.getLogger(__name__)
-        logger.exception("Error during Okta login")
+        logger.exception("okta_login_view: Unexpected error during Okta login")
         return Response(
             {"detail": f"Authentication failed: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
