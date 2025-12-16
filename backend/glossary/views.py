@@ -1362,6 +1362,19 @@ def system_config_view(request):
     )
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def okta_config_view(request):
+    """Get Okta OAuth configuration for frontend"""
+    return Response(
+        {
+            "client_id": settings.OKTA_CLIENT_ID,
+            "issuer_uri": settings.OKTA_ISSUER_URI,
+            "redirect_uri": settings.OKTA_REDIRECT_URI,
+        }
+    )
+
+
 class NotificationViewSet(viewsets.ModelViewSet):
     """ViewSet for Notification model"""
 

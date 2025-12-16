@@ -27,7 +27,13 @@ export class MainLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     // Check if this is an Okta callback first
-    if (this.authService.isOktaCallback()) {
+    const isCallback = this.authService.isOktaCallback();
+    console.log('MainLayoutComponent ngOnInit - isOktaCallback:', isCallback);
+    console.log('Current URL:', window.location.href);
+    console.log('Current pathname:', window.location.pathname);
+
+    if (isCallback) {
+      console.log('Handling Okta callback in MainLayoutComponent');
       this.handleOktaCallback();
       return;
     }
@@ -61,13 +67,41 @@ export class MainLayoutComponent implements OnInit {
         this.router.navigate(['/glossary']);
       },
       error: error => {
-        console.error('Okta callback error in MainLayoutComponent:', error);
-        console.error('Error status:', error.status);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.error);
+        // Check if this is an expected error (user not assigned, access denied, etc.)
+        const isExpectedError = (error as any)?.isExpectedError ||
+          (error?.message && (
+            error.message.includes('not assigned') ||
+            error.message.includes('Access denied') ||
+            error.message.includes('access_denied')
+          ));
+
+        // Only log verbose details for unexpected errors
+        if (!isExpectedError) {
+          console.error('Unexpected Okta callback error:', error);
+          console.error('Error status:', error.status);
+          console.error('Error message:', error.message);
+          console.error('Error details:', error.error);
+        } else {
+          // For expected errors, just log a brief message
+          console.log('Okta authentication failed:', error?.message || 'User not authorized');
+        }
+
         // On error, redirect to login page with error message
+        // Use the user-friendly message if available
+        // Check multiple possible locations for the error message
+        let errorMsg = error?.message;
+        if (!errorMsg && (error as any)?.originalError) {
+          errorMsg = (error as any).originalError.message;
+        }
+        if (!errorMsg && error?.error?.detail) {
+          errorMsg = error.error.detail;
+        }
+        if (!errorMsg) {
+          errorMsg = 'Okta authentication failed. Please try again or contact support if the problem persists.';
+        }
+
         this.router.navigate(['/login'], {
-          queryParams: { error: 'okta_auth_failed' },
+          queryParams: { error: encodeURIComponent(errorMsg) },
         });
       },
     });

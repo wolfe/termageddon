@@ -9,9 +9,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = authService.getToken();
 
-  // If no token and not a login request, redirect to login
-  // Allow both regular login and Okta login endpoints
-  if (!token && !req.url.includes('/auth/login/') && !req.url.includes('/auth/okta-login/')) {
+  // If no token and not a public auth endpoint, redirect to login
+  // Allow login, Okta login, and Okta config endpoints (public endpoints)
+  const publicEndpoints = ['/auth/login/', '/auth/okta-login/', '/auth/okta-config/'];
+  const isPublicEndpoint = publicEndpoints.some(endpoint => req.url.includes(endpoint));
+  if (!token && !isPublicEndpoint) {
     router.navigate(['/login']);
     return throwError(() => new Error('No authentication token'));
   }

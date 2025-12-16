@@ -4,7 +4,24 @@
     <div class="mb-6 text-center">
       <h1 class="text-2xl font-bold text-termageddon-primary">Termageddon</h1>
       <p class="text-termageddon-gray-dark mt-2">Glossary Management System</p>
+      <!-- Debug: Clean State Button -->
+      <button
+        type="button"
+        (click)="clearState()"
+        class="mt-2 text-xs px-2 py-1 bg-gray-200 text-gray-600 rounded border border-gray-300 hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400"
+        title="Clear all Okta storage and auth tokens (debug tool)"
+      >
+        🧹 Clean State
+      </button>
     </div>
+
+    <!-- Error Message (shown above login button for visibility) -->
+    @if (errorMessage) {
+      <div class="mb-4 p-3 bg-orange-100 border border-orange-400 text-orange-700 rounded">
+        <p class="font-semibold mb-1">Authentication Error</p>
+        <p>{{ errorMessage }}</p>
+      </div>
+    }
 
     <!-- Okta Login Button -->
     <div class="mb-6">
@@ -109,13 +126,6 @@
           }
         </button>
       </form>
-    }
-
-    <!-- Error Message -->
-    @if (errorMessage) {
-      <div class="mt-4 p-3 bg-orange-100 border border-orange-400 text-orange-700 rounded">
-        {{ errorMessage }}
-      </div>
     }
 
     <!-- Test Users Info -->

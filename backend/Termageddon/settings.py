@@ -197,6 +197,7 @@ MIN_APPROVALS = 2  # For EntryVersion approval workflow
 # Okta OAuth Settings
 OKTA_CLIENT_ID = os.getenv("OKTA_CLIENT_ID", "")
 OKTA_ISSUER_URI = os.getenv("OKTA_ISSUER_URI", "")
+OKTA_REDIRECT_URI = os.getenv("OKTA_REDIRECT_URI", "http://localhost:4200/callback")
 
 # drf-spectacular Settings
 SPECTACULAR_SETTINGS = {

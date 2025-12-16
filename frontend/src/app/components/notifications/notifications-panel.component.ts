@@ -4,6 +4,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { Subject, takeUntil, filter } from 'rxjs';
 import { Notification } from '../../models';
 import { NotificationApiService } from '../../services/notification-api.service';
+import { AuthService } from '../../services/auth.service';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 
 @Component({
@@ -207,11 +208,16 @@ export class NotificationsPanelComponent implements OnInit, OnDestroy {
 
   constructor(
     private notificationApiService: NotificationApiService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
-    this.loadNotifications();
+    // Only load notifications if user is authenticated and not handling Okta callback
+    if (this.authService.isAuthenticated() && !this.authService.isOktaCallback()) {
+      this.loadNotifications();
+    }
+
     // Refresh notifications when view changes (user navigates)
     this.router.events
       .pipe(
@@ -219,7 +225,7 @@ export class NotificationsPanelComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        if (!this.isOpen) {
+        if (!this.isOpen && this.authService.isAuthenticated()) {
           // Only refresh count when panel is closed (to avoid interrupting user)
           this.loadNotifications();
         }

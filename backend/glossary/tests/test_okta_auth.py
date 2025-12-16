@@ -19,14 +19,14 @@ class TestOktaAuth:
         token_data = {
             "sub": "00u1abc123def456",
             "email": "test@example.com",
-            "given_name": "Test",
-            "family_name": "User",
+            "first_name": "Test",
+            "last_name": "User",
         }
 
         user = get_or_create_user_from_okta_token(token_data)
 
         assert user.email == "test@example.com"
-        assert user.username == "test@example.com"
+        assert user.username == "00u1abc123def456"
         assert user.first_name == "Test"
         assert user.last_name == "User"
         assert user.profile.okta_id == "00u1abc123def456"
@@ -44,8 +44,8 @@ class TestOktaAuth:
         token_data = {
             "sub": "00u1abc123def456",
             "email": "existing@example.com",
-            "given_name": "Updated",
-            "family_name": "Name",
+            "first_name": "Updated",
+            "last_name": "Name",
         }
 
         found_user = get_or_create_user_from_okta_token(token_data)
@@ -83,8 +83,8 @@ class TestOktaAuth:
         token_data = {
             "sub": "00u1abc123def456",
             "email": "test@example.com",
-            "given_name": "New",
-            "family_name": "User",
+            "first_name": "New",
+            "last_name": "User",
         }
 
         # Should create new user with modified username
@@ -128,8 +128,8 @@ class TestOktaLoginEndpoint:
         token_data = {
             "sub": "00u1abc123def456",
             "email": "test@example.com",
-            "given_name": "Test",
-            "family_name": "User",
+            "first_name": "Test",
+            "last_name": "User",
         }
 
         def mock_verify(*args, **kwargs):

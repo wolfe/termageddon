@@ -13,6 +13,7 @@ from glossary.views import (
     TermViewSet,
     current_user_view,
     logout_view,
+    okta_config_view,
     okta_login_view,
     reset_test_database,
     switch_test_user_view,
@@ -36,6 +37,7 @@ urlpatterns = [
     # Auth endpoints
     path("auth/login/", CustomAuthToken.as_view(), name="auth-login"),
     path("auth/okta-login/", okta_login_view, name="auth-okta-login"),
+    path("auth/okta-config/", okta_config_view, name="auth-okta-config"),
     path("auth/logout/", logout_view, name="auth-logout"),
     path("auth/me/", current_user_view, name="auth-me"),
     path("auth/switch-test-user/", switch_test_user_view, name="switch-test-user"),

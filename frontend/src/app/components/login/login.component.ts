@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -12,18 +13,20 @@ import { PermissionService } from '../../services/permission.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   errorMessage: string = '';
   isLoading: boolean = false;
   showTestUserLogin: boolean = false;
+  private queryParamsSubscription?: Subscription;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private permissionService: PermissionService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -32,10 +35,66 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check initial query params (in case component is already loaded)
+    const initialErrorParam = this.route.snapshot.queryParams['error'];
+    if (initialErrorParam) {
+      try {
+        const decodedError = decodeURIComponent(initialErrorParam);
+        this.errorMessage = this.formatErrorMessage(decodedError);
+        console.log('LoginComponent: Set initial errorMessage', { initialErrorParam, decodedError, formatted: this.errorMessage });
+      } catch (e) {
+        console.error('LoginComponent: Error decoding error param', e);
+        this.errorMessage = this.formatErrorMessage(initialErrorParam);
+      }
+      this.cdr.detectChanges();
+    }
+
+    // Subscribe to query params to catch changes (including when navigating to login with error)
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      const errorParam = params['error'];
+      if (errorParam) {
+        try {
+          // Decode the error message (it's URL-encoded)
+          const decodedError = decodeURIComponent(errorParam);
+          this.errorMessage = this.formatErrorMessage(decodedError);
+          console.log('LoginComponent: Set errorMessage from subscription', { errorParam, decodedError, formatted: this.errorMessage });
+        } catch (e) {
+          console.error('LoginComponent: Error decoding error param in subscription', e);
+          this.errorMessage = this.formatErrorMessage(errorParam);
+        }
+      } else {
+        // Clear error message if no error param
+        this.errorMessage = '';
+      }
+      this.cdr.detectChanges();
+    });
+
     // Check if this is an Okta callback
     if (this.authService.isOktaCallback()) {
       this.handleOktaCallback();
     }
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
+    }
+  }
+
+  private formatErrorMessage(error: string): string {
+    // Handle common error messages with user-friendly text
+    if (error.includes('not assigned to the client application') ||
+        error.includes('not assigned to the Okta application')) {
+      return 'Your account is not assigned to this application. Please contact your administrator to request access.';
+    }
+    if (error.includes('access_denied') || error.includes('Access denied')) {
+      return 'Access denied. You may not have permission to access this application. Please contact your administrator.';
+    }
+    if (error === 'okta_auth_failed') {
+      return 'Okta authentication failed. Please try again or contact support if the problem persists.';
+    }
+    // Return the error message as-is if it's already user-friendly
+    return error;
   }
 
   onSubmit(): void {
@@ -73,6 +132,16 @@ export class LoginComponent implements OnInit {
     this.showTestUserLogin = !this.showTestUserLogin;
   }
 
+  clearState(): void {
+    this.authService.clearAllStorage();
+    // Show a brief confirmation
+    const originalMessage = this.errorMessage;
+    this.errorMessage = 'Storage cleared. Ready for clean test.';
+    setTimeout(() => {
+      this.errorMessage = originalMessage;
+    }, 2000);
+  }
+
   private handleOktaCallback(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -86,7 +155,8 @@ export class LoginComponent implements OnInit {
       },
       error: error => {
         this.isLoading = false;
-        this.errorMessage = error.error?.detail || 'Okta authentication failed';
+        const errorMsg = error?.message || error?.error?.detail || 'Okta authentication failed';
+        this.errorMessage = this.formatErrorMessage(errorMsg);
       },
       complete: () => {
         this.isLoading = false;

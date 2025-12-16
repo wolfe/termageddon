@@ -3,7 +3,7 @@ Okta OAuth2/OIDC authentication utilities
 """
 
 import logging
-from typing import Dict, Tuple
+from typing import Dict
 
 import jwt
 from jwt import PyJWKClient
@@ -150,31 +150,6 @@ def verify_okta_token(token: str) -> Dict:
         raise OktaTokenError(f"Token verification failed: {str(e)}")
 
 
-def parse_display_name(display_name: str) -> Tuple[str, str]:
-    """
-    Parse display_name into first_name and last_name.
-
-    Args:
-        display_name: Full display name (e.g., "David Wolfe")
-
-    Returns:
-        Tuple of (first_name, last_name)
-    """
-    if not display_name:
-        return ("", "")
-
-    parts = display_name.strip().split()
-    if not parts:
-        return ("", "")
-    if len(parts) == 1:
-        return (parts[0], "")
-
-    # First part is first name, rest is last name
-    first_name = parts[0]
-    last_name = " ".join(parts[1:])
-    return (first_name, last_name)
-
-
 def _update_existing_user(
     user: User, email: str, first_name: str, last_name: str, username: str
 ) -> None:
@@ -239,7 +214,7 @@ def get_or_create_user_from_okta_token(token_data: Dict) -> User:
     Get or create a Django User from Okta token data.
 
     Uses Okta ID (sub) as primary identifier and username.
-    Parses display_name for first_name and last_name.
+    Gets first_name and last_name directly from token claims.
 
     Args:
         token_data: Decoded Okta token claims
@@ -249,10 +224,10 @@ def get_or_create_user_from_okta_token(token_data: Dict) -> User:
     """
     okta_id = token_data.get("sub")
     email = token_data.get("email")
-    display_name = token_data.get("display_name", "")
 
-    # Parse display_name into first_name and last_name
-    first_name, last_name = parse_display_name(display_name)
+    # Get first_name and last_name directly from claims
+    first_name = token_data.get("first_name", "")
+    last_name = token_data.get("last_name", "")
 
     if not okta_id:
         raise OktaTokenError("Token missing 'sub' claim (Okta user ID)")
