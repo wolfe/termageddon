@@ -12,6 +12,7 @@ from glossary.views import (
     PerspectiveViewSet,
     TermViewSet,
     current_user_view,
+    health_check_view,
     logout_view,
     okta_config_view,
     okta_login_view,
@@ -34,6 +35,8 @@ router.register(
 router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [
+    # Health check (no auth required)
+    path("health/", health_check_view, name="health-check"),
     # Auth endpoints
     path("auth/login/", CustomAuthToken.as_view(), name="auth-login"),
     path("auth/okta-login/", okta_login_view, name="auth-okta-login"),

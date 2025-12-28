@@ -39,6 +39,26 @@ from glossary.serializers import (
 )
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health_check_view(request):
+    """Health check endpoint for ECS and load balancer"""
+    from django.db import connection
+
+    try:
+        # Check database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return Response(
+            {"status": "healthy", "database": "connected"}, status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response(
+            {"status": "unhealthy", "database": "disconnected", "error": str(e)},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+
 # Custom permissions
 class IsStaffOrReadOnly(IsAuthenticated):
     """Allow read-only for authenticated users, write for staff"""
@@ -1181,7 +1201,7 @@ def okta_login_view(request):
     """Okta OAuth login endpoint - exchanges Okta token for Django token"""
     logger = logging.getLogger(__name__)
     logger.info("okta_login_view: Received Okta login request")
-    
+
     from glossary.okta_auth import (
         OktaTokenError,
         get_or_create_user_from_okta_token,
@@ -1201,7 +1221,9 @@ def okta_login_view(request):
     try:
         # Verify and decode Okta token
         token_data = verify_okta_token(okta_token)
-        logger.info(f"okta_login_view: Token verified for user: {token_data.get('sub')}")
+        logger.info(
+            f"okta_login_view: Token verified for user: {token_data.get('sub')}"
+        )
 
         # Get or create Django user
         user = get_or_create_user_from_okta_token(token_data)
@@ -1209,7 +1231,9 @@ def okta_login_view(request):
 
         # Create or get Django token
         token, created = Token.objects.get_or_create(user=user)
-        logger.info(f"okta_login_view: Django token {'created' if created else 'retrieved'}")
+        logger.info(
+            f"okta_login_view: Django token {'created' if created else 'retrieved'}"
+        )
 
         return Response({"token": token.key, "user": UserDetailSerializer(user).data})
 

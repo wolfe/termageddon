@@ -24,8 +24,11 @@ from drf_spectacular.views import (
 from django.contrib import admin
 from django.urls import include, path
 
+from glossary.views import health_check_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("health/", health_check_view, name="health-check"),
     path("api/", include("glossary.urls")),
     # API Documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

@@ -29,9 +29,10 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-fallback-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# ALLOWED_HOSTS from environment or default to localhost
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True
@@ -108,7 +109,23 @@ if os.getenv("TEST_MODE") == "true":
             "NAME": BASE_DIR / "db.test.sqlite3",
         }
     }
+elif os.getenv("DB_HOST"):
+    # Production: Use PostgreSQL from environment variables
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "termageddon"),
+            "USER": os.getenv("DB_USER", "termageddon"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", ""),
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "OPTIONS": {
+                "connect_timeout": 10,
+            },
+        }
+    }
 else:
+    # Development: Use SQLite
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -160,10 +177,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-    "http://localhost:4201",
-]
+# Allow CORS from environment variable or default to localhost
+cors_origins = os.getenv(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:4200,http://localhost:4201"
+).split(",")
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins]
 CORS_ALLOW_CREDENTIALS = True
 
 # Django REST Framework Settings
