@@ -180,12 +180,56 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Override queryset to handle additional filtering"""
+        from django.db.models import Prefetch
+
         queryset = super().get_queryset()
 
         # For list view, only show entries with published drafts
         # Composite index: EntryDraft(entry, is_published, created_at) optimizes this query
         if self.action == "list":
             queryset = queryset.filter(drafts__is_published=True).distinct()
+            # Prefetch latest published draft to avoid N+1 queries in serializer
+            latest_published_draft = Prefetch(
+                "drafts",
+                queryset=EntryDraft.objects.filter(is_published=True, is_deleted=False)
+                .select_related("author", "endorsed_by")
+                .prefetch_related("approvers", "requested_reviewers")
+                .order_by("-published_at"),
+                to_attr="published_drafts",
+            )
+            queryset = queryset.prefetch_related(latest_published_draft)
+        elif self.action == "retrieve":
+            # Prefetch all drafts with related data to avoid N+1 queries in retrieve
+            latest_published_draft = Prefetch(
+                "drafts",
+                queryset=EntryDraft.objects.filter(is_published=True, is_deleted=False)
+                .select_related("author", "endorsed_by")
+                .prefetch_related("approvers", "requested_reviewers")
+                .order_by("-published_at"),
+                to_attr="published_drafts",
+            )
+            all_drafts_prefetch = Prefetch(
+                "drafts",
+                queryset=EntryDraft.objects.filter(is_deleted=False)
+                .select_related("author", "endorsed_by")
+                .prefetch_related("approvers", "requested_reviewers", "comments")
+                .order_by("-created_at"),
+                to_attr="all_drafts_list",
+            )
+            queryset = queryset.prefetch_related(
+                latest_published_draft, all_drafts_prefetch
+            )
+        elif self.action == "endorse":
+            # Prefetch published draft for endorse action
+            latest_published_draft = Prefetch(
+                "drafts",
+                queryset=EntryDraft.objects.filter(is_published=True, is_deleted=False)
+                .select_related("author", "endorsed_by")
+                .prefetch_related("approvers", "requested_reviewers")
+                .order_by("-published_at"),
+                to_attr="published_drafts",
+            )
+            queryset = queryset.prefetch_related(latest_published_draft)
 
         # Handle term_text filtering (exact match, case-insensitive)
         term_text = self.request.query_params.get("term_text")
@@ -230,6 +274,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """Enhanced retrieve to include all draft information"""
+        # Prefetching is now handled in get_queryset() for retrieve action
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
@@ -282,42 +327,122 @@ class EntryViewSet(viewsets.ModelViewSet):
         """Get entries grouped by term for simplified frontend display (paginated)"""
         from rest_framework.pagination import PageNumberPagination
 
-        # Start with base queryset (no published filter yet)
-        queryset = Entry.objects.select_related("term", "perspective")
+        from django.db.models import F, OuterRef, Prefetch, Subquery
 
-        # Apply DRF filtering first
-        queryset = self.filter_queryset(queryset)
+        # Get ordering parameter (default to -published_at)
+        ordering = request.query_params.get("ordering", "-published_at")
+        order_by_published_at = (
+            "published_at" in ordering or "-published_at" in ordering
+        )
 
-        # Then apply published-only filter for glossary display
-        queryset = queryset.filter(drafts__is_published=True).distinct()
+        # Build base queryset for entries with published drafts
+        entries_queryset = Entry.objects.filter(
+            drafts__is_published=True, is_deleted=False
+        ).select_related("term", "perspective")
 
-        # Group entries by term
-        grouped_entries = {}
-        for entry in queryset:
-            term_id = entry.term.id
-            if term_id not in grouped_entries:
-                grouped_entries[term_id] = {
-                    "term": {
-                        "id": entry.term.id,
-                        "text": entry.term.text,
-                        "text_normalized": entry.term.text_normalized,
-                        "is_official": entry.term.is_official,
-                    },
-                    "entries": [],
-                }
-            grouped_entries[term_id]["entries"].append(entry)
+        # Apply DRF filtering
+        entries_queryset = self.filter_queryset(entries_queryset).distinct()
 
-        # Convert to list format for easier frontend consumption
-        result = []
-        for term_data in grouped_entries.values():
-            serializer = self.get_serializer(term_data["entries"], many=True)
-            result.append({"term": term_data["term"], "entries": serializer.data})
+        # Prefetch latest published draft to avoid N+1 queries
+        latest_published_draft = Prefetch(
+            "drafts",
+            queryset=EntryDraft.objects.filter(is_published=True, is_deleted=False)
+            .select_related("author", "endorsed_by")
+            .prefetch_related("approvers", "requested_reviewers")
+            .order_by("-published_at"),
+            to_attr="published_drafts",
+        )
+        entries_queryset = entries_queryset.prefetch_related(latest_published_draft)
 
-        # Apply pagination to the grouped results
+        # Use database aggregation to group by term and get max published_at
+        # This avoids Python-side grouping
+
+        if order_by_published_at:
+            # Annotate each entry with its term's latest published_at for ordering
+            latest_published_subquery = (
+                EntryDraft.objects.filter(
+                    entry__term=OuterRef("term"),
+                    is_published=True,
+                    is_deleted=False,
+                )
+                .order_by("-published_at")
+                .values("published_at")[:1]
+            )
+            entries_queryset = entries_queryset.annotate(
+                term_latest_published_at=Subquery(latest_published_subquery)
+            )
+            if ordering.startswith("-"):
+                entries_queryset = entries_queryset.order_by(
+                    F("term_latest_published_at").desc(nulls_last=True),
+                    "term__text_normalized",
+                )
+            else:
+                entries_queryset = entries_queryset.order_by(
+                    F("term_latest_published_at").asc(nulls_last=True),
+                    "term__text_normalized",
+                )
+        else:
+            # Apply other ordering
+            if ordering.startswith("-"):
+                field = ordering[1:]
+            else:
+                field = ordering
+
+            if field == "term__text" or field == "term__text_normalized":
+                entries_queryset = entries_queryset.order_by(
+                    "-term__text_normalized"
+                    if ordering.startswith("-")
+                    else "term__text_normalized"
+                )
+            else:
+                entries_queryset = entries_queryset.order_by("term__text_normalized")
+
+        # Apply pagination
         paginator = PageNumberPagination()
-        paginator.page_size = 50  # Same as default PAGE_SIZE
-        paginated_result = paginator.paginate_queryset(result, request)
-        return paginator.get_paginated_response(paginated_result)
+        paginator.page_size = 50
+        paginated_entries = paginator.paginate_queryset(entries_queryset, request)
+
+        if not paginated_entries:
+            return paginator.get_paginated_response([])
+
+        # Group entries by term using database values() - more efficient than Python
+        # Get unique terms from the paginated entries
+        term_ids = list(set(entry.term_id for entry in paginated_entries))
+        terms_dict = {
+            term.id: term
+            for term in Term.objects.filter(id__in=term_ids).only(
+                "id", "text", "text_normalized", "is_official"
+            )
+        }
+
+        # Group entries by term_id (already in memory, minimal Python work)
+        entries_by_term = {}
+        for entry in paginated_entries:
+            term_id = entry.term_id
+            if term_id not in entries_by_term:
+                entries_by_term[term_id] = []
+            entries_by_term[term_id].append(entry)
+
+        # Build result - serialize all entries at once to avoid N+1
+        result = []
+        for term_id in term_ids:
+            if term_id in entries_by_term:
+                term = terms_dict[term_id]
+                term_entries = entries_by_term[term_id]
+                serializer = self.get_serializer(term_entries, many=True)
+                result.append(
+                    {
+                        "term": {
+                            "id": term.id,
+                            "text": term.text,
+                            "text_normalized": term.text_normalized,
+                            "is_official": term.is_official,
+                        },
+                        "entries": serializer.data,
+                    }
+                )
+
+        return paginator.get_paginated_response(result)
 
     @action(detail=False, methods=["post"], url_path="create-with-term")
     def create_with_term(self, request):
@@ -694,6 +819,12 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 # Ascending: unpublished drafts first, then published
                 queryset = queryset.order_by(F("published_at").asc(nulls_last=False))
 
+        # Prefetch related data to avoid N+1 queries in serializer
+        # Always prefetch these relationships as they're used in EntryDraftListSerializer
+        queryset = queryset.select_related(
+            "author", "endorsed_by", "entry__term", "entry__perspective"
+        ).prefetch_related("approvers", "requested_reviewers", "comments")
+
         return queryset
 
     def get_serializer_class(self):
@@ -874,13 +1005,45 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     queryset = Comment.objects.select_related(
         "author", "parent", "draft"
-    ).prefetch_related("replies", "reactions", "mentioned_users")
+    ).prefetch_related("reactions", "mentioned_users")
+    # Note: "replies" is prefetched in get_queryset() override to avoid conflicts
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["draft", "is_resolved", "parent"]
     ordering_fields = ["created_at"]
     ordering = ["created_at"]
     # Composite index: Comment(parent, created_at) optimizes reply ordering
+
+    def get_queryset(self):
+        """Override to add recursive prefetching for replies and reaction annotations"""
+        from django.db.models import Count, Prefetch
+
+        # Get the base queryset from DRF (this calls .all() on the queryset)
+        # DRF will apply filter_backends automatically, so we don't need to call filter_queryset here
+        queryset = super().get_queryset()
+
+        # Only apply annotations for list views to avoid breaking get_object() lookups
+        # For detail/action views, we'll rely on prefetched data
+        if self.action == "list":
+            # Annotate reaction count to avoid N+1 queries
+            # Use distinct() to ensure annotations don't cause duplicate rows
+            queryset = queryset.annotate(
+                reaction_count_annotated=Count("reactions", distinct=True)
+            )
+
+        # Prefetch replies recursively to avoid N+1 queries
+        # This prefetches nested replies with their author and reactions
+        # Use Comment.objects to ensure soft-delete filtering is preserved
+        recursive_replies_prefetch = Prefetch(
+            "replies",
+            queryset=Comment.objects.select_related("author")
+            .prefetch_related("reactions", "mentioned_users")
+            .order_by("created_at"),
+        )
+
+        # Add recursive replies prefetch
+        # Note: "replies" is NOT in the base queryset's prefetch_related to avoid conflicts
+        return queryset.prefetch_related(recursive_replies_prefetch)
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -1126,7 +1289,18 @@ class CommentViewSet(viewsets.ModelViewSet):
             drafts = self._get_relevant_drafts(entry_id)
             latest_draft = drafts.first() if drafts.exists() else None
 
-            # Build comment query
+            # Build comment query with all necessary prefetching to avoid N+1 queries
+            from django.db.models import Count, Prefetch
+
+            # Prefetch replies recursively with all needed data
+            recursive_replies_prefetch = Prefetch(
+                "replies",
+                queryset=Comment.objects.select_related("author")
+                .prefetch_related("reactions", "mentioned_users")
+                .annotate(reaction_count_annotated=Count("reactions"))
+                .order_by("created_at"),
+            )
+
             comment_query = (
                 Comment.objects.filter(
                     draft__entry_id=entry_id,
@@ -1134,7 +1308,12 @@ class CommentViewSet(viewsets.ModelViewSet):
                     parent__isnull=True,  # Only top-level comments
                 )
                 .select_related("author", "draft")
-                .prefetch_related("replies")
+                .prefetch_related(
+                    recursive_replies_prefetch,
+                    "reactions",
+                    "mentioned_users",
+                )
+                .annotate(reaction_count_annotated=Count("reactions"))
             )
 
             # If viewing a specific draft in version history, filter to that draft
@@ -1142,25 +1321,27 @@ class CommentViewSet(viewsets.ModelViewSet):
                 comment_query = comment_query.filter(draft_id=draft_id)
             else:
                 # Otherwise, only show comments on relevant drafts
-                relevant_draft_ids = drafts.values_list("id", flat=True)
+                relevant_draft_ids = list(drafts.values_list("id", flat=True))
                 comment_query = comment_query.filter(draft_id__in=relevant_draft_ids)
 
             # Filter resolved comments based on context
             if not show_resolved:
                 comment_query = comment_query.filter(is_resolved=False)
 
-            comments = comment_query.order_by("-created_at")
+            comments = list(comment_query.order_by("-created_at"))
 
             # Process comments to add draft position info
+            # All data is prefetched, so this is just Python-side processing
             comments_with_positions = []
-            for comment in comments:
+            serializer = self.get_serializer(comments, many=True)
+            for i, comment in enumerate(comments):
                 draft_position = self._calculate_draft_comment_position(
                     comment.draft, drafts, latest_draft
                 )
-                comment_data = self.get_serializer(comment).data
+                comment_data = serializer.data[i]
                 comment_data["draft_position"] = draft_position
                 comment_data["draft_id"] = comment.draft.id
-                comment_data["draft_timestamp"] = comment.draft.created_at
+                comment_data["draft_timestamp"] = comment.draft.created_at.isoformat()
                 comments_with_positions.append(comment_data)
 
             # Apply pagination to the processed comments
@@ -1252,6 +1433,13 @@ def okta_login_view(request):
             f"okta_login_view: Django token {'created' if created else 'retrieved'}"
         )
 
+        # Prefetch curatorship to avoid N+1 query in serializer
+        user = (
+            User.objects.filter(pk=user.pk)
+            .select_related("profile")
+            .prefetch_related("curatorship__perspective")
+            .first()
+        )
         return Response({"token": token.key, "user": UserDetailSerializer(user).data})
 
     except OktaTokenError as e:
@@ -1310,7 +1498,14 @@ def current_user_view(request):
             # Silently fail - don't break the /me endpoint if archiving fails
             pass
 
-    serializer = UserDetailSerializer(request.user)
+    # Prefetch curatorship to avoid N+1 query in serializer
+    user = (
+        User.objects.filter(pk=request.user.pk)
+        .select_related("profile")
+        .prefetch_related("curatorship__perspective")
+        .first()
+    )
+    serializer = UserDetailSerializer(user)
     return Response(serializer.data)
 
 
@@ -1370,6 +1565,13 @@ def switch_test_user_view(request):  # noqa: C901
     # Create/retrieve token for target user
     token, created = Token.objects.get_or_create(user=target_user)
 
+    # Prefetch curatorship to avoid N+1 query in serializer
+    target_user = (
+        User.objects.filter(pk=target_user.pk)
+        .select_related("profile")
+        .prefetch_related("curatorship__perspective")
+        .first()
+    )
     # Return new token and user data (same format as login)
     return Response(
         {"token": token.key, "user": UserDetailSerializer(target_user).data}

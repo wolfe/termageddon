@@ -181,8 +181,25 @@ class Entry(AuditedModel):
         return self.drafts.order_by("-created_at").first()
 
     def get_latest_published_draft(self):
-        """Get the most recent published draft"""
-        return self.drafts.filter(is_published=True).order_by("-created_at").first()
+        """Get the most recent published draft
+
+        Requires 'published_drafts' to be prefetched via Prefetch with to_attr='published_drafts'.
+        Raises AttributeError if prefetch is not available.
+
+        Callers should either:
+        1. Prefetch 'published_drafts' in their queryset, or
+        2. Use direct query: entry.drafts.filter(is_published=True).order_by("-published_at", "-created_at").first()
+        """
+        if not hasattr(self, "published_drafts"):
+            raise AttributeError(
+                "Entry.published_drafts must be prefetched before calling get_latest_published_draft(). "
+                "Use Prefetch('drafts', queryset=..., to_attr='published_drafts') in your queryset, "
+                "or query directly: entry.drafts.filter(is_published=True)."
+                "order_by('-published_at', '-created_at').first()"
+            )
+        if self.published_drafts:
+            return self.published_drafts[0]
+        return None
 
     def save(self, *args, **kwargs):
         self.full_clean()

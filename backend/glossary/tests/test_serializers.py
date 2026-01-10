@@ -83,8 +83,28 @@ class TestEntrySerializers:
 
     def test_entry_list_serializer_includes_active_version(self):
         """Test that EntryListSerializer includes active_version"""
+        from django.db.models import Prefetch
+
         entry = EntryFactory()
         version = EntryDraftFactory(entry=entry, is_published=True)
+
+        # Prefetch published_drafts as required by the serializer
+        from glossary.models import EntryDraft
+
+        latest_published_draft = Prefetch(
+            "drafts",
+            queryset=EntryDraft.objects.filter(is_published=True, is_deleted=False)
+            .select_related("author", "endorsed_by")
+            .prefetch_related("approvers", "requested_reviewers")
+            .order_by("-published_at"),
+            to_attr="published_drafts",
+        )
+        entry = (
+            type(entry)
+            .objects.filter(pk=entry.pk)
+            .prefetch_related(latest_published_draft)
+            .first()
+        )
 
         serializer = EntryListSerializer(entry)
         data = serializer.data
