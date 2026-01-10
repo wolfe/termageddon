@@ -1,6 +1,6 @@
 # Security group for ALB
 resource "aws_security_group" "alb" {
-  name        = "termageddon-${var.environment}-alb-sg"
+  name_prefix = "termageddon-${var.environment}-alb-sg-"
   description = "Security group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
@@ -38,7 +38,7 @@ resource "aws_security_group" "alb" {
 
 # Security group for ECS tasks
 resource "aws_security_group" "ecs" {
-  name        = "termageddon-${var.environment}-ecs-sg"
+  name_prefix = "termageddon-${var.environment}-ecs-sg-"
   description = "Security group for ECS tasks"
   vpc_id      = aws_vpc.main.id
 
@@ -68,7 +68,7 @@ resource "aws_security_group" "ecs" {
 
 # Security group for RDS
 resource "aws_security_group" "rds" {
-  name        = "termageddon-${var.environment}-rds-sg"
+  name_prefix = "termageddon-${var.environment}-rds-sg-"
   description = "Security group for RDS PostgreSQL"
   vpc_id      = aws_vpc.main.id
 

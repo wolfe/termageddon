@@ -216,10 +216,10 @@ resource "aws_ecs_service" "main" {
     container_port   = 8000
   }
 
-  depends_on = [
-    aws_lb_listener.main,
-    aws_lb_listener.http_redirect
-  ]
+  depends_on = concat(
+    var.enable_https && var.domain_name != "" ? [aws_lb_listener.main[0]] : [],
+    [aws_lb_listener.http_redirect]
+  )
 
   tags = merge(
     var.tags,

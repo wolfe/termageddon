@@ -1,10 +1,6 @@
 variable "environment" {
   type        = string
-  description = "Environment name (dev, prod)"
-  validation {
-    condition     = contains(["dev", "prod"], var.environment)
-    error_message = "Environment must be 'dev' or 'prod'."
-  }
+  description = "Environment name (used for resource naming and tagging)"
 }
 
 
@@ -82,8 +78,13 @@ variable "okta_issuer_uri" {
 
 variable "okta_redirect_uri" {
   type        = string
-  description = "Okta redirect URI"
+  description = "Okta redirect URI. Must be updated after first deployment with the actual ALB DNS name (get from 'terraform output alb_dns_name'). Format: http://<alb-dns-name>/callback"
   default     = ""
+
+  validation {
+    condition     = var.okta_redirect_uri == "" || can(regex("^https?://.*/callback$", var.okta_redirect_uri))
+    error_message = "Okta redirect URI must be empty or a valid URL ending with /callback"
+  }
 }
 
 variable "allowed_cidr_blocks" {

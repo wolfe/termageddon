@@ -6,7 +6,7 @@ resource "aws_lb" "main" {
   security_groups     = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
 
-  enable_deletion_protection = var.environment == "prod"
+  enable_deletion_protection = false
 
   tags = merge(
     var.tags,
@@ -30,7 +30,7 @@ resource "aws_lb_target_group" "main" {
     unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/health/"
+    path                = "/api/health/"
     protocol            = "HTTP"
     matcher             = "200"
   }
@@ -73,15 +73,23 @@ resource "aws_lb_listener" "http_redirect" {
   port              = "80"
   protocol          = "HTTP"
 
-  default_action {
-    type = var.enable_https && var.domain_name != "" ? "redirect" : "forward"
-
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+  dynamic "default_action" {
+    for_each = var.enable_https && var.domain_name != "" ? [1] : []
+    content {
+      type = "redirect"
+      redirect {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
+  }
 
-    target_group_arn = var.enable_https && var.domain_name != "" ? null : aws_lb_target_group.main.arn
+  dynamic "default_action" {
+    for_each = var.enable_https && var.domain_name != "" ? [] : [1]
+    content {
+      type             = "forward"
+      target_group_arn = aws_lb_target_group.main.arn
+    }
   }
 }

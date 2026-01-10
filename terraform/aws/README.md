@@ -16,7 +16,7 @@ Terraform configuration for deploying Termageddon to AWS using ECS Fargate, RDS 
 │   ECS Fargate Service                │
 │   • Django backend container        │
 │   • Serves Angular frontend (static) │
-│   • 1 task per environment          │
+│   • 1 task                          │
 └──────────────┬──────────────────────┘
                │
                ↓
@@ -48,35 +48,37 @@ Terraform configuration for deploying Termageddon to AWS using ECS Fargate, RDS 
 
 ### 1. Configure Environment Variables
 
-Edit the tfvars file for your environment:
+Edit the tfvars file:
 
 ```bash
-# For dev
-cd terraform/aws/dev
-vim config/termageddon-dev.tfvars
-
-# For prod
-cd terraform/aws/prod
-vim config/termageddon-prod.tfvars
+cd terraform/aws
+vim config/termageddon.tfvars
 ```
 
 Set:
 - `okta_client_id`: Your Okta client ID
 - `okta_issuer_uri`: Your Okta issuer URI
-- `okta_redirect_uri`: ALB DNS name (update after first deploy)
+- `okta_redirect_uri`: Placeholder value (e.g., `http://placeholder/callback`) - **must be updated after first deployment**
+
+**Important - Two-Step Deployment Process**:
+1. **First deployment**: Use a placeholder value for `okta_redirect_uri` (e.g., `http://placeholder/callback`)
+2. After `terraform apply` completes, get the ALB DNS name: `terraform output alb_dns_name`
+3. Update `config/termageddon.tfvars` with the actual redirect URI: `http://<alb-dns-name>/callback`
+4. Run `terraform apply` again to update the Okta configuration in Secrets Manager
+5. Update the Okta application configuration in Okta admin console to match the redirect URI
 
 ### 2. Initialize Terraform
 
 ```bash
-cd terraform/aws/dev  # or prod
+cd terraform/aws
 terraform init
 ```
 
 ### 3. Plan and Apply
 
 ```bash
-terraform plan -var-file=config/termageddon-dev.tfvars
-terraform apply -var-file=config/termageddon-dev.tfvars
+terraform plan -var-file=config/termageddon.tfvars
+terraform apply -var-file=config/termageddon.tfvars
 ```
 
 ### 4. Build and Push Docker Image
@@ -103,27 +105,21 @@ After pushing a new image, force a new deployment:
 
 ```bash
 aws ecs update-service \
-  --cluster termageddon-dev \
-  --service termageddon-dev-service \
+  --cluster termageddon-termageddon \
+  --service termageddon-termageddon-service \
   --force-new-deployment \
   --region us-east-2
 ```
 
 ## Environment Configuration
 
-### Development
+Single environment configuration optimized for internal/low-load use:
 
 - **RDS**: db.t3.micro, 20GB storage
 - **ECS**: 0.25 vCPU, 512 MB memory
 - **Tasks**: 1
-- **Log retention**: 7 days
-
-### Production
-
-- **RDS**: db.t3.small, 20GB storage
-- **ECS**: 0.5 vCPU, 1 GB memory
-- **Tasks**: 1
 - **Log retention**: 30 days
+- **Final snapshots**: Enabled for data protection
 
 ## Key Outputs
 
@@ -165,42 +161,42 @@ Migrations run automatically on container startup via `entrypoint.sh`. The entry
 
 ## Health Checks
 
-- **ECS**: Uses `/health/` endpoint (checks database connectivity)
-- **ALB**: Uses `/health/` endpoint for target group health checks
+- **ECS**: Uses `/api/health/` endpoint (checks database connectivity)
+- **ALB**: Uses `/api/health/` endpoint for target group health checks
 
 ## Secrets Management
 
 Secrets are stored in AWS Secrets Manager:
-- `termageddon-{env}-db-credentials`: Database connection info
-- `termageddon-{env}-django-secret`: Django SECRET_KEY
-- `termageddon-{env}-okta-config`: Okta configuration
+- `termageddon-termageddon-db-credentials`: Database connection info
+- `termageddon-termageddon-django-secret`: Django SECRET_KEY
+- `termageddon-termageddon-okta-config`: Okta configuration
 
 ECS tasks automatically retrieve these via IAM roles.
 
 ## Cost Estimation
 
 For internal/low-load use:
-- **RDS**: ~$15-20/month (db.t3.micro/small, single-AZ)
-- **ECS Fargate**: ~$10-15/month (0.25-0.5 vCPU, 512MB-1GB)
+- **RDS**: ~$15/month (db.t3.micro, single-AZ)
+- **ECS Fargate**: ~$10/month (0.25 vCPU, 512MB)
 - **ALB**: ~$16/month
 - **NAT Gateway**: ~$32/month
 - **Data transfer**: Minimal for internal use
-- **Total**: ~$100-150/month
+- **Total**: ~$80-100/month
 
 ## Troubleshooting
 
 ### View ECS Logs
 
 ```bash
-aws logs tail /ecs/termageddon-dev --follow --region us-east-2
+aws logs tail /ecs/termageddon-termageddon --follow --region us-east-2
 ```
 
 ### Check ECS Service Status
 
 ```bash
 aws ecs describe-services \
-  --cluster termageddon-dev \
-  --services termageddon-dev-service \
+  --cluster termageddon-termageddon \
+  --services termageddon-termageddon-service \
   --region us-east-2
 ```
 
@@ -212,7 +208,7 @@ terraform output rds_address
 
 # Get password from Secrets Manager
 aws secretsmanager get-secret-value \
-  --secret-id termageddon-dev-db-credentials \
+  --secret-id termageddon-termageddon-db-credentials \
   --region us-east-2 \
   --query SecretString --output text | jq -r .password
 ```
@@ -221,8 +217,8 @@ aws secretsmanager get-secret-value \
 
 ```bash
 aws ecs update-service \
-  --cluster termageddon-dev \
-  --service termageddon-dev-service \
+  --cluster termageddon-termageddon \
+  --service termageddon-termageddon-service \
   --force-new-deployment \
   --region us-east-2
 ```
@@ -232,8 +228,8 @@ aws ecs update-service \
 To destroy all resources:
 
 ```bash
-cd terraform/aws/dev  # or prod
-terraform destroy -var-file=config/termageddon-dev.tfvars
+cd terraform/aws
+terraform destroy -var-file=config/termageddon.tfvars
 ```
 
 **Warning**: This will delete the RDS instance and all data. Make sure you have backups!
@@ -255,7 +251,7 @@ The AWS Terraform can reference Okta outputs. To use:
 
 Terraform state is stored in S3:
 - **Bucket**: `verisk-dev-terraform-state`
-- **Key**: `termageddon/aws/{env}/terraform.tfstate`
+- **Key**: `termageddon/aws/terraform.tfstate`
 - **Region**: `us-east-2`
 - **Lock table**: `matisse_terraform_lock_ohio`
 
