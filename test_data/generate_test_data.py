@@ -100,7 +100,7 @@ def generate_csv():
 
     print("\nStep 3: Writing data to CSV...")
     with open(CSV_FILE_PATH, 'w', newline='', encoding='utf-8') as f_csv:
-        writer = csv.writer(f_csv)
+        writer = csv.writer(f_csv, quoting=csv.QUOTE_ALL)  # <-- Ensure all fields are quoted
         writer.writerow(["perspective", "term", "definition", "author"])
 
         # Write all duplicate entries first

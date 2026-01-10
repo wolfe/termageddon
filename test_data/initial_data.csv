@@ -1,0 +1,78 @@
+perspective,term,definition,author
+EES,Amazon Web Services,"The world’s most comprehensive and broadly adopted cloud platform.",Kenji Tanaka
+EES,A.M. Best premium database,"A database that contains reinsurance information you can use to derive and calculate market shares. To produce the database, A.M. Best compiles data from the year-end annual reports of more than 2,000 companies.",Aisha Khan
+EES,catastrophe excess of loss,"A reinsurance program in which the ceding company is indemnified for the portion of the loss that exceeds the limit of its own retention per event.",Samuel Greene
+EES,cloud,"A network of remote servers that operate as a single ecosystem.",Maria Flores
+EES,cloud native,"Describes applications designed to run on the cloud, rather than on-premises networks.",Ben Carter
+EES,cluster,"A group of districts within a state in India, used by the Indian crop insurance market.",Sofia Rossi
+EES,coinsurance,"The portion of the losses to a layer covered by a reinsurer. Where coinsurance and gross/net participation are all specified, the participation % is applied to the treaty’s share of coinsured losses.",Leo Schmidt
+EES,comma-separated value,"A simple text file that stores data in columns separated by commas.",Chloe Dubois
+EES,company loss,"The loss a company is estimated to have from an event, excluding any program/treaty terms.",Ivan Petrov
+EES,damage factor,"Damage factors applied to catastrophe models customize losses based on the experiences of a company.",Kenji Tanaka
+EES,deductible,"The amount of loss retained by the insured; also called aggregate retention.",Aisha Khan
+EES,demand surge,"A multiplicative factor used to account for the effects of short-term inflation in the prices of labor and materials following a catastrophe.",Samuel Greene
+EES,detailed exposure,"A list of specific policies and locations, with location attributes such as construction/occupancy, year built, and replacement cost by coverage. Contrasts with aggregate exposure.",Maria Flores
+EES,detailed loss file,"An encrypted file that contains company losses by geographic area and line of business for each simulated event.",Ben Carter
+EES,deterministic event,"A catastrophic event with predefined characteristics, typically used to assess potential losses. There is no probability distribution for deterministic events.",Sofia Rossi
+EES,disaggregation,"The process of distributing aggregate exposure data from a coarse resolution to a finer resolution; more suitable for detailed catastrophe modeling.",Leo Schmidt
+EES,event set,"The set of loss files used in a detailed or aggregate loss analysis.",Chloe Dubois
+EES,event characteristic,"A variable that describes an aspect of an event.",Ivan Petrov
+EES,exceedance probability,"A set of probabilities and return periods that appear in loss analysis results. Also see exceedance probability curve.",Kenji Tanaka
+EES,exposure entity,"Item of value at risk (e.g., a house); unit of measurement for risk.",Aisha Khan
+EES,exposure set,"A discrete set of related exposure entities, such as locations and contracts, and their related financial terms.",Samuel Greene
+EES,exposure summary,"A compiled set of summary information about a group of exposures, either an exposure set or an exposure view.",Maria Flores
+EES,exposure view,"A user-defined logical view of one or more exposure sets, with optional filters.",Ben Carter
+EES,financial terms,"The parameters, such as limits and deductibles, specified in an insurance policy that define the conditions under which the insurer will pay some or all the loss. These may be defined at various levels such as contract, layer, and location, and may apply to its entirety or to specific perils and/or coverages.",Sofia Rossi
+EES,flank,"The side of a volcano.",Leo Schmidt
+EES,focal depth,"The vertical distance between where a fault rupture originates and the earth's surface.",Chloe Dubois
+EES,franchise deductible,"A deductible that is only applied if the loss exceeds a specified minimum level.",Ivan Petrov
+EES,General Distribution Release,"A security update for the Microsoft SQL server.",Kenji Tanaka
+EES,geocode,"The latitude and longitude values and the resolution associated with an individual risk used for modeling in catastrophe modeling.",Aisha Khan
+EES,ground-up loss,"The total loss due to an event before applying financial terms such as limits and deductibles.",Samuel Greene
+EES,hazard,"A factor or condition that can increase or decrease the probability or severity of a loss from an insured peril (for example, proximity to the coast).",Maria Flores
+EES,location terms,"The limits and deductibles that apply to individual locations and risks.",Ben Carter
+EES,line of business,"An attribute of a contract that describes the class of business. These can be user-defined or based on industry definitions such as residential, commercial, auto, etc.",Sofia Rossi
+EES,London Interbank Offered Rate,"A benchmark rate that some of the world's leading banks charge each other for short-term loans.",Leo Schmidt
+EES,loss file,"Loss files contain data generated to predict losses due to a particular catastrophe.",Chloe Dubois
+EES,loss market share,"Company losses generated from a market share analysis on ALERT™ event sets by comparing company loss file losses with the ILF to estimate company market share.",Ivan Petrov
+EES,market shares,"The proportion of the industry written by a company, often expressed as percentages by line of business and area/subarea.",Kenji Tanaka
+EES,market trend factor,"A user-specified adjustment factor that applies to the losses for a single program.",Aisha Khan
+EES,match loss,"A program term associated with occurrence limit.",Samuel Greene
+EES,microservices architecture,"A software development approach in which single-function modules form the basis of the application or deliverable.",Maria Flores
+EES,minimum deductible,"The deductible that is applied if the coverage or site deductible is less than the specified minimum level.",Ben Carter
+EES,number of risks,"The number of property exposures at risk. For workers' compensation exposures, this is the employee count.",Sofia Rossi
+EES,occupancy,"An attribute that indicates how a property is used, such as <b>single-family residence</b> or for <b>retail trade</b>.",Leo Schmidt
+EES,on-premises server,"A server that is reserved for use by a single entity, such as a business, and that resides in a location managed by that entity.",Chloe Dubois
+EES,online help,"Information and instructions available with a software application.",Ivan Petrov
+EES,open exposure data,"A standard that provides the industry with a robust, open, and transparent data format with the aim of delivering a common framework for encoding, transmitting, and interpreting data.",Kenji Tanaka
+EES,proportional reinsurance,"See quota share and surplus share.",Aisha Khan
+EES,query language,"A computer programming language that uses queries to request and retrieve data from databases and information systems.",Samuel Greene
+EES,quota share,"A reinsurance program where the reinsurer is responsible for the same percentage of every risk.",Maria Flores
+EES,return period,"Estimated likelihood of a loss of a given size occurring within a given time frame.",Ben Carter
+EES,reverse market loss warranty,"See industry loss maximum.",Sofia Rossi
+EES,rift zone,"An area where a volcano is rifting or splitting apart. Rock in a rift zone has many cracks and is relatively weak.",Leo Schmidt
+EES,risk limit,"The treaty limit for a single risk or layer. The risk limit value applies only to a single risk or layer.",Chloe Dubois
+EES,shapefiles,"A simple, non-topological vector format for storing the geometric location and attribute information of geographic features.",Ivan Petrov
+EES,single-tenant,"A cloud application and infrastructure environment that serves a single client.",Kenji Tanaka
+EES,software as a service,"A software licensing model in which access to the software is provided on a subscription basis, with the software being located on external servers rather than on servers located in-house.",Aisha Khan
+EES,source program,"A source program (parent) associated with a subject program (child).",Samuel Greene
+EES,spatial correlation,"The extent to which the losses at two locations behave similarly due to their spatial proximity.",Maria Flores
+EES,spot fac,"An insurance industry term short for individual location-level (spot) facultative (fac) reinsurance. See facultative reinsurance.",Ben Carter
+EES,structured query language (SQL),"A programming language for storing and processing information in a relational database.",Sofia Rossi
+EES,sublimit,"A type of layer condition that applies to a subset of locations within a policy. Sublimits are often used in high-hazard areas to limit losses for locations that fall within them.",Leo Schmidt
+EES,sums insured,"The maximum amount that an insurance company is obligated to cover in the event of a covered loss.",Chloe Dubois
+EES,standard hurricane catalog,"A catalog of events that reflects hurricane risk under average climate conditions.",Ivan Petrov
+EES,standard reinsurance agreement,"An agreement for federal crop insurance that consists of a set of contracts between the U.S. Department of Agriculture (USDA) and private companies. The contracts identify expense reimbursements and risk-sharing by the government on eligible crops.",Kenji Tanaka
+EES,take-up rate,"<p>The percentage of insurable properties actually insured.</p>",Aisha Khan
+EES,target,"A company loss set or an exposure set.",Samuel Greene
+EES,time-dependent catalog,"A catalog of probabilistic events that assumes that the annual probability of a characteristic earthquake occurring on a fault increases with the time elapsed since the previous such earthquake.",Maria Flores
+EES,universal naming convention,"A standard for identifying servers, printers, and other resources on a network, allowing a consistent access to these resources across different systems.",Ben Carter
+EES,user-defined category,"A category which allow you to classify companies and programs using criteria that are meaningful and useful to your specific needs.",Sofia Rossi
+
+Tools,Termageddon,"Glossary management software for teams. Features include <a href='#entry draft'>entry drafts</a>, <a href='#approval workflow'>approval workflow</a>, <a href='#perspective'>perspectives</a>, and collaborative <a href='#comment'>comments</a>.<br><br>See also: <a href='#glossary entry'>glossary entry</a>, <a href='#curator'>curator</a>.",Maria Flores
+Tools,entry draft,"Preliminary version of a <a href='#glossary entry'>glossary entry</a> that can be edited and reviewed before approval. Supports <i>rich text formatting</i> and <a href='#comment'>comments</a>.",Ben Carter
+Tools,glossary entry,"A term and its definition in the system. Entries may be linked to <a href='#perspective'>perspectives</a> and managed by <a href='#curator'>curators</a>.",Sofia Rossi
+Tools,approval workflow,"Process ensuring new or edited entries are reviewed by curators before becoming official. See <a href='#curator'>curator</a> and <a href='#entry draft'>entry draft</a>.",Leo Schmidt
+Tools,perspective,"Organizes glossary entries by domain or viewpoint, such as <a href='#EES'>EES</a> and <a href='#Tools'>Tools</a>.",Chloe Dubois
+Tools,curator,"User responsible for reviewing and approving glossary entries within a <a href='#perspective'>perspective</a>.",Ivan Petrov
+Tools,comment,"System for feedback and collaboration on <a href='#entry draft'>entry drafts</a> and <a href='#glossary entry'>glossary entries</a>.",Aisha Khan

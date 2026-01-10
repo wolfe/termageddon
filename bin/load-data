@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+MODE=${1:-demo}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+CSV_DEMO="test_data/initial_data.csv"
+CSV_TEST="test_data/test_data.csv"
+
+echo "Running Termageddon data loader in '$MODE' mode..."
+
+cd "$PROJECT_ROOT"
+
+if [ "$MODE" = "demo" ]; then
+    echo "Populating demo data from $CSV_DEMO (all terms/entries/drafts by admin, all published)..."
+    python backend/manage.py load_test_data --csv-path="$CSV_DEMO" --demo
+elif [ "$MODE" = "test" ]; then
+    echo "Populating test data from $CSV_TEST (full test logic)..."
+    python backend/manage.py load_test_data --csv-path="$CSV_TEST"
+else
+    echo "Usage: $0 [demo|test]"
+    exit 1
+fi
+
+echo "Done."
