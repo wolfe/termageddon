@@ -1,8 +1,13 @@
+**/.*
+!.pre-commit-config.yaml
+!.gitignore
+
 # Byte-compiled / optimized / DLL files
+
+
 **/*.pyc
 __pycache__/
 *.so
-**/.*
 *.pyo
 *.pyd
 
