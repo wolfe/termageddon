@@ -188,7 +188,7 @@ class EntryDraftAdmin(admin.ModelAdmin):
         "created_by",
         "updated_by",
     )
-    filter_horizontal = ("approvers",)
+    # Note: filter_horizontal removed because approvers uses a custom through model
     inlines = [CommentInline]
     actions = [soft_delete_selected, undelete_selected, bulk_approve_drafts]
 

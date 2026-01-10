@@ -157,6 +157,20 @@ class Entry(AuditedModel):
 
     class Meta:
         db_table = "glossary_entry"
+        indexes = [
+            models.Index(
+                fields=["term", "perspective", "is_deleted"],
+                name="glossary_en_term_persp_del_idx",
+            ),
+            models.Index(
+                fields=["term", "is_deleted"],
+                name="glossary_en_term_del_idx",
+            ),
+            models.Index(
+                fields=["perspective", "is_deleted"],
+                name="glossary_en_persp_del_idx",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.term.text} ({self.perspective.name})"
@@ -206,6 +220,42 @@ class Entry(AuditedModel):
         super().save(*args, **kwargs)
 
 
+class EntryDraftApprover(models.Model):
+    """Through model for EntryDraft.approvers ManyToMany relationship"""
+
+    entrydraft = models.ForeignKey(
+        "EntryDraft", on_delete=models.CASCADE, db_column="entrydraft_id"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+
+    class Meta:
+        db_table = "glossary_entry_draft_approvers"
+        indexes = [
+            models.Index(
+                fields=["entrydraft", "user"],
+                name="gl_ed_approvers_draft_user_idx",
+            ),
+        ]
+
+
+class EntryDraftRequestedReviewer(models.Model):
+    """Through model for EntryDraft.requested_reviewers ManyToMany relationship"""
+
+    entrydraft = models.ForeignKey(
+        "EntryDraft", on_delete=models.CASCADE, db_column="entrydraft_id"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+
+    class Meta:
+        db_table = "glossary_entry_draft_requested_reviewers"
+        indexes = [
+            models.Index(
+                fields=["entrydraft", "user"],
+                name="gl_ed_reviewers_draft_user_idx",
+            ),
+        ]
+
+
 class EntryDraft(AuditedModel):
     """A draft of an entry's definition - requires approval to become active"""
 
@@ -219,13 +269,14 @@ class EntryDraft(AuditedModel):
         User, on_delete=models.PROTECT, related_name="authored_drafts"
     )
     approvers: models.ManyToManyField[User, User] = models.ManyToManyField(
-        User, related_name="approved_drafts", blank=True
+        User, related_name="approved_drafts", blank=True, through="EntryDraftApprover"
     )
     requested_reviewers: models.ManyToManyField[User, User] = models.ManyToManyField(
         User,
         related_name="requested_reviews",
         blank=True,
         help_text="Users specifically requested to review this draft",
+        through="EntryDraftRequestedReviewer",
     )
     is_published: models.BooleanField = models.BooleanField(
         default=False,
@@ -261,6 +312,24 @@ class EntryDraft(AuditedModel):
     class Meta:
         db_table = "glossary_entry_draft"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(
+                fields=["is_archived", "is_published", "created_at"],
+                name="gl_en_arch_pub_created_idx",
+            ),
+            models.Index(
+                fields=["entry", "is_published", "is_deleted", "published_at"],
+                name="gl_en_entry_pub_del_pubat",
+            ),
+            models.Index(
+                fields=["entry", "is_deleted"],
+                name="gl_en_entry_del_idx",
+            ),
+            models.Index(
+                fields=["author", "is_deleted", "created_at"],
+                name="gl_en_author_del_created",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.entry} - draft{self.id} by {self.author.username}"
@@ -386,6 +455,24 @@ class Comment(AuditedModel):
     class Meta:
         db_table = "glossary_comment"
         ordering = ["created_at"]
+        indexes = [
+            models.Index(
+                fields=["draft", "is_deleted", "created_at"],
+                name="gl_co_draft_del_created_idx",
+            ),
+            models.Index(
+                fields=["draft", "parent", "is_deleted", "created_at"],
+                name="gl_co_draft_parent_del_created",
+            ),
+            models.Index(
+                fields=["draft", "is_resolved", "created_at"],
+                name="gl_co_draft_resolved_created",
+            ),
+            models.Index(
+                fields=["is_resolved", "created_at"],
+                name="gl_co_resolved_created_idx",
+            ),
+        ]
 
     def __str__(self):
         return f"Comment by {self.author.username} on draft {self.draft.id}"
@@ -524,6 +611,16 @@ class PerspectiveCurator(AuditedModel):
 
     class Meta:
         db_table = "glossary_perspective_curator"
+        indexes = [
+            models.Index(
+                fields=["user", "is_deleted"],
+                name="glossary_pc_user_del_idx",
+            ),
+            models.Index(
+                fields=["perspective", "is_deleted"],
+                name="glossary_pc_persp_del_idx",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.perspective.name}"
