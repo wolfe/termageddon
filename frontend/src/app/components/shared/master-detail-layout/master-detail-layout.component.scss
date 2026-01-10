@@ -24,3 +24,12 @@
   min-height: 0;
   overflow: hidden;
 }
+
+/* Constrain wrapper div created by ng-content in sidebar */
+.three-panel-sidebar-content > * {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,5 +1,12 @@
 // Component-specific styles for term-list
 
+:host {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .term-list-item .search-highlight {
   background-color: #fef3c7; /* yellow-100 */
   border: 1px solid #fbbf24; /* yellow-400 */

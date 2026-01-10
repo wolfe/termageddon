@@ -74,9 +74,20 @@
   @apply text-sm text-gray-500 mt-1;
 }
 
-/* Sidebar content area */
+/* Sidebar content area - no overflow here, let child components handle scrolling */
 .three-panel-sidebar-content {
-  @apply flex-1 overflow-y-auto bg-white;
+  @apply flex-1 overflow-hidden bg-white;
+  @apply flex flex-col;
+  @apply min-h-0;
+
+  /* Constrain wrapper div created by ng-content */
+  > * {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 /* Loading state */

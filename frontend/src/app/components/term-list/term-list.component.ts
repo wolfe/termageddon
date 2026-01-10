@@ -115,6 +115,10 @@ export class TermListComponent implements OnInit, OnDestroy {
       this.entries = [];
       this.hasNextPage = false;
       this.nextPageUrl = null;
+      // Reset scroll position when filters change
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTop = 0;
+      }
     } else {
       this.isLoadingMore = true;
     }
@@ -283,5 +287,13 @@ export class TermListComponent implements OnInit, OnDestroy {
 
   onSortChanged(sortBy: string): void {
     this.sortControl.setValue(sortBy);
+  }
+
+  onSearchTermChange(value: string): void {
+    this.searchControl.setValue(value);
+  }
+
+  onSearchEvent(searchTerm: string): void {
+    this.loadEntries();
   }
 }
