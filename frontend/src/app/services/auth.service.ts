@@ -16,7 +16,7 @@ interface OktaConfig {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8000/api';
+  private readonly API_URL = '/api';
   private readonly TOKEN_KEY = 'auth_token';
 
   private oktaAuth: OktaAuth | null = null;

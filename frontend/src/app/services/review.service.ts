@@ -7,7 +7,7 @@ import { EntryDraft, PaginatedResponse, ReviewDraft, User } from '../models';
   providedIn: 'root',
 })
 export class ReviewService {
-  private readonly API_URL = 'http://localhost:8000/api';
+  private readonly API_URL = '/api';
 
   constructor(private http: HttpClient) {}
 

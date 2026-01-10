@@ -7,7 +7,7 @@ import { PaginatedResponse } from '../models';
   providedIn: 'root',
 })
 export abstract class BaseService {
-  protected readonly API_URL = 'http://localhost:8000/api';
+  protected readonly API_URL = '/api';
 
   constructor(protected http: HttpClient) {}
 
