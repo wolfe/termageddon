@@ -1,0 +1,137 @@
+variable "environment" {
+  type        = string
+  description = "Environment name (dev, prod)"
+  validation {
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "Environment must be 'dev' or 'prod'."
+  }
+}
+
+
+variable "aws_region" {
+  type        = string
+  description = "AWS region for resources"
+  default     = "us-east-2"
+}
+
+variable "vpc_cidr" {
+  type        = string
+  description = "CIDR block for VPC"
+  default     = "10.0.0.0/16"
+}
+
+variable "db_instance_class" {
+  type        = string
+  description = "RDS instance class"
+  default     = "db.t3.micro"
+}
+
+variable "db_allocated_storage" {
+  type        = number
+  description = "RDS allocated storage in GB"
+  default     = 20
+}
+
+variable "db_name" {
+  type        = string
+  description = "Database name"
+  default     = "termageddon"
+}
+
+variable "db_username" {
+  type        = string
+  description = "Database master username"
+  default     = "termageddon"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Database master password (provide via TF_VAR_db_password)"
+  sensitive   = true
+}
+
+variable "django_secret_key" {
+  type        = string
+  description = "Django SECRET_KEY (provide via TF_VAR_django_secret_key)"
+  sensitive   = true
+}
+
+variable "ecs_task_cpu" {
+  type        = number
+  description = "CPU units for ECS task (256 = 0.25 vCPU, 512 = 0.5 vCPU)"
+  default     = 256
+}
+
+variable "ecs_task_memory" {
+  type        = number
+  description = "Memory for ECS task in MB"
+  default     = 512
+}
+
+variable "desired_task_count" {
+  type        = number
+  description = "Desired number of ECS tasks"
+  default     = 1
+}
+
+variable "domain_name" {
+  type        = string
+  description = "Domain name for ACM certificate (optional, leave empty for HTTP-only)"
+  default     = ""
+}
+
+variable "okta_client_id" {
+  type        = string
+  description = "Okta client ID"
+  default     = ""
+}
+
+variable "okta_issuer_uri" {
+  type        = string
+  description = "Okta issuer URI"
+  default     = ""
+}
+
+variable "okta_redirect_uri" {
+  type        = string
+  description = "Okta redirect URI"
+  default     = ""
+}
+
+variable "allowed_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks allowed to access ALB (for internal use)"
+  default     = ["0.0.0.0/0"]
+}
+
+variable "enable_https" {
+  type        = bool
+  description = "Enable HTTPS listener (requires domain_name and ACM certificate)"
+  default     = false
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Common tags for all resources"
+  default     = {}
+}
+
+variable "use_existing_iam_roles" {
+  type        = bool
+  description = "Use existing IAM roles instead of creating new ones"
+  default     = false
+}
+
+variable "existing_ecs_task_execution_role_arn" {
+  type        = string
+  description = "ARN of existing ECS task execution role (required if use_existing_iam_roles = true)"
+  default     = ""
+}
+
+variable "existing_ecs_task_role_arn" {
+  type        = string
+  description = "ARN of existing ECS task role (required if use_existing_iam_roles = true)"
+  default     = ""
+}
+
+# No need for log_retention_days variable - hardcoded to 30 days in resource

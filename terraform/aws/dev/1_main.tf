@@ -1,5 +1,5 @@
 module "termageddon" {
-  source = "../templates"
+  source = "../modules"
 
   environment = "dev"
   aws_region  = "us-east-2"
@@ -16,29 +16,23 @@ module "termageddon" {
   domain_name = ""
   enable_https = false
 
+  # Secrets (provided via environment variables)
+  db_password        = var.db_password
+  django_secret_key  = var.django_secret_key
+
   okta_client_id    = var.okta_client_id
   okta_issuer_uri   = var.okta_issuer_uri
   okta_redirect_uri = var.okta_redirect_uri
 
   allowed_cidr_blocks = ["0.0.0.0/0"] # Adjust for internal access
 
+  # IAM Role Configuration - using existing roles due to permission constraints
+  use_existing_iam_roles              = true
+  existing_ecs_task_execution_role_arn = "arn:aws:iam::753029624111:role/ecsTaskExecutionRole"
+  existing_ecs_task_role_arn          = "arn:aws:iam::753029624111:role/ecsTaskExecutionRole"
+
   tags = {
     Environment = "dev"
     ManagedBy   = "terraform"
   }
-}
-
-variable "okta_client_id" {
-  type        = string
-  description = "Okta client ID"
-}
-
-variable "okta_issuer_uri" {
-  type        = string
-  description = "Okta issuer URI"
-}
-
-variable "okta_redirect_uri" {
-  type        = string
-  description = "Okta redirect URI"
 }
