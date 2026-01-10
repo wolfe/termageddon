@@ -1,0 +1,80 @@
+#!/bin/bash
+set -e
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BACKEND_DIR="${SCRIPT_DIR}/../backend"
+
+# Configuration
+ECR_REGISTRY="753029624111.dkr.ecr.us-east-2.amazonaws.com"
+ECR_REPO="termageddon-dev-backend"
+AWS_REGION="us-east-2"
+ECS_CLUSTER="termageddon-dev"
+ECS_SERVICE="termageddon-dev-service"
+
+# Use git commit hash as tag, or "latest" if not in git repo
+if git rev-parse --git-dir > /dev/null 2>&1; then
+  TAG=$(git rev-parse --short HEAD)
+  # Check if there are uncommitted changes
+  if [[ -n $(git status -s) ]]; then
+    TAG="${TAG}-dirty"
+  fi
+else
+  TAG="latest"
+fi
+
+echo "=== Termageddon Backend Publish ==="
+echo "Tag: ${TAG}"
+echo ""
+
+# Login to ECR
+echo "Logging into ECR..."
+aws ecr get-login-password --region ${AWS_REGION} | \
+  docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+# Build Docker image
+echo ""
+echo "Building Docker image..."
+cd "${BACKEND_DIR}"
+docker build -t termageddon-backend .
+
+# Tag image with both git hash and latest
+echo ""
+echo "Tagging image..."
+docker tag termageddon-backend:latest ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
+docker tag termageddon-backend:latest ${ECR_REGISTRY}/${ECR_REPO}:latest
+
+# Push to ECR
+echo ""
+echo "Pushing to ECR..."
+docker push ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
+docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
+
+# Push to ECR
+echo ""
+echo "Pushing to ECR..."
+docker push ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
+docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
+
+echo ""
+echo "✓ Publish complete!"
+echo ""
+echo "Image tags pushed:"
+echo "  ${ECR_REGISTRY}/${ECR_REPO}:${TAG}"
+echo "  ${ECR_REGISTRY}/${ECR_REPO}:latest"
+echo ""
+echo "To deploy, run:"
+echo "  cd terraform/aws/dev"
+echo "  source .env"
+echo "  terraform apply -var-file=config/termageddon-dev.tfvars -var=\"image_tag=latest\""
+echo ""
+echo "Or to deploy a specific version:"
+echo "  terraform apply -var-file=config/termageddon-dev.tfvars -var=\"image_tag=${TAG}\""
+echo ""
+echo "View logs:"
+echo "  aws logs tail /ecs/termageddon-dev --follow --region ${AWS_REGION}"
+echo ""
+echo "Application URL:"
+echo "  http://termageddon-dev-alb-1289199186.us-east-2.elb.amazonaws.com/"
+
+

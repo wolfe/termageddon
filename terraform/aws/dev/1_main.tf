@@ -12,6 +12,7 @@ module "termageddon" {
   ecs_task_cpu    = 256  # 0.25 vCPU
   ecs_task_memory = 512  # 512 MB
   desired_task_count = 1
+  image_tag = var.image_tag
 
   domain_name = ""
   enable_https = false
