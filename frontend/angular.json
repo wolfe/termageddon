@@ -20,6 +20,8 @@
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "baseHref": "/",
+            "deployUrl": "/static/",
             "polyfills": [
               "zone.js"
             ],

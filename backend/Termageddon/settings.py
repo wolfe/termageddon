@@ -83,7 +83,10 @@ ROOT_URLCONF = "Termageddon.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "staticfiles"],  # Look for templates in staticfiles
+        "DIRS": [
+            BASE_DIR / "staticfiles",  # Collected static files (production)
+            BASE_DIR / "target",  # Angular build output (before collectstatic)
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -171,6 +174,11 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Directories where Django will look for additional static files
+STATICFILES_DIRS = [
+    BASE_DIR / "target",  # Angular build output
+]
 
 # WhiteNoise configuration for serving static files
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

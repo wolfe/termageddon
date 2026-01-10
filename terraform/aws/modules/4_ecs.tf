@@ -1,6 +1,6 @@
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
-  name = "${var.environment}-${var.environment}"
+  name = "termageddon-${var.environment}"
 
   setting {
     name  = "containerInsights"
@@ -81,13 +81,13 @@ resource "aws_iam_role" "ecs_task" {
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.environment}"
+  name              = "/ecs/termageddon-${var.environment}"
   retention_in_days = 30
 
   tags = merge(
     var.tags,
     {
-      Name = "${var.environment}-ecs-logs"
+      Name = "termageddon-${var.environment}-ecs-logs"
     }
   )
 }
@@ -204,7 +204,7 @@ resource "aws_ecs_task_definition" "backend" {
 
 # ECS Service
 resource "aws_ecs_service" "main" {
-  name            = "${var.environment}-service"
+  name            = "termageddon-${var.environment}-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.backend.arn
   desired_count   = var.desired_task_count
