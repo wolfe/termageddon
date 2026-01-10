@@ -93,7 +93,14 @@
             <span class="text-sm">
               {{ currentUser.first_name }} {{ currentUser.last_name }}
               @if (currentUser.is_staff) {
-                <span class="ml-2 px-2 py-1 bg-yellow-500 text-black text-xs rounded">ADMIN</span>
+                <a
+                  href="/admin/"
+                  target="_blank"
+                  class="ml-2 px-2 py-1 bg-yellow-500 text-black text-xs rounded hover:bg-yellow-600 inline-block"
+                  title="Open Django Admin in new tab"
+                >
+                  ADMIN
+                </a>
               }
             </span>
           }
