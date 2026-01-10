@@ -3,17 +3,14 @@ set -e
 
 echo "Starting Termageddon backend entrypoint..."
 
-# Wait for database to be ready (only if DB_HOST is set, otherwise use SQLite)
-if [ -n "${DB_HOST}" ]; then
-  echo "Waiting for PostgreSQL database..."
-  until PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -U "${DB_USER}" -d "${DB_NAME}" -c '\q' 2>/dev/null; do
-    echo "Database is unavailable - sleeping"
-    sleep 1
-  done
-  echo "Database is up - executing commands"
-else
-  echo "No DB_HOST set, using SQLite database"
-fi
+# Wait for database to be ready
+echo "Waiting for database..."
+until PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -U "${DB_USER}" -d "${DB_NAME}" -c '\q' 2>/dev/null; do
+  echo "Database is unavailable - sleeping"
+  sleep 1
+done
+
+echo "Database is up - executing commands"
 
 # Run migrations
 echo "Running database migrations..."
