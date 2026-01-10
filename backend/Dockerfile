@@ -38,6 +38,11 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy application code
 COPY . .
 
+# Build metadata (will be overridden by build args)
+ARG BUILD_VERSION=unknown
+ARG BUILD_TIME=unknown
+RUN echo "{\"version\": \"${BUILD_VERSION}\", \"build_time\": \"${BUILD_TIME}\"}" > /app/build_info.json
+
 # Create directory for static files
 RUN mkdir -p /app/staticfiles
 

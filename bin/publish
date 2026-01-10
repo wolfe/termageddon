@@ -23,8 +23,11 @@ else
   TAG="latest"
 fi
 
+BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
 echo "=== Termageddon Backend Publish ==="
 echo "Tag: ${TAG}"
+echo "Build time: ${BUILD_TIME}"
 echo ""
 
 # Login to ECR
@@ -36,7 +39,10 @@ aws ecr get-login-password --region ${AWS_REGION} | \
 echo ""
 echo "Building Docker image..."
 cd "${BACKEND_DIR}"
-docker build -t termageddon-backend .
+docker build \
+  --build-arg BUILD_VERSION=${TAG} \
+  --build-arg BUILD_TIME=${BUILD_TIME} \
+  -t termageddon-backend .
 
 # Tag image with both git hash and latest
 echo ""
