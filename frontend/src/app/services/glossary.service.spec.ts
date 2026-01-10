@@ -60,7 +60,7 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/perspectives/');
+      const req = httpMock.expectOne('/api/perspectives/');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -78,7 +78,7 @@ describe('GlossaryService', () => {
         expect(perspective).toEqual(mockPerspective);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/perspectives/1/');
+      const req = httpMock.expectOne('/api/perspectives/1/');
       expect(req.request.method).toBe('GET');
       req.flush(mockPerspective);
     });
@@ -97,7 +97,7 @@ describe('GlossaryService', () => {
         expect(perspective).toEqual(mockPerspective);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/perspectives/');
+      const req = httpMock.expectOne('/api/perspectives/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(newPerspective);
       req.flush(mockPerspective);
@@ -126,7 +126,7 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/terms/?page_size=50&search=test');
+      const req = httpMock.expectOne('/api/terms/?page_size=50&search=test');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -145,7 +145,7 @@ describe('GlossaryService', () => {
         expect(term).toEqual(mockTerm);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/terms/1/');
+      const req = httpMock.expectOne('/api/terms/1/');
       expect(req.request.method).toBe('GET');
       req.flush(mockTerm);
     });
@@ -165,7 +165,7 @@ describe('GlossaryService', () => {
         expect(term).toEqual(mockTerm);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/terms/');
+      const req = httpMock.expectOne('/api/terms/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(newTerm);
       req.flush(mockTerm);
@@ -209,7 +209,7 @@ describe('GlossaryService', () => {
       });
 
       const req = httpMock.expectOne(
-        'http://localhost:8000/api/entries/?perspective=1&approval_status=approved'
+        '/api/entries/?perspective=1&approval_status=approved'
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
@@ -228,7 +228,7 @@ describe('GlossaryService', () => {
       });
 
       const req = httpMock.expectOne(
-        'http://localhost:8000/api/entries/?search=test&perspective=1'
+        '/api/entries/?search=test&perspective=1'
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
@@ -261,7 +261,7 @@ describe('GlossaryService', () => {
         expect(entry).toEqual(mockEntry);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/1/mark_official/');
+      const req = httpMock.expectOne('/api/entries/1/mark_official/');
       expect(req.request.method).toBe('POST');
       req.flush(mockEntry);
     });
@@ -285,7 +285,7 @@ describe('GlossaryService', () => {
         expect(response.count).toBe(mockUsers.length);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/users/');
+      const req = httpMock.expectOne('/api/users/');
       expect(req.request.method).toBe('GET');
       req.flush({ count: mockUsers.length, next: null, previous: null, results: mockUsers });
     });
@@ -334,7 +334,7 @@ describe('GlossaryService', () => {
       });
 
       const req = httpMock.expectOne(
-        'http://localhost:8000/api/entries/grouped-by-term/?perspective=1&page=2'
+        '/api/entries/grouped-by-term/?perspective=1&page=2'
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
@@ -353,7 +353,7 @@ describe('GlossaryService', () => {
         expect(response.count).toBe(0);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/grouped-by-term/');
+      const req = httpMock.expectOne('/api/entries/grouped-by-term/');
       expect(req.request.method).toBe('GET');
       req.flush(malformedResponse);
     });
@@ -415,7 +415,7 @@ describe('GlossaryService', () => {
         expect(response.count).toBe(mockDrafts.length);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entry-drafts/history/?entry=1');
+      const req = httpMock.expectOne('/api/entry-drafts/history/?entry=1');
       expect(req.request.method).toBe('GET');
       req.flush({ count: mockDrafts.length, next: null, previous: null, results: mockDrafts });
     });
@@ -453,7 +453,7 @@ describe('GlossaryService', () => {
       });
 
       const req = httpMock.expectOne(
-        'http://localhost:8000/api/comments/with_draft_positions/?entry=1'
+        '/api/comments/with_draft_positions/?entry=1'
       );
       expect(req.request.method).toBe('GET');
       req.flush({ count: mockComments.length, next: null, previous: null, results: mockComments });
@@ -515,7 +515,7 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
+      const req = httpMock.expectOne('/api/entries/lookup-or-create-entry/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(request);
       req.flush(mockResponse);
@@ -557,7 +557,7 @@ describe('GlossaryService', () => {
         expect(response.entry).toBeUndefined();
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
+      const req = httpMock.expectOne('/api/entries/lookup-or-create-entry/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(request);
       req.flush(mockResponse);
@@ -576,7 +576,7 @@ describe('GlossaryService', () => {
         },
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/lookup-or-create-entry/');
+      const req = httpMock.expectOne('/api/entries/lookup-or-create-entry/');
       expect(req.request.method).toBe('POST');
       req.flush({ detail: 'Invalid request' }, { status: 400, statusText: 'Bad Request' });
     });
@@ -608,7 +608,7 @@ describe('GlossaryService', () => {
         expect(entry).toEqual(mockEntry);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entries/1/');
+      const req = httpMock.expectOne('/api/entries/1/');
       expect(req.request.method).toBe('GET');
       req.flush(mockEntry);
     });
@@ -665,7 +665,7 @@ describe('GlossaryService', () => {
         expect(draft.entry.perspective).toBeDefined();
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/entry-drafts/1/?expand=entry');
+      const req = httpMock.expectOne('/api/entry-drafts/1/?expand=entry');
       expect(req.request.method).toBe('GET');
       req.flush(mockDraft);
     });

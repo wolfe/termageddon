@@ -66,7 +66,7 @@ describe('NotificationApiService', () => {
     it('should get notifications with page number', () => {
       const mockNotifications: PaginatedResponse<Notification> = {
         count: 50,
-        next: 'http://localhost:8000/api/notifications/?page=2',
+        next: '/api/notifications/?page=2',
         previous: null,
         results: [],
       };

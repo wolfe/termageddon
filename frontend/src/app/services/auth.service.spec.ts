@@ -63,7 +63,7 @@ describe('AuthService', () => {
         expect(service.getToken()).toBe('test-token-123');
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/auth/login/');
+      const req = httpMock.expectOne('/api/auth/login/');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ username: 'testuser', password: 'password' });
       req.flush(mockResponse);
@@ -81,7 +81,7 @@ describe('AuthService', () => {
         },
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/auth/login/');
+      const req = httpMock.expectOne('/api/auth/login/');
       req.flush({ detail: 'Invalid credentials' }, { status: 401, statusText: 'Unauthorized' });
     });
   });
@@ -95,7 +95,7 @@ describe('AuthService', () => {
         expect(service.getToken()).toBeNull();
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/auth/logout/');
+      const req = httpMock.expectOne('/api/auth/logout/');
       expect(req.request.method).toBe('POST');
       req.flush({});
     });
@@ -116,7 +116,7 @@ describe('AuthService', () => {
         expect(user).toEqual(mockUser);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/auth/me/');
+      const req = httpMock.expectOne('/api/auth/me/');
       expect(req.request.method).toBe('GET');
       req.flush(mockUser);
     });
@@ -173,7 +173,7 @@ describe('AuthService', () => {
         expect(users).toEqual(mockUsers);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/users/?test_users_only=true');
+      const req = httpMock.expectOne('/api/users/?test_users_only=true');
       expect(req.request.method).toBe('GET');
       req.flush({
         count: mockUsers.length,
@@ -188,7 +188,7 @@ describe('AuthService', () => {
         expect(users).toEqual([]);
       });
 
-      const req = httpMock.expectOne('http://localhost:8000/api/users/?test_users_only=true');
+      const req = httpMock.expectOne('/api/users/?test_users_only=true');
       req.flush({
         count: 0,
         next: null,
@@ -217,7 +217,7 @@ describe('AuthService', () => {
           expect(config).toEqual(mockConfig);
         });
 
-        const req = httpMock.expectOne('http://localhost:8000/api/auth/okta-config/');
+        const req = httpMock.expectOne('/api/auth/okta-config/');
         expect(req.request.method).toBe('GET');
         req.flush(mockConfig);
       });
@@ -231,14 +231,14 @@ describe('AuthService', () => {
 
         // First call
         (service as any).getOktaConfig().subscribe();
-        const req1 = httpMock.expectOne('http://localhost:8000/api/auth/okta-config/');
+        const req1 = httpMock.expectOne('/api/auth/okta-config/');
         req1.flush(mockConfig);
 
         // Second call should use cached config (no new request)
         (service as any).getOktaConfig().subscribe((config: any) => {
           expect(config).toEqual(mockConfig);
         });
-        httpMock.expectNone('http://localhost:8000/api/auth/okta-config/');
+        httpMock.expectNone('/api/auth/okta-config/');
       });
     });
 
@@ -319,7 +319,7 @@ describe('AuthService', () => {
           expect(mockOktaAuth.tokenManager.get).toHaveBeenCalledWith('accessToken');
 
           // Verify backend login request
-          const req = httpMock.expectOne('http://localhost:8000/api/auth/okta-login/');
+          const req = httpMock.expectOne('/api/auth/okta-login/');
           expect(req.request.method).toBe('POST');
           expect(req.request.body).toEqual({ okta_token: 'okta-access-token-123' });
           req.flush(mockResponse);
@@ -344,7 +344,7 @@ describe('AuthService', () => {
         });
 
         // No need to wait - error happens synchronously
-        httpMock.expectNone('http://localhost:8000/api/auth/okta-login/');
+        httpMock.expectNone('/api/auth/okta-login/');
       });
 
       it('should handle backend login failure', (done) => {
@@ -367,7 +367,7 @@ describe('AuthService', () => {
 
         // Wait for async operations
         setTimeout(() => {
-          const req = httpMock.expectOne('http://localhost:8000/api/auth/okta-login/');
+          const req = httpMock.expectOne('/api/auth/okta-login/');
           req.flush(
             { detail: 'Invalid token' },
             { status: 401, statusText: 'Unauthorized' }
@@ -388,7 +388,7 @@ describe('AuthService', () => {
 
         // Wait for async operations
         setTimeout(() => {
-          const req = httpMock.expectOne('http://localhost:8000/api/auth/okta-login/');
+          const req = httpMock.expectOne('/api/auth/okta-login/');
           req.error(new ErrorEvent('Network error'));
         }, 10);
       });
@@ -417,7 +417,7 @@ describe('AuthService', () => {
         service.loginWithOkta();
 
         // Should not make config request
-        httpMock.expectNone('http://localhost:8000/api/auth/okta-config/');
+        httpMock.expectNone('/api/auth/okta-config/');
         expect(service['isLoginInProgress']).toBe(true);
       });
 
@@ -428,7 +428,7 @@ describe('AuthService', () => {
         service.loginWithOkta();
 
         // Should not make config request
-        httpMock.expectNone('http://localhost:8000/api/auth/okta-config/');
+        httpMock.expectNone('/api/auth/okta-config/');
         expect(service.isOktaCallback()).toBe(true);
       });
     });

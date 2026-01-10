@@ -69,9 +69,13 @@ setup_paths() {
     fi
 }
 
-# Function to run frontend tests
-run_frontend_tests() {
-    print_status "Running frontend unit tests..."
+# Function to run a command in the frontend directory with proper setup
+# Usage: run_in_frontend "description" "command" [success_message] [failure_message]
+run_in_frontend() {
+    local description="$1"
+    local command="$2"
+    local success_msg="${3:-Success}"
+    local failure_msg="${4:-Failed}"
 
     if [ ! -d "$FRONTEND_DIR" ]; then
         print_error "Frontend directory not found at: $FRONTEND_DIR"
@@ -84,35 +88,43 @@ run_frontend_tests() {
     # Change to frontend directory
     cd "$FRONTEND_DIR"
 
-    # Check if node_modules exists
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing frontend dependencies..."
-        npm install
+    # Always install dependencies to ensure they're up to date
+    print_status "Installing frontend dependencies..."
+    if ! npm install; then
+        print_error "Failed to install frontend dependencies"
+        cd "$original_dir"
+        return 1
     fi
 
-    # Run frontend tests
-    print_status "Running Angular unit tests..."
-    local frontend_success=true
-    if npm run test -- --watch=false --browsers=ChromeHeadless; then
-        print_success "Frontend unit tests passed"
-    else
-        print_error "Frontend unit tests failed"
-        frontend_success=false
-    fi
-
-    # Return to original directory
-    cd "$original_dir"
-
-    if [ "$frontend_success" = true ]; then
+    # Run the command
+    print_status "$description"
+    if eval "$command"; then
+        print_success "$success_msg"
+        cd "$original_dir"
         return 0
     else
+        print_error "$failure_msg"
+        cd "$original_dir"
         return 1
     fi
 }
 
-# Function to run backend tests
-run_backend_tests() {
-    print_status "Running backend tests..."
+# Function to run frontend tests
+run_frontend_tests() {
+    run_in_frontend \
+        "Running Angular unit tests..." \
+        "npm run test -- --watch=false --browsers=ChromeHeadless" \
+        "Frontend unit tests passed" \
+        "Frontend unit tests failed"
+}
+
+# Function to run a command in the backend directory with proper setup
+# Usage: run_in_backend "description" "command" [success_message] [failure_message]
+run_in_backend() {
+    local description="$1"
+    local command="$2"
+    local success_msg="${3:-Success}"
+    local failure_msg="${4:-Failed}"
 
     if [ ! -d "$BACKEND_DIR" ]; then
         print_error "Backend directory not found at: $BACKEND_DIR"
@@ -134,36 +146,38 @@ run_backend_tests() {
     # Activate virtual environment
     source venv/bin/activate
 
-    # Check if requirements are installed
-    if ! python -c "import django" 2>/dev/null; then
-        print_status "Installing backend dependencies..."
-        pip install -r requirements.txt
-    fi
-
-    # Collect static files for tests
-    print_status "Collecting static files..."
-    python manage.py collectstatic --noinput > /dev/null 2>&1
-
-    # Run backend tests
-    print_status "Running backend tests with pytest..."
-    local backend_success=true
-    if python -m pytest --tb=short -q; then
-        print_success "Backend tests passed"
-    else
-        print_error "Backend tests failed"
-        backend_success=false
-    fi
-
-    deactivate
-
-    # Return to original directory
-    cd "$original_dir"
-
-    if [ "$backend_success" = true ]; then
-        return 0
-    else
+    # Always install dependencies to ensure they're up to date
+    print_status "Installing backend dependencies..."
+    if ! pip install -r requirements.txt; then
+        print_error "Failed to install backend dependencies"
+        deactivate
+        cd "$original_dir"
         return 1
     fi
+
+    # Run the command
+    print_status "$description"
+    if eval "$command"; then
+        print_success "$success_msg"
+        deactivate
+        cd "$original_dir"
+        return 0
+    else
+        print_error "$failure_msg"
+        deactivate
+        cd "$original_dir"
+        return 1
+    fi
+}
+
+# Function to run backend tests
+run_backend_tests() {
+    # Collect static files and run tests in a single backend session
+    run_in_backend \
+        "Collecting static files and running backend tests..." \
+        "python manage.py collectstatic --noinput > /dev/null 2>&1 && python -m pytest --tb=short -q" \
+        "Backend tests passed" \
+        "Backend tests failed"
 }
 
 # Function to run dead code detection
@@ -177,64 +191,44 @@ run_dead_code_detection() {
     local original_dir="$(pwd)"
 
     # Run backend dead code detection
-    print_status "Checking backend for dead code with Vulture..."
-    if [ -d "$BACKEND_DIR" ]; then
-        cd "$BACKEND_DIR"
-
-        # Check if virtual environment exists and activate it
-        if [ -d "venv" ]; then
-            source venv/bin/activate
-
-            # Check if vulture is installed
-            if ! python -c "import vulture" 2>/dev/null; then
-                print_status "Installing Vulture..."
-                pip install vulture
-            fi
-
-            # Run vulture
-            if vulture --config .vulture-config glossary/; then
-                print_success "Backend dead code check passed"
-            else
-                print_warning "Backend dead code check found issues (see output above)"
-                dead_code_success=false
-            fi
-
-            deactivate
+    # Check if vulture is installed before running
+    if ! run_in_backend \
+        "Installing Vulture if needed..." \
+        "pip install vulture > /dev/null 2>&1 || true" \
+        "Vulture ready" \
+        "Failed to install Vulture"; then
+        print_warning "Failed to set up backend environment, skipping backend dead code check"
+        dead_code_success=false
+    else
+        if run_in_backend \
+            "Checking backend for dead code with Vulture..." \
+            "vulture --config .vulture-config glossary/" \
+            "Backend dead code check passed" \
+            "Backend dead code check found issues (see output above)"; then
+            # Success - do nothing
+            :
         else
-            print_warning "Backend virtual environment not found, skipping backend dead code check"
+            print_warning "Backend dead code check found issues (see output above)"
             dead_code_success=false
         fi
-    else
-        print_warning "Backend directory not found, skipping backend dead code check"
-        dead_code_success=false
     fi
 
     # Run frontend dead code detection
-    print_status "Checking frontend for dead code with Knip..."
-    if [ -d "$FRONTEND_DIR" ]; then
-        cd "$FRONTEND_DIR"
+    # Check if knip is installed globally before running
+    if ! command_exists knip; then
+        print_status "Installing Knip globally..."
+        npm install -g knip
+    fi
 
-        # Check if node_modules exists
-        if [ ! -d "node_modules" ]; then
-            print_status "Installing frontend dependencies..."
-            npm install
-        fi
-
-        # Check if knip is installed globally
-        if ! command_exists knip; then
-            print_status "Installing Knip globally..."
-            npm install -g knip
-        fi
-
-        # Run knip
-        if knip --config knip.json; then
-            print_success "Frontend dead code check passed"
-        else
-            print_warning "Frontend dead code check found issues (see output above)"
-            dead_code_success=false
-        fi
+    if run_in_frontend \
+        "Checking frontend for dead code with Knip..." \
+        "knip --config knip.json" \
+        "Frontend dead code check passed" \
+        "Frontend dead code check found issues (see output above)"; then
+        # Success - do nothing
+        :
     else
-        print_warning "Frontend directory not found, skipping frontend dead code check"
+        print_warning "Frontend dead code check found issues (see output above)"
         dead_code_success=false
     fi
 
