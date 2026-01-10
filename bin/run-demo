@@ -117,7 +117,7 @@ if [ ! -f "db.sqlite3" ]; then
         print_error "Failed to run migrations"
         exit 1
     fi
-    
+
     # Load test data for new database
     print_status "Loading test data..."
     python manage.py load_test_data
@@ -129,9 +129,18 @@ else
     print_status "Database already exists, skipping migrations and test data"
 fi
 
+# Collect static files (needed for Django admin)
+print_status "Collecting static files..."
+python manage.py collectstatic --noinput
+if [ $? -ne 0 ]; then
+    print_error "Failed to collect static files"
+    exit 1
+fi
+
 # Start backend server in background
+# Set DEBUG=True for development to enable static file serving
 print_status "Starting backend server..."
-python manage.py runserver > /dev/null 2>&1 &
+DEBUG=True python manage.py runserver 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready
