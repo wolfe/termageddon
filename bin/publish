@@ -57,37 +57,25 @@ docker build \
   --build-arg BUILD_TIME=${BUILD_TIME} \
   -t termageddon-backend .
 
-# Tag image with both git hash and latest
+# Tag image with git hash
 echo ""
 echo "Tagging image..."
 docker tag termageddon-backend:latest ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
-docker tag termageddon-backend:latest ${ECR_REGISTRY}/${ECR_REPO}:latest
 
 # Push to ECR
 echo ""
 echo "Pushing to ECR..."
 docker push ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
-docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
-
-# Push to ECR
-echo ""
-echo "Pushing to ECR..."
-docker push ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
-docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
 
 echo ""
 echo "✓ Publish complete!"
 echo ""
-echo "Image tags pushed:"
+echo "Image tag pushed:"
 echo "  ${ECR_REGISTRY}/${ECR_REPO}:${TAG}"
-echo "  ${ECR_REGISTRY}/${ECR_REPO}:latest"
 echo ""
 echo "To deploy, run:"
 echo "  cd terraform/aws/dev"
 echo "  source .env"
-echo "  terraform apply -var-file=config/termageddon-dev.tfvars -var=\"image_tag=latest\""
-echo ""
-echo "Or to deploy a specific version:"
 echo "  terraform apply -var-file=config/termageddon-dev.tfvars -var=\"image_tag=${TAG}\""
 echo ""
 echo "View logs:"
