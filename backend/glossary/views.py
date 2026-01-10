@@ -43,22 +43,23 @@ from glossary.serializers import (
 @permission_classes([AllowAny])
 def health_check_view(request):
     """Health check endpoint for ECS and load balancer"""
-    from django.db import connection
     import json
     import os
+
+    from django.db import connection
 
     try:
         # Check database connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-        
+
         # Load build info
         build_info = {"version": "unknown", "build_time": "unknown"}
         build_info_path = os.path.join(settings.BASE_DIR, "build_info.json")
         if os.path.exists(build_info_path):
             with open(build_info_path, "r") as f:
                 build_info = json.load(f)
-        
+
         return Response(
             {
                 "status": "healthy",

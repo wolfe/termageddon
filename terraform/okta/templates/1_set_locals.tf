@@ -1,5 +1,5 @@
 /* Okta Terraform configuration for Termageddon
- * 
+ *
  * PRE-CONDITIONS:
  * OKTA_API_TOKEN environment variable (Lastpass entry "Okta API Tokens")
  */

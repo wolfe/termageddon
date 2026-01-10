@@ -21,6 +21,7 @@ repos:
       - id: flake8
         args: [--exclude=migrations]
         files: ^backend/.*\.py$
+        exclude: ^backend/.*/migrations/.*\.py$
 
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks

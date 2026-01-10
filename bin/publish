@@ -82,5 +82,3 @@ echo "  aws logs tail /ecs/termageddon-dev --follow --region ${AWS_REGION}"
 echo ""
 echo "Application URL:"
 echo "  http://termageddon-dev-alb-1289199186.us-east-2.elb.amazonaws.com/"
-
-
