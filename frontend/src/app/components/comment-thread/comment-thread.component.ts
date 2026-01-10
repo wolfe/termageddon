@@ -373,14 +373,6 @@ export class CommentThreadComponent implements OnInit, OnChanges {
 
     this.glossaryService.reactToComment(comment.id).subscribe({
       next: updatedComment => {
-        // Log API response for debugging
-        console.log('Reaction API response:', {
-          commentId: updatedComment.id,
-          reaction_count: updatedComment.reaction_count,
-          user_has_reacted: updatedComment.user_has_reacted,
-          fullResponse: updatedComment
-        });
-
         // Update the comment in the array with server response
         const updated = this.updateCommentInArray(updatedComment);
         if (!updated) {

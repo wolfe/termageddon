@@ -259,6 +259,75 @@ class TestCommentModel:
             reply.is_resolved = True
             reply.save()
 
+    def test_comment_edited_at_timestamp(self):
+        """Test that edited_at is set when comment text is updated"""
+        from django.utils import timezone
+
+        comment = CommentFactory(text="Original text")
+        assert comment.edited_at is None
+
+        # Update comment text
+        comment.text = "Updated text"
+        comment.save()
+
+        assert comment.edited_at is not None
+        assert comment.edited_at <= timezone.now()
+
+    def test_comment_edited_at_not_set_on_creation(self):
+        """Test that edited_at is not set when comment is first created"""
+        comment = CommentFactory(text="Original text")
+
+        assert comment.edited_at is None
+
+    def test_comment_deep_nesting(self):
+        """Test comment with multiple levels of nesting"""
+        parent = CommentFactory()
+        reply1 = CommentFactory(parent=parent)
+        reply2 = CommentFactory(parent=reply1)
+        reply3 = CommentFactory(parent=reply2)
+
+        assert parent.replies.count() == 1
+        assert reply1.replies.count() == 1
+        assert reply2.replies.count() == 1
+        assert reply3.replies.count() == 0
+
+    def test_reaction_unique_constraint(self):
+        """Test that user can only have one reaction per comment per type"""
+        from glossary.models import Reaction
+
+        comment = CommentFactory()
+        user = UserFactory()
+
+        # Create first reaction
+        Reaction.objects.create(
+            comment=comment,
+            user=user,
+            reaction_type="thumbs_up",
+            created_by=user,
+        )
+
+        # Try to create duplicate reaction (should raise ValidationError from clean())
+        # ValidationError is raised during save() which calls full_clean()
+        with pytest.raises(ValidationError, match="already exists"):
+            Reaction.objects.create(
+                comment=comment,
+                user=user,
+                reaction_type="thumbs_up",
+                created_by=user,
+            )
+
+    def test_reaction_invalid_type(self):
+        """Test that invalid reaction type raises ValidationError"""
+        from glossary.models import Reaction
+
+        comment = CommentFactory()
+        user = UserFactory()
+
+        reaction = Reaction(comment=comment, user=user, reaction_type="invalid_type")
+
+        with pytest.raises(ValidationError, match="Invalid reaction type"):
+            reaction.full_clean()
+
 
 @pytest.mark.django_db
 class TestPerspectiveCuratorModel:

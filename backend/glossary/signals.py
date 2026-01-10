@@ -60,20 +60,26 @@ def notify_draft_approved(*args, instance, action, pk_set, **kwargs):
 
         approver_ids = pk_set
         if approver_ids and instance.approvers.count() >= settings.MIN_APPROVALS:
-            # Draft just became approved
-            approvers = User.objects.filter(id__in=approver_ids)
-            approver_names = ", ".join(
-                [
-                    approver.get_full_name() or approver.username
-                    for approver in approvers
-                ]
-            )
-            Notification.objects.create(
+            # Check if notification already exists (to avoid duplicates when adding multiple approvers)
+            if not Notification.objects.filter(
                 user=instance.author,
                 type="draft_approved",
-                message=f"Your draft for '{instance.entry.term.text}' was approved by {approver_names}",
                 related_draft=instance,
-            )
+            ).exists():
+                # Draft just became approved
+                approvers = User.objects.filter(id__in=approver_ids)
+                approver_names = ", ".join(
+                    [
+                        approver.get_full_name() or approver.username
+                        for approver in approvers
+                    ]
+                )
+                Notification.objects.create(
+                    user=instance.author,
+                    type="draft_approved",
+                    message=f"Your draft for '{instance.entry.term.text}' was approved by {approver_names}",
+                    related_draft=instance,
+                )
 
 
 @receiver(post_save, sender=Comment)
@@ -121,13 +127,15 @@ def notify_review_requested(*args, instance, action, pk_set, **kwargs):
         reviewer_ids = pk_set
         reviewers = User.objects.filter(id__in=reviewer_ids)
         for reviewer in reviewers:
-            Notification.objects.create(
-                user=reviewer,
-                type="review_requested",
-                message=(
-                    f"You were requested to review a draft for "
-                    f"'{instance.entry.term.text}' by "
-                    f"{instance.author.get_full_name() or instance.author.username}"
-                ),
-                related_draft=instance,
-            )
+            # Don't notify if reviewer is the author
+            if reviewer != instance.author:
+                Notification.objects.create(
+                    user=reviewer,
+                    type="review_requested",
+                    message=(
+                        f"You were requested to review a draft for "
+                        f"'{instance.entry.term.text}' by "
+                        f"{instance.author.get_full_name() or instance.author.username}"
+                    ),
+                    related_draft=instance,
+                )

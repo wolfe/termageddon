@@ -41,7 +41,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       try {
         const decodedError = decodeURIComponent(initialErrorParam);
         this.errorMessage = this.formatErrorMessage(decodedError);
-        console.log('LoginComponent: Set initial errorMessage', { initialErrorParam, decodedError, formatted: this.errorMessage });
       } catch (e) {
         console.error('LoginComponent: Error decoding error param', e);
         this.errorMessage = this.formatErrorMessage(initialErrorParam);
@@ -57,7 +56,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           // Decode the error message (it's URL-encoded)
           const decodedError = decodeURIComponent(errorParam);
           this.errorMessage = this.formatErrorMessage(decodedError);
-          console.log('LoginComponent: Set errorMessage from subscription', { errorParam, decodedError, formatted: this.errorMessage });
         } catch (e) {
           console.error('LoginComponent: Error decoding error param in subscription', e);
           this.errorMessage = this.formatErrorMessage(errorParam);

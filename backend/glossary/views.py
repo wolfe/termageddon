@@ -895,11 +895,11 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         # Users can only update their own comments
-        if (
-            self.get_object().author != self.request.user
-            and not self.request.user.is_staff
-        ):
-            raise ValidationError("You can only update your own comments.")
+        comment = self.get_object()
+        if comment.author != self.request.user and not self.request.user.is_staff:
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied("You can only update your own comments.")
         serializer.save(updated_by=self.request.user)
 
     @action(detail=True, methods=["post"])
@@ -1412,6 +1412,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["type", "is_read"]
 
     def get_queryset(self):
         """Return notifications for the current user"""
@@ -1422,12 +1424,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["patch"])
     def mark_read(self, request, pk=None):
         """Mark a notification as read"""
+        # get_object() filters by user, so if notification doesn't exist or belongs to another user, it raises 404
         notification = self.get_object()
-        if notification.user != request.user:
-            return Response(
-                {"detail": "You can only mark your own notifications as read."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         notification.is_read = True
         notification.save()
         serializer = self.get_serializer(notification)

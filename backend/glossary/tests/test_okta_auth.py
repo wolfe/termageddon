@@ -176,3 +176,112 @@ class TestOktaLoginEndpoint:
         # Verify user was created with Okta ID as username
         user = User.objects.get(username="00u1abc123def456")
         assert user.email == "test@example.com"
+
+    def test_okta_login_with_missing_first_name(self, api_client, monkeypatch):
+        """Test Okta login when first_name is missing from token"""
+        from glossary import okta_auth
+
+        token_data = {
+            "sub": "00u1abc123def456",
+            "email": "test@example.com",
+            "last_name": "User",
+        }
+
+        def mock_verify(*args, **kwargs):
+            return token_data
+
+        monkeypatch.setattr(okta_auth, "verify_okta_token", mock_verify)
+
+        url = "/api/auth/okta-login/"
+        response = api_client.post(url, {"okta_token": "valid_token"})
+
+        assert response.status_code == status.HTTP_200_OK
+        user = User.objects.get(username="00u1abc123def456")
+        assert user.first_name == ""
+        assert user.last_name == "User"
+
+    def test_okta_login_with_missing_last_name(self, api_client, monkeypatch):
+        """Test Okta login when last_name is missing from token"""
+        from glossary import okta_auth
+
+        token_data = {
+            "sub": "00u1abc123def456",
+            "email": "test@example.com",
+            "first_name": "Test",
+        }
+
+        def mock_verify(*args, **kwargs):
+            return token_data
+
+        monkeypatch.setattr(okta_auth, "verify_okta_token", mock_verify)
+
+        url = "/api/auth/okta-login/"
+        response = api_client.post(url, {"okta_token": "valid_token"})
+
+        assert response.status_code == status.HTTP_200_OK
+        user = User.objects.get(username="00u1abc123def456")
+        assert user.first_name == "Test"
+        assert user.last_name == ""
+
+    def test_okta_login_updates_existing_user_email(self, api_client, monkeypatch):
+        """Test that email changes in Okta update Django user"""
+        from glossary import okta_auth
+
+        # Create existing user
+        user = User.objects.create_user(
+            username="00u1abc123def456",
+            email="old@example.com",
+            first_name="Test",
+            last_name="User",
+        )
+
+        token_data = {
+            "sub": "00u1abc123def456",
+            "email": "new@example.com",
+            "first_name": "Test",
+            "last_name": "User",
+        }
+
+        def mock_verify(*args, **kwargs):
+            return token_data
+
+        monkeypatch.setattr(okta_auth, "verify_okta_token", mock_verify)
+
+        url = "/api/auth/okta-login/"
+        response = api_client.post(url, {"okta_token": "valid_token"})
+
+        assert response.status_code == status.HTTP_200_OK
+        user.refresh_from_db()
+        assert user.email == "new@example.com"
+
+    def test_okta_login_partial_name_update(self, api_client, monkeypatch):
+        """Test that only changed name fields are updated"""
+        from glossary import okta_auth
+
+        # Create existing user
+        user = User.objects.create_user(
+            username="00u1abc123def456",
+            email="test@example.com",
+            first_name="Original",
+            last_name="Name",
+        )
+
+        token_data = {
+            "sub": "00u1abc123def456",
+            "email": "test@example.com",
+            "first_name": "Updated",
+            "last_name": "Name",  # Same as before
+        }
+
+        def mock_verify(*args, **kwargs):
+            return token_data
+
+        monkeypatch.setattr(okta_auth, "verify_okta_token", mock_verify)
+
+        url = "/api/auth/okta-login/"
+        response = api_client.post(url, {"okta_token": "valid_token"})
+
+        assert response.status_code == status.HTTP_200_OK
+        user.refresh_from_db()
+        assert user.first_name == "Updated"
+        assert user.last_name == "Name"  # Unchanged
