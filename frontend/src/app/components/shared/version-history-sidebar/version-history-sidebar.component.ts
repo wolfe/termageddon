@@ -14,11 +14,10 @@ import { EntryDetailService } from '../../../services/entry-detail.service';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
-  selector: 'app-version-history-sidebar',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './version-history-sidebar.component.html',
-  styleUrls: ['./version-history-sidebar.component.scss'],
+    selector: 'app-version-history-sidebar',
+    imports: [CommonModule],
+    templateUrl: './version-history-sidebar.component.html',
+    styleUrls: ['./version-history-sidebar.component.scss']
 })
 export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
   @Input() entryId: number | null = null;

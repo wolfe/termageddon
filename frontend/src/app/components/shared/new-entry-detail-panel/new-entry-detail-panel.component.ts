@@ -6,15 +6,14 @@ import { DefinitionFormComponent } from '../../definition-form/definition-form.c
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
 
 @Component({
-  selector: 'app-new-entry-detail-panel',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    DefinitionFormComponent,
-    PerspectivePillComponent,
-  ],
-  template: `
+    selector: 'app-new-entry-detail-panel',
+    imports: [
+        CommonModule,
+        FormsModule,
+        DefinitionFormComponent,
+        PerspectivePillComponent,
+    ],
+    template: `
     <div class="new-entry-detail-panel">
       <!-- Header -->
       <div class="panel-header">
@@ -68,7 +67,7 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
       </div>
     </div>
   `,
-  styleUrls: ['./new-entry-detail-panel.component.scss'],
+    styleUrls: ['./new-entry-detail-panel.component.scss']
 })
 export class NewEntryDetailPanelComponent implements OnInit {
   @Input() entry: Entry | null = null;

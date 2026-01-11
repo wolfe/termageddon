@@ -22,18 +22,17 @@ import {
 } from '../shared/search-filter-bar/search-filter-bar.component';
 
 @Component({
-  selector: 'app-term-list',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    TermDialogComponent,
-    CreateEntryDialogComponent,
-    PerspectivePillComponent,
-    SearchFilterBarComponent,
-  ],
-  templateUrl: './term-list.component.html',
-  styleUrl: './term-list.component.scss',
+    selector: 'app-term-list',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        TermDialogComponent,
+        CreateEntryDialogComponent,
+        PerspectivePillComponent,
+        SearchFilterBarComponent,
+    ],
+    templateUrl: './term-list.component.html',
+    styleUrl: './term-list.component.scss'
 })
 export class TermListComponent implements OnInit, OnDestroy {
   @Output() entrySelected = new EventEmitter<Entry>();

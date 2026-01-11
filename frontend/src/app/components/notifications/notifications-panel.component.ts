@@ -8,10 +8,9 @@ import { AuthService } from '../../services/auth.service';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 
 @Component({
-  selector: 'app-notifications-panel',
-  standalone: true,
-  imports: [CommonModule, RelativeTimePipe],
-  template: `
+    selector: 'app-notifications-panel',
+    imports: [CommonModule, RelativeTimePipe],
+    template: `
     <div class="notifications-container">
       <button
         (click)="togglePanel()"
@@ -60,8 +59,8 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
       }
     </div>
   `,
-  styles: [
-    `
+    styles: [
+        `
       .notifications-container {
         position: relative;
       }
@@ -196,7 +195,7 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
         font-size: 0.875rem;
       }
     `,
-  ],
+    ]
 })
 export class NotificationsPanelComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];

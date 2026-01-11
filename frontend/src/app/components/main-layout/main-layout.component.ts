@@ -8,11 +8,10 @@ import { InlineNotificationComponent } from '../shared/inline-notification/inlin
 import { NotificationsPanelComponent } from '../notifications/notifications-panel.component';
 
 @Component({
-  selector: 'app-main-layout',
-  standalone: true,
-  imports: [CommonModule, RouterModule, InlineNotificationComponent, NotificationsPanelComponent],
-  templateUrl: './main-layout.component.html',
-  styleUrl: './main-layout.component.scss',
+    selector: 'app-main-layout',
+    imports: [CommonModule, RouterModule, InlineNotificationComponent, NotificationsPanelComponent],
+    templateUrl: './main-layout.component.html',
+    styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent implements OnInit {
   currentUser: User | null = null;

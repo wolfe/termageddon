@@ -23,11 +23,10 @@ export interface SortOption {
 }
 
 @Component({
-  selector: 'app-search-filter-bar',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './search-filter-bar.component.html',
-  styleUrl: './search-filter-bar.component.scss',
+    selector: 'app-search-filter-bar',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './search-filter-bar.component.html',
+    styleUrl: './search-filter-bar.component.scss'
 })
 export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Input() placeholder: string = 'Search...';

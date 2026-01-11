@@ -29,19 +29,18 @@ import { VersionHistorySidebarComponent } from '../shared/version-history-sideba
 import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
-  selector: 'app-term-detail',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    DefinitionFormComponent,
-    CommentThreadComponent,
-    UserAvatarComponent,
-    PerspectivePillComponent,
-    VersionHistorySidebarComponent,
-  ],
-  templateUrl: './term-detail.component.html',
-  styleUrl: './term-detail.component.scss',
+    selector: 'app-term-detail',
+    imports: [
+        CommonModule,
+        FormsModule,
+        DefinitionFormComponent,
+        CommentThreadComponent,
+        UserAvatarComponent,
+        PerspectivePillComponent,
+        VersionHistorySidebarComponent,
+    ],
+    templateUrl: './term-detail.component.html',
+    styleUrl: './term-detail.component.scss'
 })
 export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() entry!: Entry;

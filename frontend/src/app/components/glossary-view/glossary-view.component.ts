@@ -11,17 +11,16 @@ import { MasterDetailLayoutComponent } from '../shared/master-detail-layout/mast
 import { StatusSummaryComponent } from '../shared/status-summary/status-summary.component';
 
 @Component({
-  selector: 'app-glossary-view',
-  standalone: true,
-  imports: [
-    CommonModule,
-    TermListComponent,
-    TermDetailComponent,
-    MasterDetailLayoutComponent,
-    StatusSummaryComponent,
-  ],
-  templateUrl: './glossary-view.component.html',
-  styleUrl: './glossary-view.component.scss',
+    selector: 'app-glossary-view',
+    imports: [
+        CommonModule,
+        TermListComponent,
+        TermDetailComponent,
+        MasterDetailLayoutComponent,
+        StatusSummaryComponent,
+    ],
+    templateUrl: './glossary-view.component.html',
+    styleUrl: './glossary-view.component.scss'
 })
 export class GlossaryViewComponent implements OnInit {
   selectedEntry: Entry | null = null;

@@ -12,11 +12,10 @@ import {
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
-  selector: 'app-draft-list-item',
-  standalone: true,
-  imports: [CommonModule, PerspectivePillComponent],
-  templateUrl: './draft-list-item.component.html',
-  styleUrl: './draft-list-item.component.scss',
+    selector: 'app-draft-list-item',
+    imports: [CommonModule, PerspectivePillComponent],
+    templateUrl: './draft-list-item.component.html',
+    styleUrl: './draft-list-item.component.scss'
 })
 export class DraftListItemComponent {
   @Input() draft!: ReviewDraft;

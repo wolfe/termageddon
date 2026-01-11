@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Perspective } from '../../../models';
 
 @Component({
-  selector: 'app-perspective-pill',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-perspective-pill',
+    imports: [CommonModule],
+    template: `
     <span
       [class]="getPillClasses()"
       [title]="perspective.description || perspective.name"
@@ -15,7 +14,7 @@ import { Perspective } from '../../../models';
       {{ getDisplayText() }}
     </span>
   `,
-  styleUrls: ['./perspective-pill.component.scss'],
+    styleUrls: ['./perspective-pill.component.scss']
 })
 export class PerspectivePillComponent {
   @Input() perspective!: Perspective;

@@ -41,21 +41,20 @@ import {
 import { getInitials } from '../../utils/user.util';
 
 @Component({
-  selector: 'app-review-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReviewerSelectorDialogComponent,
-    MasterDetailLayoutComponent,
-    SearchFilterBarComponent,
-    DraftListItemComponent,
-    DraftDetailPanelComponent,
-    StatusSummaryComponent,
-    CreateEntryDialogComponent,
-  ],
-  templateUrl: './review-dashboard.component.html',
-  styleUrl: './review-dashboard.component.scss',
+    selector: 'app-review-dashboard',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReviewerSelectorDialogComponent,
+        MasterDetailLayoutComponent,
+        SearchFilterBarComponent,
+        DraftListItemComponent,
+        DraftDetailPanelComponent,
+        StatusSummaryComponent,
+        CreateEntryDialogComponent,
+    ],
+    templateUrl: './review-dashboard.component.html',
+    styleUrl: './review-dashboard.component.scss'
 })
 export class ReviewDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

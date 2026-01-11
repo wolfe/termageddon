@@ -5,11 +5,10 @@ import { GlossaryService } from '../../services/glossary.service';
 import { Perspective, Term, Entry, CreateTermAndEntryRequest } from '../../models';
 
 @Component({
-  selector: 'app-term-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './term-dialog.component.html',
-  styleUrls: ['./term-dialog.component.scss'],
+    selector: 'app-term-dialog',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './term-dialog.component.html',
+    styleUrls: ['./term-dialog.component.scss']
 })
 export class TermDialogComponent implements OnInit {
   @Input() isOpen = false;

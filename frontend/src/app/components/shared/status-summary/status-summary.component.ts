@@ -8,10 +8,9 @@ export interface StatusSummaryItem {
 }
 
 @Component({
-  selector: 'app-status-summary',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-status-summary',
+    imports: [CommonModule],
+    template: `
     @if (items.length > 0) {
       <div class="p-3 border-b border-gray-300">
         <div class="flex items-center space-x-4 text-xs">
@@ -24,7 +23,7 @@ export interface StatusSummaryItem {
         </div>
       </div>
     }
-  `,
+  `
 })
 export class StatusSummaryComponent {
   @Input() items: StatusSummaryItem[] = [];

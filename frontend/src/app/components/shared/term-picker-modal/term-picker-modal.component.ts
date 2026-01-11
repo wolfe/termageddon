@@ -15,10 +15,9 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of, Subject } from 'rxjs';
 
 @Component({
-  selector: 'app-term-picker-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-term-picker-modal',
+    imports: [CommonModule, FormsModule],
+    template: `
     <div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
       <div class="modal-dialog" (click)="$event.stopPropagation()">
         <div class="modal-header">
@@ -99,7 +98,7 @@ import { of, Subject } from 'rxjs';
       </div>
     </div>
   `,
-  styleUrls: ['./term-picker-modal.component.scss'],
+    styleUrls: ['./term-picker-modal.component.scss']
 })
 export class TermPickerModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;

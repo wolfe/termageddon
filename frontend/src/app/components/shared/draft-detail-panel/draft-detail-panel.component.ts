@@ -43,19 +43,18 @@ import { diffHtml, DiffResult } from '../../../utils/diff.util';
 type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
 
 @Component({
-  selector: 'app-draft-detail-panel',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    CommentThreadComponent,
-    UserAvatarComponent,
-    PerspectivePillComponent,
-    DefinitionFormComponent,
-    VersionHistorySidebarComponent,
-  ],
-  templateUrl: './draft-detail-panel.component.html',
-  styleUrl: './draft-detail-panel.component.scss',
+    selector: 'app-draft-detail-panel',
+    imports: [
+        CommonModule,
+        FormsModule,
+        CommentThreadComponent,
+        UserAvatarComponent,
+        PerspectivePillComponent,
+        DefinitionFormComponent,
+        VersionHistorySidebarComponent,
+    ],
+    templateUrl: './draft-detail-panel.component.html',
+    styleUrl: './draft-detail-panel.component.scss'
 })
 export class DraftDetailPanelComponent
   extends BaseEntryDetailComponent

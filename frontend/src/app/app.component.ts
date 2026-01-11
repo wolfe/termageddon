@@ -3,11 +3,10 @@ import { RouterOutlet } from '@angular/router';
 import { DemoAutoLoginService } from './services/demo-auto-login.service';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet],
-  template: ` <router-outlet></router-outlet> `,
-  styles: [],
+    selector: 'app-root',
+    imports: [RouterOutlet],
+    template: ` <router-outlet></router-outlet> `,
+    styles: []
 })
 export class AppComponent implements OnInit {
   title = 'Termageddon';

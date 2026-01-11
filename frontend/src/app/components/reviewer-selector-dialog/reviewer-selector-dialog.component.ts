@@ -4,11 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { User } from '../../models';
 
 @Component({
-  selector: 'app-reviewer-selector-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './reviewer-selector-dialog.component.html',
-  styleUrls: ['./reviewer-selector-dialog.component.scss'],
+    selector: 'app-reviewer-selector-dialog',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './reviewer-selector-dialog.component.html',
+    styleUrls: ['./reviewer-selector-dialog.component.scss']
 })
 export class ReviewerSelectorDialogComponent implements OnInit {
   @Input() isOpen = false;

@@ -16,11 +16,10 @@ import {
 import { TermAutocompleteComponent } from '../shared/term-autocomplete/term-autocomplete.component';
 
 @Component({
-  selector: 'app-create-entry-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, TermAutocompleteComponent],
-  templateUrl: './create-entry-dialog.component.html',
-  styleUrls: ['./create-entry-dialog.component.scss'],
+    selector: 'app-create-entry-dialog',
+    imports: [CommonModule, FormsModule, TermAutocompleteComponent],
+    templateUrl: './create-entry-dialog.component.html',
+    styleUrls: ['./create-entry-dialog.component.scss']
 })
 export class CreateEntryDialogComponent implements OnInit {
   @Input() isOpen = false;

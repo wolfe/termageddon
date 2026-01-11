@@ -14,11 +14,10 @@ import { Term } from '../../../models';
 import { TermPickerModalComponent } from '../term-picker-modal/term-picker-modal.component';
 
 @Component({
-  selector: 'app-term-autocomplete',
-  standalone: true,
-  imports: [CommonModule, FormsModule, TermPickerModalComponent],
-  styleUrl: './term-autocomplete.component.scss',
-  template: `
+    selector: 'app-term-autocomplete',
+    imports: [CommonModule, FormsModule, TermPickerModalComponent],
+    styleUrl: './term-autocomplete.component.scss',
+    template: `
     <div class="term-autocomplete">
       <div class="input-container">
         <input
@@ -39,7 +38,7 @@ import { TermPickerModalComponent } from '../term-picker-modal/term-picker-modal
         (termSelected)="onTermSelected($event)"
       ></app-term-picker-modal>
     </div>
-  `,
+  `
 })
 export class TermAutocompleteComponent implements OnInit, OnChanges {
   @Input() selectedTermId: number | null = null;

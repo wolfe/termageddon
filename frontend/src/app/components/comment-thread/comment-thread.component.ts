@@ -9,11 +9,10 @@ import { UserAvatarComponent } from '../shared/user-avatar/user-avatar.component
 import { getInitials, getUserDisplayName } from '../../utils/user.util';
 
 @Component({
-  selector: 'app-comment-thread',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RelativeTimePipe, UserAvatarComponent],
-  templateUrl: './comment-thread.component.html',
-  styleUrls: ['./comment-thread.component.scss'],
+    selector: 'app-comment-thread',
+    imports: [CommonModule, FormsModule, RelativeTimePipe, UserAvatarComponent],
+    templateUrl: './comment-thread.component.html',
+    styleUrls: ['./comment-thread.component.scss']
 })
 export class CommentThreadComponent implements OnInit, OnChanges {
   @Input() comments: Comment[] = [];

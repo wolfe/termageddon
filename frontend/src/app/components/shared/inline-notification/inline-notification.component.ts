@@ -4,11 +4,10 @@ import { NotificationService, Notification } from '../../../services/notificatio
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'app-inline-notification',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './inline-notification.component.html',
-  styleUrls: ['./inline-notification.component.scss'],
+    selector: 'app-inline-notification',
+    imports: [CommonModule],
+    templateUrl: './inline-notification.component.html',
+    styleUrls: ['./inline-notification.component.scss']
 })
 export class InlineNotificationComponent implements OnInit, OnDestroy {
   notification: Notification | null = null;

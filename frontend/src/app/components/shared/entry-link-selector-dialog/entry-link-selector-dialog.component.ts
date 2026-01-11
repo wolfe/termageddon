@@ -15,11 +15,10 @@ import { GlossaryService } from '../../../services/glossary.service';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
 
 @Component({
-  selector: 'app-entry-link-selector-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PerspectivePillComponent],
-  templateUrl: './entry-link-selector-dialog.component.html',
-  styleUrls: ['./entry-link-selector-dialog.component.scss'],
+    selector: 'app-entry-link-selector-dialog',
+    imports: [CommonModule, FormsModule, PerspectivePillComponent],
+    templateUrl: './entry-link-selector-dialog.component.html',
+    styleUrls: ['./entry-link-selector-dialog.component.scss']
 })
 export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isOpen = false;

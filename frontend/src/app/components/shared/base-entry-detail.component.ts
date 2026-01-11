@@ -5,7 +5,8 @@ import { EntryDetailService } from '../../services/entry-detail.service';
 import { PermissionService } from '../../services/permission.service';
 
 @Component({
-  template: '',
+    template: '',
+    standalone: false
 })
 export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   @Input() entry: Entry | ReviewDraft | null = null;

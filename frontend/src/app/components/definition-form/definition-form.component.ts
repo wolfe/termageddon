@@ -6,12 +6,11 @@ import { Entry } from '../../models';
 import { EntryLinkSelectorDialogComponent } from '../shared/entry-link-selector-dialog/entry-link-selector-dialog.component';
 
 @Component({
-  selector: 'app-definition-form',
-  standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
-  templateUrl: './definition-form.component.html',
-  styleUrls: ['./definition-form.component.scss'],
-  encapsulation: ViewEncapsulation.None,
+    selector: 'app-definition-form',
+    imports: [CommonModule, FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
+    templateUrl: './definition-form.component.html',
+    styleUrls: ['./definition-form.component.scss'],
+    encapsulation: ViewEncapsulation.None
 })
 export class DefinitionFormComponent implements OnInit, OnDestroy {
   @Input() content: string = '';

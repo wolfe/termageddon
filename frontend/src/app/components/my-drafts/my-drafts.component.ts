@@ -30,23 +30,22 @@ import { getDraftStatus, getDraftStatusClass, canPublish } from '../../utils/dra
 import { getInitials } from '../../utils/user.util';
 
 @Component({
-  selector: 'app-my-drafts',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReviewerSelectorDialogComponent,
-    MasterDetailLayoutComponent,
-    SearchFilterBarComponent,
-    DraftListItemComponent,
-    DraftDetailPanelComponent,
-    NewEntryDetailPanelComponent,
-    StatusSummaryComponent,
-    CreateEntryDialogComponent,
-    ConfirmationDialogComponent,
-  ],
-  templateUrl: './my-drafts.component.html',
-  styleUrls: ['./my-drafts.component.scss'],
+    selector: 'app-my-drafts',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReviewerSelectorDialogComponent,
+        MasterDetailLayoutComponent,
+        SearchFilterBarComponent,
+        DraftListItemComponent,
+        DraftDetailPanelComponent,
+        NewEntryDetailPanelComponent,
+        StatusSummaryComponent,
+        CreateEntryDialogComponent,
+        ConfirmationDialogComponent,
+    ],
+    templateUrl: './my-drafts.component.html',
+    styleUrls: ['./my-drafts.component.scss']
 })
 export class MyDraftsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
