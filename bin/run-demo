@@ -109,16 +109,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Check if database exists, if not run migrations
-if [ ! -f "db.sqlite3" ]; then
-    print_status "Running database migrations..."
-    python manage.py migrate
-    if [ $? -ne 0 ]; then
-        print_error "Failed to run migrations"
-        exit 1
-    fi
+# Always run migrations to ensure database is up to date
+print_status "Running database migrations..."
+python manage.py migrate
+if [ $? -ne 0 ]; then
+    print_error "Failed to run migrations"
+    exit 1
+fi
 
-    # Load test data for new database
+# Load test data only if database is new (no entries exist)
+if [ ! -f "db.sqlite3" ] || [ -z "$(python manage.py shell -c 'from glossary.models import Entry; print(Entry.objects.count())' 2>/dev/null | grep -E '^[0-9]+$' | head -1)" ]; then
     print_status "Loading test data..."
     python manage.py load_test_data
     if [ $? -ne 0 ]; then
@@ -126,7 +126,7 @@ if [ ! -f "db.sqlite3" ]; then
         exit 1
     fi
 else
-    print_status "Database already exists, skipping migrations and test data"
+    print_status "Database already has data, skipping test data load"
 fi
 
 # Collect static files (needed for Django admin)

@@ -1,3 +1,6 @@
+/* Shared three-panel view styles - must come first */
+@use 'app/styles/three-panel-views.scss';
+
 /* Tailwind directives */
 @tailwind base;
 @tailwind components;
@@ -5,9 +8,6 @@
 
 /* Quill CSS */
 @import 'quill/dist/quill.snow.css';
-
-/* Shared three-panel view styles */
-@use 'app/styles/three-panel-views.scss';
 
 /* Global styles with Termageddon branding */
 @layer base {
