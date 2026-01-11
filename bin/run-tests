@@ -113,7 +113,7 @@ run_in_frontend() {
 run_frontend_tests() {
     run_in_frontend \
         "Running Angular unit tests..." \
-        "npm run test -- --watch=false --browsers=ChromeHeadless" \
+        "npm run test" \
         "Frontend unit tests passed" \
         "Frontend unit tests failed"
 }

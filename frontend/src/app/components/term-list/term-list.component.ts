@@ -13,7 +13,6 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Perspective, Entry, User, GroupedEntry } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
-import { TermDialogComponent } from '../term-dialog/term-dialog.component';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
 import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
 import {
@@ -25,7 +24,6 @@ import {
     selector: 'app-term-list',
     imports: [
     ReactiveFormsModule,
-    TermDialogComponent,
     CreateEntryDialogComponent,
     PerspectivePillComponent,
     SearchFilterBarComponent

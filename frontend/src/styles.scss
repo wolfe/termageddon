@@ -7,7 +7,7 @@
 @import 'quill/dist/quill.snow.css';
 
 /* Shared three-panel view styles */
-@import 'app/styles/three-panel-views.scss';
+@use 'app/styles/three-panel-views.scss';
 
 /* Global styles with Termageddon branding */
 @layer base {

@@ -1,4 +1,5 @@
 // Vitest setup file for Angular testing
+import 'reflect-metadata';
 import 'zone.js';
 import 'zone.js/testing';
 import { getTestBed } from '@angular/core/testing';

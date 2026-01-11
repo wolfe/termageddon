@@ -1,5 +1,6 @@
 import type { MockedObject } from 'vitest';
-import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -1026,7 +1027,8 @@ describe('MyDraftsComponent', () => {
       expect(draftIds).not.toContain(2);
     });
 
-    it('should refresh drafts and comments after edit is saved', fakeAsync(() => {
+    it('should refresh drafts and comments after edit is saved', async () => {
+      vi.useFakeTimers();
       const mockDraft: ReviewDraft = {
         id: 1,
         content: 'Test draft content',
@@ -1108,12 +1110,14 @@ describe('MyDraftsComponent', () => {
 
       // Simulate edit saved event
       component.onEditSaved();
-      tick(); // Wait for async operations
-      flush(); // Flush all timers (including setTimeout in onEditSaved)
+      // Advance timers to flush setTimeout
+      vi.runAllTimers();
 
       expect(panelCommonService.loadDrafts).toHaveBeenCalled();
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
       expect(component.state.comments).toEqual(mockComments);
-    }));
+
+      vi.useRealTimers();
+    });
   });
 });

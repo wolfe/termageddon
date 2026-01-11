@@ -1,4 +1,5 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { NotificationService, Notification } from './notification.service';
 
 describe('NotificationService', () => {
@@ -108,20 +109,23 @@ describe('NotificationService', () => {
       expect(service.getNotification()).toBeNull();
     });
 
-    it('should not auto-dismiss notification (component handles timing)', fakeAsync(() => {
+    it('should not auto-dismiss notification (component handles timing', async () => {
+      vi.useFakeTimers();
       service.success('Test notification');
 
       expect(service.getNotification()).toBeTruthy();
 
       // Fast-forward 8 seconds - notification should still be there
       // because the component handles the timing, not the service
-      tick(8000);
+      vi.advanceTimersByTime(8000);
 
       expect(service.getNotification()).toBeTruthy();
 
       // Manually dismiss to clean up
       service.dismiss();
       expect(service.getNotification()).toBeNull();
-    }));
+
+      vi.useRealTimers();
+    });
   });
 });

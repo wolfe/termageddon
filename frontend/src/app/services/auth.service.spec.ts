@@ -298,8 +298,7 @@ describe('AuthService', () => {
         service['isLoginInProgress'] = false; // Reset login state
       });
 
-      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
-      it('should handle successful Okta callback', done => {
+      it('should handle successful Okta callback', async () => {
         const mockResponse: LoginResponse = {
           token: 'django-token-123',
           user: {
@@ -312,109 +311,85 @@ describe('AuthService', () => {
           },
         };
 
-        service.handleOktaCallback().subscribe({
-          next: response => {
-            expect(response).toEqual(mockResponse);
-            expect(service.getToken()).toBe('django-token-123');
-            expect(mockOktaAuth.handleRedirect).toHaveBeenCalled();
-            done();
-          },
-          error: error => done.fail(error),
+        const promise = service.handleOktaCallback().toPromise();
+
+        // Wait for handleRedirect promise to resolve
+        await vi.waitFor(async () => {
+          expect(mockOktaAuth.tokenManager.get).toHaveBeenCalledWith('accessToken');
         });
 
-        // Wait for handleRedirect promise
-        setTimeout(() => {
-          // Verify token manager was called
-          expect(mockOktaAuth.tokenManager.get).toHaveBeenCalledWith('accessToken');
+        // Verify backend login request
+        const req = httpMock.expectOne('/api/auth/okta-login/');
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body).toEqual({ okta_token: 'okta-access-token-123' });
+        req.flush(mockResponse);
 
-          // Verify backend login request
-          const req = httpMock.expectOne('/api/auth/okta-login/');
-          expect(req.request.method).toBe('POST');
-          expect(req.request.body).toEqual({ okta_token: 'okta-access-token-123' });
-          req.flush(mockResponse);
-        }, 10);
+        const response = await promise;
+        expect(response).toEqual(mockResponse);
+        expect(service.getToken()).toBe('django-token-123');
+        expect(mockOktaAuth.handleRedirect).toHaveBeenCalled();
       });
 
-      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
-      it('should handle missing access token from Okta', done => {
+      it('should handle missing access token from Okta', async () => {
         mockOktaAuth.tokenManager.get.mockReturnValue(Promise.resolve(null));
 
-        service.handleOktaCallback().subscribe({
-          next: () => done.fail('Should have failed'),
-          error: error => {
-            expect(error.message).toContain('No access token');
-            expect(router.navigate).toHaveBeenCalledWith(
-              ['/login'],
-              expect.objectContaining({
-                queryParams: expect.any(Object),
-              })
-            );
-            done();
-          },
-        });
+        await expect(service.handleOktaCallback().toPromise()).rejects.toThrow('No access token');
+        expect(router.navigate).toHaveBeenCalledWith(
+          ['/login'],
+          expect.objectContaining({
+            queryParams: expect.any(Object),
+          })
+        );
 
         // No need to wait - error happens synchronously
         httpMock.expectNone('/api/auth/okta-login/');
       });
 
-      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
-      it('should handle backend login failure', done => {
-        service.handleOktaCallback().subscribe({
-          next: () => done.fail('Should have failed'),
-          error: error => {
-            expect(error.message).toContain('Invalid token');
-            expect(service.getToken()).toBeNull();
-            expect(router.navigate).toHaveBeenCalledWith(
-              ['/login'],
-              expect.objectContaining({
-                queryParams: expect.objectContaining({
-                  error: expect.any(String),
-                }),
-              })
-            );
-            done();
-          },
-        });
+      it('should handle backend login failure', async () => {
+        const promise = service.handleOktaCallback().toPromise();
 
         // Wait for async operations
-        setTimeout(() => {
-          const req = httpMock.expectOne('/api/auth/okta-login/');
-          req.flush({ detail: 'Invalid token' }, { status: 401, statusText: 'Unauthorized' });
-        }, 10);
-      });
-
-      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
-      it('should handle network error during backend login', done => {
-        service.handleOktaCallback().subscribe({
-          next: () => done.fail('Should have failed'),
-          error: error => {
-            expect(error).toBeDefined();
-            expect(service.getToken()).toBeNull();
-            expect(router.navigate).toHaveBeenCalled();
-            done();
-          },
+        await vi.waitFor(async () => {
+          expect(mockOktaAuth.tokenManager.get).toHaveBeenCalledWith('accessToken');
         });
 
-        // Wait for async operations
-        setTimeout(() => {
-          const req = httpMock.expectOne('/api/auth/okta-login/');
-          req.error(new ErrorEvent('Network error'));
-        }, 10);
+        const req = httpMock.expectOne('/api/auth/okta-login/');
+        req.flush({ detail: 'Invalid token' }, { status: 401, statusText: 'Unauthorized' });
+
+        await expect(promise).rejects.toThrow();
+        expect(service.getToken()).toBeNull();
+        expect(router.navigate).toHaveBeenCalledWith(
+          ['/login'],
+          expect.objectContaining({
+            queryParams: expect.objectContaining({
+              error: expect.any(String),
+            }),
+          })
+        );
       });
 
-      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
-      it('should handle Okta handleRedirect failure', done => {
+      it('should handle network error during backend login', async () => {
+        const promise = service.handleOktaCallback().toPromise();
+
+        // Wait for async operations
+        await vi.waitFor(async () => {
+          expect(mockOktaAuth.tokenManager.get).toHaveBeenCalledWith('accessToken');
+        });
+
+        const req = httpMock.expectOne('/api/auth/okta-login/');
+        req.error(new ErrorEvent('Network error'));
+
+        await expect(promise).rejects.toThrow();
+        expect(service.getToken()).toBeNull();
+        expect(router.navigate).toHaveBeenCalled();
+      });
+
+      it('should handle Okta handleRedirect failure', async () => {
         mockOktaAuth.handleRedirect.mockReturnValue(Promise.reject(new Error('Redirect failed')));
 
-        service.handleOktaCallback().subscribe({
-          next: () => done.fail('Should have failed'),
-          error: error => {
-            expect(error).toBeDefined();
-            expect(service.getToken()).toBeNull();
-            expect(router.navigate).toHaveBeenCalled();
-            done();
-          },
-        });
+        await expect(service.handleOktaCallback().toPromise()).rejects.toThrow();
+        expect(service.getToken()).toBeNull();
+        expect(router.navigate).toHaveBeenCalled();
       });
     });
 

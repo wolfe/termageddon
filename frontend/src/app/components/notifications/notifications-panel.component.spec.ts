@@ -31,10 +31,8 @@ describe('NotificationsPanelComponent', () => {
       markAllAsRead: vi.fn().mockName('NotificationApiService.markAllAsRead'),
     };
     const authSpy = {
-      isAuthenticated: vi.fn().mockName('AuthService.isAuthenticated'),
-      isOktaCallback: vi.fn().mockName('AuthService.isOktaCallback'),
-      isAuthenticated: vi.fn().mockReturnValue(true),
-      isOktaCallback: vi.fn().mockReturnValue(false),
+            isAuthenticated: vi.fn().mockName('AuthService.isAuthenticated').mockReturnValue(true),
+            isOktaCallback: vi.fn().mockName('AuthService.isOktaCallback').mockReturnValue(false),
     };
 
     await TestBed.configureTestingModule({

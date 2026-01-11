@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { fakeAsync, tick } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { SearchFilterBarComponent } from './search-filter-bar.component';
 
 describe('SearchFilterBarComponent', () => {
@@ -21,7 +21,8 @@ describe('SearchFilterBarComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should debounce search input', fakeAsync(() => {
+  it('should debounce search input', async () => {
+    vi.useFakeTimers();
     vi.spyOn(component.search, 'emit');
 
     // Simulate rapid typing
@@ -38,12 +39,14 @@ describe('SearchFilterBarComponent', () => {
     expect(component.search.emit).not.toHaveBeenCalled();
 
     // Wait for debounce time (300ms)
-    tick(300);
+    vi.advanceTimersByTime(300);
 
     // Should emit only once with the latest value
     expect(component.search.emit).toHaveBeenCalledTimes(1);
     expect(component.search.emit).toHaveBeenCalledWith('abc');
-  }));
+
+    vi.useRealTimers();
+  });
 
   it('should emit search immediately on Enter key', () => {
     vi.spyOn(component.search, 'emit');
@@ -67,7 +70,8 @@ describe('SearchFilterBarComponent', () => {
     expect(component.searchTermChange.emit).toHaveBeenCalledWith('test');
   });
 
-  it('should handle clear correctly', fakeAsync(() => {
+  it('should handle clear correctly', async () => {
+    vi.useFakeTimers();
     vi.spyOn(component.search, 'emit');
     vi.spyOn(component.searchTermChange, 'emit');
     vi.spyOn(component.cleared, 'emit');
@@ -79,7 +83,9 @@ describe('SearchFilterBarComponent', () => {
     expect(component.cleared.emit).toHaveBeenCalledTimes(1);
 
     // search should emit after debounce
-    tick(300);
+    vi.advanceTimersByTime(300);
     expect(component.search.emit).toHaveBeenCalledWith('');
-  }));
+
+    vi.useRealTimers();
+  });
 });
