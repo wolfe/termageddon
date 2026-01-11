@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { of } from 'rxjs';
@@ -11,6 +11,7 @@ import { EntryDetailService } from '../../services/entry-detail.service';
 import { PanelCommonService } from '../../services/panel-common.service';
 import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewDraft, User, Comment } from '../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('MyDraftsComponent', () => {
   let component: MyDraftsComponent;
@@ -234,8 +235,8 @@ describe('MyDraftsComponent', () => {
     panelCommonSpy.filterDraftsBySearch.and.returnValue([]);
 
     await TestBed.configureTestingModule({
-      imports: [MyDraftsComponent, HttpClientTestingModule],
-      providers: [
+    imports: [MyDraftsComponent],
+    providers: [
         { provide: ReviewService, useValue: reviewSpy },
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
@@ -245,8 +246,10 @@ describe('MyDraftsComponent', () => {
         { provide: Router, useValue: routerSpy },
         { provide: Location, useValue: locationSpy },
         { provide: ActivatedRoute, useValue: activatedRouteSpy },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(MyDraftsComponent);
     component = fixture.componentInstance;

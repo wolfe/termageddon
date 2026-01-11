@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { DraftDetailPanelComponent } from './draft-detail-panel.component';
 import { EntryDetailService } from '../../../services/entry-detail.service';
 import { PermissionService } from '../../../services/permission.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ReviewDraft, EntryDraft, User } from '../../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('DraftDetailPanelComponent', () => {
   let component: DraftDetailPanelComponent;
@@ -33,13 +34,15 @@ describe('DraftDetailPanelComponent', () => {
     const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
 
     await TestBed.configureTestingModule({
-      imports: [DraftDetailPanelComponent, HttpClientTestingModule],
-      providers: [
+    imports: [DraftDetailPanelComponent],
+    providers: [
         { provide: EntryDetailService, useValue: entryDetailSpy },
         { provide: PermissionService, useValue: permissionSpy },
         { provide: NotificationService, useValue: notificationSpy },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(DraftDetailPanelComponent);
     component = fixture.componentInstance;

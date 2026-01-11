@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { TermDetailComponent } from './term-detail.component';
 import { EntryDetailService } from '../../services/entry-detail.service';
@@ -8,6 +8,7 @@ import { NotificationService } from '../../services/notification.service';
 import { GlossaryService } from '../../services/glossary.service';
 import { NavigationService } from '../../services/navigation.service';
 import { Entry, EntryDraft, Comment } from '../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TermDetailComponent', () => {
   let component: TermDetailComponent;
@@ -43,15 +44,17 @@ describe('TermDetailComponent', () => {
     glossarySpy.getEntries.and.returnValue(of({ results: [] }));
 
     await TestBed.configureTestingModule({
-      imports: [TermDetailComponent, HttpClientTestingModule],
-      providers: [
+    imports: [TermDetailComponent],
+    providers: [
         { provide: EntryDetailService, useValue: entryDetailSpy },
         { provide: PermissionService, useValue: permissionSpy },
         { provide: NotificationService, useValue: notificationSpy },
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: NavigationService, useValue: navigationSpy },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(TermDetailComponent);
     component = fixture.componentInstance;

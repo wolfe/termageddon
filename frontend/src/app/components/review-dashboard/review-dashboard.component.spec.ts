@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { of } from 'rxjs';
@@ -11,6 +11,7 @@ import { NotificationService } from '../../services/notification.service';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { UrlHelperService } from '../../services/url-helper.service';
 import { ReviewDraft, User, Comment } from '../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('ReviewDashboardComponent Integration Tests', () => {
   let component: ReviewDashboardComponent;
@@ -66,8 +67,8 @@ describe('ReviewDashboardComponent Integration Tests', () => {
     });
 
     await TestBed.configureTestingModule({
-      imports: [ReviewDashboardComponent, HttpClientTestingModule],
-      providers: [
+    imports: [ReviewDashboardComponent],
+    providers: [
         { provide: ReviewService, useValue: reviewSpy },
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
@@ -77,8 +78,10 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         { provide: Router, useValue: routerSpy },
         { provide: Location, useValue: locationSpy },
         { provide: ActivatedRoute, useValue: activatedRouteSpy },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(ReviewDashboardComponent);
     component = fixture.componentInstance;

@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { EntryDetailService } from './entry-detail.service';
 import { GlossaryService } from './glossary.service';
 import { ReviewService } from './review.service';
 import { Entry, EntryDraft, ReviewDraft, User } from '../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('EntryDetailService', () => {
   let service: EntryDetailService;
@@ -30,13 +31,15 @@ describe('EntryDetailService', () => {
     glossarySpy.createEntryDraft.and.returnValue(of({} as EntryDraft));
 
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [
+    imports: [],
+    providers: [
         EntryDetailService,
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: ReviewService, useValue: reviewSpy },
-      ],
-    });
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+});
 
     service = TestBed.inject(EntryDetailService);
     glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;

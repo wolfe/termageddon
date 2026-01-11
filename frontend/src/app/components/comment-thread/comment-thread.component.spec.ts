@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { CommentThreadComponent } from './comment-thread.component';
 import { GlossaryService } from '../../services/glossary.service';
 import { PermissionService } from '../../services/permission.service';
 import { Comment, User } from '../../models';
 import { of, throwError } from 'rxjs';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('CommentThreadComponent', () => {
   let component: CommentThreadComponent;
@@ -46,12 +47,14 @@ describe('CommentThreadComponent', () => {
     permissionSpy.setCurrentUser(currentUserValue);
 
     await TestBed.configureTestingModule({
-      imports: [CommentThreadComponent, HttpClientTestingModule],
-      providers: [
+    imports: [CommentThreadComponent],
+    providers: [
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(CommentThreadComponent);
     component = fixture.componentInstance;

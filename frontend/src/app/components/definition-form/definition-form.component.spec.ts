@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { DefinitionFormComponent } from './definition-form.component';
 import { Entry } from '../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('DefinitionFormComponent', () => {
   let component: DefinitionFormComponent;
@@ -9,8 +10,9 @@ describe('DefinitionFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DefinitionFormComponent, HttpClientTestingModule],
-    }).compileComponents();
+    imports: [DefinitionFormComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+}).compileComponents();
 
     fixture = TestBed.createComponent(DefinitionFormComponent);
     component = fixture.componentInstance;

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { GlossaryService } from './glossary.service';
 import {
   Perspective,
@@ -10,6 +10,7 @@ import {
   PaginatedResponse,
   GroupedEntry,
 } from '../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('GlossaryService', () => {
   let service: GlossaryService;
@@ -17,9 +18,9 @@ describe('GlossaryService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [GlossaryService],
-    });
+    imports: [],
+    providers: [GlossaryService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     service = TestBed.inject(GlossaryService);
     httpMock = TestBed.inject(HttpTestingController);
   });
