@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NotificationApiService } from './notification-api.service';
@@ -8,26 +9,26 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 
 describe('NotificationApiService', () => {
   let service: NotificationApiService;
-  let glossaryService: jasmine.SpyObj<GlossaryService>;
+  let glossaryService: MockedObject<GlossaryService>;
 
   beforeEach(() => {
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'getNotifications',
-      'markNotificationRead',
-      'markAllNotificationsRead',
-    ]);
+    const glossarySpy = {
+      getNotifications: vi.fn().mockName('GlossaryService.getNotifications'),
+      markNotificationRead: vi.fn().mockName('GlossaryService.markNotificationRead'),
+      markAllNotificationsRead: vi.fn().mockName('GlossaryService.markAllNotificationsRead'),
+    };
 
     TestBed.configureTestingModule({
-    imports: [],
-    providers: [
+      imports: [],
+      providers: [
         NotificationApiService,
         { provide: GlossaryService, useValue: glossarySpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-});
+      ],
+    });
     service = TestBed.inject(NotificationApiService);
-    glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
+    glossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
   });
 
   it('should be created', () => {
@@ -58,7 +59,7 @@ describe('NotificationApiService', () => {
         ],
       };
 
-      glossaryService.getNotifications.and.returnValue(of(mockNotifications));
+      glossaryService.getNotifications.mockReturnValue(of(mockNotifications));
 
       service.getNotifications().subscribe(response => {
         expect(response).toEqual(mockNotifications);
@@ -74,7 +75,7 @@ describe('NotificationApiService', () => {
         results: [],
       };
 
-      glossaryService.getNotifications.and.returnValue(of(mockNotifications));
+      glossaryService.getNotifications.mockReturnValue(of(mockNotifications));
 
       service.getNotifications(2).subscribe(response => {
         expect(response).toEqual(mockNotifications);
@@ -83,7 +84,7 @@ describe('NotificationApiService', () => {
     });
 
     it('should handle errors when getting notifications', () => {
-      glossaryService.getNotifications.and.returnValue(
+      glossaryService.getNotifications.mockReturnValue(
         throwError(() => ({ status: 500, message: 'Server error' }))
       );
 
@@ -106,7 +107,7 @@ describe('NotificationApiService', () => {
         created_at: '2023-01-01T00:00:00Z',
       };
 
-      glossaryService.markNotificationRead.and.returnValue(of(mockNotification));
+      glossaryService.markNotificationRead.mockReturnValue(of(mockNotification));
 
       service.markAsRead(1).subscribe(response => {
         expect(response).toEqual(mockNotification);
@@ -116,7 +117,7 @@ describe('NotificationApiService', () => {
     });
 
     it('should handle errors when marking notification as read', () => {
-      glossaryService.markNotificationRead.and.returnValue(
+      glossaryService.markNotificationRead.mockReturnValue(
         throwError(() => ({ status: 404, message: 'Not found' }))
       );
 
@@ -131,7 +132,7 @@ describe('NotificationApiService', () => {
 
   describe('markAllAsRead', () => {
     it('should mark all notifications as read', () => {
-      glossaryService.markAllNotificationsRead.and.returnValue(
+      glossaryService.markAllNotificationsRead.mockReturnValue(
         of({ detail: 'All notifications marked as read.' })
       );
 
@@ -142,7 +143,7 @@ describe('NotificationApiService', () => {
     });
 
     it('should handle errors when marking all as read', () => {
-      glossaryService.markAllNotificationsRead.and.returnValue(
+      glossaryService.markAllNotificationsRead.mockReturnValue(
         throwError(() => ({ status: 500, message: 'Server error' }))
       );
 

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
@@ -11,17 +12,19 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('DraftDetailPanelComponent', () => {
   let component: DraftDetailPanelComponent;
   let fixture: ComponentFixture<DraftDetailPanelComponent>;
-  let entryDetailService: jasmine.SpyObj<EntryDetailService>;
-  let permissionService: jasmine.SpyObj<PermissionService>;
-  let notificationService: jasmine.SpyObj<NotificationService>;
+  let entryDetailService: MockedObject<EntryDetailService>;
+  let permissionService: MockedObject<PermissionService>;
+  let notificationService: MockedObject<NotificationService>;
 
   beforeEach(async () => {
-    const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
-      'loadDraftHistory',
-      'initializeEditContentFromLatest',
-      'createNewDraft',
-    ]);
-    const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
+    const entryDetailSpy = {
+      loadDraftHistory: vi.fn().mockName('EntryDetailService.loadDraftHistory'),
+      initializeEditContentFromLatest: vi
+        .fn()
+        .mockName('EntryDetailService.initializeEditContentFromLatest'),
+      createNewDraft: vi.fn().mockName('EntryDetailService.createNewDraft'),
+    };
+    const permissionSpy = {
       currentUser: {
         id: 1,
         username: 'testuser',
@@ -30,27 +33,28 @@ describe('DraftDetailPanelComponent', () => {
         is_staff: false,
         perspective_curator_for: [],
       },
-    });
-    const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
+    };
+    const notificationSpy = {
+      success: vi.fn().mockName('NotificationService.success'),
+      error: vi.fn().mockName('NotificationService.error'),
+    };
 
     await TestBed.configureTestingModule({
-    imports: [DraftDetailPanelComponent],
-    providers: [
+      imports: [DraftDetailPanelComponent],
+      providers: [
         { provide: EntryDetailService, useValue: entryDetailSpy },
         { provide: PermissionService, useValue: permissionSpy },
         { provide: NotificationService, useValue: notificationSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-}).compileComponents();
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(DraftDetailPanelComponent);
     component = fixture.componentInstance;
-    entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
-    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
-    notificationService = TestBed.inject(
-      NotificationService
-    ) as jasmine.SpyObj<NotificationService>;
+    entryDetailService = TestBed.inject(EntryDetailService) as MockedObject<EntryDetailService>;
+    permissionService = TestBed.inject(PermissionService) as MockedObject<PermissionService>;
+    notificationService = TestBed.inject(NotificationService) as MockedObject<NotificationService>;
   });
 
   it('should create', () => {
@@ -256,7 +260,7 @@ describe('DraftDetailPanelComponent', () => {
         replaces_draft: undefined,
       };
 
-      entryDetailService.initializeEditContentFromLatest.and.returnValue('Latest draft content');
+      entryDetailService.initializeEditContentFromLatest.mockReturnValue('Latest draft content');
 
       component.onEdit();
 
@@ -360,7 +364,9 @@ describe('DraftDetailPanelComponent', () => {
         replaces_draft: undefined,
       };
 
-      entryDetailService.loadDraftHistory.and.returnValue(of({ count: mockDrafts.length, next: null, previous: null, results: mockDrafts }));
+      entryDetailService.loadDraftHistory.mockReturnValue(
+        of({ count: mockDrafts.length, next: null, previous: null, results: mockDrafts })
+      );
 
       component.loadDraftHistory();
 

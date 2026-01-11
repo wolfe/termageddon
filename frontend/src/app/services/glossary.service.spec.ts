@@ -18,9 +18,13 @@ describe('GlossaryService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-    imports: [],
-    providers: [GlossaryService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
-});
+      imports: [],
+      providers: [
+        GlossaryService,
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+      ],
+    });
     service = TestBed.inject(GlossaryService);
     httpMock = TestBed.inject(HttpTestingController);
   });
@@ -209,9 +213,7 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(
-        '/api/entries/?perspective=1&approval_status=approved'
-      );
+      const req = httpMock.expectOne('/api/entries/?perspective=1&approval_status=approved');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -228,9 +230,7 @@ describe('GlossaryService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(
-        '/api/entries/?search=test&perspective=1'
-      );
+      const req = httpMock.expectOne('/api/entries/?search=test&perspective=1');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -334,9 +334,7 @@ describe('GlossaryService', () => {
         expect(response.results[0].entries[0].id).toBe(baseEntry.id);
       });
 
-      const req = httpMock.expectOne(
-        '/api/entries/grouped-by-term/?perspective=1&page=2'
-      );
+      const req = httpMock.expectOne('/api/entries/grouped-by-term/?perspective=1&page=2');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -453,9 +451,7 @@ describe('GlossaryService', () => {
         expect(response.count).toBe(mockComments.length);
       });
 
-      const req = httpMock.expectOne(
-        '/api/comments/with_draft_positions/?entry=1'
-      );
+      const req = httpMock.expectOne('/api/comments/with_draft_positions/?entry=1');
       expect(req.request.method).toBe('GET');
       req.flush({ count: mockComments.length, next: null, previous: null, results: mockComments });
     });

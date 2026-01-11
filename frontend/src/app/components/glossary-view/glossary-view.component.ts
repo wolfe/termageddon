@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Entry } from '../../models';
@@ -13,12 +13,11 @@ import { StatusSummaryComponent } from '../shared/status-summary/status-summary.
 @Component({
     selector: 'app-glossary-view',
     imports: [
-        CommonModule,
-        TermListComponent,
-        TermDetailComponent,
-        MasterDetailLayoutComponent,
-        StatusSummaryComponent,
-    ],
+    TermListComponent,
+    TermDetailComponent,
+    MasterDetailLayoutComponent,
+    StatusSummaryComponent
+],
     templateUrl: './glossary-view.component.html',
     styleUrl: './glossary-view.component.scss'
 })

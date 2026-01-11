@@ -10,9 +10,9 @@ describe('DefinitionFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    imports: [DefinitionFormComponent],
-    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
-}).compileComponents();
+      imports: [DefinitionFormComponent],
+      providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(DefinitionFormComponent);
     component = fixture.componentInstance;
@@ -27,12 +27,12 @@ describe('DefinitionFormComponent', () => {
     it('should insert link with proper HTML format and data attributes', () => {
       // Mock editor with required methods
       const mockEditor = {
-        getSelection: jasmine.createSpy('getSelection').and.returnValue({ index: 0, length: 0 }),
-        insertText: jasmine.createSpy('insertText'),
-        formatText: jasmine.createSpy('formatText'),
-        setSelection: jasmine.createSpy('setSelection'),
+        getSelection: vi.fn().mockReturnValue({ index: 0, length: 0 }),
+        insertText: vi.fn(),
+        formatText: vi.fn(),
+        setSelection: vi.fn(),
         root: {
-          querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([]),
+          querySelectorAll: vi.fn().mockReturnValue([]),
         },
       };
 
@@ -70,10 +70,10 @@ describe('DefinitionFormComponent', () => {
 
     it('should not insert link if no selection is available', () => {
       const mockEditor = {
-        getSelection: jasmine.createSpy('getSelection').and.returnValue(null),
-        insertText: jasmine.createSpy('insertText'),
-        formatText: jasmine.createSpy('formatText'),
-        setSelection: jasmine.createSpy('setSelection'),
+        getSelection: vi.fn().mockReturnValue(null),
+        insertText: vi.fn(),
+        formatText: vi.fn(),
+        setSelection: vi.fn(),
       };
 
       component.editor = mockEditor;
@@ -92,12 +92,12 @@ describe('DefinitionFormComponent', () => {
 
   describe('entry link selector', () => {
     it('should open entry link selector when openEntryLinkSelector is called', () => {
-      expect(component.showEntryLinkSelector).toBeFalse();
+      expect(component.showEntryLinkSelector).toBe(false);
 
       // Access private method through component instance
       (component as any).openEntryLinkSelector();
 
-      expect(component.showEntryLinkSelector).toBeTrue();
+      expect(component.showEntryLinkSelector).toBe(true);
     });
 
     it('should close entry link selector when onEntryLinkSelectorClosed is called', () => {
@@ -105,11 +105,11 @@ describe('DefinitionFormComponent', () => {
 
       component.onEntryLinkSelectorClosed();
 
-      expect(component.showEntryLinkSelector).toBeFalse();
+      expect(component.showEntryLinkSelector).toBe(false);
     });
 
     it('should insert link and close selector when entry is selected', () => {
-      spyOn(component, 'insertLink');
+      vi.spyOn(component, 'insertLink');
       component.showEntryLinkSelector = true;
 
       const mockEntry: Partial<Entry> = {
@@ -136,7 +136,7 @@ describe('DefinitionFormComponent', () => {
       component.onEntrySelected(mockEntry as Entry);
 
       expect(component.insertLink).toHaveBeenCalledWith(mockEntry.id!, mockEntry.term!.text);
-      expect(component.showEntryLinkSelector).toBeFalse();
+      expect(component.showEntryLinkSelector).toBe(false);
     });
   });
 
@@ -146,7 +146,7 @@ describe('DefinitionFormComponent', () => {
       const hasLink = toolbarContainer.some(
         group => Array.isArray(group) && group.includes('link' as any)
       );
-      expect(hasLink).toBeTrue();
+      expect(hasLink).toBe(true);
     });
 
     it('should include custom-link in toolbar container', () => {
@@ -154,7 +154,7 @@ describe('DefinitionFormComponent', () => {
       const hasCustomLink = toolbarContainer.some(
         group => Array.isArray(group) && group.includes('custom-link' as any)
       );
-      expect(hasCustomLink).toBeTrue();
+      expect(hasCustomLink).toBe(true);
     });
   });
 });

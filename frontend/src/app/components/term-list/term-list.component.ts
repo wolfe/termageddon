@@ -8,7 +8,7 @@ import {
   HostListener,
   OnDestroy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Perspective, Entry, User, GroupedEntry } from '../../models';
@@ -24,13 +24,12 @@ import {
 @Component({
     selector: 'app-term-list',
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        TermDialogComponent,
-        CreateEntryDialogComponent,
-        PerspectivePillComponent,
-        SearchFilterBarComponent,
-    ],
+    ReactiveFormsModule,
+    TermDialogComponent,
+    CreateEntryDialogComponent,
+    PerspectivePillComponent,
+    SearchFilterBarComponent
+],
     templateUrl: './term-list.component.html',
     styleUrl: './term-list.component.scss'
 })
@@ -189,7 +188,7 @@ export class TermListComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   onScroll(): void {
     if (!this.scrollContainer) return;
 

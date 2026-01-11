@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
@@ -10,27 +11,29 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
-  let router: jasmine.SpyObj<Router>;
+  let router: MockedObject<Router>;
   let originalConsoleError: typeof console.error;
 
   beforeEach(() => {
     // Suppress console.error during tests
     originalConsoleError = console.error;
-    console.error = jasmine.createSpy('console.error');
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    console.error = vi.fn();
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
+    };
 
     TestBed.configureTestingModule({
-    imports: [],
-    providers: [
+      imports: [],
+      providers: [
         AuthService,
         { provide: Router, useValue: routerSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-});
+      ],
+    });
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    router = TestBed.inject(Router) as MockedObject<Router>;
 
     // Clear localStorage before each test
     localStorage.clear();
@@ -249,34 +252,36 @@ describe('AuthService', () => {
       // Note: Testing isOktaCallback directly is difficult due to window.location being read-only
       // We'll test it indirectly through other methods or skip these tests
       // The method implementation is simple and can be verified manually
-      xit('should return true for callback URL with code parameter', () => {
+      it.skip('should return true for callback URL with code parameter', () => {
         // Skipped - window.location is read-only
       });
 
-      xit('should return true for callback URL with error parameter', () => {
+      it.skip('should return true for callback URL with error parameter', () => {
         // Skipped - window.location is read-only
       });
 
-      xit('should return false for non-callback URL', () => {
+      it.skip('should return false for non-callback URL', () => {
         // Skipped - window.location is read-only
       });
 
-      xit('should return false for callback URL without code or error', () => {
+      it.skip('should return false for callback URL without code or error', () => {
         // Skipped - window.location is read-only
       });
     });
 
     describe('handleOktaCallback', () => {
-      let mockOktaAuth: jasmine.SpyObj<any>;
+      let mockOktaAuth: MockedObject<any>;
 
       beforeEach(() => {
         // Mock OktaAuth
         mockOktaAuth = {
-          handleRedirect: jasmine.createSpy('handleRedirect').and.returnValue(Promise.resolve()),
+          handleRedirect: vi.fn().mockReturnValue(Promise.resolve()),
           tokenManager: {
-            get: jasmine.createSpy('get').and.returnValue(Promise.resolve({
-              accessToken: 'okta-access-token-123',
-            })),
+            get: vi.fn().mockReturnValue(
+              Promise.resolve({
+                accessToken: 'okta-access-token-123',
+              })
+            ),
           },
         };
 
@@ -286,14 +291,15 @@ describe('AuthService', () => {
           issuer_uri: 'https://test.okta.com',
           redirect_uri: 'http://localhost:4200/callback',
         };
-        spyOn(service as any, 'getOktaConfig').and.returnValue(of(mockConfig));
+        vi.spyOn(service as any, 'getOktaConfig').mockReturnValue(of(mockConfig));
 
         // Initialize Okta (this will create the instance)
         service['oktaAuth'] = mockOktaAuth as any;
         service['isLoginInProgress'] = false; // Reset login state
       });
 
-      it('should handle successful Okta callback', (done) => {
+      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
+      it('should handle successful Okta callback', done => {
         const mockResponse: LoginResponse = {
           token: 'django-token-123',
           user: {
@@ -307,13 +313,13 @@ describe('AuthService', () => {
         };
 
         service.handleOktaCallback().subscribe({
-          next: (response) => {
+          next: response => {
             expect(response).toEqual(mockResponse);
             expect(service.getToken()).toBe('django-token-123');
             expect(mockOktaAuth.handleRedirect).toHaveBeenCalled();
             done();
           },
-          error: (error) => done.fail(error),
+          error: error => done.fail(error),
         });
 
         // Wait for handleRedirect promise
@@ -329,17 +335,18 @@ describe('AuthService', () => {
         }, 10);
       });
 
-      it('should handle missing access token from Okta', (done) => {
-        mockOktaAuth.tokenManager.get.and.returnValue(Promise.resolve(null));
+      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
+      it('should handle missing access token from Okta', done => {
+        mockOktaAuth.tokenManager.get.mockReturnValue(Promise.resolve(null));
 
         service.handleOktaCallback().subscribe({
           next: () => done.fail('Should have failed'),
-          error: (error) => {
+          error: error => {
             expect(error.message).toContain('No access token');
             expect(router.navigate).toHaveBeenCalledWith(
               ['/login'],
-              jasmine.objectContaining({
-                queryParams: jasmine.any(Object),
+              expect.objectContaining({
+                queryParams: expect.any(Object),
               })
             );
             done();
@@ -350,17 +357,18 @@ describe('AuthService', () => {
         httpMock.expectNone('/api/auth/okta-login/');
       });
 
-      it('should handle backend login failure', (done) => {
+      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
+      it('should handle backend login failure', done => {
         service.handleOktaCallback().subscribe({
           next: () => done.fail('Should have failed'),
-          error: (error) => {
+          error: error => {
             expect(error.message).toContain('Invalid token');
             expect(service.getToken()).toBeNull();
             expect(router.navigate).toHaveBeenCalledWith(
               ['/login'],
-              jasmine.objectContaining({
-                queryParams: jasmine.objectContaining({
-                  error: jasmine.any(String),
+              expect.objectContaining({
+                queryParams: expect.objectContaining({
+                  error: expect.any(String),
                 }),
               })
             );
@@ -371,17 +379,15 @@ describe('AuthService', () => {
         // Wait for async operations
         setTimeout(() => {
           const req = httpMock.expectOne('/api/auth/okta-login/');
-          req.flush(
-            { detail: 'Invalid token' },
-            { status: 401, statusText: 'Unauthorized' }
-          );
+          req.flush({ detail: 'Invalid token' }, { status: 401, statusText: 'Unauthorized' });
         }, 10);
       });
 
-      it('should handle network error during backend login', (done) => {
+      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
+      it('should handle network error during backend login', done => {
         service.handleOktaCallback().subscribe({
           next: () => done.fail('Should have failed'),
-          error: (error) => {
+          error: error => {
             expect(error).toBeDefined();
             expect(service.getToken()).toBeNull();
             expect(router.navigate).toHaveBeenCalled();
@@ -396,12 +402,13 @@ describe('AuthService', () => {
         }, 10);
       });
 
-      it('should handle Okta handleRedirect failure', (done) => {
-        mockOktaAuth.handleRedirect.and.returnValue(Promise.reject(new Error('Redirect failed')));
+      // TODO: vitest-migration: The 'done' callback was used in an unhandled way. Please migrate manually.
+      it('should handle Okta handleRedirect failure', done => {
+        mockOktaAuth.handleRedirect.mockReturnValue(Promise.reject(new Error('Redirect failed')));
 
         service.handleOktaCallback().subscribe({
           next: () => done.fail('Should have failed'),
-          error: (error) => {
+          error: error => {
             expect(error).toBeDefined();
             expect(service.getToken()).toBeNull();
             expect(router.navigate).toHaveBeenCalled();
@@ -426,7 +433,7 @@ describe('AuthService', () => {
 
       it('should not proceed if already on callback', () => {
         // Mock isOktaCallback to return true
-        spyOn(service, 'isOktaCallback').and.returnValue(true);
+        vi.spyOn(service, 'isOktaCallback').mockReturnValue(true);
 
         service.loginWithOkta();
 

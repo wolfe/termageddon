@@ -7,7 +7,7 @@ import {
   OnChanges,
   OnDestroy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { Entry, PaginatedResponse, GroupedEntry } from '../../../models';
@@ -16,7 +16,7 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
 
 @Component({
     selector: 'app-entry-link-selector-dialog',
-    imports: [CommonModule, FormsModule, PerspectivePillComponent],
+    imports: [FormsModule, PerspectivePillComponent],
     templateUrl: './entry-link-selector-dialog.component.html',
     styleUrls: ['./entry-link-selector-dialog.component.scss']
 })

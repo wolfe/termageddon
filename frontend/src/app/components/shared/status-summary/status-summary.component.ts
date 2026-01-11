@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 export interface StatusSummaryItem {
   count: number;
@@ -9,7 +9,7 @@ export interface StatusSummaryItem {
 
 @Component({
     selector: 'app-status-summary',
-    imports: [CommonModule],
+    imports: [],
     template: `
     @if (items.length > 0) {
       <div class="p-3 border-b border-gray-300">

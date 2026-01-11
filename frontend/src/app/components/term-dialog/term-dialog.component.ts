@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../services/glossary.service';
 import { Perspective, Term, Entry, CreateTermAndEntryRequest } from '../../models';
 
 @Component({
     selector: 'app-term-dialog',
-    imports: [CommonModule, FormsModule],
+    imports: [FormsModule],
     templateUrl: './term-dialog.component.html',
     styleUrls: ['./term-dialog.component.scss']
 })

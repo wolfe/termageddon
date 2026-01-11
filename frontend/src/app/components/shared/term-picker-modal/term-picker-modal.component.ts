@@ -7,7 +7,7 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../../services/glossary.service';
 import { Term, PaginatedResponse } from '../../../models';
@@ -16,88 +16,100 @@ import { of, Subject } from 'rxjs';
 
 @Component({
     selector: 'app-term-picker-modal',
-    imports: [CommonModule, FormsModule],
+    imports: [FormsModule],
     template: `
-    <div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
-      <div class="modal-dialog" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Select Term</h2>
-          <button class="close-button" (click)="onClose()" type="button">
-            <span>&times;</span>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <!-- Search Input -->
-          <div class="search-container">
-            <input
-              type="text"
-              [(ngModel)]="searchText"
-              (input)="onSearchChange()"
-              placeholder="Search terms..."
-              class="search-input"
-              #searchInput
-            />
-            <button *ngIf="searchText" (click)="clearSearch()" class="clear-button" type="button">
-              ✕
+    @if (isOpen) {
+      <div class="modal-overlay" (click)="onClose()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Select Term</h2>
+            <button class="close-button" (click)="onClose()" type="button">
+              <span>&times;</span>
             </button>
           </div>
-
-          <!-- Loading Indicator -->
-          <div *ngIf="isLoading" class="loading-indicator">Loading terms...</div>
-
-          <!-- Term List -->
-          <div class="term-list" *ngIf="!isLoading">
-            <div
-              *ngFor="let term of terms; trackBy: trackByTermId"
-              class="term-item"
-              (click)="selectTerm(term)"
-              [class.selected]="selectedTermId === term.id"
-            >
-              <div class="term-text">{{ term.text }}</div>
-              <div class="term-meta" *ngIf="term.is_official">
-                <span class="official-badge">Official</span>
+          <div class="modal-body">
+            <!-- Search Input -->
+            <div class="search-container">
+              <input
+                type="text"
+                [(ngModel)]="searchText"
+                (input)="onSearchChange()"
+                placeholder="Search terms..."
+                class="search-input"
+                #searchInput
+                />
+              @if (searchText) {
+                <button (click)="clearSearch()" class="clear-button" type="button">
+                  ✕
+                </button>
+              }
+            </div>
+            <!-- Loading Indicator -->
+            @if (isLoading) {
+              <div class="loading-indicator">Loading terms...</div>
+            }
+            <!-- Term List -->
+            @if (!isLoading) {
+              <div class="term-list">
+                @for (term of terms; track trackByTermId($index, term)) {
+                  <div
+                    class="term-item"
+                    (click)="selectTerm(term)"
+                    [class.selected]="selectedTermId === term.id"
+                    >
+                    <div class="term-text">{{ term.text }}</div>
+                    @if (term.is_official) {
+                      <div class="term-meta">
+                        <span class="official-badge">Official</span>
+                      </div>
+                    }
+                  </div>
+                }
+                <!-- Create New Option -->
+                @if (showCreateNewOption) {
+                  <div class="term-item create-new" (click)="createNewTerm()">
+                    <div class="term-text">
+                      <em>Create new term: "{{ searchText }}"</em>
+                    </div>
+                  </div>
+                }
+                <!-- No Results -->
+                @if (terms.length === 0 && !showCreateNewOption && !isLoading) {
+                  <div
+                    class="no-results"
+                    >
+                    @if (searchText) {
+                      <div>
+                        No terms found matching "{{ searchText }}"
+                      </div>
+                    } @else {
+                      No terms available
+                    }
+                  </div>
+                }
+                <!-- Load More Button -->
+                @if (hasNextPage && !isLoading) {
+                  <div class="load-more-container">
+                    <button
+                      type="button"
+                      class="btn btn-secondary load-more-btn"
+                      (click)="loadMoreTerms()"
+                      [disabled]="isLoadingMore"
+                      >
+                      {{ isLoadingMore ? 'Loading...' : 'Load More Terms' }}
+                    </button>
+                  </div>
+                }
               </div>
-            </div>
-
-            <!-- Create New Option -->
-            <div *ngIf="showCreateNewOption" class="term-item create-new" (click)="createNewTerm()">
-              <div class="term-text">
-                <em>Create new term: "{{ searchText }}"</em>
-              </div>
-            </div>
-
-            <!-- No Results -->
-            <div
-              *ngIf="terms.length === 0 && !showCreateNewOption && !isLoading"
-              class="no-results"
-            >
-              <div *ngIf="searchText; else noSearchText">
-                No terms found matching "{{ searchText }}"
-              </div>
-              <ng-template #noSearchText> No terms available </ng-template>
-            </div>
-
-            <!-- Load More Button -->
-            <div *ngIf="hasNextPage && !isLoading" class="load-more-container">
-              <button
-                type="button"
-                class="btn btn-secondary load-more-btn"
-                (click)="loadMoreTerms()"
-                [disabled]="isLoadingMore"
-              >
-                {{ isLoadingMore ? 'Loading...' : 'Load More Terms' }}
-              </button>
-            </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="onClose()">Cancel</button>
           </div>
         </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="onClose()">Cancel</button>
-        </div>
       </div>
-    </div>
-  `,
+    }
+    `,
     styleUrls: ['./term-picker-modal.component.scss']
 })
 export class TermPickerModalComponent implements OnInit, OnChanges {

@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { User } from '../../../models';
@@ -24,7 +24,7 @@ export interface SortOption {
 
 @Component({
     selector: 'app-search-filter-bar',
-    imports: [CommonModule, FormsModule],
+    imports: [FormsModule],
     templateUrl: './search-filter-bar.component.html',
     styleUrl: './search-filter-bar.component.scss'
 })

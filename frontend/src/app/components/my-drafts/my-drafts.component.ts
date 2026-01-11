@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -32,18 +32,17 @@ import { getInitials } from '../../utils/user.util';
 @Component({
     selector: 'app-my-drafts',
     imports: [
-        CommonModule,
-        FormsModule,
-        ReviewerSelectorDialogComponent,
-        MasterDetailLayoutComponent,
-        SearchFilterBarComponent,
-        DraftListItemComponent,
-        DraftDetailPanelComponent,
-        NewEntryDetailPanelComponent,
-        StatusSummaryComponent,
-        CreateEntryDialogComponent,
-        ConfirmationDialogComponent,
-    ],
+    FormsModule,
+    ReviewerSelectorDialogComponent,
+    MasterDetailLayoutComponent,
+    SearchFilterBarComponent,
+    DraftListItemComponent,
+    DraftDetailPanelComponent,
+    NewEntryDetailPanelComponent,
+    StatusSummaryComponent,
+    CreateEntryDialogComponent,
+    ConfirmationDialogComponent
+],
     templateUrl: './my-drafts.component.html',
     styleUrls: ['./my-drafts.component.scss']
 })

@@ -22,7 +22,7 @@ describe('SearchFilterBarComponent', () => {
   });
 
   it('should debounce search input', fakeAsync(() => {
-    spyOn(component.search, 'emit');
+    vi.spyOn(component.search, 'emit');
 
     // Simulate rapid typing
     component.searchTerm = 'a';
@@ -46,7 +46,7 @@ describe('SearchFilterBarComponent', () => {
   }));
 
   it('should emit search immediately on Enter key', () => {
-    spyOn(component.search, 'emit');
+    vi.spyOn(component.search, 'emit');
 
     component.searchTerm = 'test';
     const event = new KeyboardEvent('keypress', { key: 'Enter' });
@@ -58,7 +58,7 @@ describe('SearchFilterBarComponent', () => {
   });
 
   it('should emit searchTermChange immediately', () => {
-    spyOn(component.searchTermChange, 'emit');
+    vi.spyOn(component.searchTermChange, 'emit');
 
     component.searchTerm = 'test';
     component.onSearchInput();
@@ -68,9 +68,9 @@ describe('SearchFilterBarComponent', () => {
   });
 
   it('should handle clear correctly', fakeAsync(() => {
-    spyOn(component.search, 'emit');
-    spyOn(component.searchTermChange, 'emit');
-    spyOn(component.cleared, 'emit');
+    vi.spyOn(component.search, 'emit');
+    vi.spyOn(component.searchTermChange, 'emit');
+    vi.spyOn(component.cleared, 'emit');
 
     component.onClear();
 

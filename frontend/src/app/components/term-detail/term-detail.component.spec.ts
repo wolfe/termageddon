@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
@@ -13,18 +14,23 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('TermDetailComponent', () => {
   let component: TermDetailComponent;
   let fixture: ComponentFixture<TermDetailComponent>;
-  let navigationService: jasmine.SpyObj<NavigationService>;
+  let navigationService: MockedObject<NavigationService>;
 
   beforeEach(async () => {
-    const navigationSpy = jasmine.createSpyObj('NavigationService', ['navigateToEntry']);
-    const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
-      'loadCommentsWithPositions',
-      'loadDraftHistory',
-      'initializeEditContentFromLatest',
-      'createNewDraft',
-      'refreshAfterDraftCreated',
-    ]);
-    const permissionSpy = jasmine.createSpyObj('PermissionService', ['canMarkOfficial'], {
+    const navigationSpy = {
+      navigateToEntry: vi.fn().mockName('NavigationService.navigateToEntry'),
+    };
+    const entryDetailSpy = {
+      loadCommentsWithPositions: vi.fn().mockName('EntryDetailService.loadCommentsWithPositions'),
+      loadDraftHistory: vi.fn().mockName('EntryDetailService.loadDraftHistory'),
+      initializeEditContentFromLatest: vi
+        .fn()
+        .mockName('EntryDetailService.initializeEditContentFromLatest'),
+      createNewDraft: vi.fn().mockName('EntryDetailService.createNewDraft'),
+      refreshAfterDraftCreated: vi.fn().mockName('EntryDetailService.refreshAfterDraftCreated'),
+    };
+    const permissionSpy = {
+      canMarkOfficial: vi.fn().mockName('PermissionService.canMarkOfficial'),
       currentUser: {
         id: 1,
         username: 'testuser',
@@ -33,19 +39,29 @@ describe('TermDetailComponent', () => {
         is_staff: false,
         perspective_curator_for: [],
       },
-    });
-    permissionSpy.canMarkOfficial.and.returnValue(false);
-    const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getEntries', 'endorseEntry']);
+    };
+    permissionSpy.canMarkOfficial.mockReturnValue(false);
+    const notificationSpy = {
+      success: vi.fn().mockName('NotificationService.success'),
+      error: vi.fn().mockName('NotificationService.error'),
+    };
+    const glossarySpy = {
+      getEntries: vi.fn().mockName('GlossaryService.getEntries'),
+      endorseEntry: vi.fn().mockName('GlossaryService.endorseEntry'),
+    };
 
     // Mock the service methods to return observables (paginated responses)
-    entryDetailSpy.loadCommentsWithPositions.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
-    entryDetailSpy.loadDraftHistory.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
-    glossarySpy.getEntries.and.returnValue(of({ results: [] }));
+    entryDetailSpy.loadCommentsWithPositions.mockReturnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
+    entryDetailSpy.loadDraftHistory.mockReturnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
+    glossarySpy.getEntries.mockReturnValue(of({ results: [] }));
 
     await TestBed.configureTestingModule({
-    imports: [TermDetailComponent],
-    providers: [
+      imports: [TermDetailComponent],
+      providers: [
         { provide: EntryDetailService, useValue: entryDetailSpy },
         { provide: PermissionService, useValue: permissionSpy },
         { provide: NotificationService, useValue: notificationSpy },
@@ -53,12 +69,12 @@ describe('TermDetailComponent', () => {
         { provide: NavigationService, useValue: navigationSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-}).compileComponents();
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TermDetailComponent);
     component = fixture.componentInstance;
-    navigationService = TestBed.inject(NavigationService) as jasmine.SpyObj<NavigationService>;
+    navigationService = TestBed.inject(NavigationService) as MockedObject<NavigationService>;
 
     // Set up mock entry
     component.entry = {
@@ -115,7 +131,7 @@ describe('TermDetailComponent', () => {
       });
 
       // Spy on preventDefault
-      spyOn(mockEvent, 'preventDefault');
+      vi.spyOn(mockEvent, 'preventDefault');
 
       // Trigger the click event
       document.dispatchEvent(mockEvent);
@@ -146,7 +162,7 @@ describe('TermDetailComponent', () => {
       });
 
       // Spy on preventDefault
-      spyOn(mockEvent, 'preventDefault');
+      vi.spyOn(mockEvent, 'preventDefault');
 
       // Trigger the click event
       document.dispatchEvent(mockEvent);
@@ -176,7 +192,7 @@ describe('TermDetailComponent', () => {
       });
 
       // Spy on preventDefault
-      spyOn(mockEvent, 'preventDefault');
+      vi.spyOn(mockEvent, 'preventDefault');
 
       // Trigger the click event
       document.dispatchEvent(mockEvent);
@@ -208,7 +224,7 @@ describe('TermDetailComponent', () => {
       });
 
       // Spy on preventDefault
-      spyOn(mockEvent, 'preventDefault');
+      vi.spyOn(mockEvent, 'preventDefault');
 
       // Trigger the click event
       document.dispatchEvent(mockEvent);

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,20 +17,26 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('MyDraftsComponent', () => {
   let component: MyDraftsComponent;
   let fixture: ComponentFixture<MyDraftsComponent>;
-  let reviewService: jasmine.SpyObj<ReviewService>;
-  let glossaryService: jasmine.SpyObj<GlossaryService>;
-  let permissionService: jasmine.SpyObj<PermissionService>;
-  let entryDetailService: jasmine.SpyObj<EntryDetailService>;
-  let panelCommonService: jasmine.SpyObj<PanelCommonService>;
-  let urlHelperService: jasmine.SpyObj<UrlHelperService>;
-  let router: jasmine.SpyObj<Router>;
-  let location: jasmine.SpyObj<Location>;
-  let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
+  let reviewService: MockedObject<ReviewService>;
+  let glossaryService: MockedObject<GlossaryService>;
+  let permissionService: MockedObject<PermissionService>;
+  let entryDetailService: MockedObject<EntryDetailService>;
+  let panelCommonService: MockedObject<PanelCommonService>;
+  let urlHelperService: MockedObject<UrlHelperService>;
+  let router: MockedObject<Router>;
+  let location: MockedObject<Location>;
+  let activatedRoute: MockedObject<ActivatedRoute>;
 
   beforeEach(async () => {
-    const reviewSpy = jasmine.createSpyObj('ReviewService', ['getOwnDrafts', 'searchDrafts']);
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getUsers', 'getPerspectives']);
-    const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
+    const reviewSpy = {
+      getOwnDrafts: vi.fn().mockName('ReviewService.getOwnDrafts'),
+      searchDrafts: vi.fn().mockName('ReviewService.searchDrafts'),
+    };
+    const glossarySpy = {
+      getUsers: vi.fn().mockName('GlossaryService.getUsers'),
+      getPerspectives: vi.fn().mockName('GlossaryService.getPerspectives'),
+    };
+    const permissionSpy = {
       currentUser: {
         id: 1,
         username: 'testuser',
@@ -38,38 +45,44 @@ describe('MyDraftsComponent', () => {
         is_staff: false,
         perspective_curator_for: [],
       },
-    });
-    const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
-      'loadCommentsWithPositions',
-      'loadDraftHistory',
-      'getEntryId',
-    ]);
-    const panelCommonSpy = jasmine.createSpyObj('PanelCommonService', [
-      'initializePanelState',
-      'loadUsers',
-      'loadDrafts',
-      'onSearch',
-      'refreshAfterEdit',
-      'selectDraft',
-      'onEditSaved',
-      'onCommentAdded',
-      'onCommentResolved',
-      'onCommentUnresolved',
-      'getLatestDraftsPerEntry',
-      'filterDraftsBySearch',
-    ]);
-    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', ['buildDraftUrl']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
-    const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
+    };
+    const entryDetailSpy = {
+      loadCommentsWithPositions: vi.fn().mockName('EntryDetailService.loadCommentsWithPositions'),
+      loadDraftHistory: vi.fn().mockName('EntryDetailService.loadDraftHistory'),
+      getEntryId: vi.fn().mockName('EntryDetailService.getEntryId'),
+    };
+    const panelCommonSpy = {
+      initializePanelState: vi.fn().mockName('PanelCommonService.initializePanelState'),
+      loadUsers: vi.fn().mockName('PanelCommonService.loadUsers'),
+      loadDrafts: vi.fn().mockName('PanelCommonService.loadDrafts'),
+      onSearch: vi.fn().mockName('PanelCommonService.onSearch'),
+      refreshAfterEdit: vi.fn().mockName('PanelCommonService.refreshAfterEdit'),
+      selectDraft: vi.fn().mockName('PanelCommonService.selectDraft'),
+      onEditSaved: vi.fn().mockName('PanelCommonService.onEditSaved'),
+      onCommentAdded: vi.fn().mockName('PanelCommonService.onCommentAdded'),
+      onCommentResolved: vi.fn().mockName('PanelCommonService.onCommentResolved'),
+      onCommentUnresolved: vi.fn().mockName('PanelCommonService.onCommentUnresolved'),
+      getLatestDraftsPerEntry: vi.fn().mockName('PanelCommonService.getLatestDraftsPerEntry'),
+      filterDraftsBySearch: vi.fn().mockName('PanelCommonService.filterDraftsBySearch'),
+    };
+    const urlHelperSpy = {
+      buildDraftUrl: vi.fn().mockName('UrlHelperService.buildDraftUrl'),
+    };
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
+    };
+    const locationSpy = {
+      replaceState: vi.fn().mockName('Location.replaceState'),
+    };
+    const activatedRouteSpy = {
       queryParams: of({}),
       snapshot: {
         queryParams: {},
       },
-    });
+    };
 
     // Setup PanelCommonService mocks BEFORE component creation
-    panelCommonSpy.initializePanelState.and.returnValue({
+    panelCommonSpy.initializePanelState.mockReturnValue({
       loading: false,
       error: null,
       currentUser: null,
@@ -85,8 +98,8 @@ describe('MyDraftsComponent', () => {
       draftToRequestReview: null,
       requestingReview: false,
     });
-    panelCommonSpy.loadUsers.and.returnValue();
-    panelCommonSpy.loadDrafts.and.callFake(
+    panelCommonSpy.loadUsers.mockReturnValue();
+    panelCommonSpy.loadDrafts.mockImplementation(
       (options: any, state: any, postProcessFn?: (drafts: any[]) => any[]) => {
         // Backend now handles latest-only filtering for 'own' eligibility
         const mockDrafts = [
@@ -141,7 +154,7 @@ describe('MyDraftsComponent', () => {
         state.loading = false;
       }
     );
-    panelCommonSpy.onSearch.and.callFake((searchTerm: string, state: any, options: any) => {
+    panelCommonSpy.onSearch.mockImplementation((searchTerm: string, state: any, options: any) => {
       // Backend now handles latest-only filtering for 'own' eligibility
       state.searchTerm = searchTerm;
       const mockDrafts = [
@@ -185,40 +198,42 @@ describe('MyDraftsComponent', () => {
       state.filteredDrafts = mockDrafts;
       state.loading = false;
     });
-    panelCommonSpy.refreshAfterEdit.and.callFake((state: any, loadDraftsCallback: () => void) => {
-      // Simulate the actual behavior - refresh comments first, then drafts
-      if (state.selectedDraft?.entry?.id) {
-        entryDetailService
-          .loadCommentsWithPositions(state.selectedDraft.entry.id)
-          .subscribe(response => {
-            state.comments = response.results;
-          });
+    panelCommonSpy.refreshAfterEdit.mockImplementation(
+      (state: any, loadDraftsCallback: () => void) => {
+        // Simulate the actual behavior - refresh comments first, then drafts
+        if (state.selectedDraft?.entry?.id) {
+          entryDetailService
+            .loadCommentsWithPositions(state.selectedDraft.entry.id)
+            .subscribe(response => {
+              state.comments = response.results;
+            });
+        }
+        loadDraftsCallback();
       }
-      loadDraftsCallback();
-    });
-    panelCommonSpy.selectDraft.and.returnValue();
-    panelCommonSpy.onEditSaved.and.callFake((state: any, loadDraftsCallback: () => void) => {
+    );
+    panelCommonSpy.selectDraft.mockReturnValue();
+    panelCommonSpy.onEditSaved.mockImplementation((state: any, loadDraftsCallback: () => void) => {
       // Simulate the actual behavior
       loadDraftsCallback();
     });
-    panelCommonSpy.onCommentAdded.and.returnValue();
-    panelCommonSpy.onCommentResolved.and.returnValue();
-    panelCommonSpy.onCommentUnresolved.and.returnValue();
+    panelCommonSpy.onCommentAdded.mockReturnValue();
+    panelCommonSpy.onCommentResolved.mockReturnValue();
+    panelCommonSpy.onCommentUnresolved.mockReturnValue();
     // Setup default return values for the spies BEFORE component creation
-    reviewSpy.getOwnDrafts.and.returnValue(
+    reviewSpy.getOwnDrafts.mockReturnValue(
       of({ count: 0, next: null, previous: null, results: [] })
     );
-    reviewSpy.searchDrafts.and.returnValue(
+    reviewSpy.searchDrafts.mockReturnValue(
       of({ count: 0, next: null, previous: null, results: [] })
     );
-    glossarySpy.getUsers.and.returnValue(of([]));
-    glossarySpy.getPerspectives.and.returnValue(
+    glossarySpy.getUsers.mockReturnValue(of([]));
+    glossarySpy.getPerspectives.mockReturnValue(
       of({ count: 0, next: null, previous: null, results: [] })
     );
-    entryDetailSpy.loadCommentsWithPositions.and.returnValue(of([]));
-    entryDetailSpy.loadDraftHistory.and.returnValue(of([]));
-    entryDetailSpy.getEntryId.and.returnValue(1);
-    panelCommonSpy.getLatestDraftsPerEntry.and.callFake((drafts: ReviewDraft[]) => {
+    entryDetailSpy.loadCommentsWithPositions.mockReturnValue(of([]));
+    entryDetailSpy.loadDraftHistory.mockReturnValue(of([]));
+    entryDetailSpy.getEntryId.mockReturnValue(1);
+    panelCommonSpy.getLatestDraftsPerEntry.mockImplementation((drafts: ReviewDraft[]) => {
       // Simulate the actual filtering logic
       const latestDraftsMap = new Map<number, ReviewDraft>();
       drafts.forEach(draft => {
@@ -232,11 +247,11 @@ describe('MyDraftsComponent', () => {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
-    panelCommonSpy.filterDraftsBySearch.and.returnValue([]);
+    panelCommonSpy.filterDraftsBySearch.mockReturnValue([]);
 
     await TestBed.configureTestingModule({
-    imports: [MyDraftsComponent],
-    providers: [
+      imports: [MyDraftsComponent],
+      providers: [
         { provide: ReviewService, useValue: reviewSpy },
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
@@ -248,20 +263,20 @@ describe('MyDraftsComponent', () => {
         { provide: ActivatedRoute, useValue: activatedRouteSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-}).compileComponents();
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(MyDraftsComponent);
     component = fixture.componentInstance;
-    reviewService = TestBed.inject(ReviewService) as jasmine.SpyObj<ReviewService>;
-    glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
-    entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
-    panelCommonService = TestBed.inject(PanelCommonService) as jasmine.SpyObj<PanelCommonService>;
-    urlHelperService = TestBed.inject(UrlHelperService) as jasmine.SpyObj<UrlHelperService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    location = TestBed.inject(Location) as jasmine.SpyObj<Location>;
-    activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
+    reviewService = TestBed.inject(ReviewService) as MockedObject<ReviewService>;
+    glossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    permissionService = TestBed.inject(PermissionService) as MockedObject<PermissionService>;
+    entryDetailService = TestBed.inject(EntryDetailService) as MockedObject<EntryDetailService>;
+    panelCommonService = TestBed.inject(PanelCommonService) as MockedObject<PanelCommonService>;
+    urlHelperService = TestBed.inject(UrlHelperService) as MockedObject<UrlHelperService>;
+    router = TestBed.inject(Router) as MockedObject<Router>;
+    location = TestBed.inject(Location) as MockedObject<Location>;
+    activatedRoute = TestBed.inject(ActivatedRoute) as MockedObject<ActivatedRoute>;
 
     // Ensure the component state is initialized
     fixture.detectChanges();
@@ -698,7 +713,7 @@ describe('MyDraftsComponent', () => {
         ],
       };
 
-      reviewService.getOwnDrafts.and.returnValue(of(mockResponse));
+      reviewService.getOwnDrafts.mockReturnValue(of(mockResponse));
 
       component.loadMyDrafts();
 
@@ -843,7 +858,7 @@ describe('MyDraftsComponent', () => {
         ],
       };
 
-      reviewService.getOwnDrafts.and.returnValue(of(mockResponse));
+      reviewService.getOwnDrafts.mockReturnValue(of(mockResponse));
 
       component.loadMyDrafts();
 
@@ -989,11 +1004,13 @@ describe('MyDraftsComponent', () => {
         ],
       };
 
-      reviewService.searchDrafts.and.returnValue(of(mockSearchResponse));
-      reviewService.getOwnDrafts.and.returnValue(
+      reviewService.searchDrafts.mockReturnValue(of(mockSearchResponse));
+      reviewService.getOwnDrafts.mockReturnValue(
         of({ count: 0, next: null, previous: null, results: [] })
       );
-      glossaryService.getUsers.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+      glossaryService.getUsers.mockReturnValue(
+        of({ count: 0, next: null, previous: null, results: [] })
+      );
 
       component.state.searchTerm = 'test';
       component.ngOnInit(); // Ensure currentUser is initialized
@@ -1074,7 +1091,7 @@ describe('MyDraftsComponent', () => {
 
       component.state.selectedDraft = mockDraft;
 
-      reviewService.getOwnDrafts.and.returnValue(
+      reviewService.getOwnDrafts.mockReturnValue(
         of({
           count: 1,
           next: null,
@@ -1083,7 +1100,9 @@ describe('MyDraftsComponent', () => {
         })
       );
 
-      entryDetailService.loadCommentsWithPositions.and.returnValue(of({ count: mockComments.length, next: null, previous: null, results: mockComments }));
+      entryDetailService.loadCommentsWithPositions.mockReturnValue(
+        of({ count: mockComments.length, next: null, previous: null, results: mockComments })
+      );
 
       // The existing refreshAfterEdit spy should handle this correctly
 

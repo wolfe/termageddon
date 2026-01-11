@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { GlossaryService } from '../../services/glossary.service';
@@ -17,7 +17,7 @@ import { TermAutocompleteComponent } from '../shared/term-autocomplete/term-auto
 
 @Component({
     selector: 'app-create-entry-dialog',
-    imports: [CommonModule, FormsModule, TermAutocompleteComponent],
+    imports: [FormsModule, TermAutocompleteComponent],
     templateUrl: './create-entry-dialog.component.html',
     styleUrls: ['./create-entry-dialog.component.scss']
 })

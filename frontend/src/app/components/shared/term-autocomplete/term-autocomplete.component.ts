@@ -7,7 +7,7 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../../services/glossary.service';
 import { Term } from '../../../models';
@@ -15,7 +15,7 @@ import { TermPickerModalComponent } from '../term-picker-modal/term-picker-modal
 
 @Component({
     selector: 'app-term-autocomplete',
-    imports: [CommonModule, FormsModule, TermPickerModalComponent],
+    imports: [FormsModule, TermPickerModalComponent],
     styleUrl: './term-autocomplete.component.scss',
     template: `
     <div class="term-autocomplete">

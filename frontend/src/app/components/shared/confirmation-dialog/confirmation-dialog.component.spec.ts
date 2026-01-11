@@ -19,7 +19,7 @@ describe('ConfirmationDialogComponent', () => {
   });
 
   it('should emit confirmed event when confirm is clicked', () => {
-    spyOn(component.confirmed, 'emit');
+    vi.spyOn(component.confirmed, 'emit');
 
     component.onConfirm();
 
@@ -27,7 +27,7 @@ describe('ConfirmationDialogComponent', () => {
   });
 
   it('should emit cancelled event when cancel is clicked', () => {
-    spyOn(component.cancelled, 'emit');
+    vi.spyOn(component.cancelled, 'emit');
 
     component.onCancel();
 
@@ -35,7 +35,7 @@ describe('ConfirmationDialogComponent', () => {
   });
 
   it('should emit cancelled event when backdrop is clicked', () => {
-    spyOn(component.cancelled, 'emit');
+    vi.spyOn(component.cancelled, 'emit');
     const mockEvent = {
       target: 'backdrop',
       currentTarget: 'backdrop',
@@ -47,7 +47,7 @@ describe('ConfirmationDialogComponent', () => {
   });
 
   it('should not emit cancelled event when content is clicked', () => {
-    spyOn(component.cancelled, 'emit');
+    vi.spyOn(component.cancelled, 'emit');
     const mockEvent = {
       target: 'content',
       currentTarget: 'backdrop',

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
@@ -11,20 +12,26 @@ import { EntryDraft, User } from '../../models';
 describe('DraftRouterComponent', () => {
   let component: DraftRouterComponent;
   let fixture: ComponentFixture<DraftRouterComponent>;
-  let mockGlossaryService: jasmine.SpyObj<GlossaryService>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockGlossaryService: MockedObject<GlossaryService>;
+  let mockAuthService: MockedObject<AuthService>;
+  let mockRouter: MockedObject<Router>;
   let mockActivatedRoute: any;
   let originalConsoleError: any;
 
   beforeEach(async () => {
     // Suppress console.error during tests
     originalConsoleError = console.error;
-    console.error = jasmine.createSpy('console.error');
+    console.error = vi.fn();
 
-    const glossaryServiceSpy = jasmine.createSpyObj('GlossaryService', ['getEntryDraft']);
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const glossaryServiceSpy = {
+      getEntryDraft: vi.fn().mockName('GlossaryService.getEntryDraft'),
+    };
+    const authServiceSpy = {
+      getCurrentUser: vi.fn().mockName('AuthService.getCurrentUser'),
+    };
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
+    };
 
     mockActivatedRoute = {
       params: of({ draftId: '1' }),
@@ -45,9 +52,9 @@ describe('DraftRouterComponent', () => {
 
     fixture = TestBed.createComponent(DraftRouterComponent);
     component = fixture.componentInstance;
-    mockGlossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    mockAuthService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    mockGlossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    mockAuthService = TestBed.inject(AuthService) as MockedObject<AuthService>;
+    mockRouter = TestBed.inject(Router) as MockedObject<Router>;
   });
 
   afterEach(() => {
@@ -70,7 +77,7 @@ describe('DraftRouterComponent', () => {
     };
 
     beforeEach(() => {
-      mockAuthService.getCurrentUser.and.returnValue(of(mockUser));
+      mockAuthService.getCurrentUser.mockReturnValue(of(mockUser));
     });
 
     it('should route to glossary for published drafts', () => {
@@ -90,7 +97,7 @@ describe('DraftRouterComponent', () => {
         replaces_draft: undefined,
       };
 
-      mockGlossaryService.getEntryDraft.and.returnValue(of(mockDraft));
+      mockGlossaryService.getEntryDraft.mockReturnValue(of(mockDraft));
 
       component.ngOnInit();
 
@@ -116,7 +123,7 @@ describe('DraftRouterComponent', () => {
         replaces_draft: undefined,
       };
 
-      mockGlossaryService.getEntryDraft.and.returnValue(of(mockDraft));
+      mockGlossaryService.getEntryDraft.mockReturnValue(of(mockDraft));
 
       component.ngOnInit();
 
@@ -151,7 +158,7 @@ describe('DraftRouterComponent', () => {
         replaces_draft: undefined,
       };
 
-      mockGlossaryService.getEntryDraft.and.returnValue(of(mockDraft));
+      mockGlossaryService.getEntryDraft.mockReturnValue(of(mockDraft));
 
       component.ngOnInit();
 
@@ -161,7 +168,7 @@ describe('DraftRouterComponent', () => {
     });
 
     it('should navigate to login when user is not authenticated', () => {
-      mockAuthService.getCurrentUser.and.returnValue(
+      mockAuthService.getCurrentUser.mockReturnValue(
         throwError(() => new Error('Not authenticated'))
       );
 
@@ -181,7 +188,7 @@ describe('DraftRouterComponent', () => {
         replaces_draft: undefined,
       };
 
-      mockGlossaryService.getEntryDraft.and.returnValue(of(mockDraft));
+      mockGlossaryService.getEntryDraft.mockReturnValue(of(mockDraft));
 
       component.ngOnInit();
 
@@ -189,7 +196,7 @@ describe('DraftRouterComponent', () => {
     });
 
     it('should navigate to glossary when draft loading fails', () => {
-      mockGlossaryService.getEntryDraft.and.returnValue(
+      mockGlossaryService.getEntryDraft.mockReturnValue(
         throwError(() => new Error('Draft not found'))
       );
 

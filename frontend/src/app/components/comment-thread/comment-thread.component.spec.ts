@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { CommentThreadComponent } from './comment-thread.component';
@@ -10,8 +11,8 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('CommentThreadComponent', () => {
   let component: CommentThreadComponent;
   let fixture: ComponentFixture<CommentThreadComponent>;
-  let glossaryService: jasmine.SpyObj<GlossaryService>;
-  let permissionService: jasmine.SpyObj<PermissionService>;
+  let glossaryService: MockedObject<GlossaryService>;
+  let permissionService: MockedObject<PermissionService>;
   let originalConsoleError: typeof console.error;
   let originalConsoleWarn: typeof console.warn;
 
@@ -19,16 +20,16 @@ describe('CommentThreadComponent', () => {
     // Suppress console.error and console.warn during tests
     originalConsoleError = console.error;
     originalConsoleWarn = console.warn;
-    console.error = jasmine.createSpy('console.error');
-    console.warn = jasmine.createSpy('console.warn');
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'createComment',
-      'updateComment',
-      'resolveComment',
-      'unresolveComment',
-      'reactToComment',
-      'unreactToComment',
-    ]);
+    console.error = vi.fn();
+    console.warn = vi.fn();
+    const glossarySpy = {
+      createComment: vi.fn().mockName('GlossaryService.createComment'),
+      updateComment: vi.fn().mockName('GlossaryService.updateComment'),
+      resolveComment: vi.fn().mockName('GlossaryService.resolveComment'),
+      unresolveComment: vi.fn().mockName('GlossaryService.unresolveComment'),
+      reactToComment: vi.fn().mockName('GlossaryService.reactToComment'),
+      unreactToComment: vi.fn().mockName('GlossaryService.unreactToComment'),
+    };
     const currentUserValue = {
       id: 1,
       username: 'testuser',
@@ -37,29 +38,30 @@ describe('CommentThreadComponent', () => {
       is_staff: false,
       perspective_curator_for: [],
     };
-    const permissionSpy = jasmine.createSpyObj('PermissionService', ['setCurrentUser'], {
+    const permissionSpy = {
+      setCurrentUser: vi.fn().mockName('PermissionService.setCurrentUser'),
       currentUser$: of(currentUserValue),
       get currentUser() {
         return currentUserValue;
       },
-    });
+    };
     // Set initial currentUser via setCurrentUser
     permissionSpy.setCurrentUser(currentUserValue);
 
     await TestBed.configureTestingModule({
-    imports: [CommentThreadComponent],
-    providers: [
+      imports: [CommentThreadComponent],
+      providers: [
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-}).compileComponents();
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CommentThreadComponent);
     component = fixture.componentInstance;
-    glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
+    glossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    permissionService = TestBed.inject(PermissionService) as MockedObject<PermissionService>;
 
     component.draftId = 1;
   });
@@ -124,7 +126,7 @@ describe('CommentThreadComponent', () => {
         edited_at: '2023-01-02T00:00:00Z',
       };
 
-      glossaryService.updateComment.and.returnValue(of(updatedComment));
+      glossaryService.updateComment.mockReturnValue(of(updatedComment));
       component.startEdit(comment);
       component.editText = 'Updated comment';
 
@@ -138,7 +140,7 @@ describe('CommentThreadComponent', () => {
     });
 
     it('should handle edit submission errors', () => {
-      glossaryService.updateComment.and.returnValue(
+      glossaryService.updateComment.mockReturnValue(
         throwError(() => ({ status: 403, message: 'Forbidden' }))
       );
       component.startEdit(comment);
@@ -217,7 +219,7 @@ describe('CommentThreadComponent', () => {
         user_has_reacted: true,
       };
 
-      glossaryService.reactToComment.and.returnValue(of(updatedComment));
+      glossaryService.reactToComment.mockReturnValue(of(updatedComment));
 
       // Verify initial state
       expect(comment.user_has_reacted).toBe(false);
@@ -239,7 +241,7 @@ describe('CommentThreadComponent', () => {
         user_has_reacted: true,
       };
 
-      glossaryService.reactToComment.and.returnValue(of(updatedComment));
+      glossaryService.reactToComment.mockReturnValue(of(updatedComment));
 
       // Verify initial state
       expect(component.reactionLoadingCommentId).toBeNull();
@@ -263,7 +265,7 @@ describe('CommentThreadComponent', () => {
     });
 
     it('should handle reaction errors', () => {
-      glossaryService.reactToComment.and.returnValue(
+      glossaryService.reactToComment.mockReturnValue(
         throwError(() => ({ status: 500, message: 'Server error' }))
       );
 
@@ -308,7 +310,7 @@ describe('CommentThreadComponent', () => {
         is_resolved: true,
       };
 
-      glossaryService.resolveComment.and.returnValue(of(updatedComment));
+      glossaryService.resolveComment.mockReturnValue(of(updatedComment));
       let resolvedCommentEmitted: Comment | undefined;
       component.commentResolved.subscribe(resolvedComment => {
         resolvedCommentEmitted = resolvedComment;
@@ -329,7 +331,7 @@ describe('CommentThreadComponent', () => {
         is_resolved: false,
       };
 
-      glossaryService.unresolveComment.and.returnValue(of(updatedComment));
+      glossaryService.unresolveComment.mockReturnValue(of(updatedComment));
       let unresolvedCommentEmitted: Comment | undefined;
       component.commentUnresolved.subscribe(unresolvedComment => {
         unresolvedCommentEmitted = unresolvedComment;
@@ -344,7 +346,7 @@ describe('CommentThreadComponent', () => {
     });
 
     it('should handle resolve errors', () => {
-      glossaryService.resolveComment.and.returnValue(
+      glossaryService.resolveComment.mockReturnValue(
         throwError(() => ({ status: 403, message: 'Forbidden' }))
       );
 
@@ -360,7 +362,14 @@ describe('CommentThreadComponent', () => {
         id: 1,
         draft_id: 1,
         text: 'Parent comment',
-        author: { id: 1, username: 'user1', first_name: 'User', last_name: 'One', is_staff: false, perspective_curator_for: [] },
+        author: {
+          id: 1,
+          username: 'user1',
+          first_name: 'User',
+          last_name: 'One',
+          is_staff: false,
+          perspective_curator_for: [],
+        },
         is_resolved: false,
         replies: [],
         created_at: '2023-01-01T00:00:00Z',
@@ -371,7 +380,14 @@ describe('CommentThreadComponent', () => {
         id: 2,
         draft_id: 1,
         text: 'Reply 1',
-        author: { id: 2, username: 'user2', first_name: 'User', last_name: 'Two', is_staff: false, perspective_curator_for: [] },
+        author: {
+          id: 2,
+          username: 'user2',
+          first_name: 'User',
+          last_name: 'Two',
+          is_staff: false,
+          perspective_curator_for: [],
+        },
         parent: 1,
         is_resolved: false,
         replies: [],
@@ -383,7 +399,14 @@ describe('CommentThreadComponent', () => {
         id: 3,
         draft_id: 1,
         text: 'Reply 2',
-        author: { id: 3, username: 'user3', first_name: 'User', last_name: 'Three', is_staff: false, perspective_curator_for: [] },
+        author: {
+          id: 3,
+          username: 'user3',
+          first_name: 'User',
+          last_name: 'Three',
+          is_staff: false,
+          perspective_curator_for: [],
+        },
         parent: 2,
         is_resolved: false,
         replies: [],

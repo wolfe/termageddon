@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
@@ -9,41 +10,45 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 
 describe('EntryDetailService', () => {
   let service: EntryDetailService;
-  let glossaryService: jasmine.SpyObj<GlossaryService>;
-  let reviewService: jasmine.SpyObj<ReviewService>;
+  let glossaryService: MockedObject<GlossaryService>;
+  let reviewService: MockedObject<ReviewService>;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', [
-      'getDraftHistory',
-      'getCommentsWithDraftPositions',
-      'getComments',
-      'getEntry',
-      'createEntryDraft',
-    ]);
-    const reviewSpy = jasmine.createSpyObj('ReviewService', ['getDraftsCanApprove']);
+    const glossarySpy = {
+      getDraftHistory: vi.fn().mockName('GlossaryService.getDraftHistory'),
+      getCommentsWithDraftPositions: vi
+        .fn()
+        .mockName('GlossaryService.getCommentsWithDraftPositions'),
+      getComments: vi.fn().mockName('GlossaryService.getComments'),
+      getEntry: vi.fn().mockName('GlossaryService.getEntry'),
+      createEntryDraft: vi.fn().mockName('GlossaryService.createEntryDraft'),
+    };
+    const reviewSpy = {
+      getDraftsCanApprove: vi.fn().mockName('ReviewService.getDraftsCanApprove'),
+    };
 
     // Setup default return values for the spies
-    glossarySpy.getDraftHistory.and.returnValue(of([]));
-    glossarySpy.getCommentsWithDraftPositions.and.returnValue(of([]));
-    glossarySpy.getComments.and.returnValue(of({ results: [] }));
-    glossarySpy.getEntry.and.returnValue(of({} as Entry));
-    glossarySpy.createEntryDraft.and.returnValue(of({} as EntryDraft));
+    glossarySpy.getDraftHistory.mockReturnValue(of([]));
+    glossarySpy.getCommentsWithDraftPositions.mockReturnValue(of([]));
+    glossarySpy.getComments.mockReturnValue(of({ results: [] }));
+    glossarySpy.getEntry.mockReturnValue(of({} as Entry));
+    glossarySpy.createEntryDraft.mockReturnValue(of({} as EntryDraft));
 
     TestBed.configureTestingModule({
-    imports: [],
-    providers: [
+      imports: [],
+      providers: [
         EntryDetailService,
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: ReviewService, useValue: reviewSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-});
+      ],
+    });
 
     service = TestBed.inject(EntryDetailService);
-    glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    reviewService = TestBed.inject(ReviewService) as jasmine.SpyObj<ReviewService>;
+    glossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    reviewService = TestBed.inject(ReviewService) as MockedObject<ReviewService>;
     httpMock = TestBed.inject(HttpTestingController);
   });
 

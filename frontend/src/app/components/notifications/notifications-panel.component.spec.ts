@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
@@ -9,29 +10,32 @@ import { Notification } from '../../models';
 describe('NotificationsPanelComponent', () => {
   let component: NotificationsPanelComponent;
   let fixture: ComponentFixture<NotificationsPanelComponent>;
-  let notificationApiService: jasmine.SpyObj<NotificationApiService>;
-  let authService: jasmine.SpyObj<AuthService>;
-  let router: jasmine.SpyObj<Router>;
+  let notificationApiService: MockedObject<NotificationApiService>;
+  let authService: MockedObject<AuthService>;
+  let router: MockedObject<Router>;
   let routerEvents$: Subject<any>;
   let originalConsoleError: typeof console.error;
 
   beforeEach(async () => {
     // Suppress console.error during tests
     originalConsoleError = console.error;
-    console.error = jasmine.createSpy('console.error');
+    console.error = vi.fn();
     routerEvents$ = new Subject();
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
       events: routerEvents$.asObservable(),
-    });
-    const notificationApiSpy = jasmine.createSpyObj('NotificationApiService', [
-      'getNotifications',
-      'markAsRead',
-      'markAllAsRead',
-    ]);
-    const authSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated', 'isOktaCallback'], {
-      isAuthenticated: jasmine.createSpy('isAuthenticated').and.returnValue(true),
-      isOktaCallback: jasmine.createSpy('isOktaCallback').and.returnValue(false),
-    });
+    };
+    const notificationApiSpy = {
+      getNotifications: vi.fn().mockName('NotificationApiService.getNotifications'),
+      markAsRead: vi.fn().mockName('NotificationApiService.markAsRead'),
+      markAllAsRead: vi.fn().mockName('NotificationApiService.markAllAsRead'),
+    };
+    const authSpy = {
+      isAuthenticated: vi.fn().mockName('AuthService.isAuthenticated'),
+      isOktaCallback: vi.fn().mockName('AuthService.isOktaCallback'),
+      isAuthenticated: vi.fn().mockReturnValue(true),
+      isOktaCallback: vi.fn().mockReturnValue(false),
+    };
 
     await TestBed.configureTestingModule({
       imports: [NotificationsPanelComponent],
@@ -46,9 +50,9 @@ describe('NotificationsPanelComponent', () => {
     component = fixture.componentInstance;
     notificationApiService = TestBed.inject(
       NotificationApiService
-    ) as jasmine.SpyObj<NotificationApiService>;
-    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    ) as MockedObject<NotificationApiService>;
+    authService = TestBed.inject(AuthService) as MockedObject<AuthService>;
+    router = TestBed.inject(Router) as MockedObject<Router>;
   });
 
   afterEach(() => {
@@ -72,7 +76,7 @@ describe('NotificationsPanelComponent', () => {
         },
       ];
 
-      notificationApiService.getNotifications.and.returnValue(
+      notificationApiService.getNotifications.mockReturnValue(
         of({
           count: 1,
           next: null,
@@ -89,7 +93,7 @@ describe('NotificationsPanelComponent', () => {
     });
 
     it('should not load notifications if not authenticated', () => {
-      authService.isAuthenticated.and.returnValue(false);
+      authService.isAuthenticated.mockReturnValue(false);
 
       fixture.detectChanges();
 
@@ -97,7 +101,7 @@ describe('NotificationsPanelComponent', () => {
     });
 
     it('should not load notifications if on Okta callback', () => {
-      authService.isOktaCallback.and.returnValue(true);
+      authService.isOktaCallback.mockReturnValue(true);
 
       fixture.detectChanges();
 
@@ -115,7 +119,7 @@ describe('NotificationsPanelComponent', () => {
         },
       ];
 
-      notificationApiService.getNotifications.and.returnValue(
+      notificationApiService.getNotifications.mockReturnValue(
         of({
           count: 1,
           next: null,
@@ -125,7 +129,7 @@ describe('NotificationsPanelComponent', () => {
       );
 
       fixture.detectChanges();
-      notificationApiService.getNotifications.calls.reset();
+      notificationApiService.getNotifications.mockClear();
 
       // Simulate navigation end
       routerEvents$.next(new NavigationEnd(1, '/glossary', '/glossary'));
@@ -143,7 +147,7 @@ describe('NotificationsPanelComponent', () => {
         previous: null,
         results: [],
       };
-      notificationApiService.getNotifications.and.returnValue(of(mockResponse));
+      notificationApiService.getNotifications.mockReturnValue(of(mockResponse));
 
       expect(component.isOpen).toBe(false);
 
@@ -172,7 +176,7 @@ describe('NotificationsPanelComponent', () => {
         results: mockNotifications,
       };
 
-      notificationApiService.getNotifications.and.returnValue(of(mockResponse));
+      notificationApiService.getNotifications.mockReturnValue(of(mockResponse));
 
       component.togglePanel();
 
@@ -200,7 +204,7 @@ describe('NotificationsPanelComponent', () => {
         },
       ];
 
-      notificationApiService.getNotifications.and.returnValue(
+      notificationApiService.getNotifications.mockReturnValue(
         of({
           count: 2,
           next: null,
@@ -217,7 +221,7 @@ describe('NotificationsPanelComponent', () => {
     });
 
     it('should handle loading state', () => {
-      notificationApiService.getNotifications.and.returnValue(
+      notificationApiService.getNotifications.mockReturnValue(
         of({
           count: 0,
           next: null,
@@ -232,7 +236,7 @@ describe('NotificationsPanelComponent', () => {
     });
 
     it('should handle errors when loading notifications', () => {
-      notificationApiService.getNotifications.and.returnValue(
+      notificationApiService.getNotifications.mockReturnValue(
         throwError(() => ({ status: 500, message: 'Server error' }))
       );
 
@@ -256,7 +260,7 @@ describe('NotificationsPanelComponent', () => {
       component.notifications = [notification];
       component.unreadCount = 1;
 
-      notificationApiService.markAsRead.and.returnValue(
+      notificationApiService.markAsRead.mockReturnValue(
         of({
           ...notification,
           is_read: true,
@@ -292,7 +296,7 @@ describe('NotificationsPanelComponent', () => {
         created_at: '2023-01-01T00:00:00Z',
       };
 
-      notificationApiService.markAsRead.and.returnValue(
+      notificationApiService.markAsRead.mockReturnValue(
         throwError(() => ({ status: 404, message: 'Not found' }))
       );
 
@@ -323,7 +327,7 @@ describe('NotificationsPanelComponent', () => {
       ];
       component.unreadCount = 2;
 
-      notificationApiService.markAllAsRead.and.returnValue(
+      notificationApiService.markAllAsRead.mockReturnValue(
         of({ detail: 'All notifications marked as read.' })
       );
 
@@ -345,7 +349,7 @@ describe('NotificationsPanelComponent', () => {
       ];
       component.unreadCount = 1;
 
-      notificationApiService.markAllAsRead.and.returnValue(
+      notificationApiService.markAllAsRead.mockReturnValue(
         throwError(() => ({ status: 500, message: 'Server error' }))
       );
 
@@ -359,7 +363,7 @@ describe('NotificationsPanelComponent', () => {
 
   describe('empty state', () => {
     it('should handle empty notifications list', () => {
-      notificationApiService.getNotifications.and.returnValue(
+      notificationApiService.getNotifications.mockReturnValue(
         of({
           count: 0,
           next: null,

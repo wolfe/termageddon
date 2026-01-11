@@ -1,9 +1,9 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
     selector: 'app-master-detail-layout',
-    imports: [CommonModule],
+    imports: [],
     templateUrl: './master-detail-layout.component.html',
     styleUrl: './master-detail-layout.component.scss'
 })

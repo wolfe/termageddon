@@ -1,5 +1,5 @@
 import { Component, OnInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
@@ -9,7 +9,7 @@ import { NotificationsPanelComponent } from '../notifications/notifications-pane
 
 @Component({
     selector: 'app-main-layout',
-    imports: [CommonModule, RouterModule, InlineNotificationComponent, NotificationsPanelComponent],
+    imports: [RouterModule, InlineNotificationComponent, NotificationsPanelComponent],
     templateUrl: './main-layout.component.html',
     styleUrl: './main-layout.component.scss'
 })

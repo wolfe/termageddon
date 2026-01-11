@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,26 +17,29 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 describe('ReviewDashboardComponent Integration Tests', () => {
   let component: ReviewDashboardComponent;
   let fixture: ComponentFixture<ReviewDashboardComponent>;
-  let reviewService: jasmine.SpyObj<ReviewService>;
-  let glossaryService: jasmine.SpyObj<GlossaryService>;
-  let permissionService: jasmine.SpyObj<PermissionService>;
-  let notificationService: jasmine.SpyObj<NotificationService>;
-  let entryDetailService: jasmine.SpyObj<EntryDetailService>;
-  let urlHelperService: jasmine.SpyObj<UrlHelperService>;
-  let router: jasmine.SpyObj<Router>;
-  let location: jasmine.SpyObj<Location>;
-  let activatedRoute: jasmine.SpyObj<ActivatedRoute>;
+  let reviewService: MockedObject<ReviewService>;
+  let glossaryService: MockedObject<GlossaryService>;
+  let permissionService: MockedObject<PermissionService>;
+  let notificationService: MockedObject<NotificationService>;
+  let entryDetailService: MockedObject<EntryDetailService>;
+  let urlHelperService: MockedObject<UrlHelperService>;
+  let router: MockedObject<Router>;
+  let location: MockedObject<Location>;
+  let activatedRoute: MockedObject<ActivatedRoute>;
 
   beforeEach(async () => {
-    const reviewSpy = jasmine.createSpyObj('ReviewService', [
-      'getDraftsCanApprove',
-      'searchDrafts',
-      'approveDraft',
-      'requestReview',
-      'publishDraft',
-    ]);
-    const glossarySpy = jasmine.createSpyObj('GlossaryService', ['getUsers', 'getPerspectives']);
-    const permissionSpy = jasmine.createSpyObj('PermissionService', [], {
+    const reviewSpy = {
+      getDraftsCanApprove: vi.fn().mockName('ReviewService.getDraftsCanApprove'),
+      searchDrafts: vi.fn().mockName('ReviewService.searchDrafts'),
+      approveDraft: vi.fn().mockName('ReviewService.approveDraft'),
+      requestReview: vi.fn().mockName('ReviewService.requestReview'),
+      publishDraft: vi.fn().mockName('ReviewService.publishDraft'),
+    };
+    const glossarySpy = {
+      getUsers: vi.fn().mockName('GlossaryService.getUsers'),
+      getPerspectives: vi.fn().mockName('GlossaryService.getPerspectives'),
+    };
+    const permissionSpy = {
       currentUser$: {
         subscribe: (callback: any) =>
           callback({
@@ -47,28 +51,34 @@ describe('ReviewDashboardComponent Integration Tests', () => {
             perspective_curator_for: [],
           }),
       },
-    });
-    const notificationSpy = jasmine.createSpyObj('NotificationService', [
-      'success',
-      'error',
-      'warning',
-    ]);
-    const entryDetailSpy = jasmine.createSpyObj('EntryDetailService', [
-      'loadCommentsWithPositions',
-    ]);
-    const urlHelperSpy = jasmine.createSpyObj('UrlHelperService', ['buildDraftUrl']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    const locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
-    const activatedRouteSpy = jasmine.createSpyObj('ActivatedRoute', [], {
+    };
+    const notificationSpy = {
+      success: vi.fn().mockName('NotificationService.success'),
+      error: vi.fn().mockName('NotificationService.error'),
+      warning: vi.fn().mockName('NotificationService.warning'),
+    };
+    const entryDetailSpy = {
+      loadCommentsWithPositions: vi.fn().mockName('EntryDetailService.loadCommentsWithPositions'),
+    };
+    const urlHelperSpy = {
+      buildDraftUrl: vi.fn().mockName('UrlHelperService.buildDraftUrl'),
+    };
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
+    };
+    const locationSpy = {
+      replaceState: vi.fn().mockName('Location.replaceState'),
+    };
+    const activatedRouteSpy = {
       queryParams: of({}),
       snapshot: {
         queryParams: {},
       },
-    });
+    };
 
     await TestBed.configureTestingModule({
-    imports: [ReviewDashboardComponent],
-    providers: [
+      imports: [ReviewDashboardComponent],
+      providers: [
         { provide: ReviewService, useValue: reviewSpy },
         { provide: GlossaryService, useValue: glossarySpy },
         { provide: PermissionService, useValue: permissionSpy },
@@ -80,22 +90,20 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         { provide: ActivatedRoute, useValue: activatedRouteSpy },
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-    ]
-}).compileComponents();
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ReviewDashboardComponent);
     component = fixture.componentInstance;
-    reviewService = TestBed.inject(ReviewService) as jasmine.SpyObj<ReviewService>;
-    glossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    permissionService = TestBed.inject(PermissionService) as jasmine.SpyObj<PermissionService>;
-    notificationService = TestBed.inject(
-      NotificationService
-    ) as jasmine.SpyObj<NotificationService>;
-    entryDetailService = TestBed.inject(EntryDetailService) as jasmine.SpyObj<EntryDetailService>;
-    urlHelperService = TestBed.inject(UrlHelperService) as jasmine.SpyObj<UrlHelperService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    location = TestBed.inject(Location) as jasmine.SpyObj<Location>;
-    activatedRoute = TestBed.inject(ActivatedRoute) as jasmine.SpyObj<ActivatedRoute>;
+    reviewService = TestBed.inject(ReviewService) as MockedObject<ReviewService>;
+    glossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    permissionService = TestBed.inject(PermissionService) as MockedObject<PermissionService>;
+    notificationService = TestBed.inject(NotificationService) as MockedObject<NotificationService>;
+    entryDetailService = TestBed.inject(EntryDetailService) as MockedObject<EntryDetailService>;
+    urlHelperService = TestBed.inject(UrlHelperService) as MockedObject<UrlHelperService>;
+    router = TestBed.inject(Router) as MockedObject<Router>;
+    location = TestBed.inject(Location) as MockedObject<Location>;
+    activatedRoute = TestBed.inject(ActivatedRoute) as MockedObject<ActivatedRoute>;
   });
 
   it('should create', () => {
@@ -167,11 +175,13 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       ];
 
       component.state.selectedDraft = mockDraft;
-      entryDetailService.loadCommentsWithPositions.and.returnValue(of({ count: mockComments.length, next: null, previous: null, results: mockComments }));
-      reviewService.getDraftsCanApprove.and.returnValue(
+      entryDetailService.loadCommentsWithPositions.mockReturnValue(
+        of({ count: mockComments.length, next: null, previous: null, results: mockComments })
+      );
+      reviewService.getDraftsCanApprove.mockReturnValue(
         of({ count: 0, next: null, previous: null, results: [] })
       );
-      glossaryService.getPerspectives.and.returnValue(
+      glossaryService.getPerspectives.mockReturnValue(
         of({ count: 0, next: null, previous: null, results: [] })
       );
 
@@ -179,7 +189,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       component.onEditSaved();
 
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
-      expect(component.state.comments).toEqual(jasmine.arrayContaining(mockComments));
+      expect(component.state.comments).toEqual(expect.arrayContaining(mockComments));
     });
 
     it('should load pending drafts after edit is saved', () => {
@@ -233,8 +243,8 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         ],
       };
 
-      reviewService.getDraftsCanApprove.and.returnValue(of(mockResponse));
-      glossaryService.getPerspectives.and.returnValue(
+      reviewService.getDraftsCanApprove.mockReturnValue(of(mockResponse));
+      glossaryService.getPerspectives.mockReturnValue(
         of({ count: 0, next: null, previous: null, results: [] })
       );
 
@@ -315,13 +325,15 @@ describe('ReviewDashboardComponent Integration Tests', () => {
         },
       ];
 
-      entryDetailService.loadCommentsWithPositions.and.returnValue(of({ count: mockComments.length, next: null, previous: null, results: mockComments }));
+      entryDetailService.loadCommentsWithPositions.mockReturnValue(
+        of({ count: mockComments.length, next: null, previous: null, results: mockComments })
+      );
 
       component.selectDraft(mockDraft);
 
       expect(component.state.selectedDraft).toBe(mockDraft);
       expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
-      expect(component.state.comments).toEqual(jasmine.arrayContaining(mockComments));
+      expect(component.state.comments).toEqual(expect.arrayContaining(mockComments));
     });
   });
 });

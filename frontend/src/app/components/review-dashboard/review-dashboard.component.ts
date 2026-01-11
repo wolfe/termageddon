@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -43,16 +43,15 @@ import { getInitials } from '../../utils/user.util';
 @Component({
     selector: 'app-review-dashboard',
     imports: [
-        CommonModule,
-        FormsModule,
-        ReviewerSelectorDialogComponent,
-        MasterDetailLayoutComponent,
-        SearchFilterBarComponent,
-        DraftListItemComponent,
-        DraftDetailPanelComponent,
-        StatusSummaryComponent,
-        CreateEntryDialogComponent,
-    ],
+    FormsModule,
+    ReviewerSelectorDialogComponent,
+    MasterDetailLayoutComponent,
+    SearchFilterBarComponent,
+    DraftListItemComponent,
+    DraftDetailPanelComponent,
+    StatusSummaryComponent,
+    CreateEntryDialogComponent
+],
     templateUrl: './review-dashboard.component.html',
     styleUrl: './review-dashboard.component.scss'
 })

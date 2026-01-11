@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { User } from '../../models';
 
 @Component({
     selector: 'app-reviewer-selector-dialog',
-    imports: [CommonModule, FormsModule],
+    imports: [FormsModule],
     templateUrl: './reviewer-selector-dialog.component.html',
     styleUrls: ['./reviewer-selector-dialog.component.scss']
 })

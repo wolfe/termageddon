@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -8,14 +9,14 @@ import { BehaviorSubject } from 'rxjs';
 describe('InlineNotificationComponent', () => {
   let component: InlineNotificationComponent;
   let fixture: ComponentFixture<InlineNotificationComponent>;
-  let notificationService: jasmine.SpyObj<NotificationService>;
+  let notificationService: MockedObject<NotificationService>;
   let notificationSubject: BehaviorSubject<Notification | null>;
 
   beforeEach(async () => {
     notificationSubject = new BehaviorSubject<Notification | null>(null);
-    const spy = jasmine.createSpyObj('NotificationService', [], {
+    const spy = {
       notification$: notificationSubject.asObservable(),
-    });
+    };
 
     await TestBed.configureTestingModule({
       imports: [InlineNotificationComponent, BrowserAnimationsModule],
@@ -24,9 +25,7 @@ describe('InlineNotificationComponent', () => {
 
     fixture = TestBed.createComponent(InlineNotificationComponent);
     component = fixture.componentInstance;
-    notificationService = TestBed.inject(
-      NotificationService
-    ) as jasmine.SpyObj<NotificationService>;
+    notificationService = TestBed.inject(NotificationService) as MockedObject<NotificationService>;
   });
 
   it('should create', () => {
@@ -135,8 +134,8 @@ describe('InlineNotificationComponent', () => {
   });
 
   it('should clean up subscription on destroy', () => {
-    const destroySpy = spyOn(component['destroy$'], 'next');
-    const completeSpy = spyOn(component['destroy$'], 'complete');
+    const destroySpy = vi.spyOn(component['destroy$'], 'next');
+    const completeSpy = vi.spyOn(component['destroy$'], 'complete');
 
     component.ngOnDestroy();
 

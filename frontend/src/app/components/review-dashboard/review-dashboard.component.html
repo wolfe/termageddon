@@ -36,49 +36,55 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="state.loading" class="three-panel-loading">
-      <div class="three-panel-loading-content">
-        <div class="three-panel-loading-spinner"></div>
-        <p class="three-panel-loading-text">Loading...</p>
+    @if (state.loading) {
+      <div class="three-panel-loading">
+        <div class="three-panel-loading-content">
+          <div class="three-panel-loading-spinner"></div>
+          <p class="three-panel-loading-text">Loading...</p>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Error State -->
-    <div *ngIf="state.error && !state.loading" class="three-panel-error">
-      <div class="three-panel-error-content">
-        <p class="three-panel-error-text">{{ state.error }}</p>
-        <button (click)="loadPendingDrafts()" class="three-panel-error-button">Retry</button>
+    @if (state.error && !state.loading) {
+      <div class="three-panel-error">
+        <div class="three-panel-error-content">
+          <p class="three-panel-error-text">{{ state.error }}</p>
+          <button (click)="loadPendingDrafts()" class="three-panel-error-button">Retry</button>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Drafts List -->
-    <div *ngIf="!state.loading && !state.error" class="flex-1 overflow-y-auto">
-      @if (state.filteredDrafts.length === 0) {
-        <div class="three-panel-no-results">
-          <p class="three-panel-no-results-text">
-            @if (state.drafts.length === 0) {
-              No pending reviews found.
-            } @else {
-              No matches found for "{{ state.searchTerm }}".
-            }
-          </p>
-        </div>
-      } @else {
-        @for (draft of state.filteredDrafts; track draft.id) {
-          <app-draft-list-item
-            [draft]="draft"
-            [selected]="state.selectedDraft?.id === draft.id"
-            [showStatus]="false"
-            statusType="eligibility"
-            [showPublishButton]="true"
-            [showApprovalStatus]="true"
-            context="review"
-            (clicked)="selectDraft($event)"
-            (publishClicked)="publishDraft($event)"
-          ></app-draft-list-item>
+    @if (!state.loading && !state.error) {
+      <div class="flex-1 overflow-y-auto">
+        @if (state.filteredDrafts.length === 0) {
+          <div class="three-panel-no-results">
+            <p class="three-panel-no-results-text">
+              @if (state.drafts.length === 0) {
+                No pending reviews found.
+              } @else {
+                No matches found for "{{ state.searchTerm }}".
+              }
+            </p>
+          </div>
+        } @else {
+          @for (draft of state.filteredDrafts; track draft.id) {
+            <app-draft-list-item
+              [draft]="draft"
+              [selected]="state.selectedDraft?.id === draft.id"
+              [showStatus]="false"
+              statusType="eligibility"
+              [showPublishButton]="true"
+              [showApprovalStatus]="true"
+              context="review"
+              (clicked)="selectDraft($event)"
+              (publishClicked)="publishDraft($event)"
+            ></app-draft-list-item>
+          }
         }
-      }
-    </div>
+      </div>
+    }
   </div>
 
   <!-- Detail Panel -->

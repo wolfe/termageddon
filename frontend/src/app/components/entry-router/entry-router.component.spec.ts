@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
@@ -11,20 +12,26 @@ import { Entry, User } from '../../models';
 describe('EntryRouterComponent', () => {
   let component: EntryRouterComponent;
   let fixture: ComponentFixture<EntryRouterComponent>;
-  let mockGlossaryService: jasmine.SpyObj<GlossaryService>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockGlossaryService: MockedObject<GlossaryService>;
+  let mockAuthService: MockedObject<AuthService>;
+  let mockRouter: MockedObject<Router>;
   let mockActivatedRoute: any;
   let originalConsoleError: any;
 
   beforeEach(async () => {
     // Suppress console.error during tests
     originalConsoleError = console.error;
-    console.error = jasmine.createSpy('console.error');
+    console.error = vi.fn();
 
-    const glossaryServiceSpy = jasmine.createSpyObj('GlossaryService', ['getEntry']);
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const glossaryServiceSpy = {
+      getEntry: vi.fn().mockName('GlossaryService.getEntry'),
+    };
+    const authServiceSpy = {
+      getCurrentUser: vi.fn().mockName('AuthService.getCurrentUser'),
+    };
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
+    };
 
     mockActivatedRoute = {
       params: of({ entryId: '1' }),
@@ -46,9 +53,9 @@ describe('EntryRouterComponent', () => {
 
     fixture = TestBed.createComponent(EntryRouterComponent);
     component = fixture.componentInstance;
-    mockGlossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    mockAuthService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    mockGlossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    mockAuthService = TestBed.inject(AuthService) as MockedObject<AuthService>;
+    mockRouter = TestBed.inject(Router) as MockedObject<Router>;
   });
 
   afterEach(() => {
@@ -71,7 +78,7 @@ describe('EntryRouterComponent', () => {
     };
 
     beforeEach(() => {
-      mockAuthService.getCurrentUser.and.returnValue(of(mockUser));
+      mockAuthService.getCurrentUser.mockReturnValue(of(mockUser));
     });
 
     it('should route to glossary for published entries', () => {
@@ -112,7 +119,7 @@ describe('EntryRouterComponent', () => {
         },
       };
 
-      mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
+      mockGlossaryService.getEntry.mockReturnValue(of(mockEntry));
 
       component.ngOnInit();
 
@@ -159,7 +166,7 @@ describe('EntryRouterComponent', () => {
         },
       };
 
-      mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
+      mockGlossaryService.getEntry.mockReturnValue(of(mockEntry));
 
       component.ngOnInit();
 
@@ -215,7 +222,7 @@ describe('EntryRouterComponent', () => {
         },
       };
 
-      mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
+      mockGlossaryService.getEntry.mockReturnValue(of(mockEntry));
 
       component.ngOnInit();
 
@@ -264,7 +271,7 @@ describe('EntryRouterComponent', () => {
         },
       };
 
-      mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
+      mockGlossaryService.getEntry.mockReturnValue(of(mockEntry));
 
       component.ngOnInit();
 
@@ -274,7 +281,7 @@ describe('EntryRouterComponent', () => {
     });
 
     it('should navigate to login when user is not authenticated', () => {
-      mockAuthService.getCurrentUser.and.returnValue(
+      mockAuthService.getCurrentUser.mockReturnValue(
         throwError(() => new Error('Not authenticated'))
       );
 
@@ -300,7 +307,7 @@ describe('EntryRouterComponent', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
-      mockGlossaryService.getEntry.and.returnValue(of(mockEntry));
+      mockGlossaryService.getEntry.mockReturnValue(of(mockEntry));
 
       component.ngOnInit();
 
@@ -308,7 +315,7 @@ describe('EntryRouterComponent', () => {
     });
 
     it('should navigate to glossary when entry loading fails', () => {
-      mockGlossaryService.getEntry.and.returnValue(throwError(() => new Error('Entry not found')));
+      mockGlossaryService.getEntry.mockReturnValue(throwError(() => new Error('Entry not found')));
 
       component.ngOnInit();
 
@@ -330,8 +337,8 @@ describe('EntryRouterComponent', () => {
       mockActivatedRoute.queryParams = of({ term: 'New Test Term', perspective: '1' });
 
       const glossaryServiceExtended = mockGlossaryService as any;
-      glossaryServiceExtended.getTerms = jasmine.createSpy('getTerms');
-      glossaryServiceExtended.getEntries = jasmine.createSpy('getEntries');
+      glossaryServiceExtended.getTerms = vi.fn();
+      glossaryServiceExtended.getEntries = vi.fn();
     });
 
     it('should handle new entry route with existing term', () => {
@@ -354,8 +361,8 @@ describe('EntryRouterComponent', () => {
         results: [],
       };
 
-      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
-      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+      (mockGlossaryService as any).getTerms.mockReturnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.mockReturnValue(of(mockEntriesResponse));
 
       component.ngOnInit();
 
@@ -379,8 +386,8 @@ describe('EntryRouterComponent', () => {
         results: [],
       };
 
-      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
-      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+      (mockGlossaryService as any).getTerms.mockReturnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.mockReturnValue(of(mockEntriesResponse));
 
       component.ngOnInit();
 
@@ -428,8 +435,8 @@ describe('EntryRouterComponent', () => {
         ],
       };
 
-      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
-      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+      (mockGlossaryService as any).getTerms.mockReturnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.mockReturnValue(of(mockEntriesResponse));
 
       component.ngOnInit();
 
@@ -455,8 +462,8 @@ describe('EntryRouterComponent', () => {
         results: [],
       };
 
-      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
-      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+      (mockGlossaryService as any).getTerms.mockReturnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.mockReturnValue(of(mockEntriesResponse));
 
       component.ngOnInit();
 
@@ -487,8 +494,8 @@ describe('EntryRouterComponent', () => {
         results: [],
       };
 
-      (mockGlossaryService as any).getTerms.and.returnValue(of(mockTermsResponse));
-      (mockGlossaryService as any).getEntries.and.returnValue(of(mockEntriesResponse));
+      (mockGlossaryService as any).getTerms.mockReturnValue(of(mockTermsResponse));
+      (mockGlossaryService as any).getEntries.mockReturnValue(of(mockEntriesResponse));
 
       component.ngOnInit();
 

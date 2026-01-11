@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -10,23 +11,28 @@ import { AuthService } from '../../services/auth.service';
 describe('CreateEntryDialogComponent', () => {
   let component: CreateEntryDialogComponent;
   let fixture: ComponentFixture<CreateEntryDialogComponent>;
-  let mockGlossaryService: jasmine.SpyObj<GlossaryService>;
-  let mockNavigationService: jasmine.SpyObj<NavigationService>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockGlossaryService: MockedObject<GlossaryService>;
+  let mockNavigationService: MockedObject<NavigationService>;
+  let mockAuthService: MockedObject<AuthService>;
+  let mockRouter: MockedObject<Router>;
 
   beforeEach(async () => {
-    const glossaryServiceSpy = jasmine.createSpyObj('GlossaryService', [
-      'getPerspectives',
-      'getUsers',
-      'lookupOrCreateEntry',
-    ]);
-    const navigationServiceSpy = jasmine.createSpyObj('NavigationService', [
-      'navigateToPanelWithEntry',
-      'determineTargetPanel',
-    ]);
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'navigateByUrl']);
+    const glossaryServiceSpy = {
+      getPerspectives: vi.fn().mockName('GlossaryService.getPerspectives'),
+      getUsers: vi.fn().mockName('GlossaryService.getUsers'),
+      lookupOrCreateEntry: vi.fn().mockName('GlossaryService.lookupOrCreateEntry'),
+    };
+    const navigationServiceSpy = {
+      navigateToPanelWithEntry: vi.fn().mockName('NavigationService.navigateToPanelWithEntry'),
+      determineTargetPanel: vi.fn().mockName('NavigationService.determineTargetPanel'),
+    };
+    const authServiceSpy = {
+      getCurrentUser: vi.fn().mockName('AuthService.getCurrentUser'),
+    };
+    const routerSpy = {
+      navigate: vi.fn().mockName('Router.navigate'),
+      navigateByUrl: vi.fn().mockName('Router.navigateByUrl'),
+    };
 
     await TestBed.configureTestingModule({
       imports: [CreateEntryDialogComponent],
@@ -40,17 +46,19 @@ describe('CreateEntryDialogComponent', () => {
 
     fixture = TestBed.createComponent(CreateEntryDialogComponent);
     component = fixture.componentInstance;
-    mockGlossaryService = TestBed.inject(GlossaryService) as jasmine.SpyObj<GlossaryService>;
-    mockNavigationService = TestBed.inject(NavigationService) as jasmine.SpyObj<NavigationService>;
-    mockAuthService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-    mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    mockGlossaryService = TestBed.inject(GlossaryService) as MockedObject<GlossaryService>;
+    mockNavigationService = TestBed.inject(NavigationService) as MockedObject<NavigationService>;
+    mockAuthService = TestBed.inject(AuthService) as MockedObject<AuthService>;
+    mockRouter = TestBed.inject(Router) as MockedObject<Router>;
 
     // Setup default mocks
-    mockGlossaryService.getPerspectives.and.returnValue(
+    mockGlossaryService.getPerspectives.mockReturnValue(
       of({ count: 0, next: null, previous: null, results: [] })
     );
-    mockGlossaryService.getUsers.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
-    mockAuthService.getCurrentUser.and.returnValue(
+    mockGlossaryService.getUsers.mockReturnValue(
+      of({ count: 0, next: null, previous: null, results: [] })
+    );
+    mockAuthService.getCurrentUser.mockReturnValue(
       of({
         id: 1,
         username: 'testuser',
@@ -103,7 +111,7 @@ describe('CreateEntryDialogComponent', () => {
       updated_at: '',
     };
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(
+    mockGlossaryService.lookupOrCreateEntry.mockReturnValue(
       of({
         entry_id: 5,
         has_published_draft: true,
@@ -129,7 +137,7 @@ describe('CreateEntryDialogComponent', () => {
     component.onSave();
 
     expect(mockGlossaryService.lookupOrCreateEntry).toHaveBeenCalled();
-    expect(mockRouter.navigate).not.toHaveBeenCalledWith(['/entry/new'], jasmine.any(Object));
+    expect(mockRouter.navigate).not.toHaveBeenCalledWith(['/entry/new'], expect.any(Object));
   });
 
   it('should show validation error when term text is empty', () => {
@@ -169,7 +177,7 @@ describe('CreateEntryDialogComponent', () => {
       updated_at: '',
     };
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(
+    mockGlossaryService.lookupOrCreateEntry.mockReturnValue(
       of({
         entry_id: 5,
         has_published_draft: true,
@@ -182,7 +190,7 @@ describe('CreateEntryDialogComponent', () => {
       })
     );
 
-    spyOn(component.entryCreated, 'emit');
+    vi.spyOn(component.entryCreated, 'emit');
 
     component.selectedTermId = 1;
     component.selectedTermText = 'Existing Term';
@@ -200,7 +208,7 @@ describe('CreateEntryDialogComponent', () => {
   });
 
   it('should emit close event after successful save', () => {
-    spyOn(component.close, 'emit');
+    vi.spyOn(component.close, 'emit');
 
     component.selectedTermText = 'Brand New Term';
     component.selectedPerspectiveId = 1;
@@ -235,9 +243,9 @@ describe('CreateEntryDialogComponent', () => {
   });
 
   it('should handle lookupOrCreateEntry error gracefully', () => {
-    spyOn(component.close, 'emit');
+    vi.spyOn(component.close, 'emit');
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(
+    mockGlossaryService.lookupOrCreateEntry.mockReturnValue(
       of({
         entry_id: 5,
         has_published_draft: true,
@@ -269,7 +277,7 @@ describe('CreateEntryDialogComponent', () => {
 
     component.onSave();
 
-    expect(component.isLoading).toBeFalse();
+    expect(component.isLoading).toBe(false);
     expect(component.close.emit).toHaveBeenCalled();
   });
 
@@ -291,7 +299,7 @@ describe('CreateEntryDialogComponent', () => {
       perspective: { id: 1, name: 'Test', description: '', created_at: '', updated_at: '' },
       entry: undefined,
     };
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(of(errorResponse));
+    mockGlossaryService.lookupOrCreateEntry.mockReturnValue(of(errorResponse));
 
     component.selectedTermId = 1;
     component.selectedTermText = 'Existing Term';
@@ -305,7 +313,7 @@ describe('CreateEntryDialogComponent', () => {
 
     component.onSave();
 
-    expect(component.isLoading).toBeFalse();
+    expect(component.isLoading).toBe(false);
   });
 
   it('should load perspectives and users on init', () => {
@@ -337,8 +345,10 @@ describe('CreateEntryDialogComponent', () => {
       },
     ];
 
-    mockGlossaryService.getPerspectives.and.returnValue(of(mockPerspectives));
-    mockGlossaryService.getUsers.and.returnValue(of({ count: mockUsers.length, next: null, previous: null, results: mockUsers }));
+    mockGlossaryService.getPerspectives.mockReturnValue(of(mockPerspectives));
+    mockGlossaryService.getUsers.mockReturnValue(
+      of({ count: mockUsers.length, next: null, previous: null, results: mockUsers })
+    );
 
     component.ngOnInit();
 
@@ -367,7 +377,7 @@ describe('CreateEntryDialogComponent', () => {
       entry: undefined,
     };
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(of(mockResponse));
+    mockGlossaryService.lookupOrCreateEntry.mockReturnValue(of(mockResponse));
 
     component.selectedTermId = 1;
     component.selectedTermText = 'Test Term';
@@ -400,7 +410,7 @@ describe('CreateEntryDialogComponent', () => {
       entry: undefined,
     };
 
-    mockGlossaryService.lookupOrCreateEntry.and.returnValue(of(mockResponse));
+    mockGlossaryService.lookupOrCreateEntry.mockReturnValue(of(mockResponse));
 
     component.selectedTermId = 1;
     component.selectedTermText = 'Test Term';
@@ -514,7 +524,7 @@ describe('CreateEntryDialogComponent', () => {
   });
 
   it('should reset form and emit close on onClose', () => {
-    spyOn(component.close, 'emit');
+    vi.spyOn(component.close, 'emit');
     component.selectedTermText = 'Test Term';
     component.selectedTermId = 1;
     component.selectedPerspectiveId = 1;

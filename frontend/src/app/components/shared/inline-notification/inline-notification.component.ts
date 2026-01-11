@@ -1,11 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { NotificationService, Notification } from '../../../services/notification.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-inline-notification',
-    imports: [CommonModule],
+    imports: [],
     templateUrl: './inline-notification.component.html',
     styleUrls: ['./inline-notification.component.scss']
 })

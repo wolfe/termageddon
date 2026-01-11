@@ -1,16 +1,18 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { User } from '../../../models';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 
 @Component({
     selector: 'app-user-avatar',
-    imports: [CommonModule],
+    imports: [],
     template: `
-    <div [class]="getAvatarClasses()" [title]="getUserDisplayName(user)" *ngIf="user">
-      {{ getInitials(user) || '?' }}
-    </div>
-  `,
+    @if (user) {
+      <div [class]="getAvatarClasses()" [title]="getUserDisplayName(user)">
+        {{ getInitials(user) || '?' }}
+      </div>
+    }
+    `,
     styles: []
 })
 export class UserAvatarComponent {

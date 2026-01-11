@@ -1,10 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Perspective } from '../../../models';
 
 @Component({
     selector: 'app-perspective-pill',
-    imports: [CommonModule],
+    imports: [],
     template: `
     <span
       [class]="getPillClasses()"

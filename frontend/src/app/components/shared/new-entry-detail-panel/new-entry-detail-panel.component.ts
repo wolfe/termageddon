@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Entry, User } from '../../../models';
 import { DefinitionFormComponent } from '../../definition-form/definition-form.component';
@@ -8,11 +8,10 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
 @Component({
     selector: 'app-new-entry-detail-panel',
     imports: [
-        CommonModule,
-        FormsModule,
-        DefinitionFormComponent,
-        PerspectivePillComponent,
-    ],
+    FormsModule,
+    DefinitionFormComponent,
+    PerspectivePillComponent
+],
     template: `
     <div class="new-entry-detail-panel">
       <!-- Header -->
@@ -23,10 +22,11 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
               {{ displayTermText }}
             </h2>
             <div class="flex items-center space-x-2 mt-1">
-              <app-perspective-pill
-                [perspective]="displayPerspective"
-                *ngIf="displayPerspective"
-              ></app-perspective-pill>
+              @if (displayPerspective) {
+                <app-perspective-pill
+                  [perspective]="displayPerspective"
+                ></app-perspective-pill>
+              }
             </div>
           </div>
         </div>
@@ -52,13 +52,13 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
                 (click)="onSave()"
                 [disabled]="!editContent.trim()"
                 class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium"
-              >
+                >
                 Create Draft
               </button>
               <button
                 (click)="onCancel()"
                 class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
-              >
+                >
                 Cancel
               </button>
             </div>
@@ -66,7 +66,7 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
         </div>
       </div>
     </div>
-  `,
+    `,
     styleUrls: ['./new-entry-detail-panel.component.scss']
 })
 export class NewEntryDetailPanelComponent implements OnInit {

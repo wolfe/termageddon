@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router, NavigationEnd } from '@angular/router';
 import { Subject, takeUntil, filter } from 'rxjs';
 import { Notification } from '../../models';
@@ -9,7 +9,7 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 
 @Component({
     selector: 'app-notifications-panel',
-    imports: [CommonModule, RelativeTimePipe],
+    imports: [RelativeTimePipe],
     template: `
     <div class="notifications-container">
       <button

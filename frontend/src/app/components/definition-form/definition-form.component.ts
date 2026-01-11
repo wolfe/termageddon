@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { Entry } from '../../models';
@@ -7,7 +7,7 @@ import { EntryLinkSelectorDialogComponent } from '../shared/entry-link-selector-
 
 @Component({
     selector: 'app-definition-form',
-    imports: [CommonModule, FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
+    imports: [FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
     templateUrl: './definition-form.component.html',
     styleUrls: ['./definition-form.component.scss'],
     encapsulation: ViewEncapsulation.None

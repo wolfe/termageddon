@@ -1,58 +1,55 @@
-<div class="modal-overlay" *ngIf="isOpen" (click)="onBackdropClick($event)">
-  <div class="modal-dialog">
-    <div class="modal-header">
-      <h3>Select Reviewers</h3>
-      <button type="button" class="close-btn" (click)="onCancel()" aria-label="Close">
-        <span>&times;</span>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <div class="search-container">
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Search users..."
-          [(ngModel)]="searchTerm"
-          (input)="onSearchChange()"
-        />
+@if (isOpen) {
+  <div class="modal-overlay" (click)="onBackdropClick($event)">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Select Reviewers</h3>
+        <button type="button" class="close-btn" (click)="onCancel()" aria-label="Close">
+          <span>&times;</span>
+        </button>
       </div>
-
-      <div class="users-list">
-        <div
-          *ngFor="let user of filteredUsers"
-          class="user-item"
-          (click)="toggleSelection(user.id)"
-        >
-          <label class="checkbox-container">
-            <input
-              type="checkbox"
-              [checked]="isSelected(user.id)"
-              (change)="toggleSelection(user.id)"
-            />
-            <span class="checkmark"></span>
-          </label>
-          <div class="user-info">
-            <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
-            <div class="user-username">
-              {{ '@' + user.username }}
+      <div class="modal-body">
+        <div class="search-container">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search users..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+          />
+        </div>
+        <div class="users-list">
+          @for (user of filteredUsers; track user) {
+            <div class="user-item" (click)="toggleSelection(user.id)">
+              <label class="checkbox-container">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(user.id)"
+                  (change)="toggleSelection(user.id)"
+                />
+                <span class="checkmark"></span>
+              </label>
+              <div class="user-info">
+                <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+                <div class="user-username">
+                  {{ '@' + user.username }}
+                </div>
+              </div>
             </div>
-          </div>
+          }
+          @if (filteredUsers.length === 0) {
+            <div class="no-results">No users found matching "{{ searchTerm }}"</div>
+          }
         </div>
-
-        <div *ngIf="filteredUsers.length === 0" class="no-results">
-          No users found matching "{{ searchTerm }}"
-        </div>
+        @if (selectedReviewerIds.length > 0) {
+          <div class="selected-count">{{ selectedReviewerIds.length }} reviewer(s) selected</div>
+        }
       </div>
-
-      <div class="selected-count" *ngIf="selectedReviewerIds.length > 0">
-        {{ selectedReviewerIds.length }} reviewer(s) selected
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="onConfirm()">
+          Confirm Selection
+        </button>
       </div>
-    </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
-      <button type="button" class="btn btn-primary" (click)="onConfirm()">Confirm Selection</button>
     </div>
   </div>
-</div>
+}
