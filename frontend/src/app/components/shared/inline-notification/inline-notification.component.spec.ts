@@ -208,13 +208,37 @@ describe('InlineNotificationComponent', () => {
     vi.useRealTimers();
   });
 
-  it('should clean up subscription on destroy', () => {
-    const destroySpy = vi.spyOn(component['destroy$'], 'next');
-    const completeSpy = vi.spyOn(component['destroy$'], 'complete');
+  it('should clean up timer on destroy', async () => {
+    vi.useFakeTimers();
 
+    // Set up a notification to create a timer
+    const notification: Notification = {
+      id: 'test-1',
+      type: 'success',
+      message: 'Test message',
+    };
+
+    notificationSubject.next(notification);
+    fixture.detectChanges();
+
+    // Advance past the initial setTimeout (50ms) to create the autoHideTimer
+    // The autoHideTimer is set inside the 50ms setTimeout callback
+    vi.advanceTimersByTime(60);
+    await fixture.whenStable();
+
+    // Verify timer exists (it's set after the 50ms setTimeout completes)
+    const timerId = component['autoHideTimer'];
+    expect(timerId).toBeTruthy();
+
+    // Spy on clearTimeout to verify it's called
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+    // Destroy component
     component.ngOnDestroy();
 
-    expect(destroySpy).toHaveBeenCalled();
-    expect(completeSpy).toHaveBeenCalled();
+    // Verify clearTimeout was called with the timer
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(timerId);
+
+    vi.useRealTimers();
   });
 });

@@ -7,12 +7,24 @@ import {
   ElementRef,
   HostListener,
   OnDestroy,
+  DestroyRef,
+  inject,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Perspective, Entry, User, GroupedEntry } from '../../models';
 import { GlossaryService } from '../../services/glossary.service';
+import { PaginationService, PaginationState } from '../../services/pagination.service';
+import {
+  createLoadingState,
+  resetLoadingState,
+  startLoadingMore,
+  completeLoadingState,
+  setErrorState,
+  LoadingState,
+} from '../../utils/loading-state.util';
 import { CreateEntryDialogComponent } from '../create-entry-dialog/create-entry-dialog.component';
 import { PerspectivePillComponent } from '../shared/perspective-pill/perspective-pill.component';
 import {
@@ -40,13 +52,29 @@ export class TermListComponent implements OnInit, OnDestroy {
   groupedEntries: GroupedEntry[] = [];
   perspectives: Perspective[] = [];
   users: User[] = [];
-  isLoading: boolean = false;
-  isLoadingMore: boolean = false;
   selectedEntry: Entry | null = null;
   showCreateDialog: boolean = false;
-  currentPage: number = 1;
-  hasNextPage: boolean = false;
-  nextPageUrl: string | null = null;
+
+  // Use utilities for pagination and loading state
+  paginationState!: PaginationState<GroupedEntry>;
+  loadingState: LoadingState = createLoadingState();
+
+  // Expose properties for template
+  get isLoading(): boolean {
+    return this.loadingState.isLoading;
+  }
+  get isLoadingMore(): boolean {
+    return this.loadingState.isLoadingMore;
+  }
+  get currentPage(): number {
+    return this.paginationState.currentPage;
+  }
+  get hasNextPage(): boolean {
+    return this.paginationState.hasNextPage;
+  }
+  get nextPageUrl(): string | null {
+    return this.paginationState.nextPageUrl;
+  }
 
   @ViewChild('scrollContainer', { static: false }) scrollContainer!: ElementRef;
 
@@ -63,7 +91,14 @@ export class TermListComponent implements OnInit, OnDestroy {
     { value: '-term__text_normalized', label: 'Term Z-A' },
   ];
 
-  constructor(private glossaryService: GlossaryService) {}
+  private destroyRef = inject(DestroyRef);
+
+  constructor(
+    private glossaryService: GlossaryService,
+    private paginationService: PaginationService
+  ) {
+    this.paginationState = this.paginationService.createInitialState();
+  }
 
   ngOnInit(): void {
     this.loadPerspectives();
@@ -72,13 +107,19 @@ export class TermListComponent implements OnInit, OnDestroy {
 
     // Search with debounce
     this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged())
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadEntries());
 
     // Other filters trigger immediate search
-    this.perspectiveControl.valueChanges.subscribe(() => this.loadEntries());
-    this.authorControl.valueChanges.subscribe(() => this.loadEntries());
-    this.sortControl.valueChanges.subscribe(() => this.loadEntries());
+    this.perspectiveControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadEntries());
+    this.authorControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadEntries());
+    this.sortControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadEntries());
   }
 
   loadPerspectives(): void {
@@ -105,18 +146,16 @@ export class TermListComponent implements OnInit, OnDestroy {
 
   loadEntries(reset: boolean = true): void {
     if (reset) {
-      this.isLoading = true;
-      this.currentPage = 1;
+      this.loadingState = resetLoadingState(this.loadingState);
+      this.paginationState = this.paginationService.resetState(this.paginationState);
       this.groupedEntries = [];
       this.entries = [];
-      this.hasNextPage = false;
-      this.nextPageUrl = null;
       // Reset scroll position when filters change
       if (this.scrollContainer) {
         this.scrollContainer.nativeElement.scrollTop = 0;
       }
     } else {
-      this.isLoadingMore = true;
+      this.loadingState = startLoadingMore(this.loadingState);
     }
 
     const filters: any = {};
@@ -137,51 +176,35 @@ export class TermListComponent implements OnInit, OnDestroy {
       filters.ordering = this.sortControl.value;
     }
 
-    if (!reset) {
-      filters.page = this.currentPage + 1;
-    }
-
     // Use new grouped_by_term endpoint with pagination
-    this.glossaryService.getEntriesGroupedByTerm(filters, reset ? 1 : this.currentPage + 1).subscribe({
-      next: response => {
-        // Ensure results is an array
-        const results = Array.isArray(response.results) ? response.results : [];
+    this.glossaryService
+      .getEntriesGroupedByTerm(filters, reset ? 1 : this.paginationState.currentPage + 1)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          // Ensure results is an array
+          const results = Array.isArray(response.results) ? response.results : [];
 
-        if (reset) {
-          this.groupedEntries = results;
-          this.entries = results.flatMap(group => group.entries || []);
-        } else {
-          // Append new results
-          this.groupedEntries = [...this.groupedEntries, ...results];
-          this.entries = [...this.entries, ...results.flatMap(group => group.entries || [])];
-        }
+          this.paginationState = this.paginationService.updatePaginationState(
+            this.paginationState,
+            { ...response, results },
+            reset
+          );
 
-        this.hasNextPage = !!response.next;
-        this.nextPageUrl = response.next;
-        if (response.next) {
-          // Extract page number from next URL if available
-          const urlParams = new URLSearchParams(response.next.split('?')[1] || '');
-          const nextPage = urlParams.get('page');
-          if (nextPage) {
-            this.currentPage = parseInt(nextPage, 10) - 1;
-          } else {
-            this.currentPage = reset ? 1 : this.currentPage + 1;
-          }
-        }
+          this.groupedEntries = this.paginationState.items;
+          this.entries = this.paginationState.items.flatMap(group => group.entries || []);
 
-        this.isLoading = false;
-        this.isLoadingMore = false;
-      },
-      error: error => {
-        console.error('Failed to load entries:', error);
-        this.isLoading = false;
-        this.isLoadingMore = false;
-      },
-    });
+          this.loadingState = completeLoadingState(this.loadingState);
+        },
+        error: error => {
+          console.error('Failed to load entries:', error);
+          this.loadingState = setErrorState(this.loadingState, 'Failed to load entries');
+        },
+      });
   }
 
   loadMoreEntries(): void {
-    if (this.hasNextPage && !this.isLoadingMore && !this.isLoading) {
+    if (this.paginationState.hasNextPage && !this.loadingState.isLoadingMore && !this.loadingState.isLoading) {
       this.loadEntries(false);
     }
   }
@@ -196,7 +219,12 @@ export class TermListComponent implements OnInit, OnDestroy {
     const clientHeight = element.clientHeight;
 
     // Load more when user scrolls to within 200px of bottom
-    if (scrollTop + clientHeight >= scrollHeight - 200 && this.hasNextPage && !this.isLoadingMore && !this.isLoading) {
+    if (
+      scrollTop + clientHeight >= scrollHeight - 200 &&
+      this.paginationState.hasNextPage &&
+      !this.loadingState.isLoadingMore &&
+      !this.loadingState.isLoading
+    ) {
       this.loadMoreEntries();
     }
   }

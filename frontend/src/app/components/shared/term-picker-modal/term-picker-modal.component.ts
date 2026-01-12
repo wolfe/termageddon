@@ -11,8 +11,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '../../../services/glossary.service';
 import { Term, PaginatedResponse } from '../../../models';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import { of, Subject } from 'rxjs';
+import { of, Subject, debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs';
 
 @Component({
     selector: 'app-term-picker-modal',

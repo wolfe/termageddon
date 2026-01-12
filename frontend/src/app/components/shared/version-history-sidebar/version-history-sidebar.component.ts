@@ -5,10 +5,11 @@ import {
   Output,
   OnInit,
   OnChanges,
-  OnDestroy,
+  DestroyRef,
+  inject,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
 import { EntryDraft } from '../../../models';
 import { EntryDetailService } from '../../../services/entry-detail.service';
 import { getInitials, getUserDisplayName } from '../../../utils/user.util';
@@ -19,7 +20,7 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
     templateUrl: './version-history-sidebar.component.html',
     styleUrls: ['./version-history-sidebar.component.scss']
 })
-export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
+export class VersionHistorySidebarComponent implements OnInit, OnChanges {
   @Input() entryId: number | null = null;
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
@@ -36,7 +37,7 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
   hasNextPage: boolean = false;
   nextPageUrl: string | null = null;
 
-  private destroy$ = new Subject<void>();
+  private destroyRef = inject(DestroyRef);
 
   constructor(private entryDetailService: EntryDetailService) {}
 
@@ -44,11 +45,6 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
     if (this.entryId) {
       this.loadDraftHistory();
     }
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   ngOnChanges() {
@@ -74,7 +70,7 @@ export class VersionHistorySidebarComponent implements OnInit, OnDestroy {
 
     this.entryDetailService
       .loadDraftHistory(this.entryId, reset ? 1 : this.currentPage + 1)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           if (reset) {

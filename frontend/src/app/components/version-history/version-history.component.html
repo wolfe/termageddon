@@ -1,83 +1,101 @@
-<div class="modal-overlay" *ngIf="isOpen" (click)="onBackdropClick($event)">
-  <div class="modal-dialog">
-    <div class="modal-header">
-      <h3>Draft History</h3>
-      <button type="button" class="close-btn" (click)="onClose()" aria-label="Close">
-        <span>&times;</span>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <div *ngIf="loading" class="loading">Loading draft history...</div>
-
-      <div *ngIf="error" class="error">
-        {{ error }}
+@if (isOpen) {
+  <div class="modal-overlay" (click)="onBackdropClick($event)">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Draft History</h3>
+        <button type="button" class="close-btn" (click)="onClose()" aria-label="Close">
+          <span>&times;</span>
+        </button>
       </div>
 
-      <div *ngIf="!loading && !error" class="draft-timeline">
-        <div
-          *ngFor="let draft of drafts; let i = index"
-          class="draft-item"
-          [class.selected]="selectedDraft?.id === draft.id"
-          [class.active]="isActiveDraft(draft)"
-          (click)="selectDraft(draft)"
-        >
-          <div class="draft-indicator">
-            <div class="draft-number">{{ drafts.length - i }}</div>
-            <div class="timeline-line" *ngIf="i < drafts.length - 1"></div>
-          </div>
+      <div class="modal-body">
+        @if (loading) {
+          <div class="loading">Loading draft history...</div>
+        }
 
-          <div class="draft-content">
-            <div class="draft-header">
-              <div class="draft-meta">
-                <div class="author-info">
-                  <app-user-avatar
-                    [user]="version.author"
-                    color="blue"
-                    size="large"
-                  ></app-user-avatar>
-                  <div class="author-details">
-                    <div class="author-name">
-                      {{ getUserDisplayName(version.author) }}
-                    </div>
-                    <div class="draft-date">
-                      {{ draft.created_at | date: 'medium' }}
+        @if (error) {
+          <div class="error">
+            {{ error }}
+          </div>
+        }
+
+        @if (!loading && !error) {
+          <div class="draft-timeline">
+            @for (draft of drafts; track draft.id; let i = $index) {
+              <div
+                class="draft-item"
+                [class.selected]="selectedDraft?.id === draft.id"
+                [class.active]="isActiveDraft(draft)"
+                (click)="selectDraft(draft)"
+              >
+                <div class="draft-indicator">
+                  <div class="draft-number">{{ drafts.length - i }}</div>
+                  @if (i < drafts.length - 1) {
+                    <div class="timeline-line"></div>
+                  }
+                </div>
+
+                <div class="draft-content">
+                  <div class="draft-header">
+                    <div class="draft-meta">
+                      <div class="author-info">
+                        <app-user-avatar
+                          [user]="draft.author"
+                          color="blue"
+                          size="large"
+                        ></app-user-avatar>
+                        <div class="author-details">
+                          <div class="author-name">
+                            {{ getUserDisplayName(draft.author) }}
+                          </div>
+                          <div class="draft-date">
+                            {{ draft.created_at | date: 'medium' }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="draft-status">
+                        <span class="status-badge" [ngClass]="getDraftStatusClass(draft)">
+                          {{ getDraftStatus(draft) }}
+                        </span>
+                        @if (isActiveDraft(draft)) {
+                          <span class="active-badge"> Current </span>
+                        }
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="draft-status">
-                  <span class="status-badge" [ngClass]="getDraftStatusClass(draft)">
-                    {{ getDraftStatus(draft) }}
-                  </span>
-                  <span *ngIf="isActiveDraft(draft)" class="active-badge"> Current </span>
+                  <div class="draft-preview">
+                    <div class="preview-content" [innerHTML]="draft.content | slice: 0 : 200"></div>
+                    @if (draft.content.length > 200) {
+                      <div class="preview-more">...</div>
+                    }
+                  </div>
+
+                  @if (draft.approvers.length > 0) {
+                    <div class="draft-approvals">
+                      <div class="approvals-label">Approved by:</div>
+                      <div class="approvers-list">
+                        @for (approver of draft.approvers; track approver.id) {
+                          <app-user-avatar
+                            [user]="approver"
+                            color="green"
+                            size="medium"
+                          ></app-user-avatar>
+                        }
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
-            </div>
-
-            <div class="draft-preview">
-              <div class="preview-content" [innerHTML]="draft.content | slice: 0 : 200"></div>
-              <div *ngIf="draft.content.length > 200" class="preview-more">...</div>
-            </div>
-
-            <div class="draft-approvals" *ngIf="draft.approvers.length > 0">
-              <div class="approvals-label">Approved by:</div>
-              <div class="approvers-list">
-                <app-user-avatar
-                  *ngFor="let approver of draft.approvers"
-                  [user]="approver"
-                  color="green"
-                  size="medium"
-                ></app-user-avatar>
-              </div>
-            </div>
+            }
           </div>
-        </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
       </div>
     </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
-    </div>
   </div>
-</div>
+}

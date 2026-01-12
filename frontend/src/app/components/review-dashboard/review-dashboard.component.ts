@@ -1,9 +1,9 @@
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
 import { ReviewDraft, User, PaginatedResponse, Comment } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { NotificationService } from '../../services/notification.service';
@@ -55,9 +55,7 @@ import { getInitials } from '../../utils/user.util';
     templateUrl: './review-dashboard.component.html',
     styleUrl: './review-dashboard.component.scss'
 })
-export class ReviewDashboardComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
+export class ReviewDashboardComponent implements OnInit {
   // Use centralized panel state
   state: PanelState;
 
@@ -104,6 +102,8 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
   getApprovalAccessLevel = getApprovalAccessLevel;
   getInitials = getInitials;
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private permissionService: PermissionService,
     private notificationService: NotificationService,
@@ -145,15 +145,10 @@ export class ReviewDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   loadPerspectives(): void {
     this.glossaryService
       .getPerspectives()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: perspectives => {
           this.perspectives = perspectives.results.map((p: any) => ({ id: p.id, name: p.name }));

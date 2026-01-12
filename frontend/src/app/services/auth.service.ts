@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, from, throwError } from 'rxjs';
-import { map, tap, switchMap, catchError, shareReplay, finalize } from 'rxjs/operators';
+import { Observable, from, throwError, map, tap, switchMap, catchError, shareReplay, finalize } from 'rxjs';
 import { LoginRequest, LoginResponse, PaginatedResponse, User } from '../models';
 import OktaAuth, { AccessToken } from '@okta/okta-auth-js';
 

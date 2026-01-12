@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { User } from '../../../models';
 
 export interface FilterConfig {
@@ -28,7 +29,7 @@ export interface SortOption {
     templateUrl: './search-filter-bar.component.html',
     styleUrl: './search-filter-bar.component.scss'
 })
-export class SearchFilterBarComponent implements OnInit, OnDestroy {
+export class SearchFilterBarComponent implements OnInit {
   @Input() placeholder: string = 'Search...';
   @Input() filters: FilterConfig[] = [];
   @Input() showClearButton: boolean = true;
@@ -37,7 +38,6 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
 
   // Debouncing for search input
   private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>();
 
   // New unified filter inputs
   @Input() showPerspectiveFilter: boolean = false;
@@ -70,22 +70,19 @@ export class SearchFilterBarComponent implements OnInit, OnDestroy {
   @Output() createClicked = new EventEmitter<void>();
   @Output() clearFilters = new EventEmitter<void>();
 
+  private destroyRef = inject(DestroyRef);
+
   ngOnInit(): void {
     // Set up debounced search
     this.searchSubject
       .pipe(
         debounceTime(300), // Wait 300ms after user stops typing
         distinctUntilChanged(), // Only emit if the value has changed
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(searchTerm => {
         this.search.emit(searchTerm);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onSearchInput(): void {

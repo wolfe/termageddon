@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Router, NavigationEnd } from '@angular/router';
-import { Subject, takeUntil, filter } from 'rxjs';
+import { filter } from 'rxjs';
 import { Notification } from '../../models';
 import { NotificationApiService } from '../../services/notification-api.service';
 import { AuthService } from '../../services/auth.service';
@@ -203,7 +204,7 @@ export class NotificationsPanelComponent implements OnInit, OnDestroy {
   isOpen: boolean = false;
   loading: boolean = false;
 
-  private destroy$ = new Subject<void>();
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private notificationApiService: NotificationApiService,
@@ -221,7 +222,7 @@ export class NotificationsPanelComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
         if (!this.isOpen && this.authService.isAuthenticated()) {
@@ -229,11 +230,6 @@ export class NotificationsPanelComponent implements OnInit, OnDestroy {
           this.loadNotifications();
         }
       });
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   togglePanel() {
@@ -282,5 +278,9 @@ export class NotificationsPanelComponent implements OnInit, OnDestroy {
         console.error('Error marking all notifications as read:', error);
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup handled by DestroyRef
   }
 }

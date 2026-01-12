@@ -10,11 +10,12 @@ import {
   ViewChild,
   AfterViewInit,
   OnDestroy,
+  DestroyRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Subject } from 'rxjs';
 import { Entry, Comment, EntryDraft } from '../../models';
 import { PermissionService } from '../../services/permission.service';
 import { GlossaryService } from '../../services/glossary.service';
@@ -65,7 +66,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   showVersionHistory: boolean = false;
   selectedHistoricalDraft: EntryDraft | null = null;
   private shouldLoadEntries: boolean = true;
-  private destroy$ = new Subject<void>();
+  private destroyRef = inject(DestroyRef);
   private commentsLoadedForEntryId: number | null = null;
   private commentsLoadedForDraftId: number | null = null;
 
@@ -105,8 +106,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    // Cleanup handled by DestroyRef
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -533,7 +533,7 @@ export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, On
     document.addEventListener('click', handleLinkClick, true); // Use capture phase
 
     // Clean up on destroy
-    this.destroy$.subscribe(() => {
+    this.destroyRef.onDestroy(() => {
       document.removeEventListener('click', handleLinkClick, true);
     });
   }

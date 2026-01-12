@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { NotificationService, Notification } from '../../../services/notification.service';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-inline-notification',
@@ -14,14 +14,15 @@ export class InlineNotificationComponent implements OnInit, OnDestroy {
   isVisible: boolean = false;
   isFading: boolean = false;
   isResetting: boolean = false;
-  private destroy$ = new Subject<void>();
   private autoHideTimer: any = null;
+
+  private destroyRef = inject(DestroyRef);
 
   constructor(private notificationService: NotificationService) {}
 
   ngOnInit(): void {
     this.notificationService.notification$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((notification: Notification | null) => {
         // Clear any existing timer
         if (this.autoHideTimer) {
@@ -66,8 +67,6 @@ export class InlineNotificationComponent implements OnInit, OnDestroy {
     if (this.autoHideTimer) {
       clearTimeout(this.autoHideTimer);
     }
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   getIconClass(notification: Notification): string {

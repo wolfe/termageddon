@@ -5,13 +5,23 @@ import {
   Output,
   OnInit,
   OnChanges,
-  OnDestroy,
+  DestroyRef,
+  inject,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
 import { Entry, PaginatedResponse, GroupedEntry } from '../../../models';
 import { GlossaryService } from '../../../services/glossary.service';
+import { PaginationService, PaginationState } from '../../../services/pagination.service';
+import {
+  createLoadingState,
+  resetLoadingState,
+  startLoadingMore,
+  completeLoadingState,
+  setErrorState,
+  LoadingState,
+} from '../../../utils/loading-state.util';
 import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.component';
 
 @Component({
@@ -20,7 +30,7 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
     templateUrl: './entry-link-selector-dialog.component.html',
     styleUrls: ['./entry-link-selector-dialog.component.scss']
 })
-export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDestroy {
+export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
   @Output() entrySelected = new EventEmitter<Entry>();
@@ -28,19 +38,40 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
   groupedEntries: GroupedEntry[] = [];
   filteredEntries: GroupedEntry[] = [];
   searchTerm = '';
-  loading = false;
-  loadingMore = false;
-  error: string | null = null;
   selectedEntry: Entry | null = null;
 
-  // Pagination state
-  currentPage: number = 1;
-  hasNextPage: boolean = false;
-  nextPageUrl: string | null = null;
+  // Use utilities for pagination and loading state
+  paginationState!: PaginationState<GroupedEntry>;
+  loadingState: LoadingState = createLoadingState();
 
-  private destroy$ = new Subject<void>();
+  // Expose properties for template
+  get loading(): boolean {
+    return this.loadingState.isLoading;
+  }
+  get loadingMore(): boolean {
+    return this.loadingState.isLoadingMore;
+  }
+  get error(): string | null {
+    return this.loadingState.error;
+  }
+  get currentPage(): number {
+    return this.paginationState.currentPage;
+  }
+  get hasNextPage(): boolean {
+    return this.paginationState.hasNextPage;
+  }
+  get nextPageUrl(): string | null {
+    return this.paginationState.nextPageUrl;
+  }
 
-  constructor(private glossaryService: GlossaryService) {}
+  private destroyRef = inject(DestroyRef);
+
+  constructor(
+    private glossaryService: GlossaryService,
+    private paginationService: PaginationService
+  ) {
+    this.paginationState = this.paginationService.createInitialState();
+  }
 
   ngOnInit() {
     if (this.isOpen) {
@@ -54,68 +85,47 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
     }
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   loadEntries(reset: boolean = true) {
     if (reset) {
-      this.loading = true;
-      this.currentPage = 1;
+      this.loadingState = resetLoadingState(this.loadingState);
+      this.paginationState = this.paginationService.resetState(this.paginationState);
       this.groupedEntries = [];
       this.filteredEntries = [];
-      this.hasNextPage = false;
-      this.nextPageUrl = null;
       this.searchTerm = '';
       this.selectedEntry = null;
     } else {
-      this.loadingMore = true;
+      this.loadingState = startLoadingMore(this.loadingState);
     }
 
-    this.error = null;
+    this.loadingState = { ...this.loadingState, error: null };
 
     this.glossaryService
-      .getEntriesGroupedByTerm({}, reset ? 1 : this.currentPage + 1)
-      .pipe(takeUntil(this.destroy$))
+      .getEntriesGroupedByTerm({}, reset ? 1 : this.paginationState.currentPage + 1)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          if (reset) {
-            this.groupedEntries = response.results;
-            this.filteredEntries = [...response.results];
-          } else {
-            // Append new results
-            this.groupedEntries = [...this.groupedEntries, ...response.results];
-            this.filteredEntries = [...this.filteredEntries, ...response.results];
-          }
+          this.paginationState = this.paginationService.updatePaginationState(
+            this.paginationState,
+            response,
+            reset
+          );
 
-          this.hasNextPage = !!response.next;
-          this.nextPageUrl = response.next;
-          if (response.next) {
-            // Extract page number from next URL if available
-            const urlParams = new URLSearchParams(response.next.split('?')[1] || '');
-            const nextPage = urlParams.get('page');
-            if (nextPage) {
-              this.currentPage = parseInt(nextPage, 10) - 1;
-            } else {
-              this.currentPage = reset ? 1 : this.currentPage + 1;
-            }
-          }
+          this.groupedEntries = this.paginationState.items;
+          this.filteredEntries = reset
+            ? [...this.paginationState.items]
+            : [...this.filteredEntries, ...response.results];
 
-          this.loading = false;
-          this.loadingMore = false;
+          this.loadingState = completeLoadingState(this.loadingState);
         },
         error: (error: any) => {
           console.error('Error loading entries:', error);
-          this.error = 'Failed to load entries';
-          this.loading = false;
-          this.loadingMore = false;
+          this.loadingState = setErrorState(this.loadingState, 'Failed to load entries');
         },
       });
   }
 
   loadMoreEntries() {
-    if (this.hasNextPage && !this.loadingMore && !this.loading) {
+    if (this.paginationState.hasNextPage && !this.loadingState.isLoadingMore && !this.loadingState.isLoading) {
       this.loadEntries(false);
     }
   }
@@ -129,7 +139,12 @@ export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges, OnDe
     const clientHeight = target.clientHeight;
 
     // Load more when user scrolls to within 200px of bottom
-    if (scrollTop + clientHeight >= scrollHeight - 200 && this.hasNextPage && !this.loadingMore && !this.loading) {
+    if (
+      scrollTop + clientHeight >= scrollHeight - 200 &&
+      this.paginationState.hasNextPage &&
+      !this.loadingState.isLoadingMore &&
+      !this.loadingState.isLoading
+    ) {
       this.loadMoreEntries();
     }
   }

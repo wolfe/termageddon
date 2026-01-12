@@ -1,5 +1,5 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Entry, ReviewDraft, EntryDraft, Comment } from '../../models';
 import { EntryDetailService } from '../../services/entry-detail.service';
 import { PermissionService } from '../../services/permission.service';
@@ -23,8 +23,6 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   @Output() commentUnresolved = new EventEmitter<Comment>();
   @Output() draftSelected = new EventEmitter<EntryDraft>();
 
-  protected destroy$ = new Subject<void>();
-
   // State management
   isEditMode: boolean = false;
   editContent: string = '';
@@ -40,6 +38,8 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   showVersionHistorySidebar: boolean = false;
   protected commentsLoadedForEntryId: number | null = null;
 
+  protected destroyRef = inject(DestroyRef);
+
   constructor(
     protected entryDetailService: EntryDetailService,
     protected permissionService: PermissionService
@@ -52,8 +52,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    // Cleanup handled by takeUntilDestroyed()
   }
 
   /**
@@ -85,7 +84,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
     this.isLoadingComments = true;
     this.entryDetailService
       .loadCommentsWithPositions(entryId, page, draftId, showResolved)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
           if (append) {
@@ -116,7 +115,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
     this.isLoadingDraftHistory = true;
     this.entryDetailService
       .loadDraftHistory(entryId, page)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
           if (append) {
@@ -160,7 +159,7 @@ export abstract class BaseEntryDetailComponent implements OnInit, OnDestroy {
 
     this.entryDetailService
       .createNewDraft(entryId, this.editContent, currentUser.id)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: newDraft => {
           this.isEditMode = false;

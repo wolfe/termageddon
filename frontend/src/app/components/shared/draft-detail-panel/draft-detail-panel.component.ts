@@ -10,10 +10,11 @@ import {
   ViewChild,
   AfterViewInit,
   OnDestroy,
+  DestroyRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
 import { ReviewDraft, Comment, EntryDraft, User, Entry } from '../../../models';
 import { CommentThreadComponent } from '../../comment-thread/comment-thread.component';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
@@ -144,8 +145,8 @@ export class DraftDetailPanelComponent
   }
 
   override ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    super.ngOnDestroy();
+    // Cleanup handled by DestroyRef
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -555,7 +556,7 @@ export class DraftDetailPanelComponent
     document.addEventListener('click', handleLinkClick, true); // Use capture phase
 
     // Clean up on destroy
-    this.destroy$.subscribe(() => {
+    this.destroyRef.onDestroy(() => {
       document.removeEventListener('click', handleLinkClick, true);
     });
   }
