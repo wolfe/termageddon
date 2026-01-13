@@ -345,7 +345,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Loading data from {csv_file}"))
 
         with transaction.atomic():
-            # Create superuser
+            # Create superuser (always reset password to ensure it works)
             admin, created = User.objects.get_or_create(
                 username="admin",
                 defaults={
@@ -355,15 +355,18 @@ class Command(BaseCommand):
                     "last_name": "User",
                 },
             )
+            # Always reset password to ensure it's correct
+            admin.set_password("admin")
+            admin.is_staff = True
+            admin.is_superuser = True
+            admin.save()
             if created:
-                admin.set_password("admin")
-                admin.save()
                 self.stdout.write(
                     self.style.SUCCESS("Created superuser: admin / admin")
                 )
             else:
                 self.stdout.write(
-                    self.style.WARNING("Superuser 'admin' already exists")
+                    self.style.SUCCESS("Reset password for superuser: admin / admin")
                 )
 
             # Read CSV to extract unique authors
@@ -415,14 +418,17 @@ class Command(BaseCommand):
                         "last_name": last_name,
                     },
                 )
-                if created:
-                    user.set_password("ImABird")  # Shared password for test users
-                    user.save()
-                    # Mark as test user (all but the last one)
-                    is_test_user = i < len(author_list) - 1
-                    user.profile.is_test_user = is_test_user
-                    user.profile.save()
+                # Always reset password to ensure it's correct
+                user.set_password("ImABird")  # Shared password for test users
+                user.first_name = first_name
+                user.last_name = last_name
+                user.save()
+                # Mark as test user (all but the last one)
+                is_test_user = i < len(author_list) - 1
+                user.profile.is_test_user = is_test_user
+                user.profile.save()
 
+                if created:
                     if is_test_user:
                         self.stdout.write(
                             self.style.SUCCESS(
@@ -433,6 +439,19 @@ class Command(BaseCommand):
                         self.stdout.write(
                             self.style.SUCCESS(
                                 f"Created regular user: {username} / ImABird"
+                            )
+                        )
+                else:
+                    if is_test_user:
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"Reset password for test user: {username} / ImABird"
+                            )
+                        )
+                    else:
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"Reset password for regular user: {username} / ImABird"
                             )
                         )
                 users[author_name] = user

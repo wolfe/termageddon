@@ -87,55 +87,49 @@ fi
 # Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     print_status "Creating virtual environment..."
-    python3 -m venv venv
-    if [ $? -ne 0 ]; then
+    python3 -m venv venv || {
         print_error "Failed to create virtual environment"
         exit 1
-    fi
+    }
 fi
 
 # Activate virtual environment
-source venv/bin/activate
-if [ $? -ne 0 ]; then
+source venv/bin/activate || {
     print_error "Failed to activate virtual environment"
     exit 1
-fi
+}
 
 # Install dependencies
 print_status "Installing backend dependencies..."
-pip install -q -r requirements.txt
-if [ $? -ne 0 ]; then
+pip install -q -r requirements.txt || {
     print_error "Failed to install backend dependencies"
     exit 1
-fi
+}
 
-# Always run migrations to ensure database is up to date
+# Wipe database on every run for clean demo
+print_status "Wiping existing database..."
+rm -f db.sqlite3
+
+# Run migrations to create fresh database
 print_status "Running database migrations..."
-python manage.py migrate
-if [ $? -ne 0 ]; then
+python manage.py migrate || {
     print_error "Failed to run migrations"
     exit 1
-fi
+}
 
-# Load test data only if database is new (no entries exist)
-if [ ! -f "db.sqlite3" ] || [ -z "$(python manage.py shell -c 'from glossary.models import Entry; print(Entry.objects.count())' 2>/dev/null | grep -E '^[0-9]+$' | head -1)" ]; then
-    print_status "Loading test data..."
-    python manage.py load_test_data
-    if [ $? -ne 0 ]; then
-        print_error "Failed to load test data"
-        exit 1
-    fi
-else
-    print_status "Database already has data, skipping test data load"
-fi
+# Load test data
+print_status "Loading test data..."
+python manage.py load_test_data || {
+    print_error "Failed to load test data"
+    exit 1
+}
 
 # Collect static files (needed for Django admin)
 print_status "Collecting static files..."
-python manage.py collectstatic --noinput
-if [ $? -ne 0 ]; then
+python manage.py collectstatic --noinput || {
     print_error "Failed to collect static files"
     exit 1
-fi
+}
 
 # Start backend server in background
 # Set DEBUG=True for development to enable static file serving
@@ -159,12 +153,11 @@ cd "$FRONTEND_DIR"
 
 # Always install dependencies to ensure they're up to date
 print_status "Installing frontend dependencies..."
-npm install
-if [ $? -ne 0 ]; then
+npm install || {
     print_error "Failed to install frontend dependencies"
-    kill $BACKEND_PID
+    kill $BACKEND_PID 2>/dev/null
     exit 1
-fi
+}
 
 # Start frontend server in foreground temporarily to see errors
 print_status "Starting frontend server..."

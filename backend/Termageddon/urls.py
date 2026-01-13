@@ -39,9 +39,11 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-    # Serve Angular frontend - catch-all route (must be last, excludes admin and api)
+    # Serve Angular frontend - catch-all route (must be last)
+    # Excludes: admin, api, health, static files, and common file extensions
     re_path(
-        r"^(?!admin|api|health).*$",
+        r"^(?!admin|api|health|static|favicon\.ico|"
+        r".*\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|json|xml|txt|pdf|zip|tar|gz)$).*$",
         TemplateView.as_view(template_name="index.html"),
         name="frontend",
     ),

@@ -1381,12 +1381,25 @@ class CustomAuthToken(ObtainAuthToken):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        logger = logging.getLogger(__name__)
+        data_keys = (
+            list(request.data.keys()) if hasattr(request.data, "keys") else "N/A"
+        )
+        logger.info(f"CustomAuthToken: Received login request. Data keys: {data_keys}")
+
         serializer = self.serializer_class(
             data=request.data, context={"request": request}
         )
-        serializer.is_valid(raise_exception=True)
+
+        if not serializer.is_valid():
+            logger.warning(
+                f"CustomAuthToken: Validation failed. Errors: {serializer.errors}"
+            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
+        logger.info(f"CustomAuthToken: Login successful for user: {user.username}")
 
         from glossary.serializers import UserDetailSerializer
 
