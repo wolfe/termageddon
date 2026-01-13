@@ -17,6 +17,7 @@ import { TermPickerModalComponent } from '../term-picker-modal/term-picker-modal
     selector: 'app-term-autocomplete',
     imports: [FormsModule, TermPickerModalComponent],
     styleUrl: './term-autocomplete.component.scss',
+    standalone: true,
     template: `
     <div class="term-autocomplete">
       <div class="input-container">

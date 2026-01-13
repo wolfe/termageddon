@@ -11,7 +11,8 @@ import { NotificationsPanelComponent } from '../notifications/notifications-pane
     selector: 'app-main-layout',
     imports: [RouterModule, InlineNotificationComponent, NotificationsPanelComponent],
     templateUrl: './main-layout.component.html',
-    styleUrl: './main-layout.component.scss'
+    styleUrl: './main-layout.component.scss',
+    standalone: true
 })
 export class MainLayoutComponent implements OnInit {
   currentUser: User | null = null;

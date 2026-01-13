@@ -5,6 +5,7 @@ import { Perspective } from '../../../models';
 @Component({
     selector: 'app-perspective-pill',
     imports: [],
+    standalone: true,
     template: `
     <span
       [class]="getPillClasses()"

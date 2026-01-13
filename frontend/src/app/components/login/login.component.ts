@@ -10,7 +10,8 @@ import { Subscription } from 'rxjs';
     selector: 'app-login',
     imports: [ReactiveFormsModule],
     templateUrl: './login.component.html',
-    styleUrl: './login.component.scss'
+    styleUrl: './login.component.scss',
+    standalone: true
 })
 export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;

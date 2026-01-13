@@ -6,7 +6,8 @@ import { DemoAutoLoginService } from './services/demo-auto-login.service';
     selector: 'app-root',
     imports: [RouterOutlet],
     template: ` <router-outlet></router-outlet> `,
-    styles: []
+    styles: [],
+    standalone: true
 })
 export class AppComponent implements OnInit {
   title = 'Termageddon';

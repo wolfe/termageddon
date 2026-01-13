@@ -28,7 +28,8 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
     selector: 'app-entry-link-selector-dialog',
     imports: [FormsModule, PerspectivePillComponent],
     templateUrl: './entry-link-selector-dialog.component.html',
-    styleUrls: ['./entry-link-selector-dialog.component.scss']
+    styleUrls: ['./entry-link-selector-dialog.component.scss'],
+    standalone: true
 })
 export class EntryLinkSelectorDialogComponent implements OnInit, OnChanges {
   @Input() isOpen = false;

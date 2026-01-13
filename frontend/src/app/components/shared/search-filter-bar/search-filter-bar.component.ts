@@ -27,7 +27,8 @@ export interface SortOption {
     selector: 'app-search-filter-bar',
     imports: [FormsModule],
     templateUrl: './search-filter-bar.component.html',
-    styleUrl: './search-filter-bar.component.scss'
+    styleUrl: './search-filter-bar.component.scss',
+    standalone: true
 })
 export class SearchFilterBarComponent implements OnInit {
   @Input() placeholder: string = 'Search...';

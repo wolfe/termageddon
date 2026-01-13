@@ -19,7 +19,8 @@ import { TermAutocompleteComponent } from '../shared/term-autocomplete/term-auto
     selector: 'app-create-entry-dialog',
     imports: [FormsModule, TermAutocompleteComponent],
     templateUrl: './create-entry-dialog.component.html',
-    styleUrls: ['./create-entry-dialog.component.scss']
+    styleUrls: ['./create-entry-dialog.component.scss'],
+    standalone: true
 })
 export class CreateEntryDialogComponent implements OnInit {
   @Input() isOpen = false;

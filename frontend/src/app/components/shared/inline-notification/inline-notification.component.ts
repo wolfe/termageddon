@@ -7,7 +7,8 @@ import { NotificationService, Notification } from '../../../services/notificatio
     selector: 'app-inline-notification',
     imports: [],
     templateUrl: './inline-notification.component.html',
-    styleUrls: ['./inline-notification.component.scss']
+    styleUrls: ['./inline-notification.component.scss'],
+    standalone: true
 })
 export class InlineNotificationComponent implements OnInit, OnDestroy {
   notification: Notification | null = null;

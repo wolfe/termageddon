@@ -18,7 +18,8 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
     selector: 'app-version-history-sidebar',
     imports: [CommonModule],
     templateUrl: './version-history-sidebar.component.html',
-    styleUrls: ['./version-history-sidebar.component.scss']
+    styleUrls: ['./version-history-sidebar.component.scss'],
+    standalone: true
 })
 export class VersionHistorySidebarComponent implements OnInit, OnChanges {
   @Input() entryId: number | null = null;

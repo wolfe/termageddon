@@ -41,7 +41,8 @@ import { getInitialsFromName, getUserDisplayName } from '../../utils/user.util';
         VersionHistorySidebarComponent,
     ],
     templateUrl: './term-detail.component.html',
-    styleUrl: './term-detail.component.scss'
+    styleUrl: './term-detail.component.scss',
+    standalone: true
 })
 export class TermDetailComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() entry!: Entry;

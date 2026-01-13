@@ -1,0 +1,10 @@
+[tool.vulture]
+# Paths to check
+paths = ["glossary"]
+
+# Minimum confidence for reporting (0-100)
+min_confidence = 80
+
+# Whitelist of names that should not be reported as unused
+# These are DRF action methods that appear unused but are registered by decorators
+ignore_names = ["mark_all_read"]

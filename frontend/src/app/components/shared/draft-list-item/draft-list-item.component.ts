@@ -15,7 +15,8 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
     selector: 'app-draft-list-item',
     imports: [CommonModule, PerspectivePillComponent],
     templateUrl: './draft-list-item.component.html',
-    styleUrl: './draft-list-item.component.scss'
+    styleUrl: './draft-list-item.component.scss',
+    standalone: true
 })
 export class DraftListItemComponent {
   @Input() draft!: ReviewDraft;

@@ -12,7 +12,8 @@ import { getInitials, getUserDisplayName } from '../../utils/user.util';
     selector: 'app-comment-thread',
     imports: [CommonModule, FormsModule, RelativeTimePipe, UserAvatarComponent],
     templateUrl: './comment-thread.component.html',
-    styleUrls: ['./comment-thread.component.scss']
+    styleUrls: ['./comment-thread.component.scss'],
+    standalone: true
 })
 export class CommentThreadComponent implements OnInit, OnChanges {
   @Input() comments: Comment[] = [];

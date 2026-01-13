@@ -7,7 +7,8 @@ import { User } from '../../models';
     selector: 'app-reviewer-selector-dialog',
     imports: [FormsModule],
     templateUrl: './reviewer-selector-dialog.component.html',
-    styleUrls: ['./reviewer-selector-dialog.component.scss']
+    styleUrls: ['./reviewer-selector-dialog.component.scss'],
+    standalone: true
 })
 export class ReviewerSelectorDialogComponent implements OnInit {
   @Input() isOpen = false;

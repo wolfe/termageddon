@@ -10,7 +10,8 @@ import { EntryLinkSelectorDialogComponent } from '../shared/entry-link-selector-
     imports: [FormsModule, QuillModule, EntryLinkSelectorDialogComponent],
     templateUrl: './definition-form.component.html',
     styleUrls: ['./definition-form.component.scss'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: true
 })
 export class DefinitionFormComponent implements OnInit, OnDestroy {
   @Input() content: string = '';

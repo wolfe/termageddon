@@ -53,7 +53,8 @@ import { getInitials } from '../../utils/user.util';
     CreateEntryDialogComponent
 ],
     templateUrl: './review-dashboard.component.html',
-    styleUrl: './review-dashboard.component.scss'
+    styleUrl: './review-dashboard.component.scss',
+    standalone: true
 })
 export class ReviewDashboardComponent implements OnInit {
   // Use centralized panel state

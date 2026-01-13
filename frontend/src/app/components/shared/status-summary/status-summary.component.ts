@@ -10,6 +10,7 @@ export interface StatusSummaryItem {
 @Component({
     selector: 'app-status-summary',
     imports: [],
+    standalone: true,
     template: `
     @if (items.length > 0) {
       <div class="p-3 border-b border-gray-300">

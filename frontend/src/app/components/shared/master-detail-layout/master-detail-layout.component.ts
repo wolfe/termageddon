@@ -5,7 +5,8 @@ import { Component, Input } from '@angular/core';
     selector: 'app-master-detail-layout',
     imports: [],
     templateUrl: './master-detail-layout.component.html',
-    styleUrl: './master-detail-layout.component.scss'
+    styleUrl: './master-detail-layout.component.scss',
+    standalone: true
 })
 export class MasterDetailLayoutComponent {
   @Input() sidebarWidth: string = 'w-[25%]';

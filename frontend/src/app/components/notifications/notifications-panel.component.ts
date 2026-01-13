@@ -11,6 +11,7 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 @Component({
     selector: 'app-notifications-panel',
     imports: [RelativeTimePipe],
+    standalone: true,
     template: `
     <div class="notifications-container">
       <button

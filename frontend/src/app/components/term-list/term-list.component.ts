@@ -41,7 +41,8 @@ import {
     SearchFilterBarComponent
 ],
     templateUrl: './term-list.component.html',
-    styleUrl: './term-list.component.scss'
+    styleUrl: './term-list.component.scss',
+    standalone: true
 })
 export class TermListComponent implements OnInit, OnDestroy {
   @Output() entrySelected = new EventEmitter<Entry>();

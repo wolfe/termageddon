@@ -45,7 +45,8 @@ import { getInitials } from '../../utils/user.util';
     ConfirmationDialogComponent
 ],
     templateUrl: './my-drafts.component.html',
-    styleUrls: ['./my-drafts.component.scss']
+    styleUrls: ['./my-drafts.component.scss'],
+    standalone: true
 })
 export class MyDraftsComponent implements OnInit {
   // Use centralized panel state

@@ -6,6 +6,7 @@ import { getInitials, getUserDisplayName } from '../../../utils/user.util';
 @Component({
     selector: 'app-user-avatar',
     imports: [],
+    standalone: true,
     template: `
     @if (user) {
       <div [class]="getAvatarClasses()" [title]="getUserDisplayName(user)">

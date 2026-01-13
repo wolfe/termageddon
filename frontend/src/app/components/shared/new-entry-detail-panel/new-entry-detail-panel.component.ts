@@ -12,6 +12,7 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
     DefinitionFormComponent,
     PerspectivePillComponent
 ],
+    standalone: true,
     template: `
     <div class="new-entry-detail-panel">
       <!-- Header -->

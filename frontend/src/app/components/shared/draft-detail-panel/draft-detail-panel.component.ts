@@ -55,7 +55,8 @@ type DraftDisplayContext = 'review' | 'my-drafts' | 'term-detail';
         VersionHistorySidebarComponent,
     ],
     templateUrl: './draft-detail-panel.component.html',
-    styleUrl: './draft-detail-panel.component.scss'
+    styleUrl: './draft-detail-panel.component.scss',
+    standalone: true
 })
 export class DraftDetailPanelComponent
   extends BaseEntryDetailComponent

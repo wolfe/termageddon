@@ -13,7 +13,8 @@ interface ConfirmationDialogData {
     selector: 'app-confirmation-dialog',
     imports: [CommonModule],
     templateUrl: './confirmation-dialog.component.html',
-    styleUrls: ['./confirmation-dialog.component.scss']
+    styleUrls: ['./confirmation-dialog.component.scss'],
+    standalone: true
 })
 export class ConfirmationDialogComponent {
   @Input() isOpen = false;

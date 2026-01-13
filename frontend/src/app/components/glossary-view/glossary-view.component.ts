@@ -19,7 +19,8 @@ import { StatusSummaryComponent } from '../shared/status-summary/status-summary.
     StatusSummaryComponent
 ],
     templateUrl: './glossary-view.component.html',
-    styleUrl: './glossary-view.component.scss'
+    styleUrl: './glossary-view.component.scss',
+    standalone: true
 })
 export class GlossaryViewComponent implements OnInit {
   selectedEntry: Entry | null = null;

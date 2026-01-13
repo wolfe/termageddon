@@ -16,6 +16,7 @@ import { of, Subject, debounceTime, distinctUntilChanged, switchMap, catchError 
 @Component({
     selector: 'app-term-picker-modal',
     imports: [FormsModule],
+    standalone: true,
     template: `
     @if (isOpen) {
       <div class="modal-overlay" (click)="onClose()">
