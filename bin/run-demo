@@ -110,10 +110,21 @@ pip install -q -r requirements.txt || {
 print_status "Wiping existing database..."
 rm -f db.sqlite3
 
+# Create migrations for any model changes
+print_status "Creating migrations for model changes..."
+python manage.py makemigrations || {
+    print_error "Failed to create migrations"
+    exit 1
+}
+
 # Run migrations to create fresh database
 print_status "Running database migrations..."
 python manage.py migrate || {
     print_error "Failed to run migrations"
+    exit 1
+}
+python manage.py migrate || {
+    print_error "Failed to re-run migrations"
     exit 1
 }
 

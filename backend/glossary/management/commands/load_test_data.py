@@ -155,6 +155,21 @@ class Command(BaseCommand):
 
             # Ensure all drafts after published are newer (they already are, but verify)
             # The unpublished drafts already have recent timestamps, which is correct
+            # However, we need to ensure that any draft that replaces another has a newer timestamp
+            # This is especially important after timestamp adjustments
+            for i, draft in enumerate(drafts):
+                if (
+                    draft.replaces_draft
+                    and draft.created_at <= draft.replaces_draft.created_at
+                ):
+                    # Ensure replacing draft is at least 1 second newer
+                    new_timestamp = draft.replaces_draft.created_at + timedelta(
+                        seconds=1
+                    )
+                    EntryDraft.objects.filter(pk=draft.pk).update(
+                        created_at=new_timestamp
+                    )
+                    draft.refresh_from_db()
 
         for i, draft in enumerate(drafts):
             if i == published_draft_index:
@@ -242,12 +257,18 @@ class Command(BaseCommand):
 
         # Check created_at consistency in revision chains
         inconsistent_chains = 0
-        for draft in EntryDraft.objects.filter(replaces_draft__isnull=False):
+        for draft in EntryDraft.objects.filter(
+            replaces_draft__isnull=False
+        ).select_related("replaces_draft"):
             if draft.created_at <= draft.replaces_draft.created_at:
                 inconsistent_chains += 1
+                # Fix the inconsistency by ensuring the replacing draft is newer
+                # Add a small buffer to ensure it's definitely newer
+                new_timestamp = draft.replaces_draft.created_at + timedelta(seconds=1)
+                EntryDraft.objects.filter(pk=draft.pk).update(created_at=new_timestamp)
         if inconsistent_chains > 0:
             validation_errors.append(
-                f"Found {inconsistent_chains} revision chains with inconsistent created_at"
+                f"Found {inconsistent_chains} revision chains with inconsistent created_at (fixed)"
             )
 
         return validation_errors
