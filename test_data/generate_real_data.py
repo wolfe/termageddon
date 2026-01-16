@@ -49,7 +49,7 @@ def wrap_in_paragraphs(text):
     return f"<p>{text}</p>"
 
 
-def improve_definition(original, term_text, all_terms):
+def improve_definition(original, term_text, all_terms, current_perspective):
     """Improve definition by removing redundancy and adding cross-references."""
     improved = original
 
@@ -67,83 +67,103 @@ def improve_definition(original, term_text, all_terms):
     for pattern, replacement, flags in patterns:
         improved = re.sub(pattern, replacement, improved, flags=flags)
 
+    # Filter terms to only include those from the same perspective
+    same_perspective_terms = {
+        term: perspective
+        for term, perspective in all_terms.items()
+        if perspective == current_perspective
+    }
+
     # Add cross-references for related terms
     # Split text into parts: HTML tags and text content
-    # Only replace terms in text content, not in HTML attributes
+    # Only replace terms in text content, not in HTML attributes or inside links
     parts = []
     last_end = 0
+    in_link = False  # Track if we're inside an <a> tag
 
     # Find all HTML tags
     for match in re.finditer(r'<[^>]+>', improved):
         # Text before tag
         text_before = improved[last_end:match.start()]
         if text_before:
-            parts.append(('text', text_before))
+            parts.append(('text', text_before, in_link))
         # Tag itself
-        parts.append(('tag', match.group()))
+        tag = match.group()
+        parts.append(('tag', tag))
+        # Check if this is an opening or closing link tag
+        if tag.lower().startswith('<a '):
+            in_link = True
+        elif tag.lower() == '</a>':
+            in_link = False
         last_end = match.end()
 
     # Text after last tag
     if last_end < len(improved):
-        parts.append(('text', improved[last_end:]))
+        parts.append(('text', improved[last_end:], in_link))
 
     # Process text parts only
     result_parts = []
-    for part_type, part_content in parts:
-        if part_type == 'tag':
+    for part in parts:
+        if len(part) == 2:  # Tag
+            part_type, part_content = part
             result_parts.append(part_content)
-        else:
-            # Process text content for cross-references
-            text_content = part_content
-            for other_term, other_perspective in all_terms.items():
-                if other_term.lower() == term_text.lower():
-                    continue
-
-                # Skip if term is too short (likely false matches)
-                if len(other_term) < 3:
-                    continue
-
-                # Skip if text already contains cross-reference placeholders
-                # (to avoid nested cross-references like [[[[term|EES]] data|EES]])
-                if '[[' in text_content and ']]' in text_content:
-                    # Check if this term is already inside a cross-reference
-                    # Find all existing cross-references
-                    existing_refs = re.findall(r'\[\[([^\|]+)\|([^\]]+)\]\]', text_content)
-                    term_in_ref = False
-                    for ref_term, _ in existing_refs:
-                        if other_term.lower() in ref_term.lower() or ref_term.lower() in other_term.lower():
-                            term_in_ref = True
-                            break
-                    if term_in_ref:
+        else:  # Text with link flag
+            part_type, part_content, is_inside_link = part
+            if is_inside_link:
+                # Don't process text inside links - preserve it as-is to keep external links intact
+                result_parts.append(part_content)
+            else:
+                # Process text content for cross-references (only if not inside a link)
+                text_content = part_content
+                for other_term, other_perspective in same_perspective_terms.items():
+                    if other_term.lower() == term_text.lower():
                         continue
 
-                # Check if term appears in text (case-insensitive word boundary)
-                pattern = r'\b' + re.escape(other_term) + r'\b'
-                if re.search(pattern, text_content, re.IGNORECASE):
-                    # Only replace if not already a cross-reference
-                    if f'[[{other_term}|' not in text_content:
-                        # Also check that we're not inside an existing cross-reference
-                        # by checking if the match is between [[ and ]]
-                        matches = list(re.finditer(pattern, text_content, re.IGNORECASE))
-                        for match in reversed(matches):  # Process from end to avoid index shifts
-                            start, end = match.span()
-                            # Check if this position is inside a cross-reference
-                            before = text_content[:start]
-                            after = text_content[end:]
-                            # Count [[ before and ]] after
-                            open_count = before.count('[[') - before.count(']]')
-                            close_count = after.count(']]') - after.count('[[')
-                            # If we're inside a cross-reference, skip this match
-                            if open_count > 0 and close_count > 0:
-                                continue
-                            # Replace this occurrence
-                            text_content = (
-                                text_content[:start] +
-                                f'[[{other_term}|{other_perspective}]]' +
-                                text_content[end:]
-                            )
-                            break  # Only replace first match per term
-            result_parts.append(text_content)
+                    # Skip if term is too short (likely false matches)
+                    if len(other_term) < 3:
+                        continue
+
+                    # Skip if text already contains cross-reference placeholders
+                    # (to avoid nested cross-references like [[[[term|EES]] data|EES]])
+                    if '[[' in text_content and ']]' in text_content:
+                        # Check if this term is already inside a cross-reference
+                        # Find all existing cross-references
+                        existing_refs = re.findall(r'\[\[([^\|]+)\|([^\]]+)\]\]', text_content)
+                        term_in_ref = False
+                        for ref_term, _ in existing_refs:
+                            if other_term.lower() in ref_term.lower() or ref_term.lower() in other_term.lower():
+                                term_in_ref = True
+                                break
+                        if term_in_ref:
+                            continue
+
+                    # Check if term appears in text (case-insensitive word boundary)
+                    pattern = r'\b' + re.escape(other_term) + r'\b'
+                    if re.search(pattern, text_content, re.IGNORECASE):
+                        # Only replace if not already a cross-reference
+                        if f'[[{other_term}|' not in text_content:
+                            # Also check that we're not inside an existing cross-reference
+                            # by checking if the match is between [[ and ]]
+                            matches = list(re.finditer(pattern, text_content, re.IGNORECASE))
+                            for match in reversed(matches):  # Process from end to avoid index shifts
+                                start, end = match.span()
+                                # Check if this position is inside a cross-reference
+                                before = text_content[:start]
+                                after = text_content[end:]
+                                # Count [[ before and ]] after
+                                open_count = before.count('[[') - before.count(']]')
+                                close_count = after.count(']]') - after.count('[[')
+                                # If we're inside a cross-reference, skip this match
+                                if open_count > 0 and close_count > 0:
+                                    continue
+                                # Replace this occurrence
+                                text_content = (
+                                    text_content[:start] +
+                                    f'[[{other_term}|{other_perspective}]]' +
+                                    text_content[end:]
+                                )
+                                break  # Only replace first match per term
+                result_parts.append(text_content)
 
     improved = ''.join(result_parts)
 
@@ -421,16 +441,13 @@ def main():
         writer = csv.writer(f)
         writer.writerow(["perspective", "term", "definition", "author"])
 
-        # Write EES entries (two drafts each)
+        # Write EES entries (single improved draft each)
+        # Cross-references are resolved after all entries are created via resolve_cross_references()
         for term, original_def in dita_entries:
-            # First draft: original definition
-            first_draft = wrap_in_paragraphs(original_def)
-            writer.writerow(["EES", term, first_draft, "admin"])
-
-            # Second draft: improved definition
-            improved_def = improve_definition(original_def, term, all_terms)
-            second_draft = wrap_in_paragraphs(improved_def)
-            writer.writerow(["EES", term, second_draft, "admin"])
+            # Generate improved definition in-memory (adds cross-references)
+            improved_def = improve_definition(original_def, term, all_terms, "EES")
+            draft = wrap_in_paragraphs(improved_def)
+            writer.writerow(["EES", term, draft, "admin"])
 
         # Write Tools entries (single draft each)
         for term, definition in tools_entries:
@@ -438,9 +455,9 @@ def main():
             writer.writerow(["Tools", term, draft, "admin"])
 
     print(f"✓ Generated {csv_path}")
-    print(f"  - {len(dita_entries)} EES terms (2 drafts each = {len(dita_entries) * 2} rows)")
+    print(f"  - {len(dita_entries)} EES terms ({len(dita_entries)} rows)")
     print(f"  - {len(tools_entries)} Tools terms ({len(tools_entries)} rows)")
-    print(f"  - Total: {len(dita_entries) * 2 + len(tools_entries)} rows")
+    print(f"  - Total: {len(dita_entries) + len(tools_entries)} rows")
 
 
 if __name__ == "__main__":
