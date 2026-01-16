@@ -10,12 +10,35 @@
     font-weight: 600;
   }
 
-  a {
+  // External links (those without data-entry-id)
+  // These are regular HTML links, not internal glossary links
+  a:not([data-entry-id]) {
     color: #e31937;
     text-decoration: underline;
+    font-weight: 500;
+    cursor: pointer;
 
     &:hover {
       color: #003a70;
+      text-decoration: underline;
     }
+
+    &:visited {
+      color: #991b1b; // Darker red for visited links
+    }
+
+    // Add external link indicator for links that open in new tab
+    &[target="_blank"]::after {
+      content: " ↗";
+      font-size: 0.85em;
+      opacity: 0.7;
+      margin-left: 2px;
+    }
+  }
+
+  // Internal entry links (with data-entry-id) - these are styled in styles.scss
+  // Keep them separate so they get the blue styling
+  a[data-entry-id] {
+    // Styles are in global styles.scss - don't override here
   }
 }

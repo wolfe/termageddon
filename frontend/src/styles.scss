@@ -109,6 +109,23 @@ a[data-entry-id] {
   }
 }
 
+/* External link styling in prose content (for dynamically inserted HTML) */
+.prose a:not([data-entry-id]) {
+  color: #3b82f6; // Blue, consistent with internal entry links
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    color: #2563eb; // Darker blue on hover
+    text-decoration: underline;
+  }
+
+  &:visited {
+    color: #6366f1; // Purple/indigo for visited links
+  }
+}
+
 /* Diff highlighting styles for draft comparisons */
 .diff-add {
   background-color: #d1fae5; /* green-100 */
