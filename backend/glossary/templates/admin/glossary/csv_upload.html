@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:glossary_entry_changelist' %}">Entries</a>
+&rsaquo; {% trans 'Upload CSV' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Upload CSV File</h1>
+
+<p>Upload a CSV file to bulk load glossary entries. The CSV should have the following columns:</p>
+<ul>
+    <li><strong>perspective</strong> (required) - Perspective name</li>
+    <li><strong>term</strong> (required) - Term text</li>
+    <li><strong>definition</strong> (required) - Definition content (HTML supported)</li>
+    <li><strong>author</strong> (optional) - Username of author. If not provided or user doesn't exist, the current admin user will be used.</li>
+</ul>
+
+<p><strong>Note:</strong> If an entry already exists with the same term and perspective, and the published draft has the same content, it will be skipped (idempotent). If the content differs, a new draft will be created and published, preserving the previous draft in history.</p>
+
+<form method="post" enctype="multipart/form-data" id="csv-upload-form">
+    {% csrf_token %}
+
+    {% if messages %}
+        <ul class="messagelist">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <fieldset class="module aligned">
+        <div class="form-row">
+            <div>
+                <label for="id_csv_file" class="required">CSV File:</label>
+                <input type="file" name="csv_file" id="id_csv_file" accept=".csv" required style="display: block; margin-top: 5px; margin-bottom: 5px;">
+                <p class="help">Select a CSV file to upload (max 10MB)</p>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label for="id_skip_duplicates">
+                    <input type="checkbox" name="skip_duplicates" id="id_skip_duplicates" value="on" checked>
+                    Skip existing entries with same content (idempotent)
+                </label>
+                <p class="help">If checked, entries with matching published draft content will be skipped.</p>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="submit-row">
+        <input type="submit" value="Upload CSV" class="default" name="_upload">
+        <a href="{% url 'admin:glossary_entry_changelist' %}" class="button">Cancel</a>
+    </div>
+</form>
+{% endblock %}

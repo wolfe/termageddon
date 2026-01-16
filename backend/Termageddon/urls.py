@@ -21,13 +21,24 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
+from glossary.admin import csv_upload_view
 from glossary.views import health_check_view
 
+# Configure admin site URL for "VIEW SITE" link
+# In development, point to frontend (port 4200), in production use same domain
+if settings.DEBUG:
+    admin.site.site_url = "http://localhost:4200"
+else:
+    # In production, frontend is served from same domain as backend
+    admin.site.site_url = None  # None means use same domain as admin
+
 urlpatterns = [
+    path("admin/glossary/upload-csv/", csv_upload_view, name="glossary_upload_csv"),
     path("admin/", admin.site.urls),
     path("health/", health_check_view, name="health-check"),
     path("api/", include("glossary.urls")),
