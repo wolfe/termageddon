@@ -14,8 +14,9 @@ module "termageddon" {
   desired_task_count = 1
   image_tag = var.image_tag
 
-  domain_name = ""
-  enable_https = false
+  domain_name = "*.analyzere.net"
+  enable_https = true
+  allowed_hostname = "termageddon-dev.analyzere.net"
 
   # Secrets (provided via environment variables)
   db_password        = var.db_password

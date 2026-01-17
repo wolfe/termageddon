@@ -34,6 +34,13 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 # ALLOWED_HOSTS from environment or default to localhost
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+# CSRF Trusted Origins - Required for HTTPS requests to Django admin and API
+CSRF_TRUSTED_ORIGINS = [
+    "https://termageddon.analyzere.net",
+    "https://termageddon-dev.analyzere.net",
+    "https://termageddon-staging.analyzere.net",
+]
+
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True

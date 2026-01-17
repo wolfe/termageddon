@@ -1,85 +1,36 @@
 #!/bin/bash
-set -e
+set -ex
 
-# Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BACKEND_DIR="${SCRIPT_DIR}/../backend"
 FRONTEND_DIR="${SCRIPT_DIR}/../frontend"
 
-# Configuration
 ECR_REGISTRY="753029624111.dkr.ecr.us-east-2.amazonaws.com"
 ECR_REPO="termageddon-dev-backend"
 AWS_REGION="us-east-2"
-ECS_CLUSTER="termageddon-dev"
-ECS_SERVICE="termageddon-dev-service"
 
-# Use git commit hash as tag, or "latest" if not in git repo
-if git rev-parse --git-dir > /dev/null 2>&1; then
-  TAG=$(git rev-parse --short HEAD)
-  # Check if there are uncommitted changes
-  if [[ -n $(git status -s) ]]; then
-    TAG="${TAG}-dirty"
-  fi
-else
-  TAG="latest"
-fi
-
+TAG=$(git rev-parse --short HEAD 2>/dev/null || echo "latest")
 BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-echo "=== Termageddon Backend Publish ==="
-echo "Tag: ${TAG}"
-echo "Build time: ${BUILD_TIME}"
-echo ""
+echo "=== Publishing tag: ${TAG} ==="
 
-# Build Angular frontend
-echo "Building Angular frontend..."
 cd "${FRONTEND_DIR}"
 npm run build
-echo ""
 
-# Copy Angular build to backend target directory
-echo "Copying Angular build to backend..."
 rm -rf "${BACKEND_DIR}/target"
 cp -r dist/frontend/browser "${BACKEND_DIR}/target"
-echo ""
 
-# Login to ECR
-echo "Logging into ECR..."
 aws ecr get-login-password --region ${AWS_REGION} | \
   docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-# Build Docker image
-echo ""
-echo "Building Docker image..."
 cd "${BACKEND_DIR}"
 docker build \
   --build-arg BUILD_VERSION=${TAG} \
   --build-arg BUILD_TIME=${BUILD_TIME} \
   -t termageddon-backend .
 
-# Tag image with git hash
-echo ""
-echo "Tagging image..."
 docker tag termageddon-backend:latest ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
-
-# Push to ECR
-echo ""
-echo "Pushing to ECR..."
 docker push ${ECR_REGISTRY}/${ECR_REPO}:${TAG}
 
-echo ""
-echo "✓ Publish complete!"
-echo ""
-echo "Image tag pushed:"
-echo "  ${ECR_REGISTRY}/${ECR_REPO}:${TAG}"
-echo ""
-echo "To deploy, run:"
-echo "  cd terraform/aws/dev"
-echo "  source .env"
-echo "  terraform apply -var-file=config/termageddon-dev.tfvars -var=\"image_tag=${TAG}\""
-echo ""
-echo "View logs:"
-echo "  aws logs tail /ecs/termageddon-dev --follow --region ${AWS_REGION}"
-echo ""
-echo "Application URL:"
-echo "  http://termageddon-dev-alb-1289199186.us-east-2.elb.amazonaws.com/"
+echo "✓ Published: ${ECR_REGISTRY}/${ECR_REPO}:${TAG}"
+echo "To deploy: ./bin/deploy dev"

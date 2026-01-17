@@ -80,6 +80,12 @@ variable "domain_name" {
   default     = ""
 }
 
+variable "allowed_hostname" {
+  type        = string
+  description = "Allowed hostname for ALB access (e.g., termageddon-dev.analyzere.net). If empty, all hosts allowed."
+  default     = ""
+}
+
 variable "okta_client_id" {
   type        = string
   description = "Okta client ID"

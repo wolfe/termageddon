@@ -62,8 +62,33 @@ resource "aws_lb_listener" "main" {
   certificate_arn    = data.aws_acm_certificate.main[0].arn
 
   default_action {
+    type = var.allowed_hostname != "" ? "fixed-response" : "forward"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Access denied"
+      status_code  = "403"
+    }
+
+    target_group_arn = var.allowed_hostname != "" ? null : aws_lb_target_group.main.arn
+  }
+}
+
+# HTTPS Listener Rule - Allow specific hostname
+resource "aws_lb_listener_rule" "host_based" {
+  count        = var.enable_https && var.domain_name != "" && var.allowed_hostname != "" ? 1 : 0
+  listener_arn = aws_lb_listener.main[0].arn
+  priority     = 100
+
+  action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.main.arn
+  }
+
+  condition {
+    host_header {
+      values = [var.allowed_hostname]
+    }
   }
 }
 
