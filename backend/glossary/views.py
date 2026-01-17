@@ -1409,7 +1409,9 @@ class CustomAuthToken(ObtainAuthToken):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def okta_login_view(request):
-    """Okta OAuth login endpoint - exchanges Okta token for Django token"""
+    """Okta OAuth login endpoint - exchanges Okta token for Django token and creates session"""
+    from django.contrib.auth import login
+
     logger = logging.getLogger(__name__)
     logger.info("okta_login_view: Received Okta login request")
 
@@ -1440,11 +1442,17 @@ def okta_login_view(request):
         user = get_or_create_user_from_okta_token(token_data)
         logger.info(f"okta_login_view: User retrieved/created: {user.username}")
 
-        # Create or get Django token
+        # Create or get Django token for API access
         token, created = Token.objects.get_or_create(user=user)
         logger.info(
             f"okta_login_view: Django token {'created' if created else 'retrieved'}"
         )
+
+        # Log user into Django session for admin access
+        # Set backend attribute required by login()
+        user.backend = "django.contrib.auth.backends.ModelBackend"
+        login(request, user)
+        logger.info("okta_login_view: User logged into Django session")
 
         # Prefetch curatorship to avoid N+1 query in serializer
         user = (
