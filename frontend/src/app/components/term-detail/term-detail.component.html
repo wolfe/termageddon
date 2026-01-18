@@ -102,7 +102,6 @@
               size="medium"
               [variant]="entry.id === termEntry.id ? 'tab-selected' : 'tab-unselected'"
               [clickable]="true"
-              [maxLength]="10"
               (click)="switchToPerspective(termEntry)"
               [title]="termEntry.perspective.description || termEntry.perspective.name"
             ></app-perspective-pill>

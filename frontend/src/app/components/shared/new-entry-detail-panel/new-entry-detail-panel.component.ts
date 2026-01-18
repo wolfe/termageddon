@@ -26,6 +26,9 @@ import { PerspectivePillComponent } from '../perspective-pill/perspective-pill.c
               @if (displayPerspective) {
                 <app-perspective-pill
                   [perspective]="displayPerspective"
+                  size="medium"
+                  variant="selected"
+                  [maxLength]="0"
                 ></app-perspective-pill>
               }
             </div>

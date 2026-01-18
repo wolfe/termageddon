@@ -26,8 +26,6 @@
             </div>
             <app-perspective-pill
               [perspective]="entry.perspective"
-              size="small"
-              variant="unselected"
             ></app-perspective-pill>
             <div class="entry-preview" *ngIf="entry.active_draft">
               {{ entry.active_draft.content | slice: 0 : 100

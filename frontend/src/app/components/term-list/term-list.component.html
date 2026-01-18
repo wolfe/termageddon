@@ -60,10 +60,8 @@
                 @for (entry of termEntries; track entry.id) {
                   <app-perspective-pill
                     [perspective]="entry.perspective"
-                    size="small"
                     [variant]="selectedEntry?.id === entry.id ? 'selected' : 'unselected'"
                     [clickable]="true"
-                    [maxLength]="10"
                     (click)="selectEntryByPerspective(entry)"
                     data-testid="perspective-bubble"
                   ></app-perspective-pill>

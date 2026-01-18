@@ -19,11 +19,11 @@ import { Perspective } from '../../../models';
 })
 export class PerspectivePillComponent {
   @Input() perspective!: Perspective;
-  @Input() size: 'small' | 'medium' = 'medium';
+  @Input() size: 'small' | 'medium' = 'small';
   @Input() variant: 'default' | 'selected' | 'unselected' | 'tab-selected' | 'tab-unselected' =
-    'default';
+    'unselected';
   @Input() clickable: boolean = false;
-  @Input() maxLength: number = 0; // 0 means no truncation
+  @Input() maxLength: number = 20;
   @Output() click = new EventEmitter<void>();
 
   onClick(event: MouseEvent): void {
