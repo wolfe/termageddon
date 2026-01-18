@@ -10,7 +10,7 @@ import { Perspective } from '../../../models';
     <span
       [class]="getPillClasses()"
       [title]="perspective.description || perspective.name"
-      (click)="onClick()"
+      (click)="onClick($event)"
     >
       {{ getDisplayText() }}
     </span>
@@ -26,8 +26,9 @@ export class PerspectivePillComponent {
   @Input() maxLength: number = 0; // 0 means no truncation
   @Output() click = new EventEmitter<void>();
 
-  onClick(): void {
+  onClick(event: MouseEvent): void {
     if (this.clickable) {
+      event.stopPropagation();
       this.click.emit();
     }
   }

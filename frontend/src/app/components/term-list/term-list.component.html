@@ -38,18 +38,19 @@
       </div>
     } @else {
       @for (termEntries of getGroupedTermsArray(); track termEntries[0].term.id) {
-        <div class="p-3 border-b border-gray-200 hover:bg-gray-50">
+        <div
+          class="p-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+          [class.bg-termageddon-gray-light]="selectedEntry?.term?.id === termEntries[0].term.id"
+          (click)="selectTerm(termEntries)"
+          data-testid="term-row"
+        >
           <div class="flex items-start justify-between">
             <div class="flex-1">
-              <!-- Term Name (clickable to select first perspective) -->
+              <!-- Term Name -->
               <h3
-                (click)="selectTerm(termEntries)"
                 data-testid="term-name"
-                [class.bg-termageddon-gray-light]="
-                  selectedEntry?.term?.id === termEntries[0].term.id
-                "
                 [class.search-highlight]="termEntries[0].term.is_highlighted"
-                class="font-semibold text-sm text-termageddon-gray-dark cursor-pointer hover:text-termageddon-primary"
+                class="font-semibold text-sm text-termageddon-gray-dark"
               >
                 {{ termEntries[0].term.text }}
               </h3>
