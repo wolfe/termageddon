@@ -1,9 +1,6 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { MainLayoutComponent } from './components/main-layout/main-layout.component';
-import { GlossaryViewComponent } from './components/glossary-view/glossary-view.component';
-import { ReviewDashboardComponent } from './components/review-dashboard/review-dashboard.component';
-import { MyDraftsComponent } from './components/my-drafts/my-drafts.component';
 import { EntryRouterComponent } from './components/entry-router/entry-router.component';
 import { DraftRouterComponent } from './components/draft-router/draft-router.component';
 import { authGuard } from './guards/auth.guard';
@@ -43,15 +40,24 @@ export const routes: Routes = [
       },
       {
         path: 'glossary',
-        component: GlossaryViewComponent,
+        loadComponent: () =>
+          import('./components/glossary-view/glossary-view.component').then(
+            (m) => m.GlossaryViewComponent
+          ),
       },
       {
         path: 'review',
-        component: ReviewDashboardComponent,
+        loadComponent: () =>
+          import('./components/review-dashboard/review-dashboard.component').then(
+            (m) => m.ReviewDashboardComponent
+          ),
       },
       {
         path: 'my-drafts',
-        component: MyDraftsComponent,
+        loadComponent: () =>
+          import('./components/my-drafts/my-drafts.component').then(
+            (m) => m.MyDraftsComponent
+          ),
       },
       {
         path: '',
