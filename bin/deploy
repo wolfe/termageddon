@@ -4,9 +4,24 @@ set -ex
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="${SCRIPT_DIR}/.."
 
-[ $# -lt 1 ] && echo "Usage: $0 <environment>" && exit 1
+AUTO_APPROVE=""
 
-ENVIRONMENT=$1
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -y)
+      AUTO_APPROVE="-auto-approve"
+      shift
+      ;;
+    *)
+      ENVIRONMENT=$1
+      shift
+      ;;
+  esac
+done
+
+[ -z "${ENVIRONMENT}" ] && echo "Usage: $0 [-y] <environment>" && exit 1
+
 TERRAFORM_DIR="${PROJECT_ROOT}/terraform/aws/${ENVIRONMENT}"
 TFVARS_FILE="config/termageddon-${ENVIRONMENT}.tfvars"
 TAG=$(git rev-parse --short HEAD 2>/dev/null || echo "latest")
@@ -16,7 +31,7 @@ echo "=== Deploying ${ENVIRONMENT}: ${TAG} ==="
 cd "${TERRAFORM_DIR}"
 [ -f .env ] && source .env
 
-terraform apply -var-file="${TFVARS_FILE}" -var="image_tag=${TAG}"
+terraform apply ${AUTO_APPROVE} -var-file="${TFVARS_FILE}" -var="image_tag=${TAG}"
 
 echo "✓ Deployed: ${TAG}"
 
