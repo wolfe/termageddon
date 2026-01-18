@@ -133,12 +133,17 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       const trimmedToken = token.trim();
       localStorage.setItem(this.TOKEN_KEY, trimmedToken);
+      // Also set as cookie for Django admin authentication via proxy
+      // Cookie is accessible to both frontend (4200) and backend (8000) through proxy
+      document.cookie = `auth_token=${trimmedToken}; path=/; SameSite=Lax; max-age=86400`; // 24 hours
     }
   }
 
   clearToken(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.TOKEN_KEY);
+      // Clear the cookie as well
+      document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
   }
 

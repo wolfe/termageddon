@@ -1636,6 +1636,16 @@ def system_config_view(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+def test_users_exist_view(request):
+    """Check if any test users exist in the database (public endpoint for login page)"""
+    from glossary.models import UserProfile
+
+    test_users_count = UserProfile.objects.filter(is_test_user=True).count()
+    return Response({"test_users_exist": test_users_count > 0})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def okta_config_view(request):
     """Get Okta OAuth configuration for frontend"""
     return Response(

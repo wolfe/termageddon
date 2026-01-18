@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
 import { Subscription } from 'rxjs';
@@ -18,6 +19,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   errorMessage: string = '';
   isLoading: boolean = false;
   showTestUserLogin: boolean = false;
+  hasTestUsers: boolean = false;
   private queryParamsSubscription?: Subscription;
 
   constructor(
@@ -26,7 +28,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -70,6 +73,27 @@ export class LoginComponent implements OnInit, OnDestroy {
     // Note: Okta callbacks are handled by MainLayoutComponent, not LoginComponent
     // If we're on /login with callback params, it means the callback failed and redirected here
     // Don't try to handle it again - just show the error if present
+
+    // Check if test users exist (only show test user login option if they do)
+    this.checkTestUsersExist();
+  }
+
+  private checkTestUsersExist(): void {
+    this.http.get<{ test_users_exist: boolean }>('/api/test-users-exist/').subscribe({
+      next: (response) => {
+        console.log('Test users check response:', response);
+        this.hasTestUsers = response.test_users_exist;
+        console.log('hasTestUsers set to:', this.hasTestUsers);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        // Log error for debugging
+        console.error('Failed to check for test users:', error);
+        // If check fails, assume no test users (fail closed)
+        this.hasTestUsers = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   ngOnDestroy(): void {

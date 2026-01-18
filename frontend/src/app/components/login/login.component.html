@@ -11,7 +11,7 @@
         class="mt-2 text-xs px-2 py-1 bg-gray-200 text-gray-600 rounded border border-gray-300 hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400"
         title="Clear all Okta storage and auth tokens (debug tool)"
       >
-        🧹 Clean State
+        🧹 Clean Browser State
       </button>
     </div>
 
@@ -39,26 +39,30 @@
       </button>
     </div>
 
-    <!-- Divider -->
-    <div class="relative mb-6">
-      <div class="absolute inset-0 flex items-center">
-        <div class="w-full border-t border-gray-300"></div>
+    <!-- Divider (only show if test users exist) -->
+    @if (hasTestUsers) {
+      <div class="relative mb-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-white text-termageddon-gray-dark">or</span>
+        </div>
       </div>
-      <div class="relative flex justify-center text-sm">
-        <span class="px-2 bg-white text-termageddon-gray-dark">or</span>
-      </div>
-    </div>
+    }
 
     <!-- Test User Login Toggle -->
-    <div class="mb-4">
-      <button
-        type="button"
-        (click)="toggleTestUserLogin()"
-        class="text-sm text-termageddon-primary hover:text-termageddon-accent focus:outline-none"
-      >
-        {{ showTestUserLogin ? 'Hide' : 'Show' }} Test User Login
-      </button>
-    </div>
+    @if (hasTestUsers) {
+      <div class="mb-4">
+        <button
+          type="button"
+          (click)="toggleTestUserLogin()"
+          class="text-sm text-termageddon-primary hover:text-termageddon-accent focus:outline-none"
+        >
+          {{ showTestUserLogin ? 'Hide' : 'Show' }} Test User Login
+        </button>
+      </div>
+    }
 
     <!-- Test User Login Form -->
     @if (showTestUserLogin) {

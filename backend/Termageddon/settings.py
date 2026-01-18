@@ -41,6 +41,17 @@ CSRF_TRUSTED_ORIGINS = [
     "https://termageddon-staging.analyzere.net",
 ]
 
+# Add localhost for local development
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend(
+        [
+            "http://localhost:4200",  # Frontend (proxies to backend)
+            "http://127.0.0.1:4200",
+            "http://localhost:8000",  # Direct backend access (for admin if accessed directly)
+            "http://127.0.0.1:8000",
+        ]
+    )
+
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -81,6 +92,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "glossary.middleware.TokenToSessionMiddleware",  # Auto-authenticate admin via token
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

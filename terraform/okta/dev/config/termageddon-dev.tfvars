@@ -5,5 +5,6 @@ termageddon_backend_url = "termageddon-dev.analyzere.net"
 
 additional_redirect_urls = [
   "http://localhost:4200/callback",
+  "http://localhost:8000/callback",
   "http://localhost:8000/oidc/callback",
 ]
