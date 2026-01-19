@@ -382,6 +382,157 @@ class TestEntryViewSet:
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
+    def test_filter_entries_by_term(self, authenticated_client):
+        """Test filtering entries by term"""
+        term1 = TermFactory(text="Cache")
+        term2 = TermFactory(text="Memory")
+        perspective = PerspectiveFactory()
+        entry1 = EntryFactory(term=term1, perspective=perspective)
+        entry2 = EntryFactory(term=term2, perspective=perspective)
+
+        # Create published versions
+        EntryDraftFactory(entry=entry1, is_published=True)
+        EntryDraftFactory(entry=entry2, is_published=True)
+
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {"term": term1.id})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["term"]["id"] == term1.id
+
+    def test_filter_entries_by_is_official(self, authenticated_client):
+        """Test filtering entries by is_official flag"""
+        perspective = PerspectiveFactory()
+        official_entry = EntryFactory(perspective=perspective, is_official=True)
+        unofficial_entry = EntryFactory(perspective=perspective, is_official=False)
+
+        # Create published versions
+        EntryDraftFactory(entry=official_entry, is_published=True)
+        EntryDraftFactory(entry=unofficial_entry, is_published=True)
+
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {"is_official": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["is_official"] is True
+
+    def test_filter_entries_by_author(self, authenticated_client):
+        """Test filtering entries by draft author - this test would fail before the fix"""
+        author1 = UserFactory(username="author1")
+        author2 = UserFactory(username="author2")
+        perspective = PerspectiveFactory()
+
+        # Create entries authored by different users
+        entry1 = EntryFactory(perspective=perspective)
+        entry2 = EntryFactory(perspective=perspective)
+        entry3 = EntryFactory(perspective=perspective)
+
+        # Create published drafts with different authors
+        EntryDraftFactory(entry=entry1, author=author1, is_published=True)
+        EntryDraftFactory(entry=entry2, author=author2, is_published=True)
+        EntryDraftFactory(entry=entry3, author=author1, is_published=True)
+
+        # Filter by author1
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {"author": author1.id})
+
+        assert response.status_code == status.HTTP_200_OK
+        # Should only return entries authored by author1
+        assert len(response.data["results"]) == 2
+        result_ids = {result["id"] for result in response.data["results"]}
+        assert result_ids == {entry1.id, entry3.id}
+
+    def test_filter_grouped_entries_by_author(self, authenticated_client):
+        """Test filtering grouped entries by author - this test would fail before the fix"""
+        author1 = UserFactory(username="author1")
+        author2 = UserFactory(username="author2")
+        perspective = PerspectiveFactory()
+
+        term1 = TermFactory(text="Term1")
+        term2 = TermFactory(text="Term2")
+
+        # Create entries with different authors
+        entry1 = EntryFactory(term=term1, perspective=perspective)
+        entry2 = EntryFactory(term=term2, perspective=perspective)
+
+        EntryDraftFactory(entry=entry1, author=author1, is_published=True)
+        EntryDraftFactory(entry=entry2, author=author2, is_published=True)
+
+        # Filter grouped entries by author1
+        url = reverse("entry-grouped-by-term")
+        response = authenticated_client.get(url, {"author": author1.id})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["term"]["text"] == "Term1"
+        assert len(response.data["results"][0]["entries"]) == 1
+        assert response.data["results"][0]["entries"][0]["id"] == entry1.id
+
+    def test_filter_entries_by_multiple_params(self, authenticated_client):
+        """Test filtering entries by multiple parameters simultaneously"""
+        author1 = UserFactory(username="author1")
+        author2 = UserFactory(username="author2")
+        perspective1 = PerspectiveFactory(name="Perspective1")
+        perspective2 = PerspectiveFactory(name="Perspective2")
+        term1 = TermFactory(text="Term1")
+        term2 = TermFactory(text="Term2")
+        term3 = TermFactory(text="Term3")
+
+        # Create various entries
+        entry1 = EntryFactory(
+            term=term1, perspective=perspective1, is_official=True
+        )  # Match all
+        entry2 = EntryFactory(
+            term=term2, perspective=perspective1, is_official=True
+        )  # Different term
+        entry3 = EntryFactory(
+            term=term1, perspective=perspective2, is_official=True
+        )  # Different perspective
+        entry4 = EntryFactory(
+            term=term3, perspective=perspective1, is_official=False
+        )  # Different term, not official
+
+        # Create published drafts
+        EntryDraftFactory(entry=entry1, author=author1, is_published=True)
+        EntryDraftFactory(entry=entry2, author=author1, is_published=True)
+        EntryDraftFactory(entry=entry3, author=author1, is_published=True)
+        EntryDraftFactory(entry=entry4, author=author2, is_published=True)
+
+        # Filter by author1, perspective1, term1, and is_official
+        url = reverse("entry-list")
+        response = authenticated_client.get(
+            url,
+            {
+                "author": author1.id,
+                "perspective": perspective1.id,
+                "term": term1.id,
+                "is_official": "true",
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        # Should only return entry1
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["id"] == entry1.id
+
+    def test_filter_entries_by_author_no_results(self, authenticated_client):
+        """Test filtering by author with no matching entries"""
+        author_without_entries = UserFactory(username="no_entries")
+        perspective = PerspectiveFactory()
+
+        # Create an entry with a different author
+        entry = EntryFactory(perspective=perspective)
+        EntryDraftFactory(entry=entry, author=UserFactory(), is_published=True)
+
+        url = reverse("entry-list")
+        response = authenticated_client.get(url, {"author": author_without_entries.id})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["results"]) == 0
+        assert response.data["count"] == 0
+
 
 @pytest.mark.django_db
 class TestEntryDraftViewSet:

@@ -184,6 +184,11 @@ class EntryViewSet(viewsets.ModelViewSet):
 
         queryset = super().get_queryset()
 
+        # Filter by author if provided
+        author_id = self.request.query_params.get("author")
+        if author_id:
+            queryset = queryset.filter(drafts__author_id=author_id)
+
         # For list view, only show entries with published drafts
         # Composite index: EntryDraft(entry, is_published, created_at) optimizes this query
         if self.action == "list":
@@ -322,23 +327,71 @@ class EntryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
 
+    def _apply_grouped_ordering(self, queryset, ordering):
+        """Apply ordering to grouped entries queryset"""
+        from django.db.models import F, OuterRef, Subquery
+
+        order_by_published_at = (
+            "published_at" in ordering or "-published_at" in ordering
+        )
+
+        if order_by_published_at:
+            # Annotate each entry with its term's latest published_at for ordering
+            latest_published_subquery = (
+                EntryDraft.objects.filter(
+                    entry__term=OuterRef("term"),
+                    is_published=True,
+                    is_deleted=False,
+                )
+                .order_by("-published_at")
+                .values("published_at")[:1]
+            )
+            queryset = queryset.annotate(
+                term_latest_published_at=Subquery(latest_published_subquery)
+            )
+            if ordering.startswith("-"):
+                return queryset.order_by(
+                    F("term_latest_published_at").desc(nulls_last=True),
+                    "term__text_normalized",
+                )
+            else:
+                return queryset.order_by(
+                    F("term_latest_published_at").asc(nulls_last=True),
+                    "term__text_normalized",
+                )
+        else:
+            # Apply other ordering
+            field = ordering[1:] if ordering.startswith("-") else ordering
+
+            if field in ("term__text", "term__text_normalized"):
+                order_field = (
+                    "-term__text_normalized"
+                    if ordering.startswith("-")
+                    else "term__text_normalized"
+                )
+                return queryset.order_by(order_field)
+            else:
+                return queryset.order_by("term__text_normalized")
+
     @action(detail=False, methods=["get"], url_path="grouped-by-term")
     def grouped_by_term(self, request):
         """Get entries grouped by term for simplified frontend display (paginated)"""
         from rest_framework.pagination import PageNumberPagination
 
-        from django.db.models import F, OuterRef, Prefetch, Subquery
+        from django.db.models import Prefetch
 
         # Get ordering parameter (default to -published_at)
         ordering = request.query_params.get("ordering", "-published_at")
-        order_by_published_at = (
-            "published_at" in ordering or "-published_at" in ordering
-        )
 
         # Build base queryset for entries with published drafts
         entries_queryset = Entry.objects.filter(
             drafts__is_published=True, is_deleted=False
         ).select_related("term", "perspective")
+
+        # Filter by author if provided (must be before filter_queryset to avoid duplicates)
+        author_id = request.query_params.get("author")
+        if author_id:
+            entries_queryset = entries_queryset.filter(drafts__author_id=author_id)
 
         # Apply DRF filtering
         entries_queryset = self.filter_queryset(entries_queryset).distinct()
@@ -354,48 +407,8 @@ class EntryViewSet(viewsets.ModelViewSet):
         )
         entries_queryset = entries_queryset.prefetch_related(latest_published_draft)
 
-        # Use database aggregation to group by term and get max published_at
-        # This avoids Python-side grouping
-
-        if order_by_published_at:
-            # Annotate each entry with its term's latest published_at for ordering
-            latest_published_subquery = (
-                EntryDraft.objects.filter(
-                    entry__term=OuterRef("term"),
-                    is_published=True,
-                    is_deleted=False,
-                )
-                .order_by("-published_at")
-                .values("published_at")[:1]
-            )
-            entries_queryset = entries_queryset.annotate(
-                term_latest_published_at=Subquery(latest_published_subquery)
-            )
-            if ordering.startswith("-"):
-                entries_queryset = entries_queryset.order_by(
-                    F("term_latest_published_at").desc(nulls_last=True),
-                    "term__text_normalized",
-                )
-            else:
-                entries_queryset = entries_queryset.order_by(
-                    F("term_latest_published_at").asc(nulls_last=True),
-                    "term__text_normalized",
-                )
-        else:
-            # Apply other ordering
-            if ordering.startswith("-"):
-                field = ordering[1:]
-            else:
-                field = ordering
-
-            if field == "term__text" or field == "term__text_normalized":
-                entries_queryset = entries_queryset.order_by(
-                    "-term__text_normalized"
-                    if ordering.startswith("-")
-                    else "term__text_normalized"
-                )
-            else:
-                entries_queryset = entries_queryset.order_by("term__text_normalized")
+        # Apply ordering
+        entries_queryset = self._apply_grouped_ordering(entries_queryset, ordering)
 
         # Apply pagination
         paginator = PageNumberPagination()
