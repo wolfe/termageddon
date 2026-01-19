@@ -214,8 +214,8 @@ run_dead_code_detection() {
     fi
 
     # Run frontend dead code detection
-    # Use npx to run knip without global installation
-    print_status "Installing frontend dependencies..."
+    # Install knip as a local dev dependency to avoid npx resolution issues
+    print_status "Installing frontend dependencies including knip..."
     if run_in_frontend \
         "" \
         "npm install > /dev/null 2>&1" \
@@ -226,7 +226,7 @@ run_dead_code_detection() {
 
     if run_in_frontend \
         "Checking frontend for dead code with Knip..." \
-        "npx knip --config knip.json" \
+        "npm exec knip -- --config knip.json" \
         "Frontend dead code check passed" \
         "Frontend dead code check found issues (see output above)"; then
         # Success - do nothing
