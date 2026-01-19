@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { User } from '../../../models';
+import { UserDisplayWithUsernamePipe } from '../../../pipes/user-display-with-username.pipe';
 
 export interface FilterConfig {
   id: string;
@@ -25,7 +26,7 @@ export interface SortOption {
 
 @Component({
     selector: 'app-search-filter-bar',
-    imports: [FormsModule],
+    imports: [FormsModule, UserDisplayWithUsernamePipe],
     templateUrl: './search-filter-bar.component.html',
     styleUrl: './search-filter-bar.component.scss',
     standalone: true

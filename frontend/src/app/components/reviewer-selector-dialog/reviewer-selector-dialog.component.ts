@@ -2,10 +2,11 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { User } from '../../models';
+import { UserDisplayWithUsernamePipe } from '../../pipes/user-display-with-username.pipe';
 
 @Component({
     selector: 'app-reviewer-selector-dialog',
-    imports: [FormsModule],
+    imports: [FormsModule, UserDisplayWithUsernamePipe],
     templateUrl: './reviewer-selector-dialog.component.html',
     styleUrls: ['./reviewer-selector-dialog.component.scss'],
     standalone: true

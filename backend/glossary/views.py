@@ -1637,7 +1637,7 @@ def system_config_view(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def test_users_exist_view(request):
-    """Check if any test users exist in the database (public endpoint for login page)"""
+    """Check if test users exist in the database"""
     from glossary.models import UserProfile
 
     test_users_count = UserProfile.objects.filter(is_test_user=True).count()

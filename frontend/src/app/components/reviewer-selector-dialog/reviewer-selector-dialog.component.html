@@ -29,10 +29,7 @@
                 <span class="checkmark"></span>
               </label>
               <div class="user-info">
-                <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
-                <div class="user-username">
-                  {{ '@' + user.username }}
-                </div>
+                <div class="user-name">{{ user | userDisplayWithUsername }}</div>
               </div>
             </div>
           }
