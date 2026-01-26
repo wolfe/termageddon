@@ -71,6 +71,14 @@ export class AuthService {
     // Always create a fresh instance
     // Note: We don't set restoreOriginalUri here because we handle navigation
     // ourselves after the backend login completes in MainLayoutComponent
+
+    // Skip Okta initialization if config is placeholder/missing
+    if (!config.issuer_uri || config.issuer_uri.includes('placeholder') ||
+        !config.client_id || config.client_id.includes('placeholder')) {
+      console.warn('Okta configuration not set - SSO login will be disabled');
+      return;
+    }
+
     this.oktaAuth = new OktaAuth({
       issuer: config.issuer_uri,
       clientId: config.client_id,

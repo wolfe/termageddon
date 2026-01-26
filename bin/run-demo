@@ -78,32 +78,13 @@ fi
 print_status "Setting up backend..."
 cd "$BACKEND_DIR"
 
-# Remove old venv if it exists but is broken
-if [ -d "venv" ] && [ ! -f "venv/bin/python3" ]; then
-    print_status "Removing broken virtual environment..."
-    rm -rf venv
-fi
+# Use pyenv Python directly (already has Django 5.2.10 installed)
+print_status "Using pyenv Python environment..."
 
-# Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    print_status "Creating virtual environment..."
-    python3 -m venv venv || {
-        print_error "Failed to create virtual environment"
-        exit 1
-    }
-fi
-
-# Activate virtual environment
-source venv/bin/activate || {
-    print_error "Failed to activate virtual environment"
-    exit 1
-}
-
-# Install dependencies
-print_status "Installing backend dependencies..."
-pip install -q -r requirements.txt || {
-    print_error "Failed to install backend dependencies"
-    exit 1
+# Install any missing dependencies (skip if already installed)
+print_status "Checking backend dependencies..."
+pip install -q -r requirements.txt 2>/dev/null || {
+    print_warning "Some packages may already be installed or unavailable"
 }
 
 # Wipe database on every run for clean demo
@@ -164,7 +145,7 @@ cd "$FRONTEND_DIR"
 
 # Always install dependencies to ensure they're up to date
 print_status "Installing frontend dependencies..."
-npm install || {
+npm install --legacy-peer-deps || {
     print_error "Failed to install frontend dependencies"
     kill $BACKEND_PID 2>/dev/null
     exit 1
