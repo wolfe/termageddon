@@ -196,6 +196,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Directories where Django will look for additional static files
 STATICFILES_DIRS = [
+    BASE_DIR / "static",  # Custom static files (images, etc.)
     BASE_DIR / "target",  # Angular build output
 ]
 
