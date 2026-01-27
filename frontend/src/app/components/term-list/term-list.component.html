@@ -13,7 +13,7 @@
       [selectedAuthorId]="authorControl.value ? +authorControl.value : null"
       [showSortOptions]="true"
       [sortOptions]="sortOptions"
-      [selectedSortBy]="sortControl.value || '-published_at'"
+      [selectedSortBy]="sortControl.value || 'term__text_normalized'"
       [showClearFiltersButton]="true"
       [showCreateButton]="true"
       (searchTermChange)="onSearchTermChange($event)"

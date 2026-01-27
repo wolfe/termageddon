@@ -254,7 +254,7 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       expect(reviewService.getDraftsCanApprove).toHaveBeenCalledWith(
         false,
         undefined,
-        '-published_at'
+        '-created_at'
       );
       expect(component.state.drafts).toEqual(mockResponse.results);
       expect(component.state.filteredDrafts).toEqual(mockResponse.results);

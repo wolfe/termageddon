@@ -82,7 +82,7 @@ export class TermListComponent implements OnInit, OnDestroy {
   searchControl = new FormControl('');
   perspectiveControl = new FormControl('');
   authorControl = new FormControl('');
-  sortControl = new FormControl('-published_at'); // Default to newest published first
+  sortControl = new FormControl('term__text_normalized'); // Default to A-Z
 
   // Sort options for SearchFilterBarComponent
   sortOptions: SortOption[] = [
@@ -173,9 +173,8 @@ export class TermListComponent implements OnInit, OnDestroy {
       filters.author = this.authorControl.value;
     }
 
-    if (this.sortControl.value) {
-      filters.ordering = this.sortControl.value;
-    }
+    // Always include ordering (default to A-Z if not set)
+    filters.ordering = this.sortControl.value || 'term__text_normalized';
 
     // Use new grouped_by_term endpoint with pagination
     this.glossaryService
@@ -253,7 +252,7 @@ export class TermListComponent implements OnInit, OnDestroy {
     this.searchControl.setValue('');
     this.perspectiveControl.setValue('');
     this.authorControl.setValue('');
-    this.sortControl.setValue('-published_at');
+    this.sortControl.setValue('term__text_normalized');
     // The FormControl valueChanges observers will trigger loadEntries()
   }
 

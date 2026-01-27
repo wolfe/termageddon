@@ -327,76 +327,21 @@ class EntryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
 
-    def _apply_grouped_ordering(self, queryset, ordering):
-        """Apply ordering to grouped entries queryset"""
-        from django.db.models import F, OuterRef, Subquery
-
-        order_by_published_at = (
-            "published_at" in ordering or "-published_at" in ordering
-        )
-
-        if order_by_published_at:
-            # Annotate each entry with its term's latest published_at for ordering
-            latest_published_subquery = (
-                EntryDraft.objects.filter(
-                    entry__term=OuterRef("term"),
-                    is_published=True,
-                    is_deleted=False,
-                )
-                .order_by("-published_at")
-                .values("published_at")[:1]
-            )
-            queryset = queryset.annotate(
-                term_latest_published_at=Subquery(latest_published_subquery)
-            )
-            if ordering.startswith("-"):
-                return queryset.order_by(
-                    F("term_latest_published_at").desc(nulls_last=True),
-                    "term__text_normalized",
-                )
-            else:
-                return queryset.order_by(
-                    F("term_latest_published_at").asc(nulls_last=True),
-                    "term__text_normalized",
-                )
-        else:
-            # Apply other ordering
-            field = ordering[1:] if ordering.startswith("-") else ordering
-
-            if field in ("term__text", "term__text_normalized"):
-                order_field = (
-                    "-term__text_normalized"
-                    if ordering.startswith("-")
-                    else "term__text_normalized"
-                )
-                return queryset.order_by(order_field)
-            else:
-                return queryset.order_by("term__text_normalized")
-
-    @action(detail=False, methods=["get"], url_path="grouped-by-term")
-    def grouped_by_term(self, request):
-        """Get entries grouped by term for simplified frontend display (paginated)"""
-        from rest_framework.pagination import PageNumberPagination
-
+    def _build_base_entries_queryset(self, request):
+        """Build base queryset for entries with published drafts"""
         from django.db.models import Prefetch
 
-        # Get ordering parameter (default to -published_at)
-        ordering = request.query_params.get("ordering", "-published_at")
-
-        # Build base queryset for entries with published drafts
-        entries_queryset = Entry.objects.filter(
+        queryset = Entry.objects.filter(
             drafts__is_published=True, is_deleted=False
         ).select_related("term", "perspective")
 
         # Filter by author if provided (must be before filter_queryset to avoid duplicates)
         author_id = request.query_params.get("author")
         if author_id:
-            entries_queryset = entries_queryset.filter(drafts__author_id=author_id)
+            queryset = queryset.filter(drafts__author_id=author_id)
 
-        # Apply DRF filtering
-        entries_queryset = self.filter_queryset(entries_queryset).distinct()
+        queryset = self.filter_queryset(queryset).distinct()
 
-        # Prefetch latest published draft to avoid N+1 queries
         latest_published_draft = Prefetch(
             "drafts",
             queryset=EntryDraft.objects.filter(is_published=True, is_deleted=False)
@@ -405,22 +350,59 @@ class EntryViewSet(viewsets.ModelViewSet):
             .order_by("-published_at"),
             to_attr="published_drafts",
         )
-        entries_queryset = entries_queryset.prefetch_related(latest_published_draft)
+        return queryset.prefetch_related(latest_published_draft)
 
-        # Apply ordering
-        entries_queryset = self._apply_grouped_ordering(entries_queryset, ordering)
+    def _apply_published_at_ordering(self, queryset, ordering):
+        """Apply ordering by published_at date"""
+        from django.db.models import F, OuterRef, Subquery
 
-        # Apply pagination
-        paginator = PageNumberPagination()
-        paginator.page_size = 50
-        paginated_entries = paginator.paginate_queryset(entries_queryset, request)
+        latest_published_subquery = (
+            EntryDraft.objects.filter(
+                entry__term=OuterRef("term"),
+                is_published=True,
+                is_deleted=False,
+            )
+            .order_by("-published_at")
+            .values("published_at")[:1]
+        )
+        queryset = queryset.annotate(
+            term_latest_published_at=Subquery(latest_published_subquery)
+        )
 
-        if not paginated_entries:
-            return paginator.get_paginated_response([])
+        if ordering.startswith("-"):
+            return queryset.order_by(
+                F("term_latest_published_at").desc(nulls_last=True),
+                "term__text_normalized",
+            )
+        return queryset.order_by(
+            F("term_latest_published_at").asc(nulls_last=True),
+            "term__text_normalized",
+        )
 
-        # Group entries by term using database values() - more efficient than Python
-        # Get unique terms from the paginated entries
-        term_ids = list(set(entry.term_id for entry in paginated_entries))
+    def _apply_text_ordering(self, queryset, ordering):
+        """Apply ordering by term text"""
+        if ordering.startswith("-"):
+            field = ordering[1:]
+        else:
+            field = ordering
+
+        if field in ("term__text", "term__text_normalized"):
+            if ordering.startswith("-"):
+                return queryset.order_by("-term__text_normalized")
+            return queryset.order_by("term__text_normalized")
+
+        return queryset.order_by("term__text_normalized")
+
+    def _group_entries_by_term(self, paginated_entries):
+        """Group paginated entries by term, preserving order"""
+        seen_term_ids = set()
+        term_ids = []
+        for entry in paginated_entries:
+            term_id = entry.term_id
+            if term_id not in seen_term_ids:
+                seen_term_ids.add(term_id)
+                term_ids.append(term_id)
+
         terms_dict = {
             term.id: term
             for term in Term.objects.filter(id__in=term_ids).only(
@@ -428,7 +410,6 @@ class EntryViewSet(viewsets.ModelViewSet):
             )
         }
 
-        # Group entries by term_id (already in memory, minimal Python work)
         entries_by_term = {}
         for entry in paginated_entries:
             term_id = entry.term_id
@@ -436,7 +417,10 @@ class EntryViewSet(viewsets.ModelViewSet):
                 entries_by_term[term_id] = []
             entries_by_term[term_id].append(entry)
 
-        # Build result - serialize all entries at once to avoid N+1
+        return term_ids, terms_dict, entries_by_term
+
+    def _build_grouped_result(self, term_ids, terms_dict, entries_by_term):
+        """Build the grouped result with serialized entries"""
         result = []
         for term_id in term_ids:
             if term_id in entries_by_term:
@@ -454,6 +438,38 @@ class EntryViewSet(viewsets.ModelViewSet):
                         "entries": serializer.data,
                     }
                 )
+        return result
+
+    @action(detail=False, methods=["get"], url_path="grouped-by-term")
+    def grouped_by_term(self, request):
+        """Get entries grouped by term for simplified frontend display (paginated)"""
+        from rest_framework.pagination import PageNumberPagination
+
+        ordering = request.query_params.get("ordering", "term__text_normalized")
+        order_by_published_at = (
+            "published_at" in ordering or "-published_at" in ordering
+        )
+
+        entries_queryset = self._build_base_entries_queryset(request)
+
+        if order_by_published_at:
+            entries_queryset = self._apply_published_at_ordering(
+                entries_queryset, ordering
+            )
+        else:
+            entries_queryset = self._apply_text_ordering(entries_queryset, ordering)
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 50
+        paginated_entries = paginator.paginate_queryset(entries_queryset, request)
+
+        if not paginated_entries:
+            return paginator.get_paginated_response([])
+
+        term_ids, terms_dict, entries_by_term = self._group_entries_by_term(
+            paginated_entries
+        )
+        result = self._build_grouped_result(term_ids, terms_dict, entries_by_term)
 
         return paginator.get_paginated_response(result)
 

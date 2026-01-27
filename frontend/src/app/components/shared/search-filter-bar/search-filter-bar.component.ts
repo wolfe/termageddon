@@ -141,6 +141,11 @@ export class SearchFilterBarComponent implements OnInit {
     this.sortChanged.emit(target.value);
   }
 
+  onSortModelChange(value: string): void {
+    this.selectedSortBy = value;
+    this.sortChanged.emit(value);
+  }
+
   getActiveFilterCount(): number {
     let count = 0;
     if (this.searchTerm) count++;

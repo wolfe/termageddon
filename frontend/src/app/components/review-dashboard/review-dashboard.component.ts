@@ -69,7 +69,7 @@ export class ReviewDashboardComponent implements OnInit {
   perspectives: Perspective[] = [];
   selectedPerspectiveId: number | null = null;
   selectedAuthorId: number | null = null;
-  selectedSortBy: string = '-published_at'; // Default to newest published first
+  selectedSortBy: string = '-created_at'; // Default to newest edits first
   pendingPerspectiveId: number | null = null; // Store perspective ID from URL if perspectives not loaded yet
 
   // Sort options
