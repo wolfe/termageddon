@@ -1,0 +1,2008 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossgroup PUBLIC "-//OASIS//DTD DITA Glossary Group//EN" "glossgroup.dtd">
+<glossgroup id="glossary">
+    <title><ph keyref="kw_catastrophe_and_risk_solutions-abbrev"/> Glossary</title>
+    <prolog>
+        <foreign>
+            <shortdesc>Glossary terms for <ph keyref="kw_extreme-event-solutions-full"/></shortdesc>
+
+        </foreign>
+    </prolog>
+    <!--This topic requires common_glossary/keys_glossdefs.ditamap for the internal <term> references to work.-->
+    <!--
+     <glossentry id="gloss_bbb">
+        <glossterm>ttt</glossterm>
+        <glossdef>mmmm</glossdef>
+        <glossBody>
+            <glossSurfaceForm>xxx (yyy)</glossSurfaceForm>
+            <glossAlt id="yyy">
+                <glossAcronym>yyy</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+ -->
+
+    <glossentry id="gloss_activeLayers">
+        <glossterm>active layer</glossterm>
+        <glossdef><ph id="activeLayer_definition">The layer currently visible and enabled in a pane
+                in the application.This can be a map, program, or portfolio layer.</ph></glossdef>
+    </glossentry>
+    <glossentry id="gloss_activityMonitor">
+        <glossterm>Activity Monitor</glossterm>
+        <glossdef>A feature that allows you to view and manage activities such as import, export,
+            and loss analysis.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_activityStatus">
+        <glossterm>activity status</glossterm>
+        <glossdef>The state of any activity in the <term keyref="gloss_activityMonitor"
+            />.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_additionalLivingExpenses">
+        <glossterm>additional living expenses</glossterm>
+        <glossdef>Loss of use, or time element for residential properties that are not inhabitable.
+            Relocation and temporary lodging costs are considered. Coverage D.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>additional living expenses (ALE)</glossSurfaceForm>
+            <glossAlt id="ALE">
+                <glossAcronym>ALE</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_adjustmentFactor">
+        <glossterm>adjustment factor</glossterm>
+        <glossdef><p>A numerical value or percentage applied to a base analysis to refine the
+                predicted outcomes. </p>Adjustment factors can be cumulative. You can customize them
+            in your analysis by compensating for variations in company, program, and exposure
+            data.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_advancedLossModification">
+        <glossterm>advanced loss modification</glossterm>
+        <glossdef>A function that applies customizations to a loss analysis.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>advanced loss modification (ALM)</glossSurfaceForm>
+            <glossAlt id="ALM">
+                <glossAcronym>ALM</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_aggregateAnalyis">
+        <glossterm>aggregate analysis</glossterm>
+        <glossdef>An analysis of evaluating the total risk across a portfolio, region, or group of
+            aggregate exposures such as market shares or sums insured by subarea and line of
+            business.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_aggregateExcessOfLoss">
+        <glossterm>aggregate excess of loss</glossterm>
+        <glossdef>
+            <p>A reinsurance program in which a reinsurer indemnifies the ceding company for that
+                portion of the loss that exceeds the limit of its own retention for a given
+                year.</p>
+        </glossdef>
+        <glossBody>
+            <glossSurfaceForm>aggregate excess of loss (XOL)</glossSurfaceForm>
+            <glossAlt id="AggregateExcessOfLoss">
+                <glossAcronym>XOL</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_aggregateExposure">
+        <glossterm>aggregate exposure</glossterm>
+        <glossdef><ph id="aggregateExposure_definition">An exposure expressed as an aggregate value
+                rather than as individual contract terms or replacement values.</ph>  <xref keyref="aggregateExposure_about">Read more</xref></glossdef>    </glossentry>
+    <glossentry id="gloss_aggregateLimit">
+        <glossterm>aggregate limit</glossterm>
+        <glossdef>The maximum loss that can be incurred by a layer across all occurrences within
+            each year.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_aggregateLoss">
+        <glossterm>aggregate loss</glossterm>
+        <glossdef>The loss resulting from all events that occurred during a specified period.
+        </glossdef>
+    </glossentry>
+    <glossentry id="gloss_aggregateLossDistribution">
+        <glossterm>aggregate loss distribution</glossterm>
+        <glossdef>Aggregate loss distributed over a 12-month period.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_alf">
+        <glossterm>aggregated loss file</glossterm>
+        <glossdef>A binary file that contains event-level loss data consolidated by country. It is a
+            vehicle for sending loss data on your book or portions of your book to retrocessionaires
+            for pricing.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Aggregated loss file (ALF)</glossSurfaceForm>
+            <glossAlt id="ALF">
+                <glossAcronym>ALF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_aggregateRetention">
+        <glossterm>aggregate retention</glossterm>
+        <glossdef>The value below which the year's total occurrence losses (otherwise recoverable)
+            are not assumed by the layer. Applicable only to ground-up, quota share, aggregate
+            excess of loss, and catastrophe bond programs.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_alert">
+        <glossterm><ph keyref="kw_previous-company-name-abbrev"/> loss estimates in real
+            time</glossterm>
+        <glossdef>An online service providing up-to-date information and loss estimates for natural
+            catastrophes worldwide.</glossdef>
+        <glossBody>
+            <glossSurfaceForm><keyword keyref="kw_previous-company-name-abbrev"/> Loss Estimates in
+                Real Time (ALERT)</glossSurfaceForm>
+            <glossAlt id="ALERT">
+                <glossAcronym>ALERT</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_alertData">
+        <glossterm><ph keyref="kw_air-product-name_alert"/> data</glossterm>
+        <glossdef>Data that is supplied by <ph keyref="kw_air-company-name-abbrev"/>'s ALERT™ (<ph
+                keyref="kw_previous-company-name-abbrev"/> Loss Estimates in Real Time) online
+            service which provides up-to-date information and loss estimates for major natural
+            catastrophes worldwide.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_s3">
+        <glossterm>Amazon Simple Storage Service (S3)</glossterm>
+        <glossdef>An object storage service in which customers can store data and pay for the
+            service based on usage.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_aws">
+        <glossterm>Amazon Web Services</glossterm>
+        <glossdef>The world’s most comprehensive and broadly adopted cloud platform.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Amazon Web Services (AWS)</glossSurfaceForm>
+            <glossAlt id="AWS">
+                <glossAcronym>AWS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_amBest">
+        <glossterm>A.M. Best premium database</glossterm>
+        <glossdef>A database that contains reinsurance information you can use to derive and
+            calculate market shares. To produce the database, A.M. Best compiles data from the
+            year-end annual reports of more than 2,000 companies.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_analyzeRe">
+        <glossterm><ph keyref="kw_air-product-name_analyze-re"/></glossterm>
+        <glossdef><xref href="http://www.verisk.com/" format="html" scope="external">Verisk</xref>'s
+            software analytics suite designed for the reinsurance and insurance industries. The <ph
+                keyref="kw_air-product-name_analyze-re"/> suite takes loss data in a variety of
+            forms and allows for visual mapping of that loss and its analysis through tables, charts
+            and similar analysis tools. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_annualAggregateLimit">
+        <glossterm>annual aggregate limit</glossterm>
+        <glossdef>The maximum loss that a layer can incur for all occurrences within a 12-month
+            period.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_annualAggregateLoss">
+        <glossterm>annual aggregate loss</glossterm>
+        <glossdef>
+            <p>The loss resulting from all events that occurred during a contract period (12 months
+                is most common). It is calculated by dividing the sum of all losses in a simulation
+                by the total simulation years.</p>
+        </glossdef>
+        <glossBody>
+            <glossSurfaceForm>annual aggregate loss (AAL)</glossSurfaceForm>
+            <glossAlt id="AAL">
+                <glossAcronym>AAL</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_airCloud">
+        <glossterm>AIR Cloud</glossterm>
+        <glossdef><ph keyref="kw_air-company-name-abbrev"/>'s <term keyref="gloss_cloud">cloud</term>
+            branded product used by clients to host application environments on the instance on the
+                <term keyref="gloss_aws">AWS</term>.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_analyzere">
+        <glossterm>Analyze Re</glossterm>
+        <glossdef>​<ph keyref="kw_analyze-re-company-name"/>​'s software analytics suite designed
+            for the reinsurance and insurance industries. The ​Analyze Re​​ suite takes loss data in
+            a variety of forms and allows for visual mapping of that loss and its analysis through
+            tables, charts, and similar analysis tools. </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_annualAggLossDist">
+        <glossterm>annual aggregate loss distribution</glossterm>
+        <glossdef>An aggregate loss distributed over the 12 month period. The annual aggregate loss
+            distribution shows the probability distribution of annual aggregate losses.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_annualAggregateRetention">
+        <glossterm>annual aggregate retention</glossterm>
+        <glossdef>The annual aggregate retention is a value below which the total losses for a
+            12-month period are not assumed by the layer.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_annualOccurenceLoss">
+        <glossterm>annual occurrence loss</glossterm>
+        <glossdef>The largest loss resulting from all events that occurred during a 12-month period.
+            Used in reinsurance and can apply to a risk, policy, company, or contract.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_annualOcclossdist">
+        <glossterm>annual occurrence loss distribution</glossterm>
+        <glossdef>The occurrence loss distributed over a 12-month period. The annual aggregate
+            occurrence distribution shows the probability distribution of annual occurrence
+            losses.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_applnServers">
+        <glossterm>application server</glossterm>
+        <glossdef>A server that hosts applications or software that delivers a business application
+            through a communication protocol. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_appliesToAreas">
+        <glossterm>applies to areas</glossterm>
+        <glossdef>A parameter used by the application to filter by geographic area(s) and define
+            where layer terms are applied. In the case of pro rata treaties; this also defines the
+            percent ceded in each geographic area covered by the treaty.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_appliesToEvents">
+        <glossterm>applies to events</glossterm>
+        <glossdef>A parameter used by the application to filter events. The feature allows you to
+            manage which events should be considered in a contract analysis based on an event
+            parameter, peril, location, and/or condition. Event filtering includes specifying rules
+            and locations.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_area">
+        <glossterm>area</glossterm>
+        <glossdef>A geographic location that is at a higher geographic resolution than a subarea.
+            Areas are defined using the <term keyref="gloss_fips"/> or <term keyref="gloss_unicede"
+            /> standards.
+            <!--For the United States, <keyword keyref="kw_air-company-name-abbrev"/> uses the
+                <keyword keyref="kw_air-company-name-abbrev"/>- <xref
+                keyref="k_help_tsre_ref_fips">FIPS</xref> scheme to classify areas and subareas;
+            states are areas, and counties are subareas. For other countries, <keyword
+                keyref="kw_air-company-name-abbrev"/> uses the <xref
+                keyref="k_help_tsre_ref_unicede"><keyword keyref="kw_air-terminology_unicede"
+                /></xref> standard. For more information, see <xref href="http://www.unicede.com"
+                format="html" scope="external"/>.--></glossdef>
+    </glossentry>
+    <glossentry id="gloss_areaDetail">
+        <glossterm>area detail</glossterm>
+        <glossdef>Indicates the level of geographic resolution to be used when analyzing this
+            program. Can be either high (subarea) or low (area).</glossdef>
+    </glossentry>
+    <glossentry id="gloss_assessment">
+        <glossterm>assessment</glossterm>
+        <glossdef>A fee imposed on members of an insurance association for certain qualifying
+            events.<!-- <p>Agencies which impose these fees include the Florida Commission (<xref
+                    href="https://www.sbafla.com/method/Home.aspx" format="html" scope="external"
+                    >FLCM</xref>) on Hurricane Loss Projection Methodology, the California
+                Earthquake Authority (<xref href="https://www.earthquakeauthority.com/"
+                    format="html" scope="external">CEA</xref>), the Texas Windstorm Insurance
+                Association (<xref href="https://www.twia.org/" format="html" scope="external"
+                    >TWIA</xref>), and the South Carolina Wind and Hail Underwriting Association
+                    (<xref href="http://www.scwind.com/index.dital" format="html" scope="external"
+                    >SCWHUA</xref>).</p>--></glossdef>
+    </glossentry>
+    <glossentry id="gloss_avgAnnualLoss">
+        <glossterm>average annual loss</glossterm>
+        <glossdef>The average loss across all simulated years in a loss analysis.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_baseMaps">
+        <glossterm>base maps</glossterm>
+        <glossdef>Maps used in the application to provide a geographic setting for your exposure
+            data.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_bins">
+        <glossterm>Building Identification Numbering System</glossterm>
+        <glossdef><ph keyref="kw_air-company-name-abbrev"/> BINS are IDs which insurers and
+            reinsurers use to identify whether an address represents a building, a unit in a
+            building, a site, or a campus.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Building Identification Numbering System (BINS)</glossSurfaceForm>
+            <glossAlt id="BINS">
+                <glossAcronym>BINS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_blanketLimit">
+        <glossterm>blanket limit</glossterm>
+        <glossdef>A single limit that applies to multiple locations in a contract. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_businessInteruption">
+        <glossterm>business interruption</glossterm>
+        <glossdef>Loss of use or time element for non-residential structures. Business interruption
+            losses are based on the expected number of days that a building is unusable. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_catalogType">
+        <glossterm>catalog type</glossterm>
+        <glossdef>Catalogs are lists of events used to calculate potential loss. Common catalog
+            types include <term keyref="gloss_stc"/>, <term keyref="gloss_hist"/>, and <term
+                keyref="gloss_realisticDisasterScenarios"/>. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_catBond">
+        <glossterm>catastrophe bond</glossterm>
+        <glossdef><!--Catastrophe bonds, also called cat bonds, are an example of insurance
+            securitization, creating--> Risk-linked securities which transfer a specific set
+            of risks <!--(typically catastrophe and natural disaster risks)--> from
+            <!--an issuer or sponsor (--> a ceding company to capital market investors for a
+            specific rate of return. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>catastrophe bond (CATbond)</glossSurfaceForm>
+            <glossAlt id="CATbond">
+                <glossAcronym>CATbond</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_catastropheExcessOfLoss">
+        <glossterm>catastrophe excess of loss</glossterm>
+        <glossdef>A <term keyref="gloss_reinsuranceProgram">reinsurance program</term> in which the
+            ceding company is indemnified for the portion of the loss that exceeds the limit of its
+            own retention per event.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>catastrophe excess of loss (XOL)</glossSurfaceForm>
+            <glossAlt id="CatastropheExcessOfLoss">
+                <glossAcronym>XOL</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_cede">
+        <glossterm>Catastrophe Exposure Data Exchange</glossterm>
+        <glossdef> An open data format to facilitate accurate and transparent data exchange
+            throughout the insurance industry. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>Catastrophe Exposure Data Exchange (CEDE)</glossSurfaceForm>
+            <glossAlt id="CEDE">
+                <glossAcronym>CEDE</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_cededPercentage">
+        <glossterm>ceded percentage</glossterm>
+        <glossdef>The portions of the obligations in an insurance company’s policy portfolio
+            transferred to a reinsurer.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_client">
+        <glossterm>client</glossterm>
+        <glossdef>A device that communicates with a server, such as a desktop computer, laptop,
+            smart phone, or network-compatible device.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_cloud">
+        <glossterm>cloud</glossterm>
+        <glossdef>A network of remote servers that operate as a single ecosystem.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_cloudNative">
+        <glossterm>cloud native</glossterm>
+        <glossdef>Describes applications designed to run on the cloud, rather than on-premises
+            networks.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_clusters">
+        <glossterm>cluster</glossterm>
+        <glossdef>A group of districts within a state in India, used by the Indian crop insurance
+            market.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_coinsurance">
+        <glossterm>coinsurance</glossterm>
+        <glossdef>The portion of the losses to a layer covered by a reinsurer. Where coinsurance and
+            gross/net participation are all specified, the participation % is applied to the
+            treaty’s share of coinsured losses.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_csv">
+        <glossterm>comma-separated value</glossterm>
+        <glossdef>A simple text file that stores data in columns separated by commas.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>comma-separated value (CSV)</glossSurfaceForm>
+            <glossAlt id="CSV">
+                <glossAcronym>CSV</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_companyLoss">
+        <glossterm>company loss</glossterm>
+        <glossdef>The loss a company is estimated to have from an event, excluding any
+            program/treaty terms. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_companyLossAssociation">
+        <glossterm>company loss association</glossterm>
+        <glossdef>The result of a detailed loss analysis associated with a cedant company. The
+            results are saved at (sub)area and LOB resolution and may contain one or more
+            perspectives.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>company loss association (CLA)</glossSurfaceForm>
+            <glossAlt id="CLA">
+                <glossAcronym>CLA</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_clf">
+        <glossterm>company loss file</glossterm>
+        <glossdef><ph id="gloss_clf_def">Files that contain losses by line of business, area, and
+                subarea for each event. They are used in aggregate analyses. </ph></glossdef>
+        <glossBody>
+            <glossSurfaceForm>company loss file (CLF)</glossSurfaceForm>
+            <glossAlt id="CLF">
+                <glossAcronym>CLF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_companyLossMax">
+        <glossterm>company loss maximum</glossterm>
+        <glossdef>A trigger that excludes occurrences from consideration in a loss calculation. If
+            the company loss is above the company loss maximum value, then the loss value of the
+            occurrence is set to zero.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_companyLossMin">
+        <glossterm>company loss minimum</glossterm>
+        <glossdef>A trigger which excludes occurrences from consideration in a loss calculation. If
+            the company loss is below the company loss minimum value, then the loss value of the
+            occurrence is set to zero.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_companyMarketShares">
+        <glossterm>company market share</glossterm>
+        <glossdef>A percentage indicating the amount of the total insured property covered by a
+            specified company in a certain geographic area/subarea and line of business.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_coverageCorrelation">
+        <glossterm>coverage correlation</glossterm>
+        <glossdef>Measures the extent to which the losses for the coverages associated with a single
+            location are dependent on each other.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_csa">
+        <glossterm>client server architecture</glossterm>
+        <glossdef>A computing model in which one or more client computers are connected to a central
+            server over a network or internet connection. The server hosts, delivers, and manages
+            most of the client’s resources and services.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>client server architecture (CSA)</glossSurfaceForm>
+            <glossAlt id="CSA">
+                <glossAcronym>CSA</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+
+    <glossentry id="gloss_comonotonicDistribution">
+        <glossterm>comonotonic distribution</glossterm>
+        <glossdef>Comonotonic distribution methodology where loss distributions are aggregated
+            assuming that losses are maximally correlated.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_construction">
+        <glossterm>construction</glossterm>
+        <glossdef>A class of code that identifies the primary type of construction for a location,
+            such as wood frame or reinforced concrete.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_contractGain">
+        <glossterm>contract gain</glossterm>
+        <glossdef>A contract gain is an adjustment associated with portfolio analyses.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_contract">
+        <glossterm>contract</glossterm>
+        <glossdef>An insurance policy.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_contractLosses">
+        <glossterm>contract loss</glossterm>
+        <glossdef>Loss attributed to individual reinsurance contracts. </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_convolution">
+        <glossterm>convolution</glossterm>
+        <glossdef>Convolution is a methodology where loss distributions are aggregated assuming that
+            losses are completely independent from each other.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_cores">
+        <glossterm>core</glossterm>
+        <glossdef>A processor in a computer that executes programs.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_coverage">
+        <glossterm>coverage</glossterm>
+        <glossdef>A component of insurable property that describes what the insurance policy covers.
+        </glossdef>
+    </glossentry>
+    <glossentry id="gloss_coverageAmount">
+        <glossterm>coverage amount</glossterm>
+        <glossdef>A value that denotes coverage-specific deductibles and limits. It can be specified
+            as whole numbers or as a percentage of insured/replacement value.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_coveragePercentage">
+        <glossterm>coverage percentage</glossterm>
+        <glossdef>See <term keyref="gloss_coverageAmount"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_coverageRate">
+        <glossterm>coverage rate</glossterm>
+        <glossdef>The percentage of company loss of a particular <term id="gloss_LOB">LOB</term> to
+            consider when applying financial terms.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_creps">
+        <glossterm>creps</glossterm>
+        <glossdef>A retired <ph keyref="kw_air-product-name_touchstone-re"/> feature.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_cresta">
+        <glossterm>CRESTA</glossterm>
+        <glossdef>A geographical data aggregation system that defines country-specific zones. It is
+            used to manage and report on exposure data.
+            <!-- usually relating to natural hazards.<keyword keyref="kw_air-terminology_cresta"/>
+            assignments are used throughout the world by the insurance industry and other
+            organizations involved in risk management.--></glossdef>
+        <glossBody>
+            <glossSurfaceForm>Catastrophe Risk Evaluation and Standardizing Target Accumulations
+                (CRESTA)</glossSurfaceForm>
+            <glossAlt id="CRESTA">
+                <glossAcronym>CRESTA</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_cropSeason">
+        <glossterm>crop season</glossterm>
+        <glossdef>The period in which a specific crop or group of crops are planted and
+            harvested.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_damageFactors">
+        <glossterm>damage factor</glossterm>
+        <glossdef>Damage factors applied to catastrophe models customize losses based on the
+            experiences of a company.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_dbeaver">
+        <glossterm>DBeaver</glossterm>
+        <glossdef>A third-party database tool application.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_deductible">
+        <glossterm>deductible</glossterm>
+        <glossdef>The amount of loss retained by the insured; also called <term
+                keyref="gloss_aggregateRetention"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_demandSurge">
+        <glossterm>demand surge</glossterm>
+        <glossdef>A multiplicative factor used to account for the effects of short-term inflation in
+            the prices of labor and materials following a catastrophe.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_detailedexposure">
+        <glossterm>detailed exposure</glossterm>
+        <glossdef>A list of specific policies and locations, with location attributes such as
+            construction/occupancy, year built, and replacement cost by coverage. Contrasts with
+                <term keyref="gloss_aggregateExposure"/>.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_dlf">
+        <glossterm>detailed loss file</glossterm>
+        <glossdef>An encrypted file that contains company losses by geographic area and line of
+            business for each simulated event.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>detailed loss file (DLF)</glossSurfaceForm>
+            <glossAlt id="DLF">
+                <glossAcronym>DLF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_deterministicEvent">
+        <glossterm>deterministic event</glossterm>
+        <glossdef>A catastrophic event with predefined characteristics, typically used to assess
+            potential losses. There is no probability distribution for deterministic
+            events.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_disaggregation">
+        <glossterm>disaggregation</glossterm>
+        <glossdef>The process of distributing aggregate exposure data from a coarse resolution to a
+            finer resolution; more suitable for detailed catastrophe modeling.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_elt">
+        <glossterm>event loss tables</glossterm>
+        <glossdef>The format used to transfer loss files from <ph
+                keyref="kw_air-product-name_touchstone-re"/> to <ph
+                keyref="kw_analyze-re-company-name"/></glossdef>
+        <glossBody>
+            <glossSurfaceForm>event loss tables (ELT)</glossSurfaceForm>
+            <glossAlt id="ELT">
+                <glossAcronym>ELT</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_emf">
+        <glossterm>event mapping files</glossterm>
+        <glossdef>Files used to map events between versions of select U.S. models.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>event mapping files (EMF)</glossSurfaceForm>
+            <glossAlt id="EMF">
+                <glossAcronym>EMF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_epicenter">
+        <glossterm>epicenter</glossterm>
+        <glossdef>The location on the earth’s surface directly above the point of an earthquake's
+            initial rupture.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_eventSet">
+        <glossterm>event set</glossterm>
+        <glossdef>The set of loss files used in a detailed or aggregate loss analysis.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_eventCharacteristics">
+        <glossterm>event characteristic</glossterm>
+        <glossdef>A variable that describes an aspect of an event.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_exceedanceProbability">
+        <glossterm>exceedance probability</glossterm>
+        <glossdef>A set of probabilities and return periods that appear in loss analysis results.
+            Also see <term keyref="gloss_exceedanceProbabilityCurve"/>.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>exceedance probability (EP)</glossSurfaceForm>
+            <glossAlt id="ExceedanceProbability">
+                <glossAcronym>EP</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_exceedanceProbabilityCurve">
+        <glossterm>exceedance probability curve</glossterm>
+        <glossdef>The probability that various levels of loss will be exceeded in a given year. An
+            EP curve is the foundation upon which insurers estimate their likelihood of experiencing
+            various levels of loss.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>exceedance probability (EP) curve</glossSurfaceForm>
+            <glossAlt id="EPcurve">
+                <glossAcronym>EP curve</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_exceedanceProbabilitySecondaryUncertainty">
+        <glossterm>exceedance probability with secondary uncertainty curve</glossterm>
+        <glossdef>An <term keyref="gloss_exceedanceProbabilityCurve"/> (EP curve) that samples from
+            other points along an event’s probability distribution to derive a secondary view of
+            risk.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>exceedance probability with secondary uncertainty (EPSU)
+                curve</glossSurfaceForm>
+            <glossAlt id="EPSUcurve">
+                <glossAcronym>EPSU curve</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_ev">
+        <glossterm>expected value</glossterm>
+        <glossdef>See <term keyref="gloss_annualAggregateLoss"/></glossdef>
+        <glossBody>
+            <glossSurfaceForm>expected value (EV)</glossSurfaceForm>
+            <glossAlt id="EV">
+                <glossAcronym>EV</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_evi">
+        <glossterm>EVI file</glossterm>
+        <glossdef>An application-generated text file that includes information to communicate loss
+            information between the application and the associated company loss file.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_evt">
+        <glossterm>extreme value theory file</glossterm>
+        <glossdef>An index of the events in a single <term keyref="gloss_industryLossFile"/> or
+                <term keyref="gloss_clf"/>. This index allows the application to quickly locate data
+            records for a particular event.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>extreme value theory (EVT) file</glossSurfaceForm>
+            <glossAlt>
+                <glossAcronym>EVT</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+
+    <glossentry id="gloss_ep">
+        <glossterm>exceedance probability</glossterm>
+        <glossdef>A set of probabilities and return periods that appear in loss analysis
+            results.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>exceedance probability (EP)</glossSurfaceForm>
+            <glossAlt id="EP">
+                <glossAcronym>EP</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_epAdjust">
+        <glossterm>exceedance probability adjustment</glossterm>
+        <glossdef>An adjustment made to an <term keyref="gloss_exceedanceProbability">EP</term> curve at
+            the program level based on user knowledge of loss experience for a particular
+            model.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_epValues">
+        <glossterm>exceedance probability values</glossterm>
+        <glossdef>Values assigned to a distribution of points (e.g., year, return period, event
+            ID).</glossdef>
+    </glossentry>
+    <glossentry id="gloss_excessCoverage">
+        <glossterm>excess coverage</glossterm>
+        <glossdef>Layers of coverage written above the primary coverage because more capacity is
+            required.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_expectedLoss">
+        <glossterm>expected loss</glossterm>
+        <glossdef>The percentage of loss each bond/layer is expected to incur in any given
+            year.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_expirationDate">
+        <glossterm>expiration date</glossterm>
+        <glossdef>Expiration date is the last day on which coverage for a treaty is
+            effective.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_exposureAdjustFactor">
+        <glossterm>exposure adjustment factor</glossterm>
+        <glossdef>The adjustment factor used to modify company exposures by <term
+                keyref="gloss_lineOfBusiness"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_exposureData">
+        <glossterm>exposure data</glossterm>
+        <glossdef>A generic term that refers to any exposed risk (buildings, cars, offshore rigs,
+            employees) and its associated characteristics, such as address, construction/occupancy,
+            and the values. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_emm">
+        <glossterm>Exposure Management Module</glossterm>
+        <glossdef>A <ph keyref="kw_air-product-name_touchstone-re"/> feature that was later renamed
+            as <term keyref="gloss_advancedLossModification">Advanced Loss Modification</term>. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>Exposure Management Module (EMM)</glossSurfaceForm>
+            <glossAlt id="EMM">
+                <glossAcronym>EMM</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_xol">
+        <glossterm>excess of loss</glossterm>
+        <glossdef>Losses paid that exceed a specific amount up to a specified limit. Types of excess
+            of loss reinsurance include per risk, catastrophe, per policy, per occurrence, and
+            aggregate.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>excess of loss (XOL)</glossSurfaceForm>
+            <glossAlt id="XOL">
+                <glossAcronym>XOL</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_epc">
+        <glossterm>exceedance probability (EP) curve</glossterm>
+        <glossdef>A curve that shows the probability of experiencing different levels of financial
+            loss. The curve can help you determine the amount of risk to retain or cede.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_exposure">
+        <glossterm>exposure</glossterm>
+        <glossdef>Item of value at risk (e.g., a house); unit of measurement for risk</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_exposureSet">
+        <glossterm>exposure set</glossterm>
+        <glossdef>A discrete set of related exposure entities, such as locations and contracts, and
+            their related financial terms.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_exposureSummary">
+        <glossterm>exposure summary</glossterm>
+        <glossdef>A compiled set of summary information about a group of exposures, either an
+            exposure set or an exposure view. </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_exposureView">
+        <glossterm>exposure view</glossterm>
+        <glossdef>A user-defined logical view of one or more exposure sets, with optional
+            filters.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_eds">
+        <glossterm>extreme disaster scenarios</glossterm>
+        <glossdef>Unlikely but scientifically plausible scenarios that cannot be captured by
+            standard stochastic modeling techniques.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Extreme Disaster Scenarios (EDS)</glossSurfaceForm>
+            <glossAlt id="EDS">
+                <glossAcronym>EDS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_facultativeReinsurance">
+        <glossterm>facultative reinsurance</glossterm>
+        <glossdef>Coverage purchased by a primary insurer in which both the primary insurer and the
+            reinsurer usually have the option to accept or reject an individual submission. See also
+                <term keyref="gloss_treatyReinsurance"/>.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_fips">
+        <glossterm>Federal Information Processing Standards</glossterm>
+        <glossdef>Used to name states and counties in numerical format.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Federal Information Processing Standards (FIPS)</glossSurfaceForm>
+            <glossAlt id="FIPS">
+                <glossAcronym>FIPS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_finalNetLoss">
+        <glossterm>final net loss</glossterm>
+        <glossdef>Total event losses net of reinstatement premiums but not net of the initial
+            program premium.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_financialPerspective">
+        <glossterm>financial perspective</glossterm>
+        <glossdef>The view of loss from an event, depending on whether losses are measured from the
+            ground up or after the application of different insurance or reinsurance
+            terms.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_financialTerms">
+        <glossterm>financial terms</glossterm>
+        <glossdef>The parameters, such as limits and deductibles, specified in an insurance policy
+            that define the conditions under which the insurer will pay some or all the loss. These
+            may be defined at various levels such as contract, layer, and location, and may apply to
+            its entirety or to specific perils and/or coverages.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_flank">
+        <glossterm>flank</glossterm>
+        <glossdef>The side of a volcano.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_focalDepth">
+        <glossterm>focal depth</glossterm>
+        <glossdef>The vertical distance between where a fault rupture originates and the earth's
+            surface.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_franchiseDeductible">
+        <glossterm>franchise deductible</glossterm>
+        <glossdef>The pre-occurrence loss threshold that must be reached before the contract loss
+            will be paid. Also called <term>disappearing deductible</term>.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_gdr">
+        <glossterm>General Distribution Release</glossterm>
+        <glossdef>A security update for the Microsoft SQL server.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>General Distribution Release (GDR)</glossSurfaceForm>
+            <glossAlt id="GDR">
+                <glossAcronym>GDR</glossAcronym>
+            </glossAlt>
+        </glossBody>
+
+    </glossentry>
+
+    <glossentry id="gloss_geocode">
+        <glossterm>geocode</glossterm>
+        <glossdef>The latitude and longitude values and the resolution associated with an individual
+            risk used for modeling in catastrophe modeling.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_geojsonVectorFile">
+        <glossterm>GeoJSON vector file</glossterm>
+        <glossdef>A vector file format for encoding a variety of geographic data structures.
+        </glossdef>
+    </glossentry>
+    <glossentry id="gloss_geospatialAnalysis">
+        <glossterm><ph id="geospatialAnalysis_definition"></ph>This is a deterministic risk analysis that includes
+            your own view of risk on accumulations of property exposures and workers' compensation
+            information in given areas exposed to natural and man-made catastrophes.</glossterm>
+    </glossentry>
+    <glossentry id="gloss_gmlVectorfile">
+        <glossterm>GML vector file</glossterm>
+        <glossdef>A vector file format for encoding geometries or geometric characteristics of
+            geographic objects.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_grossLoss">
+        <glossterm>gross loss</glossterm>
+        <glossdef>The total loss due to an event after applying limits, <term
+                keyref="gloss_deductible">s</term>, and <term keyref="gloss_locationTerms"/> and
+            before any excess reinsurance terms.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_grossParticipation">
+        <glossterm>gross participation</glossterm>
+        <glossdef>Specifies the percentage of the losses that the reinsurer will assume.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_groundUpLoss">
+        <glossterm>ground-up loss</glossterm>
+        <glossdef>The total loss due to an event before applying financial terms such as limits and
+                <term keyref="gloss_deductible"/>s.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>ground-up loss (GU)</glossSurfaceForm>
+            <glossAlt id="GU">
+                <glossAcronym>GU</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+
+    <glossentry id="gloss_hazard">
+        <glossterm>hazard</glossterm>
+        <glossdef>A factor or condition that can increase or decrease the probability or severity of
+            a loss from an insured peril (for example, proximity to the coast).</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_hpc">
+        <glossterm>high performance computing</glossterm>
+        <glossdef>Pertains to the use of the Microsoft© High Performance Computing server, which
+            leverages a distributed computing environment that dramatically reduces run
+            times.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>high performance computing (HPC)</glossSurfaceForm>
+            <glossAlt id="HPC">
+                <glossAcronym>HPC</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_hist">
+        <glossterm>historical catalog</glossterm>
+        <glossdef>A collection of historical events for a broad area.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_histEvents">
+        <glossterm>historical event</glossterm>
+        <glossdef>A past occurrence of a natural or man-made disaster used as a reference point for
+            modeling and predicting future events.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_histEventSet">
+        <glossterm>historical event set</glossterm>
+        <glossdef> A collection of historical events for one or more models.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_inceptionDate">
+        <glossterm>inception date</glossterm>
+        <glossdef><ph id="inceptionDate_definition">The first day on which coverage for a treaty is
+                effective.</ph><xref keyref="inceptionDate_about">Read more</xref></glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_individualRiskModifier">
+        <glossterm>individual risk modifier</glossterm>
+        <glossdef>A peril.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>individual risk modifier (IRM)</glossSurfaceForm>
+            <glossAlt id="IRM">
+                <glossAcronym>IRM</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+
+    <glossentry id="gloss_industriaFacility">
+        <glossterm>industrial facility module</glossterm>
+        <glossdef>Identifies occupancy class codes used to define industrial facilities. Also called
+            the <term>large industrial facility</term> module.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_industryExposureDatabase">
+        <glossterm>industry exposure database</glossterm>
+        <glossdef>A database of all insurable properties used for estimating potential industry
+            insurance losses for specific geographical regions.
+            <!-- do not use acronym IED as it can be mistaken for "incendiary explosive device"-->
+        </glossdef>
+        <glossBody/>
+    </glossentry>
+
+    <glossentry id="gloss_industryInsurableLoss">
+        <glossterm>industry-insurable loss</glossterm>
+        <glossdef>A realistic loss estimate of all insurable properties. It can be calculated by
+            running a detailed loss analysis against the industry exposure database.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_industryInsuredLoss">
+        <glossterm>industry-insured loss</glossterm>
+        <glossdef>The portion of the <term keyref="gloss_industryInsurableLoss"/> that is, or is
+            assumed to be, insured. Insured losses include an estimate of the insurance take-up by
+            area, subarea, and line of business.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_industryLossFile">
+        <glossterm>industry loss file</glossterm>
+        <glossdef>A file that contains net industry insurable losses after application of primary
+            policies condition assumptions. These losses are grouped by event, geographic area, and
+                <term keyref="gloss_lineOfBusiness"/>. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>industry loss file (ILF)</glossSurfaceForm>
+            <glossAlt id="ILF">
+                <glossAcronym>ILF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_industryLossMaximum">
+        <glossterm>industry loss maximum</glossterm>
+        <glossdef>The value above which occurrences are excluded from consideration. If the industry
+            loss for a given occurrence is above the industry loss maximum value, then the loss
+            value of the occurrence is set to zero.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_industryLossMinimum">
+        <glossterm>industry loss minimum</glossterm>
+        <glossdef>The value below which occurrences are excluded from consideration. If the industry
+            loss for a given occurrence is below the industry loss minimum value, then the loss
+            value of the occurrence is set to zero.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_industryLossTrigger">
+        <glossterm>industry loss trigger</glossterm>
+        <glossdef>Specifies the value above or below which occurrences are excluded from
+            consideration based on the industry loss threshold for a given event.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_industryLossWarranties">
+        <glossterm>industry loss warranties</glossterm>
+        <glossdef>A type of reinsurance contract where one party will purchase protection based on
+            total loss to the insurance industry arising from an event, rather than from their own
+            losses.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>industry loss warranties (ILW)</glossSurfaceForm>
+            <glossAlt id="ILW">
+                <glossAcronym>ILW</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_insurance">
+        <glossterm>insurance</glossterm>
+        <glossdef>Coverage by contract whereby one party undertakes to indemnify or guarantee
+            another against loss by a specified contingency or peril.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_insurersCoinsur">
+        <glossterm>insurers coinsurance</glossterm>
+        <glossdef>The portion of the losses to the layer retained by the cedant.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_inure">
+        <glossterm>inure</glossterm>
+        <glossdef>To take effect for the benefit of either the reinsurer or the reinsured. For
+            example, when layers are applied to reduce the loss to a given layer, those layers are
+            said to inure to the benefit of the reinsurer of that layer.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_inuringLoss">
+        <glossterm>inuring loss</glossterm>
+        <glossdef>Inuring loss is the loss reduction applied to company loss after inuring programs
+            and terms are invoked.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_inuringOrder">
+        <glossterm>inuring order</glossterm>
+        <glossdef>Contracts inure in series or in parallel (not both).</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_inuringProgram">
+        <glossterm>inuring program</glossterm>
+        <glossdef>Inuring reinsurance programs affect the amount of risk being transferred to or
+            from the reinsured and which contract is affected.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_InvestmentAmount">
+        <glossterm>investment amount</glossterm>
+        <glossdef>The monetary commitment associated with the bond/layer. For <term
+                keyref="gloss_catBond"/> programs only.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_layer">
+        <glossterm>layer</glossterm>
+        <glossdef>An insurance or reinsurance contract with a limit and retention of
+            cover.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_layerLimit">
+        <glossterm>layer limit</glossterm>
+        <glossdef>The amount of loss ceded to the insurer. This will usually be specified as an
+            amount less than or equal to the replacement value. You can set the limit for individual
+            locations or for an entire policy that covers multiple locations.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_layerStatus">
+        <glossterm>layer status</glossterm>
+        <glossdef>See <term keyref="gloss_programStatus"/></glossdef>
+    </glossentry>
+    <glossentry id="gloss_layerTerms">
+        <glossterm>layer terms</glossterm>
+        <glossdef>Terms that apply to a <term keyref="gloss_layer"/>, such as the limit, retention,
+            participation, percent placed, and application of <term keyref="gloss_lineOfBusiness"
+                >LOBs</term> and geographies. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_locationTerms">
+        <glossterm>location terms</glossterm>
+        <glossdef>The limits and deductibles that apply to individual locations and
+            risks.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_lineOfBusiness">
+        <glossterm>line of business</glossterm>
+        <glossdef>An attribute of a contract that describes the class of business. These can be
+            user-defined or based on industry definitions such as residential, commercial, auto,
+            etc.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>line of business (LOB)</glossSurfaceForm>
+            <glossAlt id="LOB">
+                <glossAcronym>LOB</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_libor">
+        <glossterm>London Interbank Offered Rate</glossterm>
+        <glossdef>A benchmark rate that some of the world's leading banks charge each other for
+            short-term loans.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>London Interbank Offered Rate (LIBOR)</glossSurfaceForm>
+            <glossAlt id="LIBOR">
+                <glossAcronym>LIBOR</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_lossFile">
+        <glossterm>loss file</glossterm>
+        <glossdef>Loss files contain data generated to predict losses due to a particular
+            catastrophe.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_lossMarketShares">
+        <glossterm>loss market share</glossterm>
+        <glossdef>Company losses generated from a market share analysis on <ph
+                keyref="kw_air-company-name-abbrev"/> ALERT™ event sets by comparing company loss
+            file losses with the <term keyref="gloss_industryLossFile">ILF</term> to estimate
+            company market share.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_lossModFactor">
+        <glossterm>loss modification factor</glossterm>
+        <glossdef>A user-specified adjustment factor that applies to the ground-up losses for a
+            single program.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>loss modification factor (LMF)</glossSurfaceForm>
+            <glossAlt id="LMF">
+                <glossAcronym>LMF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_lossOfUse">
+        <glossterm>loss of use</glossterm>
+        <glossdef>Time element related to the loss of a structure's functionality due to damage,
+            lack of safety, or lack of access.
+            <!--Loss of use is referred to as additional living
+            expenses (ALE) for residential properties, and business interruption for other
+            properties (including commercial, industrial, and others).--></glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_magnitude">
+        <glossterm>magnitude</glossterm>
+        <glossdef>A measure of the energy released during an earthquake.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_mappingSet">
+        <glossterm>mapping set</glossterm>
+        <glossdef>A file that defines data mappings for policy, location, reinsurance, and step
+            function import <filepath>.csv</filepath> files. </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_marketLossWarranty">
+        <glossterm>market loss warranty</glossterm>
+        <glossdef>See <term keyref="gloss_industryLossMinimum"/></glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_marketShares">
+        <glossterm>market shares</glossterm>
+        <glossdef>The proportion of the industry written by a company, often expressed as
+            percentages by line of business and area/subarea.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_marketTrendFactor">
+        <glossterm>market trend factor</glossterm>
+        <glossdef>A market trend factor is a user-specified adjustment factor that applies to the
+            losses for a single program.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_matchLoss">
+        <glossterm>match loss</glossterm>
+        <glossdef>A program term associated with occurrence limit.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_msa">
+        <glossterm>microservices architecture</glossterm>
+        <glossdef>A software development approach in which single-function modules form the basis of
+            the application or deliverable.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_minimumDeductible">
+        <glossterm>minimum deductible</glossterm>
+        <glossdef>The deductible that is applied if the coverage or site deductible is less than the
+            specified minimum level.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_modelBuilder">
+        <glossterm><ph keyref="kw_air-product-name_mb-abbrev"/></glossterm>
+        <glossdef>A <ph keyref="kw_air-company-name-abbrev"/> software application that lets users
+            create their own custom models and integrate non-<ph keyref="kw_air-company-name-abbrev"
+            /> models into <ph keyref="kw_air-company-name-abbrev"/> applications.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_mixtureMethod">
+        <glossterm>mixture method</glossterm>
+        <glossdef>Methodology which combines losses using convolution and comonotonic
+            distributions.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_mpci">
+        <glossterm>Multiple Peril Crop Insurance</glossterm>
+        <glossdef>Insurance focussed primarily on crop-related perils and losses.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Multiple Peril Crop Insurance (MCPI)</glossSurfaceForm>
+            <glossAlt id="MPCI">
+                <glossAcronym>MPCI</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_multiTenantCloud">
+        <glossterm>multi-tenant cloud</glossterm>
+        <glossdef>A cloud computing architecture that enables clients to share computing resources
+            in a public or private cloud.
+            <!--Each tenant's data is isolated and remains invisible to
+            other tenants-->.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_multiYearResetDate">
+        <glossterm>multi-year reset date</glossterm>
+        <glossdef>Parameter to override program inception date.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_netLoss">
+        <glossterm>net loss</glossterm>
+        <glossdef>The loss after reinsurance treaties have been applied. See <term
+                keyref="gloss_preCatNetLoss"/> and <term keyref="gloss_postCatNetLoss"/>.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_netParticipation">
+        <glossterm>net participation</glossterm>
+        <glossdef>The amount that the original reinsurer is responsible for in a <term
+                keyref="gloss_layer"/>.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_netPrecat">
+        <glossterm>net of pre-CAT</glossterm>
+        <glossdef>The total loss generated after the application of all reinsurance treaties, except
+            for <term keyref="gloss_catastropheExcessOfLoss"/> treaties.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_netRetainedLoss">
+        <glossterm>net retained loss</glossterm>
+        <glossdef>Losses retained by a ceding company (primary insurer) after netting out
+            reinsurance contract losses and any associated inuring contract losses.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_ntlm">
+        <glossterm>New Technology LAN Manager</glossterm>
+        <glossdef>A suite of Microsoft security protocols intended to provide authentication,
+            integrity, and confidentiality to users. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>New Technology LAN Manager (NTLM)</glossSurfaceForm>
+            <glossAlt id="ntlm">
+                <glossAcronym>NTLM</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_nthEventCover">
+        <glossterm>nth event cover</glossterm>
+        <glossdef>Refers to cases where an insurance company is willing to absorb losses above the
+            retention for the first <codeph>n-1</codeph> occurrences. </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_numberOfRisks">
+        <glossterm>number of risks</glossterm>
+        <glossdef>The number of property exposures at risk. For workers' compensation exposures,
+            this is the employee count.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_occupancy">
+        <glossterm>occupancy</glossterm>
+        <glossdef>An attribute that indicates how a property is used, such as
+                    <b><parmname>single-family residence</parmname></b> or for <parmname>retail
+                trade</parmname>. <!--<keyword keyref="kw_air-company-name-abbrev"/> models use
+            occupancy codes in the damage functions that determine the degree of damage a location
+            would experience in a catastrophic event.-->
+        </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_occurrenceLimit">
+        <glossterm>occurrence limit</glossterm>
+        <glossdef>The maximum loss that can be incurred by a <term keyref="gloss_layer"/> from a
+            single occurrence.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_occurrenceLoss">
+        <glossterm>occurrence loss</glossterm>
+        <glossdef>The highest possible loss for the specified period from a single event.
+            <!--The annual
+            occurrence loss for a risk, a policy, a contract, or a company is the largest loss
+            resulting from all events that occurred during a 12-month period.--></glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_occurrenceRetention">
+        <glossterm>occurrence retention</glossterm>
+        <glossdef>The value below which the <term keyref="gloss_layer"/> does not assume occurrence
+            losses.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_on-premisesserver">
+        <glossterm>on-premises server</glossterm>
+        <glossdef>A server that is reserved for use by a single entity, such as a business, and that
+            resides in a location managed by that entity.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_onlineHelp">
+        <glossterm>online help</glossterm>
+        <glossdef>Information and instructions available with a =<ph
+                keyref="kw_air-company-name-abbrev"/> software application. </glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_openExposureData">
+        <glossterm>open exposure data</glossterm>
+        <glossdef>A standard that provides the industry with a robust, open, and transparent data
+            format with the aim of delivering a common framework for encoding, transmitting, and
+            interpreting data.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Open Exposure Data (OED)</glossSurfaceForm>
+            <glossAlt id="OED">
+                <glossAcronym>OED</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_pandemic">
+        <glossterm>pandemic</glossterm>
+        <glossdef>An epidemic of infectious disease that has spread across a large region, multiple
+            countries, continents, or worldwide.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_participation">
+        <glossterm>participation</glossterm>
+        <glossdef>The reinsurers' share of the portfolio.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_percentCeded">
+        <glossterm>percent ceded</glossterm>
+        <glossdef>The ceded amount as a percentage.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_percentOfLossDeductible">
+        <glossterm>percent of loss deductible</glossterm>
+        <glossdef>A deductible calculated as the percentage of insured loss for the
+            occurrence.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_percentPlaced">
+        <glossterm>percent placed</glossterm>
+        <glossdef>The percentage of the treaty placed with reinsurers.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_peril">
+        <glossterm>peril</glossterm>
+        <glossdef>A category of a catastrophic event that may cause loss and which an insurance
+            policy might cover, such as earthquake shake, hurricane wind, hurricane storm surge, or
+            terrorism. See <term keyref="gloss_secondaryPeril"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_perilSet">
+        <glossterm>peril set</glossterm>
+        <glossdef>A combination of one or more <term keyref="gloss_peril">perils</term>.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_perspective">
+        <glossterm>perspective</glossterm>
+        <glossdef>In the catastrophe modeling world, a perspective specifies the terms that should
+            apply to the loss results.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_perRisk">
+        <glossterm>per risk</glossterm>
+        <glossdef>A reinsurance program that applies retention and amount of reinsurance for each
+            risk rather than on an aggregate or per-event basis.
+            <!--This could apply to individual
+            locations, layers, or policies and always applies after application of gross terms
+            (location and policy limits and deductibles).--></glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_pmfby">
+        <glossterm>Pradhan Mantri Fasal Bima Yojana </glossterm>
+        <glossdef>A government-sponsored crop insurance scheme for India that integrates multiple
+            stakeholders on a single platform.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Pradhan Mantri Fasal Bima Yojana (PMFBY)</glossSurfaceForm>
+            <glossAlt>
+                <glossAcronym>PMFBY</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_postCatNetLoss">
+        <glossterm>post-CAT net loss</glossterm>
+        <glossdef>The <term keyref="gloss_netLoss"/> after application of all reinsurance treaties,
+            including <term keyref="gloss_xol">XOL</term> treaties. See also <term
+                keyref="gloss_preCatNetLoss"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_preCatNetLoss">
+        <glossterm>pre-CAT net loss</glossterm>
+        <glossdef>The <term keyref="gloss_netLoss"/> after application of all reinsurance treaties
+            except for <term keyref="gloss_xol">CatXOL</term> treaties. See also <term
+                keyref="gloss_postCatNetLoss"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_premiums">
+        <glossterm>premiums</glossterm>
+        <glossdef>A premium type is used to view the loss results net of the reinsurance premium
+            received for the contract. Reinsurance premiums apply to all program types except
+            catastrophe bonds.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_primaryCharacteristics">
+        <glossterm>primary characteristics</glossterm>
+        <glossdef>The characteristics of a location that determine its risk of damage as a result of
+            a specific peril. For example, occupancy type, construction type, year built, number of
+            stories, replacement value, or latitude and longitude.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_primaryUncertainty">
+        <glossterm>primary uncertainty</glossterm>
+        <glossdef>Uncertainty in the event generation component of the model (the event catalog).
+            Primary uncertainty has elements of epistemic/aleatory as well as model/parametric
+            uncertainty.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_principalAmount">
+        <glossterm>principal amount</glossterm>
+        <glossdef>The principal amount associated with the bond/layer.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_probabilisticEvent">
+        <glossterm>probabilistic event</glossterm>
+        <glossdef>An event described by probable values for event characteristics.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_probAttachment">
+        <glossterm>probability of attachment</glossterm>
+        <glossdef>The probability (%) of a program/layer experiencing some loss.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_probExhaustion">
+        <glossterm>probability of exhaustion</glossterm>
+        <glossdef>The probability (%) of a program/layer experiencing a complete loss.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_projectTouchstone">
+        <glossterm>project</glossterm>
+        <glossdef>In <ph keyref="kw_air-product-name_synergy-studio"/>, a project is a folder where
+            you can assemble navigational shortcuts to related exposure views and
+            analyses.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_projections">
+        <glossterm>projections</glossterm>
+        <glossdef>Refers to map projections that are certified for use in <ph
+                keyref="kw_air-company-name-abbrev"/>applications.
+            <!--These include Alberts Equal
+            Area, Conic British National Grid, Lambert Azimuthal Equal-Area, Lambert Conformal
+            Conic, NAD 1927 Contiguous USA Albers, Universal Transverse Mercator (UTM), and Web
+            Mercator.--></glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_proportionalReinsurance">
+        <glossterm>proportional reinsurance</glossterm>
+        <glossdef>See <term keyref="gloss_quotaShare"/> and <term keyref="gloss_surplusShare"
+            />.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_queryLanguage">
+        <glossterm>query language</glossterm>
+        <glossdef>A computer programming language that uses queries to request and retrieve data
+            from databases and information systems.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_quotaShare">
+        <glossterm>quota share</glossterm>
+        <glossdef>A reinsurance program where the reinsurer is responsible for the same percentage
+            of loss on each risk, regardless of the event or year. Also called <term>proportional
+                reinsurance</term>.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>quota share (QS)</glossSurfaceForm>
+            <glossAlt id="QS">
+                <glossAcronym>QS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_rds">
+        <glossterm>Lloyd's of London</glossterm>
+        <glossdef>Among other things, the company that maintains <term
+                keyref="gloss_realisticDisasterScenarios">realistic disaster
+            scenarios</term>.</glossdef>
+
+    </glossentry>
+    <glossentry id="gloss_realisticDisasterScenarios">
+        <glossterm>realistic disaster scenarios</glossterm>
+        <glossdef>Stress test scenarios defined by Lloyd’s of London. They are used to ensure that
+            syndicates meet capacity requirements should an RDS occur.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>realistic disaster scenarios (RDS)</glossSurfaceForm>
+            <glossAlt id="RDS">
+                <glossAcronym>RDS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_reinstatements">
+        <glossterm>reinstatements</glossterm>
+        <glossdef>Specifies the number of times the <term keyref="gloss_occurrenceLimit"/> for the
+            layer can be reinstated during the contract period.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_reinstatementPremium">
+        <glossterm>reinstatement premium</glossterm>
+        <glossdef>The cost to restore the insurance or reinsurance limit of a contract to its full
+            amount after the insured or reinsured incurs a loss. The term principally relates to
+            property catastrophe reinsurance contracts. </glossdef>
+
+    </glossentry>
+
+    <glossentry id="gloss_reinsuranceContract">
+        <glossterm>reinsurance contract</glossterm>
+        <glossdef>A contract made between an insurance company and a reinsurer to protect the
+            insurance company from losses. The contract provides for the reinsurer to pay for the
+            loss sustained by the insurance company when it makes a payment on the original
+            contract.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_reinsuranceProgram">
+        <glossterm>reinsurance program</glossterm>
+        <glossdef>A group of related <term keyref="gloss_reinsuranceContract">s</term> and
+            layers.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_releaseToManufacturer">
+        <glossterm>release to manufacturer</glossterm>
+        <glossdef>An update for the Microsoft SQL server distributed to manufacturers before being
+            distributed to the general public. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>Release to Manufacturer (RTM)</glossSurfaceForm>
+            <glossAlt id="RTM">
+                <glossAcronym>RTM</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_replacementValue">
+        <glossterm>replacement value</glossterm>
+        <glossdef>The amount that the insured party would have to pay to replace the insured asset
+            at the present time. Policy terms specify replacement value by location and by
+            coverage.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_retainedLoss">
+        <glossterm>retained loss</glossterm>
+        <glossdef>Losses retained by the insurer.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_returnPeriod">
+        <glossterm>return period</glossterm>
+        <glossdef>In terms of <term keyref="gloss_exceedanceProbability"/>, return period is the
+            estimated likelihood of a loss of a given size occurring within a given time
+            frame.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_reverseMarketLossWarranty">
+        <glossterm>reverse market loss warranty</glossterm>
+        <glossdef>See <term keyref="gloss_industryLossMaximum"/></glossdef>
+    </glossentry>
+    <glossentry id="gloss_riftZone">
+        <glossterm>rift zone</glossterm>
+        <glossdef>An area where a volcano is rifting or splitting apart. Rock in a rift zone has
+            many cracks and is relatively weak.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_riskLimit">
+        <glossterm>risk limit</glossterm>
+        <glossdef>The treaty limit for a single risk or layer. The risk limit value applies only to
+            treaties of the per-risk treaty
+            type<!-- and must be a numeric value between 0 and
+            99,999,999,999,999-->.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_riskRetention">
+        <glossterm>risk retention</glossterm>
+        <glossdef>The value below which the total losses are not assumed by the layer. Risk
+            retention applies only to treaties of the per-risk treaty type<!-- and must be a numeric
+            value between 0 and 99,999,999,999,999. If the field is left blank, this specifies no
+            risk retention and the value is not considered in analyses-->. </glossdef>
+    </glossentry>
+    <glossentry id="gloss_ruptureLength">
+        <glossterm>rupture length</glossterm>
+        <glossdef>The span of the fault that slips during an earthquake.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_secondaryPeril">
+        <glossterm>secondary peril</glossterm>
+        <glossdef>A secondary effect of a primary <term keyref="gloss_peril"/> peril, such as
+            earthquake sprinkler linkage.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_secondaryRiskCharacteristics">
+        <glossterm>secondary risk characteristics</glossterm>
+        <glossdef>Features of a structure or its environment that affect resistance to damage and
+            modify the base vulnerability functions for a specific peril (also known as <term
+                keyref="gloss_individualRiskModifier"/>). </glossdef>
+        <glossBody>
+            <glossSurfaceForm>secondary risk characteristics (SRC)</glossSurfaceForm>
+            <glossAlt id="SRC">
+                <glossAcronym>SRC</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_secondaryUncertainty">
+        <glossterm>secondary uncertainty</glossterm>
+        <glossdef>Uncertainty associated with the damage and loss estimation should a given event
+            occur.
+            <!--Secondary uncertainty has elements of epistemic/aleatory as well as
+            model/parametric uncertainty.--></glossdef>
+    </glossentry>
+    <glossentry id="gloss_sid">
+        <glossterm>sequential identifier</glossterm>
+        <glossdef>Identifier used in database implementation for unique identification of a
+            record.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Sequential Identifier (SID)</glossSurfaceForm>
+            <glossAlt id="SID">
+                <glossAcronym>SID</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_soa">
+        <glossterm>service-oriented architecture</glossterm>
+        <glossdef>A component-based, modular, and extensible platform for building
+            applications.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Service-oriented architecture (SOA)</glossSurfaceForm>
+            <glossAlt id="SOA">
+                <glossAcronym>SOA</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_shapeFiles">
+        <glossterm>shapefiles</glossterm>
+        <glossdef>A simple, non-topological vector format for storing the geometric location and
+            attribute information of geographic features.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_singleTenant">
+        <glossterm>single-tenant</glossterm>
+        <glossdef>A cloud application and infrastructure environment that serves a single
+            client.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_saas">
+        <glossterm>software as a service</glossterm>
+        <glossdef>A software licensing model in which access to the software is provided on a
+            subscription basis, with the software being located on external servers rather than on
+            servers located in-house. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>Software as a Service (SaaS)</glossSurfaceForm>
+            <glossAlt id="SAAS">
+                <glossAcronym>SAAS</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_sourceProgram">
+        <glossterm>source program</glossterm>
+        <glossdef>A source program (parent) associated with a subject program (child).</glossdef>
+    </glossentry>
+    <glossentry id="gloss_spatialCorrelation">
+        <glossterm>spatial correlation</glossterm>
+        <glossdef>The extent to which the losses at two locations behave similarly due to their
+            spatial proximity.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_spotFac">
+        <glossterm>spot fac</glossterm>
+        <glossdef>An insurance industry term short for individual location-level (spot) facultative
+            (fac) reinsurance. See <term keyref="gloss_facultativeReinsurance"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_svf">
+        <glossterm>SQLite vector file</glossterm>
+        <glossdef>A database that stores vector files, which are numerical representations of data
+            that capture the semantic meaning of text, images, and other data types.
+            <!--Vector
+            files can be imported into and displayed by <keyword
+                keyref="kw_air-company-name-abbrev"/> applications which support import of SQLite
+            vector files (.sqlite) as map layers and multi-table SQLite. You can import the
+            following geometry types, where polygons are imported as polygon objects, lines as
+            lines, and points as points. <ul>
+                <li>Polygon</li>
+                <li>Line</li>
+                <li>Point</li>
+                <li>Multi-polygon</li>
+                <li>Multi-line</li>
+                <li>Multi-point</li>
+            </ul> You can import projected SQLite files.--></glossdef>
+    </glossentry>
+    <glossentry id="gloss_standardHurricaneCatalog">
+        <glossterm>standard hurricane catalog</glossterm>
+        <glossdef>A catalog of events that reflects hurricane risk under average climate
+            conditions.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_sra">
+        <glossterm>standard reinsurance agreement </glossterm>
+        <glossdef>An agreement for federal crop insurance that consists of a set of contracts
+            between the U.S. Department of Agriculture (USDA) and private companies. The contracts
+            identify expense reimbursements and risk-sharing by the government on eligible
+            crops.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Standard Reinsurance Agreement (SRA)</glossSurfaceForm>
+            <glossAlt id="SRA">
+                <glossAcronym>SRA</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_startingEvent">
+        <glossterm>starting event</glossterm>
+        <glossdef>An integer value that indicates at which event during the year the <term
+                keyref="gloss_layerTerms"/> are to become effective.
+            <!--The starting event # provides the capability to analyze Nth Event
+            Covers. Only events that could potentially produce reinsurer losses are counted toward
+            the Starting Event #.--></glossdef>
+    </glossentry>
+    <glossentry id="gloss_programStatus">
+        <glossterm>status</glossterm>
+        <glossdef>Refers to the status of the program or layer. Common status types include:
+            Submitted (default), Authorized, Bound, Cancelled, Quoted, Rejected, and for cat bonds,
+            Investment Status.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_stc">
+        <glossterm>stochastic catalog</glossterm>
+        <glossdef>Series of simulated events based on one or more stochastic models over a period of
+            time. Stochastic catalogs can be used when running a loss analysis.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>stochastic catalog (STC)</glossSurfaceForm>
+            <glossAlt id="STC">
+                <glossAcronym>STC</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_stochasticEvent">
+        <glossterm>stochastic event</glossterm>
+        <glossdef>An event whose characteristics are obtained from probability distributions in the
+            historical catalog.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_stochasticmodel">
+        <glossterm>stochastic model</glossterm>
+        <glossdef>A tool for estimating probability distributions of potential outcomes by allowing
+            for random variation in one or more inputs over time.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_sql">
+        <glossterm>structured query language (SQL)</glossterm>
+        <glossdef>A programming language for storing and processing information in a relational
+            database. https://aws.amazon.com/what-is/sql/</glossdef>
+    </glossentry>
+    <glossentry id="gloss_sublimit">
+        <glossterm>sublimit</glossterm>
+        <glossdef>A type of layer condition that applies to a subset of locations within a policy.
+            Sublimits are often used in high-hazard areas to limit losses for locations that fall
+            within them.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_sumsInsured">
+        <glossterm>sums insured</glossterm>
+        <glossdef>The maximum amount that an insurance company insurance company is obligated to
+            cover in the event of a covered loss.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>sums insured (SI)</glossSurfaceForm>
+            <glossAlt id="SI">
+                <glossAcronym>SI</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_surplusShare">
+        <glossterm>surplus share</glossterm>
+        <glossdef>A reinsurance program where the reinsurer is responsible for the same size of loss
+            on each risk, regardless of the event or year.</glossdef>
+        <glossBody/>
+    </glossentry>
+    <glossentry id="gloss_tailValueAtRisk">
+        <glossterm>tail value at risk (TVaR)</glossterm>
+        <glossdef>Measures the average of all simulated losses from a percentile or return period on
+            the loss distribution through the full "tail" of the loss distribution.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>tail value at risk (TVaR)</glossSurfaceForm>
+            <glossAlt id="TVaR">
+                <glossAcronym>TVaR</glossAcronym>
+            </glossAlt>
+        </glossBody>
+
+    </glossentry>
+    <glossentry id="gloss_takeUpRates">
+        <glossterm>take-up rate</glossterm>
+        <glossdef>
+            <p>The percentage of insurable properties actually insured.</p>
+        </glossdef>
+    </glossentry>
+    <glossentry id="gloss_target">
+        <glossterm>target</glossterm>
+        <glossdef>A company loss set or an exposure set.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_timeDependentCatalog">
+        <glossterm>time-dependent catalog</glossterm>
+        <glossdef>A catalog of probabilistic events that assumes that the annual probability of a
+            characteristic earthquake occurring on a fault increases with the time elapsed since the
+            previous such earthquake.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_timeElement">
+        <glossterm>time element</glossterm>
+        <glossdef>Loss of use of a structure over time because due to damage, lack of safety, or
+            lack of access. Loss of use is referred to as <term id="gloss_additionaLivingExpenses"
+                >additional living expenses</term> for residential properties, and business
+            interruption for other properties (including commercial, industrial, and others).
+        </glossdef>
+    </glossentry>
+    <glossentry id="gloss_timeIndependentCatalog">
+        <glossterm>time-independent catalog</glossterm>
+        <glossdef>A catalog of probabilistic events that assumes that the annual probability of a
+            characteristic earthquake occurring on a fault within a given time period is independent
+            of when the last such earthquake occurred and, therefore, requires only knowledge of the
+            mean recurrence time. Compare with <term keyref="gloss_timeDependentCatalog"
+            />.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_totalInsuredValue">
+        <glossterm>total insured value</glossterm>
+        <glossdef>The minimum of the <term keyref="gloss_totalReplacementValue"/> or the limit minus
+            the deductible. If no layer or policy terms are defined, location values, limits, and
+            deductibles are used. </glossdef>
+        <glossBody>
+            <glossSurfaceForm>total insured value (TIV)</glossSurfaceForm>
+            <glossAlt>
+                <glossAcronym>TIV</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_totalReplacementValue">
+        <glossterm>total replacement value</glossterm>
+        <glossdef>The sum of the replacement values for all coverages.</glossdef>
+    </glossentry>
+
+
+    <glossentry id="gloss_treatyID">
+        <glossterm>treaty ID</glossterm>
+        <glossdef>A unique identifier provided by the user when creating a program.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_treatyInfo">
+        <glossterm>treaty information</glossterm>
+        <glossdef>Program details.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_treatyReinsurance">
+        <glossterm>treaty reinsurance</glossterm>
+        <glossdef>Coverage purchased by a primary insurer in which the reinsurer must cover any risk
+            that falls within a specified line, class, or book of business. See also <term
+                keyref="gloss_facultativeReinsurance"/>.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_treatyTerms">
+        <glossterm>treaty term</glossterm>
+        <glossdef>Characteristics used to define a reinsurance program.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_triggers">
+        <glossterm>trigger</glossterm>
+        <glossdef>
+            <p>The mechanism used to determine when payouts must be made. Triggers define company
+                and industry loss parameters and take into consideration the defined geographic
+                region.</p>
+        </glossdef>
+    </glossentry>
+    <glossentry id="gloss_ujf">
+        <glossterm>underwriting judgement factor (UJF)</glossterm>
+        <glossdef>A UJF is a user-defined adjustment factor that applies to ceding company program
+            losses.</glossdef>
+    </glossentry>
+
+    <glossentry id="gloss_unicede">
+        <glossterm>UNICEDE</glossterm>
+        <glossdef>Universal Cession Electronic Data Exchange (UNICEDE) is a globally accepted open
+            data format developed by <ph keyref="kw_air-company-name-abbrev"/> to standardize
+            insurance data exchange.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>UNICEDE</glossSurfaceForm>
+            <glossAlt id="UNICEDE">
+                <glossAcronym>UNICEDE</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_ulf">
+        <glossterm>user-generated loss file</glossterm>
+        <glossdef>A loss file whose content must adhere to <ph keyref="kw_air-company-name-abbrev"
+            />'s loss file format guidelines.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>user-generated loss file (ULF)</glossSurfaceForm>
+            <glossAlt id="ulf">
+                <glossAcronym>ULF</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_unit">
+        <glossterm>unit</glossterm>
+        <glossdef>A control that enables you to specify the order of magnitude at which you want to
+            view monetary figures.</glossdef>
+    </glossentry>
+    <glossentry id="gloss_unc">
+        <glossterm>universal naming convention</glossterm>
+        <glossdef>A standard for identifying servers, printers, and other resources on a network,
+            allowing a consistent access to these resources across different systems.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>Universal Naming Convention (UNC)</glossSurfaceForm>
+            <glossAlt id="UNC">
+                <glossAcronym>UNC</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_uncertainty">
+        <glossterm>uncertainty</glossterm>
+        <glossdef><ph id="uncertainty_definition">Refers to uncertainty about the fit or
+                appropriateness of a model or the data it uses.</ph></glossdef>
+  <!--      <related-links>
+            <link keyref="uncertainty_about" href="concepts.ditamap#uncertainty_about"/>
+        </related-links>
+        -->
+    </glossentry>
+    <glossentry id="gloss_udc">
+        <glossterm>user-defined category</glossterm>
+        <glossdef>A category which allow you to classify companies and programs using criteria that
+            are meaningful and useful to your specific needs.</glossdef>
+        <glossBody>
+            <glossSurfaceForm>user-defined categories (UDC)</glossSurfaceForm>
+            <glossAlt id="udc">
+                <glossAcronym>UDC</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+
+    <glossentry id="gloss_vectorFiles">
+        <glossterm>vector files</glossterm>
+        <glossdef>Files that contain numerical representations of data that capture the semantic
+            meaning of text, images, and other data types. See <term keyref="gloss_svf"
+            >.</term></glossdef>
+    </glossentry>
+    <glossentry id="gloss_warmSeaSurfaceTemp">
+        <glossterm>warm sea surface temperature</glossterm>
+        <glossdef>
+            <ph id="wsst_definition">The elevated temperature of the ocean's surface, typically
+                measured in the upper few meters. Warm SSTs are crucial in influencing weather
+                patterns, particularly in the formation and intensification of tropical cyclones,
+                hurricanes, and typhoons. </ph><xref keyref="wsst_about">Read more</xref>
+        </glossdef>
+        <glossBody>
+            <glossSurfaceForm>warm sea surface temperature (WSST)</glossSurfaceForm>
+            <glossAlt id="WSST">
+                <glossAcronym>WSST</glossAcronym>
+            </glossAlt>
+        </glossBody>
+    </glossentry>
+    <glossentry id="gloss_warmSeaSurfaceTempCatalog">
+        <glossterm>warm sea surface temperature catalog</glossterm>
+        <glossdef>A catalog of events based on elevated sea surface temperatures.
+            <!--Because surface
+            temperature variability in the Atlantic Ocean affects hurricane activity, the <keyword
+                keyref="kw_air-models_us-hu"/> offers a <term keyref="gloss_warmSeaSurfaceTemp">warm
+                sea surface temperature</term> catalog in addition to the standard catalog to
+            represent multiple credible views of risk.--></glossdef>
+    </glossentry>
+    <glossentry id="gloss_worldScenariosEvents">
+        <glossterm><ph keyref="kw_air-terminology_world-scenarios"/> event set</glossterm>
+        <glossdef>
+            <p>Event sets that represent low or very low probability disaster scenarios. See <term
+                    keyref="gloss_realisticDisasterScenarios">Realistic Disaster Scenarios
+                    (RDS)</term>, <term keyref="gloss_eds">Extreme Disaster Scenarios (EDS)</term>,
+                and <term keyref="gloss_warmSeaSurfaceTempCatalog">Warm Sea Surface Temperature
+                    (WSST) catalog</term>.</p>
+        </glossdef>
+    </glossentry>
+
+
+
+
+
+
+
+
+
+
+
+
+</glossgroup>

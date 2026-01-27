@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Generate real_data.csv from glossary.dita file.
+Generate real_data2.csv from glossary2.dita file.
 
 This script:
 1. Parses the DITA XML file to extract glossary entries
-2. Creates EES perspective entries with two drafts (original and improved)
-3. Creates Tools perspective entries for Termageddon-related terms
+2. Categorizes terms into perspectives (CAT Modeling, VSS Product, Verisk External)
+3. Creates entries with cross-references within each perspective
 4. Outputs CSV file with cross-reference placeholders
 """
 
@@ -47,6 +47,41 @@ def wrap_in_paragraphs(text):
 
     # Otherwise wrap in paragraph
     return f"<p>{text}</p>"
+
+
+def categorize_perspective(term_text, definition_text):
+    """
+    Categorize a term into a perspective based on keywords in term name and definition.
+
+    Returns: "CAT Modeling", "VSS Product", or "Verisk External"
+    Defaults to "CAT Modeling" for unclear cases.
+    """
+    combined = (term_text + ' ' + definition_text).lower()
+
+    # Verisk External keywords (check first to catch branding terms)
+    verisk_keywords = [
+        'verisk', 'air', 'analyze re', 'touchstone', 'model builder',
+        'synergy studio', 'alert', 'ceda', 'cede', 'unicede', 'oed'
+    ]
+    if any(kw in combined for kw in verisk_keywords):
+        return "Verisk External"
+
+    # VSS Product keywords (infrastructure/application features)
+    vss_keywords = [
+        'aws', 's3', 'cloud', 'server', 'database', 'application server',
+        'architecture', 'microservices', 'client server', 'dbeaver', 'sql',
+        'activity monitor', 'air cloud', 'multi-tenant', 'single-tenant',
+        'high performance computing', 'hpc', 'saas', 'software as a service',
+        'vector file', 'geojson', 'gml', 'shapefile', 'sqlite',
+        'online help', 'project', 'exposure view', 'exposure set',
+        'mapping set', 'query language', 'sequential identifier'
+    ]
+    if any(kw in combined for kw in vss_keywords):
+        return "VSS Product"
+
+    # CAT Modeling keywords (catastrophe modeling domain concepts)
+    # Default to CAT Modeling for unclear cases
+    return "CAT Modeling"
 
 
 def improve_definition(original, term_text, all_terms, current_perspective):
@@ -170,10 +205,12 @@ def improve_definition(original, term_text, all_terms, current_perspective):
     return improved.strip()
 
 
-def process_element(elem, term_lookup=None):
+def process_element(elem, term_lookup=None, all_terms=None):
     """Process an XML element and convert to HTML, handling special DITA elements."""
     if term_lookup is None:
         term_lookup = {}
+    if all_terms is None:
+        all_terms = {}
 
     result_parts = []
 
@@ -185,7 +222,7 @@ def process_element(elem, term_lookup=None):
     for child in elem:
         if child.tag == 'p':
             # Paragraph - wrap in <p> tags
-            para_content = process_element(child, term_lookup)
+            para_content = process_element(child, term_lookup, all_terms)
             if para_content.strip():
                 result_parts.append(f'<p>{para_content}</p>')
         elif child.tag == 'xref':
@@ -224,7 +261,9 @@ def process_element(elem, term_lookup=None):
                                 term_name = term_lookup[term_lower]
 
                 if term_name:
-                    result_parts.append(f'[[{term_name}|EES]]')
+                    # Find perspective for this term
+                    perspective = all_terms.get(term_name, "CAT Modeling")
+                    result_parts.append(f'[[{term_name}|{perspective}]]')
                 elif term_text:
                     # Use the text if available
                     result_parts.append(term_text)
@@ -234,7 +273,8 @@ def process_element(elem, term_lookup=None):
                     words = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)', camel_key)
                     if words:
                         potential_term = ' '.join(word.capitalize() for word in words)
-                        result_parts.append(f'[[{potential_term}|EES]]')
+                        perspective = all_terms.get(potential_term, "CAT Modeling")
+                        result_parts.append(f'[[{potential_term}|{perspective}]]')
                     else:
                         result_parts.append(keyref)
             elif term_id:
@@ -243,7 +283,8 @@ def process_element(elem, term_lookup=None):
                     # Try to find matching term
                     term_name = term_id.replace('gloss_', '').replace('gloss', '')
                     if term_name in term_lookup:
-                        result_parts.append(f'[[{term_name}|EES]]')
+                        perspective = all_terms.get(term_lookup[term_name], "CAT Modeling")
+                        result_parts.append(f'[[{term_lookup[term_name]}|{perspective}]]')
                     else:
                         result_parts.append(term_text)
                 else:
@@ -264,14 +305,14 @@ def process_element(elem, term_lookup=None):
                 pass
         elif child.tag == 'ph':
             # Phrase - just get text
-            result_parts.append(process_element(child, term_lookup))
+            result_parts.append(process_element(child, term_lookup, all_terms))
         elif child.tag == 'codeph':
             # Code phrase - wrap in <code>
             code_text = ''.join(child.itertext())
             result_parts.append(f'<code>{code_text}</code>')
         else:
             # Unknown element - recursively process
-            result_parts.append(process_element(child, term_lookup))
+            result_parts.append(process_element(child, term_lookup, all_terms))
 
         # Process tail text after child
         if child.tail:
@@ -280,8 +321,11 @@ def process_element(elem, term_lookup=None):
     return ''.join(result_parts)
 
 
-def parse_dita_file(dita_path):
+def parse_dita_file(dita_path, all_terms=None):
     """Parse DITA file and extract glossary entries with rich formatting."""
+    if all_terms is None:
+        all_terms = {}
+
     tree = ET.parse(dita_path)
     root = tree.getroot()
 
@@ -352,7 +396,7 @@ def parse_dita_file(dita_path):
 
             if term:
                 # Process definition element to HTML
-                definition_html = process_element(def_elem, term_lookup)
+                definition_html = process_element(def_elem, term_lookup, all_terms)
 
                 # Clean up: remove XML comments
                 definition_html = re.sub(r'<!--.*?-->', '', definition_html, flags=re.DOTALL)
@@ -368,72 +412,46 @@ def parse_dita_file(dita_path):
     return entries
 
 
-def create_tools_entries():
-    """Create Tools perspective entries for Termageddon-related terms."""
-    entries = [
-        (
-            "Termageddon",
-            "A glossary management system developed by David Wolfe for creating, reviewing, and publishing term definitions across multiple perspectives. Termageddon enables collaborative editing with an approval workflow, version history, and cross-referencing between entries."
-        ),
-        (
-            "entry draft",
-            "A proposed definition for a term within a specific perspective in [[Termageddon|Tools]]. Entry drafts require approval from two reviewers before they can be published. Drafts can be revised, creating a version history that tracks changes over time."
-        ),
-        (
-            "perspective",
-            "A categorization system in [[Termageddon|Tools]] that groups related terms together. Each perspective represents a particular viewpoint or domain (e.g., EES for industry terms, Tools for software tools). Terms can have different definitions across perspectives."
-        ),
-        (
-            "entry",
-            "A combination of a term and a perspective in [[Termageddon|Tools]]. Each entry can have multiple drafts, but only one published draft is active at a time. Entries enable the same term to have different definitions depending on the perspective."
-        ),
-        (
-            "term",
-            "A word or phrase that is being defined in [[Termageddon|Tools]]. A single term can appear in multiple entries across different perspectives, each with its own definition."
-        ),
-        (
-            "definition",
-            "The content that explains what a term means within a specific perspective in [[Termageddon|Tools]]. Definitions are written using a rich-text editor and can include cross-references to other entries."
-        ),
-        (
-            "approval",
-            "The process in [[Termageddon|Tools]] by which reviewers validate an entry draft before it can be published. Each draft requires two approvals from different users before it becomes the active definition."
-        ),
-        (
-            "reviewer",
-            "A user in [[Termageddon|Tools]] who can approve or comment on entry drafts. Reviewers help ensure the quality and accuracy of definitions before they are published."
-        ),
-        (
-            "perspective curator",
-            "A user in [[Termageddon|Tools]] who has special responsibilities for a specific perspective. Curators can endorse published drafts and help maintain the quality of definitions within their assigned perspective."
-        ),
-        (
-            "published draft",
-            "An entry draft in [[Termageddon|Tools]] that has been approved and made active. Only one published draft exists per entry at a time, and it is the definition that appears in the glossary view."
-        ),
-    ]
-    return entries
-
-
 def main():
-    """Generate real_data.csv from glossary.dita."""
+    """Generate real_data2.csv from glossary2.dita."""
     script_dir = Path(__file__).parent
-    dita_path = script_dir / "glossary.dita"
-    csv_path = script_dir / "real_data.csv"
+    dita_path = script_dir / "glossary2.dita"
+    csv_path = script_dir / "real_data2.csv"
 
     print(f"Parsing {dita_path}...")
-    dita_entries = parse_dita_file(dita_path)
-    print(f"Found {len(dita_entries)} entries in DITA file")
 
-    # Build term lookup for cross-references
+    # First pass: extract terms and definitions for categorization
+    tree = ET.parse(dita_path)
+    root = tree.getroot()
+
+    term_def_pairs = []
+    for entry in root.findall('.//glossentry'):
+        term_elem = entry.find('glossterm')
+        def_elem = entry.find('glossdef')
+        if term_elem is not None and def_elem is not None:
+            term = ''
+            if term_elem.text:
+                term = term_elem.text.strip()
+            else:
+                term = ''.join(term_elem.itertext()).strip()
+
+            if term:
+                # Get plain text definition for categorization
+                def_text = ''.join(def_elem.itertext()).strip()
+                term_def_pairs.append((term, def_text))
+
+    # Categorize all terms
+    print(f"Found {len(term_def_pairs)} entries, categorizing...")
     all_terms = {}
-    for term, _ in dita_entries:
-        all_terms[term] = "EES"
+    perspective_counts = {}
+    for term, def_text in term_def_pairs:
+        perspective = categorize_perspective(term, def_text)
+        all_terms[term] = perspective
+        perspective_counts[perspective] = perspective_counts.get(perspective, 0) + 1
 
-    # Add Tools terms to lookup
-    tools_entries = create_tools_entries()
-    for term, _ in tools_entries:
-        all_terms[term] = "Tools"
+    # Second pass: parse with full formatting and cross-references
+    dita_entries = parse_dita_file(dita_path, all_terms)
+    print(f"Parsed {len(dita_entries)} entries with formatting")
 
     # Write CSV
     print(f"Writing {csv_path}...")
@@ -441,23 +459,18 @@ def main():
         writer = csv.writer(f)
         writer.writerow(["perspective", "term", "definition", "author"])
 
-        # Write EES entries (single improved draft each)
-        # Cross-references are resolved after all entries are created via resolve_cross_references()
+        # Write entries with their categorized perspectives
         for term, original_def in dita_entries:
+            perspective = all_terms.get(term, "CAT Modeling")
             # Generate improved definition in-memory (adds cross-references)
-            improved_def = improve_definition(original_def, term, all_terms, "EES")
+            improved_def = improve_definition(original_def, term, all_terms, perspective)
             draft = wrap_in_paragraphs(improved_def)
-            writer.writerow(["EES", term, draft, "admin"])
-
-        # Write Tools entries (single draft each)
-        for term, definition in tools_entries:
-            draft = wrap_in_paragraphs(definition)
-            writer.writerow(["Tools", term, draft, "admin"])
+            writer.writerow([perspective, term, draft, "admin"])
 
     print(f"✓ Generated {csv_path}")
-    print(f"  - {len(dita_entries)} EES terms ({len(dita_entries)} rows)")
-    print(f"  - {len(tools_entries)} Tools terms ({len(tools_entries)} rows)")
-    print(f"  - Total: {len(dita_entries) + len(tools_entries)} rows")
+    for perspective, count in sorted(perspective_counts.items()):
+        print(f"  - {count} {perspective} terms")
+    print(f"  - Total: {len(dita_entries)} rows")
 
 
 if __name__ == "__main__":

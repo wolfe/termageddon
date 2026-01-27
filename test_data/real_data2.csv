@@ -1,0 +1,269 @@
+perspective,term,definition,author
+CAT Modeling,active layer,"<p>The layer currently visible and enabled in a pane in the application.This can be a map, program, or portfolio [[layer|CAT Modeling]].</p>",admin
+VSS Product,Activity Monitor,"<p>A feature that allows you to view and manage activities such as import, export, and loss analysis.</p>",admin
+CAT Modeling,activity status,<p>The state of any activity in the [[Activity Monitor|VSS Product]].</p>,admin
+CAT Modeling,additional living expenses,"<p>[[loss of use|CAT Modeling]], or [[time element|CAT Modeling]] for residential properties that are not inhabitable. Relocation and temporary lodging costs are considered. [[coverage|CAT Modeling]] D.</p>",admin
+CAT Modeling,adjustment factor,"<p>A numerical value or percentage applied to a base analysis to refine the predicted outcomes. </p>Adjustment factors can be cumulative. You can customize them in your analysis by compensating for variations in company, program, and [[exposure data|CAT Modeling]].",admin
+CAT Modeling,advanced loss modification,<p>A function that applies customizations to a loss analysis.</p>,admin
+CAT Modeling,aggregate analysis,"<p>An analysis of evaluating the total risk across a portfolio, region, or group of aggregate exposures such as [[market shares|CAT Modeling]] or [[sums insured|CAT Modeling]] by subarea and [[line of business|CAT Modeling]].</p>",admin
+CAT Modeling,aggregate excess of loss,<p>A [[reinsurance program|CAT Modeling]] in which a reinsurer indemnifies the ceding company for that portion of the loss that exceeds the limit of its own retention for a given year.</p>,admin
+CAT Modeling,aggregate exposure,<p>An [[exposure|CAT Modeling]] expressed as an aggregate value rather than as individual [[contract|CAT Modeling]] terms or replacement values. Read more</p>,admin
+CAT Modeling,aggregate limit,<p>The maximum loss that can be incurred by a [[layer|CAT Modeling]] across all occurrences within each year.</p>,admin
+CAT Modeling,aggregate loss,<p>The loss resulting from all events that occurred during a specified period.</p>,admin
+CAT Modeling,aggregate loss distribution,<p>[[aggregate loss|CAT Modeling]] distributed over a 12-month period.</p>,admin
+Verisk External,aggregated loss file,<p>A binary file that contains event-level loss data consolidated by country. It is a vehicle for sending loss [[data|Verisk External]] on your book or portions of your book to retrocessionaires for pricing.</p>,admin
+CAT Modeling,aggregate retention,"<p>The value below which the year's total occurrence losses (otherwise recoverable) are not assumed by the [[layer|CAT Modeling]]. Applicable only to ground-up, [[quota share|CAT Modeling]], [[aggregate excess of loss|CAT Modeling]], and [[catastrophe bond|CAT Modeling]] programs.</p>",admin
+CAT Modeling,"loss estimates in real
+            time",<p>An online service providing up-to-date information and loss estimates for natural catastrophes worldwide.</p>,admin
+Verisk External,data,<p>Data that is supplied by 's ALERT™ ( Loss Estimates in Real Time) online service which provides up-to-date information and loss estimates for major natural catastrophes worldwide.</p>,admin
+VSS Product,Amazon Simple Storage Service (S3),<p>An object storage service in which customers can store data and pay for the service based on usage.</p>,admin
+VSS Product,Amazon Web Services,<p>The world’s most comprehensive and broadly adopted [[cloud|VSS Product]] platform.</p>,admin
+VSS Product,A.M. Best premium database,"<p>A database that contains reinsurance information you can use to derive and calculate market shares. To produce the database, A.M. Best compiles data from the year-end annual reports of more than 2,000 companies.</p>",admin
+CAT Modeling,annual aggregate limit,<p>The maximum loss that a [[layer|CAT Modeling]] can incur for all occurrences within a 12-month period.</p>,admin
+CAT Modeling,annual aggregate loss,<p>The loss resulting from all events that occurred during a [[contract|CAT Modeling]] period (12 months is most common). It is calculated by dividing the sum of all losses in a simulation by the total simulation years.</p>,admin
+Verisk External,AIR Cloud,<p>'s [[cloud|VSS Product]] branded product used by clients to host application environments on the instance on the [[Amazon Web Services|VSS Product]].</p>,admin
+Verisk External,Analyze Re,"<p>​​'s software analytics suite designed for the reinsurance and insurance industries. The ​Analyze Re​​ suite takes loss [[data|Verisk External]] in a variety of forms and allows for visual mapping of that loss and its analysis through tables, charts, and similar analysis tools.</p>",admin
+CAT Modeling,annual aggregate loss distribution,<p>An aggregate loss distributed over the 12 month period. The annual [[aggregate loss|CAT Modeling]] distribution shows the probability distribution of annual aggregate losses.</p>,admin
+CAT Modeling,annual aggregate retention,<p>The annual [[aggregate retention|CAT Modeling]] is a value below which the total losses for a 12-month period are not assumed by the [[layer|CAT Modeling]].</p>,admin
+CAT Modeling,annual occurrence loss,"<p>The largest loss resulting from all events that occurred during a 12-month period. Used in reinsurance and can apply to a risk, policy, company, or [[contract|CAT Modeling]].</p>",admin
+CAT Modeling,annual occurrence loss distribution,<p>The [[occurrence loss|CAT Modeling]] distributed over a 12-month period. The annual aggregate occurrence distribution shows the probability distribution of annual occurrence losses.</p>,admin
+VSS Product,application server,<p>A server that hosts applications or software that delivers a business application through a communication protocol.</p>,admin
+Verisk External,applies to areas,<p>A parameter used by the application to filter by geographic area(s) and define where layer terms are applied. In the case of pro rata treaties; this also defines the [[percent ceded|Verisk External]] in each geographic area covered by the treaty.</p>,admin
+CAT Modeling,applies to events,"<p>A parameter used by the application to filter events. The feature allows you to manage which events should be considered in a [[contract|CAT Modeling]] analysis based on an event parameter, [[peril|CAT Modeling]], location, and/or condition. Event filtering includes specifying rules and locations.</p>",admin
+CAT Modeling,area,<p>A geographic location that is at a higher geographic resolution than a subarea. Areas are defined using the [[Federal Information Processing Standards|CAT Modeling]] or [[UNICEDE|Verisk External]] standards.</p>,admin
+CAT Modeling,area detail,<p>Indicates the level of geographic resolution to be used when analyzing this program. Can be either high (subarea) or low ([[area|CAT Modeling]]).</p>,admin
+CAT Modeling,assessment,<p>A fee imposed on members of an [[insurance|CAT Modeling]] association for certain qualifying events.</p>,admin
+CAT Modeling,average annual loss,<p>The average loss across all simulated years in a loss analysis.</p>,admin
+CAT Modeling,base maps,<p>Maps used in the application to provide a geographic setting for your [[exposure data|CAT Modeling]].</p>,admin
+CAT Modeling,Building Identification Numbering System,"<p>BINS are IDs which insurers and reinsurers use to identify whether an address represents a building, a [[unit|CAT Modeling]] in a building, a site, or a campus.</p>",admin
+CAT Modeling,blanket limit,<p>A single limit that applies to multiple locations in a [[contract|CAT Modeling]].</p>,admin
+CAT Modeling,business interruption,<p>[[loss of use|CAT Modeling]] or [[time element|CAT Modeling]] for non-residential structures. Business interruption losses are based on the expected number of days that a building is unusable.</p>,admin
+CAT Modeling,catalog type,"<p>Catalogs are lists of events used to calculate potential loss. Common catalog types include [[stochastic catalog|CAT Modeling]], [[historical catalog|CAT Modeling]], and [[realistic disaster scenarios|CAT Modeling]].</p>",admin
+CAT Modeling,catastrophe bond,<p>Risk-linked securities which transfer a specific set of risks from a ceding company to capital market investors for a specific rate of return.</p>,admin
+CAT Modeling,catastrophe excess of loss,<p>A [[reinsurance program|CAT Modeling]] in which the ceding company is indemnified for the portion of the loss that exceeds the limit of its own retention per event.</p>,admin
+CAT Modeling,Catastrophe Exposure Data Exchange,<p>An open data format to facilitate accurate and transparent data exchange throughout the [[insurance|CAT Modeling]] industry.</p>,admin
+Verisk External,ceded percentage,<p>The portions of the obligations in an insurance company’s policy portfolio transferred to a reinsurer.</p>,admin
+VSS Product,client,"<p>A device that communicates with a server, such as a desktop computer, laptop, smart phone, or network-compatible device.</p>",admin
+VSS Product,cloud,<p>A network of remote servers that operate as a single ecosystem.</p>,admin
+VSS Product,cloud native,"<p>Describes applications designed to run on the [[cloud|VSS Product]], rather than on-premises networks.</p>",admin
+CAT Modeling,cluster,"<p>A group of districts within a state in India, used by the Indian crop [[insurance|CAT Modeling]] market.</p>",admin
+CAT Modeling,coinsurance,"<p>The portion of the losses to a [[layer|CAT Modeling]] covered by a reinsurer. Where coinsurance and gross/[[net participation|CAT Modeling]] are all specified, the participation % is applied to the treaty’s share of coinsured losses.</p>",admin
+CAT Modeling,comma-separated value,<p>A simple text file that stores data in columns separated by commas.</p>,admin
+CAT Modeling,company loss,"<p>The loss a company is estimated to have from an event, excluding any program/treaty terms.</p>",admin
+Verisk External,company loss association,<p>The result of a detailed loss analysis associated with a cedant company. The results are saved at (sub)area and LOB resolution and may contain one or more perspectives.</p>,admin
+CAT Modeling,company loss file,"<p>Files that contain losses by [[line of business|CAT Modeling]], [[area|CAT Modeling]], and subarea for each event. They are used in aggregate analyses.</p>",admin
+CAT Modeling,company loss maximum,"<p>A [[trigger|CAT Modeling]] that excludes occurrences from consideration in a loss calculation. If the company loss is above the [[company loss|CAT Modeling]] maximum value, then the loss value of the occurrence is set to zero.</p>",admin
+CAT Modeling,company loss minimum,"<p>A [[trigger|CAT Modeling]] which excludes occurrences from consideration in a loss calculation. If the company loss is below the [[company loss|CAT Modeling]] minimum value, then the loss value of the occurrence is set to zero.</p>",admin
+CAT Modeling,company market share,<p>A percentage indicating the amount of the total insured property covered by a specified company in a certain geographic [[area|CAT Modeling]]/subarea and [[line of business|CAT Modeling]].</p>,admin
+CAT Modeling,coverage correlation,<p>Measures the extent to which the losses for the coverages associated with a single location are dependent on each other.</p>,admin
+VSS Product,client server architecture,"<p>A computing model in which one or more client computers are connected to a central server over a network or internet connection. The server hosts, delivers, and manages most of the [[client|VSS Product]]’s resources and services.</p>",admin
+CAT Modeling,comonotonic distribution,<p>Comonotonic distribution methodology where loss distributions are aggregated assuming that losses are maximally correlated.</p>,admin
+CAT Modeling,construction,"<p>A class of code that identifies the primary type of construction for a location, such as wood frame or reinforced concrete.</p>",admin
+CAT Modeling,contract gain,<p>A [[contract|CAT Modeling]] gain is an adjustment associated with portfolio analyses.</p>,admin
+CAT Modeling,contract,<p>An [[insurance|CAT Modeling]] policy.</p>,admin
+CAT Modeling,contract loss,<p>Loss attributed to individual reinsurance contracts.</p>,admin
+CAT Modeling,convolution,<p>a methodology where loss distributions are aggregated assuming that losses are completely independent from each other.</p>,admin
+CAT Modeling,core,<p>A processor in a computer that executes programs.</p>,admin
+CAT Modeling,coverage,<p>A component of insurable property that describes what the [[insurance|CAT Modeling]] policy covers.</p>,admin
+CAT Modeling,coverage amount,<p>A value that denotes [[coverage|CAT Modeling]]-specific deductibles and limits. It can be specified as whole numbers or as a percentage of insured/[[replacement value|CAT Modeling]].</p>,admin
+CAT Modeling,coverage percentage,<p>See [[coverage amount|CAT Modeling]].</p>,admin
+CAT Modeling,coverage rate,<p>The percentage of [[company loss|CAT Modeling]] of a particular LOB to consider when applying [[financial terms|CAT Modeling]].</p>,admin
+CAT Modeling,creps,<p>A retired feature.</p>,admin
+CAT Modeling,CRESTA,<p>A geographical data aggregation system that defines country-specific zones. It is used to manage and report on [[exposure data|CAT Modeling]].</p>,admin
+CAT Modeling,crop season,<p>The period in which a specific crop or group of crops are planted and harvested.</p>,admin
+CAT Modeling,damage factor,<p>Damage factors applied to catastrophe models customize losses based on the experiences of a company.</p>,admin
+VSS Product,DBeaver,<p>A third-party database tool application.</p>,admin
+CAT Modeling,deductible,<p>The amount of loss retained by the insured; also called [[aggregate retention|CAT Modeling]].</p>,admin
+CAT Modeling,demand surge,<p>A multiplicative factor used to account for the effects of short-term inflation in the prices of labor and materials following a catastrophe.</p>,admin
+CAT Modeling,detailed exposure,"<p>A list of specific policies and locations, with location attributes such as [[construction|CAT Modeling]]/[[occupancy|CAT Modeling]], year built, and replacement cost by [[coverage|CAT Modeling]]. Contrasts with [[aggregate exposure|CAT Modeling]].</p>",admin
+CAT Modeling,detailed loss file,<p>An encrypted file that contains company losses by geographic [[area|CAT Modeling]] and [[line of business|CAT Modeling]] for each simulated event.</p>,admin
+CAT Modeling,deterministic event,"<p>A catastrophic event with predefined characteristics, typically used to assess potential losses. There is no probability distribution for deterministic events.</p>",admin
+CAT Modeling,disaggregation,<p>The process of distributing [[aggregate exposure|CAT Modeling]] data from a coarse resolution to a finer resolution; more suitable for detailed catastrophe modeling.</p>,admin
+CAT Modeling,event loss tables,<p>The format used to transfer loss files from to</p>,admin
+CAT Modeling,event mapping files,<p>Files used to map events between versions of select U.S. models.</p>,admin
+CAT Modeling,epicenter,<p>The location on the earth’s surface directly above the point of an earthquake's initial rupture.</p>,admin
+CAT Modeling,event set,<p>The set of loss files used in a detailed or [[aggregate loss|CAT Modeling]] analysis.</p>,admin
+CAT Modeling,event characteristic,<p>A variable that describes an aspect of an event.</p>,admin
+CAT Modeling,exceedance probability,<p>A set of probabilities and return periods that appear in loss analysis results. Also see [[exceedance probability curve|CAT Modeling]].</p>,admin
+CAT Modeling,exceedance probability curve,<p>The probability that various levels of loss will be exceeded in a given year. An EP curve is the foundation upon which insurers estimate their likelihood of experiencing various levels of loss.</p>,admin
+CAT Modeling,exceedance probability with secondary uncertainty curve,<p>An [[exceedance probability curve|CAT Modeling]] (EP curve) that samples from other points along an event’s probability distribution to derive a secondary view of risk.</p>,admin
+CAT Modeling,expected value,<p>See [[annual aggregate loss|CAT Modeling]]</p>,admin
+CAT Modeling,EVI file,<p>An application-generated text file that includes information to communicate loss information between the application and the associated [[company loss|CAT Modeling]] file.</p>,admin
+CAT Modeling,extreme value theory file,<p>An index of the events in a single [[industry loss file|CAT Modeling]] or [[company loss file|CAT Modeling]]. This index allows the application to quickly locate data records for a particular event.</p>,admin
+CAT Modeling,exceedance probability,<p>A set of probabilities and return periods that appear in loss analysis results.</p>,admin
+CAT Modeling,exceedance probability adjustment,<p>An adjustment made to an [[exceedance probability|CAT Modeling]] curve at the program level based on user knowledge of loss experience for a particular model.</p>,admin
+CAT Modeling,exceedance probability values,"<p>Values assigned to a distribution of points (e.g., year, [[return period|CAT Modeling]], event ID).</p>",admin
+CAT Modeling,excess coverage,<p>Layers of coverage written above the primary [[coverage|CAT Modeling]] because more capacity is required.</p>,admin
+CAT Modeling,expected loss,<p>The percentage of loss each bond/[[layer|CAT Modeling]] is expected to incur in any given year.</p>,admin
+CAT Modeling,expiration date,<p>the last day on which [[coverage|CAT Modeling]] for a treaty is effective.</p>,admin
+CAT Modeling,exposure adjustment factor,<p>The [[adjustment factor|CAT Modeling]] used to modify company exposures by [[line of business|CAT Modeling]].</p>,admin
+CAT Modeling,exposure data,"<p>A generic term that refers to any exposed risk (buildings, cars, offshore rigs, employees) and its associated characteristics, such as address, [[construction|CAT Modeling]]/[[occupancy|CAT Modeling]], and the values.</p>",admin
+CAT Modeling,Exposure Management Module,<p>A feature that was later renamed as [[advanced loss modification|CAT Modeling]].</p>,admin
+CAT Modeling,excess of loss,"<p>Losses paid that exceed a specific amount up to a specified limit. Types of excess of loss reinsurance include [[per risk|CAT Modeling]], catastrophe, per policy, per occurrence, and aggregate.</p>",admin
+Verisk External,exceedance probability (EP) curve,<p>A curve that shows the probability of experiencing different levels of financial loss. The curve can help you determine the amount of risk to retain or cede.</p>,admin
+CAT Modeling,exposure,"<p>Item of value at risk (e.g., a house); [[unit|CAT Modeling]] of measurement for risk</p>",admin
+VSS Product,exposure set,"<p>A discrete set of related exposure entities, such as locations and contracts, and their related financial terms.</p>",admin
+VSS Product,exposure summary,"<p>A compiled set of summary information about a group of exposures, either an [[exposure set|VSS Product]] or an [[exposure view|VSS Product]].</p>",admin
+VSS Product,exposure view,"<p>A user-defined logical view of one or more exposure sets, with optional filters.</p>",admin
+CAT Modeling,extreme disaster scenarios,<p>Unlikely but scientifically plausible scenarios that cannot be captured by standard stochastic modeling techniques.</p>,admin
+CAT Modeling,facultative reinsurance,<p>[[coverage|CAT Modeling]] purchased by a primary insurer in which both the primary insurer and the reinsurer usually have the option to accept or reject an individual submission. See also [[treaty reinsurance|CAT Modeling]].</p>,admin
+CAT Modeling,Federal Information Processing Standards,<p>Used to name states and counties in numerical format.</p>,admin
+CAT Modeling,final net loss,<p>Total event losses net of reinstatement [[premiums|CAT Modeling]] but not net of the initial program premium.</p>,admin
+CAT Modeling,financial perspective,"<p>The view of loss from an event, depending on whether losses are measured from the ground up or after the application of different [[insurance|CAT Modeling]] or reinsurance terms.</p>",admin
+CAT Modeling,financial terms,"<p>The parameters, such as limits and deductibles, specified in an [[insurance|CAT Modeling]] policy that define the conditions under which the insurer will pay some or all the loss. These may be defined at various levels such as [[contract|CAT Modeling]], [[layer|CAT Modeling]], and location, and may apply to its entirety or to specific perils and/or coverages.</p>",admin
+CAT Modeling,flank,<p>The side of a volcano.</p>,admin
+CAT Modeling,focal depth,<p>The vertical distance between where a fault rupture originates and the earth's surface.</p>,admin
+CAT Modeling,franchise deductible,<p>The pre-[[occurrence loss|CAT Modeling]] threshold that must be reached before the [[contract|CAT Modeling]] loss will be paid. Also called disappearing [[deductible|CAT Modeling]].</p>,admin
+VSS Product,General Distribution Release,<p>A security update for the Microsoft SQL server.</p>,admin
+CAT Modeling,geocode,<p>The latitude and longitude values and the resolution associated with an individual risk used for modeling in catastrophe modeling.</p>,admin
+VSS Product,GeoJSON vector file,<p>A vector file format for encoding a variety of geographic data structures.</p>,admin
+VSS Product,GML vector file,<p>A vector file format for encoding geometries or geometric characteristics of geographic objects.</p>,admin
+CAT Modeling,gross loss,"<p>The total loss due to an event after applying limits, [[deductible|CAT Modeling]], and [[location terms|CAT Modeling]] and before any excess reinsurance terms.</p>",admin
+CAT Modeling,gross participation,<p>Specifies the percentage of the losses that the reinsurer will assume.</p>,admin
+CAT Modeling,ground-up loss,<p>The total loss due to an event before applying [[financial terms|CAT Modeling]] such as limits and [[deductible|CAT Modeling]]s.</p>,admin
+CAT Modeling,hazard,"<p>A factor or condition that can increase or decrease the probability or severity of a loss from an insured [[peril|CAT Modeling]] (for example, proximity to the coast).</p>",admin
+VSS Product,high performance computing,"<p>Pertains to the use of the Microsoft© High Performance Computing server, which leverages a distributed computing environment that dramatically reduces run times.</p>",admin
+CAT Modeling,historical catalog,<p>A collection of historical events for a broad [[area|CAT Modeling]].</p>,admin
+CAT Modeling,historical event,<p>A past occurrence of a natural or man-made disaster used as a reference point for modeling and predicting future events.</p>,admin
+CAT Modeling,historical event set,<p>A collection of historical events for one or more models.</p>,admin
+CAT Modeling,inception date,<p>The first day on which [[coverage|CAT Modeling]] for a treaty is effective.Read more</p>,admin
+CAT Modeling,individual risk modifier,<p>A [[peril|CAT Modeling]].</p>,admin
+CAT Modeling,industrial facility module,<p>Identifies [[occupancy|CAT Modeling]] class codes used to define industrial facilities. Also called the large industrial facility module.</p>,admin
+VSS Product,industry exposure database,<p>A database of all insurable properties used for estimating potential industry insurance losses for specific geographical regions.</p>,admin
+VSS Product,industry-insurable loss,<p>A realistic loss estimate of all insurable properties. It can be calculated by running a detailed loss analysis against the [[industry exposure database|VSS Product]].</p>,admin
+CAT Modeling,industry-insured loss,"<p>The portion of the [[industry-insurable loss|VSS Product]] that is, or is assumed to be, insured. Insured losses include an estimate of the [[insurance|CAT Modeling]] take-up by [[area|CAT Modeling]], subarea, and [[line of business|CAT Modeling]].</p>",admin
+CAT Modeling,industry loss file,"<p>A file that contains net industry insurable losses after application of primary policies condition assumptions. These losses are grouped by event, geographic [[area|CAT Modeling]], and [[line of business|CAT Modeling]].</p>",admin
+CAT Modeling,industry loss maximum,"<p>The value above which occurrences are excluded from consideration. If the industry loss for a given occurrence is above the industry loss maximum value, then the loss value of the occurrence is set to zero.</p>",admin
+CAT Modeling,industry loss minimum,"<p>The value below which occurrences are excluded from consideration. If the industry loss for a given occurrence is below the industry loss minimum value, then the loss value of the occurrence is set to zero.</p>",admin
+CAT Modeling,industry loss trigger,<p>Specifies the value above or below which occurrences are excluded from consideration based on the industry loss threshold for a given event.</p>,admin
+CAT Modeling,industry loss warranties,"<p>A type of reinsurance [[contract|CAT Modeling]] where one party will purchase protection based on total loss to the [[insurance|CAT Modeling]] industry arising from an event, rather than from their own losses.</p>",admin
+CAT Modeling,insurance,<p>[[coverage|CAT Modeling]] by [[contract|CAT Modeling]] whereby one party undertakes to indemnify or guarantee another against loss by a specified contingency or [[peril|CAT Modeling]].</p>,admin
+Verisk External,insurers coinsurance,<p>The portion of the losses to the layer retained by the cedant.</p>,admin
+CAT Modeling,inure,"<p>To take effect for the benefit of either the reinsurer or the reinsured. For example, when layers are applied to reduce the loss to a given layer, those layers are said to inure to the benefit of the reinsurer of that [[layer|CAT Modeling]].</p>",admin
+CAT Modeling,inuring loss,<p>the loss reduction applied to [[company loss|CAT Modeling]] after inuring programs and terms are invoked.</p>,admin
+CAT Modeling,inuring order,<p>Contracts [[inure|CAT Modeling]] in series or in parallel (not both).</p>,admin
+CAT Modeling,inuring program,<p>Inuring reinsurance programs affect the amount of risk being transferred to or from the reinsured and which [[contract|CAT Modeling]] is affected.</p>,admin
+CAT Modeling,investment amount,<p>The monetary commitment associated with the bond/[[layer|CAT Modeling]]. For [[catastrophe bond|CAT Modeling]] programs only.</p>,admin
+CAT Modeling,layer,<p>An [[insurance|CAT Modeling]] or reinsurance [[contract|CAT Modeling]] with a limit and retention of cover.</p>,admin
+Verisk External,layer limit,<p>The amount of loss ceded to the insurer. This will usually be specified as an amount less than or equal to the replacement value. You can set the limit for individual locations or for an entire policy that covers multiple locations.</p>,admin
+CAT Modeling,layer status,<p>See [[status|CAT Modeling]]</p>,admin
+CAT Modeling,layer terms,"<p>Terms that apply to a [[layer|CAT Modeling]], such as the limit, retention, [[participation|CAT Modeling]], [[percent placed|CAT Modeling]], and application of [[line of business|CAT Modeling]] and geographies.</p>",admin
+CAT Modeling,location terms,<p>The limits and deductibles that apply to individual locations and risks.</p>,admin
+CAT Modeling,line of business,"<p>An attribute of a [[contract|CAT Modeling]] that describes the class of business. These can be user-defined or based on industry definitions such as residential, commercial, auto, etc.</p>",admin
+CAT Modeling,London Interbank Offered Rate,<p>A benchmark rate that some of the world's leading banks charge each other for short-term loans.</p>,admin
+CAT Modeling,loss file,<p>Loss files contain data generated to predict losses due to a particular catastrophe.</p>,admin
+Verisk External,loss market share,<p>Company losses generated from a market share analysis on ALERT™ event sets by comparing company loss file losses with the [[industry loss file|CAT Modeling]] to estimate company market share.</p>,admin
+CAT Modeling,loss modification factor,<p>A user-specified [[adjustment factor|CAT Modeling]] that applies to the ground-up losses for a single program.</p>,admin
+CAT Modeling,loss of use,"<p>[[time element|CAT Modeling]] related to the loss of a structure's functionality due to damage, lack of safety, or lack of access.</p>",admin
+CAT Modeling,magnitude,<p>A measure of the energy released during an earthquake.</p>,admin
+VSS Product,mapping set,"<p>A file that defines data mappings for policy, location, reinsurance, and step function import .csv files.</p>",admin
+CAT Modeling,market loss warranty,<p>See [[industry loss minimum|CAT Modeling]]</p>,admin
+CAT Modeling,market shares,"<p>The proportion of the industry written by a company, often expressed as percentages by [[line of business|CAT Modeling]] and [[area|CAT Modeling]]/subarea.</p>",admin
+CAT Modeling,market trend factor,<p>A market trend factor is a user-specified [[adjustment factor|CAT Modeling]] that applies to the losses for a single program.</p>,admin
+CAT Modeling,match loss,<p>A program term associated with [[occurrence limit|CAT Modeling]].</p>,admin
+VSS Product,microservices architecture,<p>A software development approach in which single-function modules form the basis of the application or deliverable.</p>,admin
+CAT Modeling,minimum deductible,<p>The deductible that is applied if the [[coverage|CAT Modeling]] or site [[deductible|CAT Modeling]] is less than the specified minimum level.</p>,admin
+CAT Modeling,mixture method,<p>Methodology which combines losses using [[convolution|CAT Modeling]] and comonotonic distributions.</p>,admin
+CAT Modeling,Multiple Peril Crop Insurance,<p>[[insurance|CAT Modeling]] focussed primarily on crop-related perils and losses.</p>,admin
+VSS Product,multi-tenant cloud,<p>A cloud computing architecture that enables clients to share computing resources in a public or private [[cloud|VSS Product]]. .</p>,admin
+CAT Modeling,multi-year reset date,<p>Parameter to override program [[inception date|CAT Modeling]].</p>,admin
+CAT Modeling,net loss,<p>The loss after reinsurance treaties have been applied. See [[pre-CAT net loss|CAT Modeling]] and [[post-CAT net loss|CAT Modeling]].</p>,admin
+CAT Modeling,net participation,<p>The amount that the original reinsurer is responsible for in a [[layer|CAT Modeling]].</p>,admin
+CAT Modeling,net of pre-CAT,"<p>The total loss generated after the application of all reinsurance treaties, except for [[catastrophe excess of loss|CAT Modeling]] treaties.</p>",admin
+CAT Modeling,net retained loss,<p>Losses retained by a ceding company (primary insurer) after netting out reinsurance contract losses and any associated inuring [[contract|CAT Modeling]] losses.</p>,admin
+CAT Modeling,New Technology LAN Manager,"<p>A suite of Microsoft security protocols intended to provide authentication, integrity, and confidentiality to users.</p>",admin
+CAT Modeling,nth event cover,<p>Refers to cases where an [[insurance|CAT Modeling]] company is willing to absorb losses above the retention for the first <code>n-1</code> occurrences.</p>,admin
+CAT Modeling,number of risks,"<p>The number of property exposures at risk. For workers' compensation exposures, this is the employee count.</p>",admin
+CAT Modeling,occupancy,"<p>An attribute that indicates how a property is used, such as single-family residence or for retail trade.</p>",admin
+CAT Modeling,occurrence limit,<p>The maximum loss that can be incurred by a [[layer|CAT Modeling]] from a single occurrence.</p>,admin
+CAT Modeling,occurrence loss,<p>The highest possible loss for the specified period from a single event.</p>,admin
+CAT Modeling,occurrence retention,<p>The value below which the [[layer|CAT Modeling]] does not assume occurrence losses.</p>,admin
+VSS Product,on-premises server,"<p>A server that is reserved for use by a single entity, such as a business, and that resides in a location managed by that entity.</p>",admin
+VSS Product,online help,<p>Information and instructions available with a = software application.</p>,admin
+CAT Modeling,open exposure data,"<p>A standard that provides the industry with a robust, open, and transparent data format with the aim of delivering a common framework for encoding, transmitting, and interpreting data.</p>",admin
+CAT Modeling,pandemic,"<p>An epidemic of infectious disease that has spread across a large region, multiple countries, continents, or worldwide.</p>",admin
+CAT Modeling,participation,<p>The reinsurers' share of the portfolio.</p>,admin
+Verisk External,percent ceded,<p>The ceded amount as a percentage.</p>,admin
+CAT Modeling,percent of loss deductible,<p>A [[deductible|CAT Modeling]] calculated as the percentage of insured loss for the occurrence.</p>,admin
+CAT Modeling,percent placed,<p>The percentage of the treaty placed with reinsurers.</p>,admin
+CAT Modeling,peril,"<p>A category of a catastrophic event that may cause loss and which an [[insurance|CAT Modeling]] policy might cover, such as earthquake shake, hurricane wind, hurricane storm surge, or terrorism. See [[secondary peril|CAT Modeling]].</p>",admin
+CAT Modeling,peril set,<p>A combination of one or more [[peril|CAT Modeling]].</p>,admin
+CAT Modeling,perspective,"<p>In the catastrophe modeling world, a perspective specifies the terms that should apply to the loss results.</p>",admin
+CAT Modeling,per risk,<p>A [[reinsurance program|CAT Modeling]] that applies retention and amount of reinsurance for each risk rather than on an aggregate or per-event basis.</p>,admin
+CAT Modeling,Pradhan Mantri Fasal Bima Yojana,<p>A government-sponsored crop [[insurance|CAT Modeling]] scheme for India that integrates multiple stakeholders on a single platform.</p>,admin
+CAT Modeling,post-CAT net loss,"<p>The [[net loss|CAT Modeling]] after application of all reinsurance treaties, including [[excess of loss|CAT Modeling]] treaties. See also [[pre-CAT net loss|CAT Modeling]].</p>",admin
+CAT Modeling,pre-CAT net loss,<p>The [[net loss|CAT Modeling]] after application of all reinsurance treaties except for [[excess of loss|CAT Modeling]] treaties. See also [[post-CAT net loss|CAT Modeling]].</p>,admin
+CAT Modeling,premiums,<p>A premium type is used to view the loss results net of the reinsurance premium received for the [[contract|CAT Modeling]]. Reinsurance premiums apply to all program types except catastrophe bonds.</p>,admin
+CAT Modeling,primary characteristics,"<p>The characteristics of a location that determine its risk of damage as a result of a specific [[peril|CAT Modeling]]. For example, [[occupancy|CAT Modeling]] type, [[construction|CAT Modeling]] type, year built, number of stories, [[replacement value|CAT Modeling]], or latitude and longitude.</p>",admin
+CAT Modeling,primary uncertainty,<p>Uncertainty in the event generation component of the model (the event catalog). Primary uncertainty has elements of epistemic/aleatory as well as model/parametric [[uncertainty|CAT Modeling]].</p>,admin
+CAT Modeling,principal amount,<p>The principal amount associated with the bond/[[layer|CAT Modeling]].</p>,admin
+CAT Modeling,probabilistic event,<p>An event described by probable values for event characteristics.</p>,admin
+CAT Modeling,probability of attachment,<p>The probability (%) of a program/[[layer|CAT Modeling]] experiencing some loss.</p>,admin
+CAT Modeling,probability of exhaustion,<p>The probability (%) of a program/[[layer|CAT Modeling]] experiencing a complete loss.</p>,admin
+VSS Product,project,"<p>In , a project is a folder where you can assemble navigational shortcuts to related exposure views and analyses.</p>",admin
+VSS Product,projections,<p>Refers to map projections that are certified for use in applications.</p>,admin
+CAT Modeling,proportional reinsurance,<p>See [[quota share|CAT Modeling]] and [[surplus share|CAT Modeling]].</p>,admin
+VSS Product,query language,<p>A computer programming language that uses queries to request and retrieve data from databases and information systems.</p>,admin
+CAT Modeling,quota share,"<p>A [[reinsurance program|CAT Modeling]] where the reinsurer is responsible for the same percentage of loss on each risk, regardless of the event or year. Also called [[proportional reinsurance|CAT Modeling]].</p>",admin
+CAT Modeling,Lloyd's of London,"<p>Among other things, the company that maintains [[realistic disaster scenarios|CAT Modeling]].</p>",admin
+CAT Modeling,realistic disaster scenarios,<p>Stress test scenarios defined by Lloyd’s of London. They are used to ensure that syndicates meet capacity requirements should an RDS occur.</p>,admin
+CAT Modeling,reinstatements,<p>Specifies the number of times the [[occurrence limit|CAT Modeling]] for the [[layer|CAT Modeling]] can be reinstated during the [[contract|CAT Modeling]] period.</p>,admin
+CAT Modeling,reinstatement premium,<p>The cost to restore the [[insurance|CAT Modeling]] or reinsurance limit of a [[contract|CAT Modeling]] to its full amount after the insured or reinsured incurs a loss. The term principally relates to property catastrophe reinsurance contracts.</p>,admin
+CAT Modeling,reinsurance contract,<p>A contract made between an insurance company and a reinsurer to protect the insurance company from losses. The contract provides for the reinsurer to pay for the loss sustained by the [[insurance|CAT Modeling]] company when it makes a payment on the original [[contract|CAT Modeling]].</p>,admin
+CAT Modeling,reinsurance program,<p>A group of related [[reinsurance contract|CAT Modeling]] and layers.</p>,admin
+VSS Product,release to manufacturer,<p>An update for the Microsoft SQL server distributed to manufacturers before being distributed to the general public.</p>,admin
+CAT Modeling,replacement value,<p>The amount that the insured party would have to pay to replace the insured asset at the present time. Policy terms specify replacement value by location and by [[coverage|CAT Modeling]].</p>,admin
+CAT Modeling,retained loss,<p>Losses retained by the insurer.</p>,admin
+CAT Modeling,return period,"<p>In terms of [[exceedance probability|CAT Modeling]], return period is the estimated likelihood of a loss of a given size occurring within a given time frame.</p>",admin
+CAT Modeling,reverse market loss warranty,<p>See [[industry loss maximum|CAT Modeling]]</p>,admin
+CAT Modeling,rift zone,<p>An [[area|CAT Modeling]] where a volcano is rifting or splitting apart. Rock in a rift zone has many cracks and is relatively weak.</p>,admin
+CAT Modeling,risk limit,<p>The treaty limit for a single risk or [[layer|CAT Modeling]]. The risk limit value applies only to treaties of the per-risk treaty type.</p>,admin
+CAT Modeling,risk retention,<p>The value below which the total losses are not assumed by the [[layer|CAT Modeling]]. Risk retention applies only to treaties of the per-risk treaty type.</p>,admin
+CAT Modeling,rupture length,<p>The span of the fault that slips during an earthquake.</p>,admin
+CAT Modeling,secondary peril,"<p>A secondary effect of a primary [[peril|CAT Modeling]] peril, such as earthquake sprinkler linkage.</p>",admin
+CAT Modeling,secondary risk characteristics,<p>Features of a structure or its environment that affect resistance to damage and modify the base vulnerability functions for a specific [[peril|CAT Modeling]] (also known as [[individual risk modifier|CAT Modeling]]).</p>,admin
+CAT Modeling,secondary uncertainty,<p>[[uncertainty|CAT Modeling]] associated with the damage and loss estimation should a given event occur.</p>,admin
+VSS Product,sequential identifier,<p>Identifier used in database implementation for unique identification of a record.</p>,admin
+VSS Product,service-oriented architecture,"<p>A component-based, modular, and extensible platform for building applications.</p>",admin
+VSS Product,shapefiles,"<p>A simple, non-topological vector format for storing the geometric location and attribute information of geographic features.</p>",admin
+VSS Product,single-tenant,<p>A [[cloud|VSS Product]] application and infrastructure environment that serves a single [[client|VSS Product]].</p>,admin
+VSS Product,software as a service,"<p>A software licensing model in which access to the software is provided on a subscription basis, with the software being located on external servers rather than on servers located in-house.</p>",admin
+CAT Modeling,source program,<p>A source program (parent) associated with a subject program (child).</p>,admin
+CAT Modeling,spatial correlation,<p>The extent to which the losses at two locations behave similarly due to their spatial proximity.</p>,admin
+CAT Modeling,spot fac,<p>An insurance industry term short for individual location-level (spot) facultative (fac) reinsurance. See [[facultative reinsurance|CAT Modeling]].</p>,admin
+VSS Product,SQLite vector file,"<p>A database that stores [[vector files|VSS Product]], which are numerical representations of data that capture the semantic meaning of text, images, and other data types.</p>",admin
+CAT Modeling,standard hurricane catalog,<p>A catalog of events that reflects hurricane risk under average climate conditions.</p>,admin
+CAT Modeling,standard reinsurance agreement,<p>An agreement for federal crop [[insurance|CAT Modeling]] that consists of a set of contracts between the U.S. Department of Agriculture (USDA) and private companies. The contracts identify expense reimbursements and risk-sharing by the government on eligible crops.</p>,admin
+CAT Modeling,starting event,<p>An integer value that indicates at which event during the year the [[layer terms|CAT Modeling]] are to become effective.</p>,admin
+CAT Modeling,status,"<p>Refers to the status of the program or [[layer|CAT Modeling]]. Common status types include: Submitted (default), Authorized, Bound, Cancelled, Quoted, Rejected, and for cat bonds, Investment Status.</p>",admin
+CAT Modeling,stochastic catalog,<p>Series of simulated events based on one or more stochastic models over a period of time. Stochastic catalogs can be used when running a loss analysis.</p>,admin
+CAT Modeling,stochastic event,<p>An event whose characteristics are obtained from probability distributions in the [[historical catalog|CAT Modeling]].</p>,admin
+CAT Modeling,stochastic model,<p>A tool for estimating probability distributions of potential outcomes by allowing for random variation in one or more inputs over time.</p>,admin
+VSS Product,structured query language (SQL),<p>A programming language for storing and processing information in a relational database. https://aws.amazon.com/what-is/sql/</p>,admin
+CAT Modeling,sublimit,<p>A type of [[layer|CAT Modeling]] condition that applies to a subset of locations within a policy. Sublimits are often used in high-[[hazard|CAT Modeling]] areas to limit losses for locations that fall within them.</p>,admin
+CAT Modeling,sums insured,<p>The maximum amount that an insurance company [[insurance|CAT Modeling]] company is obligated to cover in the event of a covered loss.</p>,admin
+CAT Modeling,surplus share,"<p>A [[reinsurance program|CAT Modeling]] where the reinsurer is responsible for the same size of loss on each risk, regardless of the event or year.</p>",admin
+CAT Modeling,tail value at risk (TVaR),"<p>Measures the average of all simulated losses from a percentile or [[return period|CAT Modeling]] on the loss distribution through the full ""tail"" of the loss distribution.</p>",admin
+CAT Modeling,take-up rate,<p>The percentage of insurable properties actually insured.</p>,admin
+VSS Product,target,<p>A company loss set or an [[exposure set|VSS Product]].</p>,admin
+CAT Modeling,time-dependent catalog,<p>A catalog of probabilistic events that assumes that the annual probability of a characteristic earthquake occurring on a fault increases with the time elapsed since the previous such earthquake.</p>,admin
+CAT Modeling,time element,"<p>Loss of use of a structure over time because due to damage, lack of safety, or lack of access. [[loss of use|CAT Modeling]] is referred to as [[additional living expenses|CAT Modeling]] for residential properties, and [[business interruption|CAT Modeling]] for other properties (including commercial, industrial, and others).</p>",admin
+CAT Modeling,time-independent catalog,"<p>A catalog of probabilistic events that assumes that the annual probability of a characteristic earthquake occurring on a fault within a given time period is independent of when the last such earthquake occurred and, therefore, requires only knowledge of the mean recurrence time. Compare with [[time-dependent catalog|CAT Modeling]].</p>",admin
+CAT Modeling,total insured value,"<p>The minimum of the [[total replacement value|CAT Modeling]] or the limit minus the [[deductible|CAT Modeling]]. If no [[layer|CAT Modeling]] or policy terms are defined, location values, limits, and deductibles are used.</p>",admin
+CAT Modeling,total replacement value,<p>The sum of the replacement values for all coverages.</p>,admin
+CAT Modeling,treaty ID,<p>A unique identifier provided by the user when creating a program.</p>,admin
+CAT Modeling,treaty information,<p>Program details.</p>,admin
+CAT Modeling,treaty reinsurance,"<p>[[coverage|CAT Modeling]] purchased by a primary insurer in which the reinsurer must cover any risk that falls within a specified line, class, or book of business. See also [[facultative reinsurance|CAT Modeling]].</p>",admin
+CAT Modeling,treaty term,<p>Characteristics used to define a [[reinsurance program|CAT Modeling]].</p>,admin
+CAT Modeling,trigger,<p>The mechanism used to determine when payouts must be made. Triggers define company and industry loss parameters and take into consideration the defined geographic region.</p>,admin
+CAT Modeling,underwriting judgement factor (UJF),<p>A UJF is a user-defined [[adjustment factor|CAT Modeling]] that applies to ceding company program losses.</p>,admin
+Verisk External,UNICEDE,<p>Universal Cession Electronic Data Exchange (UNICEDE) is a globally accepted open data format developed by to standardize insurance [[data|Verisk External]] exchange.</p>,admin
+CAT Modeling,user-generated loss file,<p>A loss file whose content must adhere to 's [[loss file|CAT Modeling]] format guidelines.</p>,admin
+CAT Modeling,unit,<p>A control that enables you to specify the order of [[magnitude|CAT Modeling]] at which you want to view monetary figures.</p>,admin
+VSS Product,universal naming convention,"<p>A standard for identifying servers, printers, and other resources on a network, allowing a consistent access to these resources across different systems.</p>",admin
+CAT Modeling,uncertainty,<p>Refers to uncertainty about the fit or appropriateness of a model or the data it uses.</p>,admin
+CAT Modeling,user-defined category,<p>A category which allow you to classify companies and programs using criteria that are meaningful and useful to your specific needs.</p>,admin
+VSS Product,vector files,"<p>Files that contain numerical representations of data that capture the semantic meaning of text, images, and other data types. See [[SQLite vector file|VSS Product]]</p>",admin
+CAT Modeling,warm sea surface temperature,"<p>The elevated temperature of the ocean's surface, typically measured in the upper few meters. Warm SSTs are crucial in influencing weather patterns, particularly in the formation and intensification of tropical cyclones, hurricanes, and typhoons. Read more</p>",admin
+CAT Modeling,warm sea surface temperature catalog,<p>A catalog of events based on elevated sea surface temperatures.</p>,admin
+CAT Modeling,event set,"<p>Event sets that represent low or very low probability disaster scenarios. See [[realistic disaster scenarios|CAT Modeling]], [[extreme disaster scenarios|CAT Modeling]], and [[warm sea surface temperature catalog|CAT Modeling]].</p>",admin
