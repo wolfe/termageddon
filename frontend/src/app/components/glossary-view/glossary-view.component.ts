@@ -39,10 +39,14 @@ export class GlossaryViewComponent implements OnInit {
     // Subscribe to route parameters
     this.route.queryParams.subscribe(params => {
       const entryId = params['entryId'];
+      const draftId = params['draftId'];
       const editMode = params['edit'] === 'true';
 
       if (entryId) {
         this.loadEntryById(+entryId, editMode);
+      } else if (draftId) {
+        // Handle draftId by loading the draft and then the entry
+        this.loadEntryByDraftId(+draftId, editMode);
       }
     });
   }
@@ -60,6 +64,40 @@ export class GlossaryViewComponent implements OnInit {
         console.error('Failed to load entry:', error);
         // Navigate back to glossary without specific entry
         this.router.navigate(['/glossary']);
+      },
+    });
+  }
+
+  private loadEntryByDraftId(draftId: number, editMode: boolean = false): void {
+    this.glossaryService.getDraftById(draftId).subscribe({
+      next: draft => {
+        if (draft.entry?.id) {
+          // Load the entry directly
+          this.selectedEntry = null; // Clear first to ensure loading state
+          this.glossaryService.getEntryById(draft.entry.id).subscribe({
+            next: entry => {
+              this.selectedEntry = entry;
+              this.isEditMode = editMode;
+              // Replace URL with entryId instead of draftId
+              const url = this.urlHelper.buildEntryUrl(entry.id, entry, true);
+              this.location.replaceState(url);
+              // Load all entries for this term to show correct perspective pills
+              this.loadTermEntries(entry.term.id);
+            },
+            error: error => {
+              console.error('Failed to load entry from draft:', error);
+              this.router.navigate(['/glossary'], { replaceUrl: true });
+            },
+          });
+        } else {
+          console.error('Draft has no associated entry');
+          this.router.navigate(['/glossary'], { replaceUrl: true });
+        }
+      },
+      error: error => {
+        console.error('Failed to load draft:', error);
+        // Navigate back to glossary without specific entry
+        this.router.navigate(['/glossary'], { replaceUrl: true });
       },
     });
   }

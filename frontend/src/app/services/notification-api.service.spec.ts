@@ -16,6 +16,7 @@ describe('NotificationApiService', () => {
       getNotifications: vi.fn().mockName('GlossaryService.getNotifications'),
       markNotificationRead: vi.fn().mockName('GlossaryService.markNotificationRead'),
       markAllNotificationsRead: vi.fn().mockName('GlossaryService.markAllNotificationsRead'),
+      deleteNotification: vi.fn().mockName('GlossaryService.deleteNotification'),
     };
 
     TestBed.configureTestingModule({
@@ -89,7 +90,9 @@ describe('NotificationApiService', () => {
       );
 
       service.getNotifications().subscribe({
-        next: () => fail('Should have failed'),
+        next: () => {
+          throw new Error('Should have failed');
+        },
         error: error => {
           expect(error.status).toBe(500);
         },
@@ -122,7 +125,9 @@ describe('NotificationApiService', () => {
       );
 
       service.markAsRead(999).subscribe({
-        next: () => fail('Should have failed'),
+        next: () => {
+          throw new Error('Should have failed');
+        },
         error: error => {
           expect(error.status).toBe(404);
         },
@@ -148,9 +153,36 @@ describe('NotificationApiService', () => {
       );
 
       service.markAllAsRead().subscribe({
-        next: () => fail('Should have failed'),
+        next: () => {
+          throw new Error('Should have failed');
+        },
         error: error => {
           expect(error.status).toBe(500);
+        },
+      });
+    });
+  });
+
+  describe('deleteNotification', () => {
+    it('should delete notification', () => {
+      glossaryService.deleteNotification.mockReturnValue(of(undefined));
+
+      service.deleteNotification(1).subscribe(() => {
+        expect(glossaryService.deleteNotification).toHaveBeenCalledWith(1);
+      });
+    });
+
+    it('should handle errors when deleting notification', () => {
+      glossaryService.deleteNotification.mockReturnValue(
+        throwError(() => ({ status: 404, message: 'Not found' }))
+      );
+
+      service.deleteNotification(999).subscribe({
+        next: () => {
+          throw new Error('Should have failed');
+        },
+        error: error => {
+          expect(error.status).toBe(404);
         },
       });
     });

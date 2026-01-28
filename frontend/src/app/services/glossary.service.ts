@@ -183,6 +183,10 @@ export class GlossaryService extends BaseService {
     return this.post<any>('/notifications/mark_all_read/', {});
   }
 
+  deleteNotification(notificationId: number): Observable<void> {
+    return this.delete<void>(`/notifications/${notificationId}/`);
+  }
+
   endorseEntry(entryId: number): Observable<Entry> {
     return this.postAction<Entry>(`/entries/${entryId}/endorse/`);
   }

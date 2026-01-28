@@ -33,4 +33,11 @@ export class NotificationApiService {
   markAllAsRead(): Observable<any> {
     return this.glossaryService.markAllNotificationsRead();
   }
+
+  /**
+   * Delete a notification
+   */
+  deleteNotification(notificationId: number): Observable<void> {
+    return this.glossaryService.deleteNotification(notificationId);
+  }
 }

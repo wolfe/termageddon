@@ -5,6 +5,8 @@ import { Subject, of, throwError } from 'rxjs';
 import { NotificationsPanelComponent } from './notifications-panel.component';
 import { NotificationApiService } from '../../services/notification-api.service';
 import { AuthService } from '../../services/auth.service';
+import { NavigationService } from '../../services/navigation.service';
+import { GlossaryService } from '../../services/glossary.service';
 import { Notification } from '../../models';
 
 describe('NotificationsPanelComponent', () => {
@@ -13,6 +15,8 @@ describe('NotificationsPanelComponent', () => {
   let notificationApiService: MockedObject<NotificationApiService>;
   let authService: MockedObject<AuthService>;
   let router: MockedObject<Router>;
+  let navigationService: MockedObject<NavigationService>;
+  let glossaryService: MockedObject<GlossaryService>;
   let routerEvents$: Subject<any>;
   let originalConsoleError: typeof console.error;
 
@@ -27,12 +31,19 @@ describe('NotificationsPanelComponent', () => {
     };
     const notificationApiSpy = {
       getNotifications: vi.fn().mockName('NotificationApiService.getNotifications'),
-      markAsRead: vi.fn().mockName('NotificationApiService.markAsRead'),
+      markAsRead: vi.fn().mockName('NotificationApiService.markAsRead').mockReturnValue(of({})),
       markAllAsRead: vi.fn().mockName('NotificationApiService.markAllAsRead'),
+      deleteNotification: vi.fn().mockName('NotificationApiService.deleteNotification'),
     };
     const authSpy = {
             isAuthenticated: vi.fn().mockName('AuthService.isAuthenticated').mockReturnValue(true),
             isOktaCallback: vi.fn().mockName('AuthService.isOktaCallback').mockReturnValue(false),
+    };
+    const navigationServiceSpy = {
+      navigateToDraft: vi.fn().mockName('NavigationService.navigateToDraft'),
+    };
+    const glossaryServiceSpy = {
+      getDraftById: vi.fn().mockName('GlossaryService.getDraftById'),
     };
 
     await TestBed.configureTestingModule({
@@ -41,6 +52,8 @@ describe('NotificationsPanelComponent', () => {
         { provide: NotificationApiService, useValue: notificationApiSpy },
         { provide: AuthService, useValue: authSpy },
         { provide: Router, useValue: routerSpy },
+        { provide: NavigationService, useValue: navigationServiceSpy },
+        { provide: GlossaryService, useValue: glossaryServiceSpy },
       ],
     }).compileComponents();
 
@@ -51,6 +64,12 @@ describe('NotificationsPanelComponent', () => {
     ) as MockedObject<NotificationApiService>;
     authService = TestBed.inject(AuthService) as MockedObject<AuthService>;
     router = TestBed.inject(Router) as MockedObject<Router>;
+    navigationService = TestBed.inject(
+      NavigationService
+    ) as MockedObject<NavigationService>;
+    glossaryService = TestBed.inject(
+      GlossaryService
+    ) as MockedObject<GlossaryService>;
   });
 
   afterEach(() => {
@@ -374,6 +393,321 @@ describe('NotificationsPanelComponent', () => {
 
       expect(component.notifications.length).toBe(0);
       expect(component.unreadCount).toBe(0);
+    });
+  });
+
+  describe('dismissNotification', () => {
+    it('should optimistically remove notification from list', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      component.notifications = [notification];
+      component.unreadCount = 1;
+
+      // Use of(undefined) which completes synchronously
+      notificationApiService.deleteNotification.mockReturnValue(of(undefined));
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.dismissNotification(notification, event);
+
+      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(component.notifications.length).toBe(0);
+      expect(component.unreadCount).toBe(0);
+      expect(notificationApiService.deleteNotification).toHaveBeenCalledWith(1);
+      // Since of(undefined) completes synchronously, dismissingIds should be cleared immediately
+      expect(component.dismissingIds.has(notification.id)).toBe(false);
+    });
+
+    it('should remove dismissing state on success', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      component.notifications = [notification];
+      component.unreadCount = 1;
+
+      // Use of(undefined) which completes synchronously
+      notificationApiService.deleteNotification.mockReturnValue(of(undefined));
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.dismissNotification(notification, event);
+
+      // Since of(undefined) completes synchronously, dismissingIds should be cleared immediately
+      expect(component.dismissingIds.has(notification.id)).toBe(false);
+    });
+
+    it('should rollback on error', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      component.notifications = [notification];
+      component.unreadCount = 1;
+
+      notificationApiService.deleteNotification.mockReturnValue(
+        throwError(() => ({ status: 500, message: 'Server error' }))
+      );
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.dismissNotification(notification, event);
+
+      // Should rollback
+      expect(component.notifications.length).toBe(1);
+      expect(component.unreadCount).toBe(1);
+      expect(component.dismissingIds.has(notification.id)).toBe(false);
+    });
+
+    it('should not update unread count when dismissing read notification', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: true,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      component.notifications = [notification];
+      component.unreadCount = 0;
+
+      notificationApiService.deleteNotification.mockReturnValue(of(undefined));
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.dismissNotification(notification, event);
+
+      expect(component.notifications.length).toBe(0);
+      expect(component.unreadCount).toBe(0);
+    });
+  });
+
+  describe('hasRelatedContent', () => {
+    it('should return true when notification has related_draft', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      expect(component.hasRelatedContent(notification)).toBe(true);
+    });
+
+    it('should return true when notification has related_comment', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'comment_reply',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+        related_comment: 456,
+      };
+
+      expect(component.hasRelatedContent(notification)).toBe(true);
+    });
+
+    it('should return false when notification has no related content', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+      };
+
+      expect(component.hasRelatedContent(notification)).toBe(false);
+    });
+  });
+
+  describe('navigateToRelatedContent', () => {
+    it('should navigate to glossary for published draft', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: true, // Already read to avoid markAsRead call
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      const mockDraft = {
+        id: 123,
+        is_published: true,
+        entry: { id: 456 },
+      };
+
+      glossaryService.getDraftById.mockReturnValue(of(mockDraft));
+      component.isOpen = true;
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(glossaryService.getDraftById).toHaveBeenCalledWith(123);
+      expect(router.navigate).toHaveBeenCalledWith(['/glossary'], {
+        queryParams: { entryId: 456 },
+      });
+      expect(component.isOpen).toBe(false);
+    });
+
+    it('should navigate to draft panel for unpublished draft', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: true, // Already read to avoid markAsRead call
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      const mockDraft = {
+        id: 123,
+        is_published: false,
+      };
+
+      glossaryService.getDraftById.mockReturnValue(of(mockDraft));
+      component.isOpen = true;
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(navigationService.navigateToDraft).toHaveBeenCalledWith(123, mockDraft);
+      expect(component.isOpen).toBe(false);
+    });
+
+    it('should mark notification as read when navigating', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: false,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      const mockDraft = {
+        id: 123,
+        is_published: true,
+        entry: { id: 456 },
+      };
+
+      glossaryService.getDraftById.mockReturnValue(of(mockDraft));
+      notificationApiService.markAsRead.mockReturnValue(
+        of({ ...notification, is_read: true })
+      );
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(notificationApiService.markAsRead).toHaveBeenCalledWith(1);
+    });
+
+    it('should not mark as read if already read', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: true,
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      const mockDraft = {
+        id: 123,
+        is_published: true,
+        entry: { id: 456 },
+      };
+
+      glossaryService.getDraftById.mockReturnValue(of(mockDraft));
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(notificationApiService.markAsRead).not.toHaveBeenCalled();
+    });
+
+    it('should handle error when fetching draft', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: true, // Already read to avoid markAsRead call
+        created_at: '2023-01-01T00:00:00Z',
+        related_draft: 123,
+      };
+
+      glossaryService.getDraftById.mockReturnValue(
+        throwError(() => ({ status: 404, message: 'Not found' }))
+      );
+      component.isOpen = true;
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(navigationService.navigateToDraft).toHaveBeenCalledWith(123);
+      expect(component.isOpen).toBe(false);
+    });
+
+    it('should close panel when notification has no related content', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'draft_approved',
+        message: 'Test notification',
+        is_read: true, // Already read to avoid markAsRead call
+        created_at: '2023-01-01T00:00:00Z',
+      };
+
+      component.isOpen = true;
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(component.isOpen).toBe(false);
+      expect(glossaryService.getDraftById).not.toHaveBeenCalled();
+    });
+
+    it('should close panel for comment notifications (not yet implemented)', () => {
+      const notification: Notification = {
+        id: 1,
+        type: 'comment_reply',
+        message: 'Test notification',
+        is_read: true, // Already read to avoid markAsRead call
+        created_at: '2023-01-01T00:00:00Z',
+        related_comment: 456,
+      };
+
+      component.isOpen = true;
+
+      const event = { stopPropagation: vi.fn() } as unknown as Event;
+      component.navigateToRelatedContent(notification, event);
+
+      expect(component.isOpen).toBe(false);
+      expect(glossaryService.getDraftById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('closePanel', () => {
+    it('should close the panel', () => {
+      component.isOpen = true;
+      component.closePanel();
+      expect(component.isOpen).toBe(false);
     });
   });
 });
