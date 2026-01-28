@@ -12,7 +12,6 @@ Output will be in `dist/frontend/`
 ## Backend Production Setup
 ```bash
 cd backend
-source venv/bin/activate
 
 # Install production dependencies
 pip install -r requirements.txt

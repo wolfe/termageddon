@@ -75,7 +75,6 @@ Ensure these are ignored:
 db.sqlite3
 *.pyc
 __pycache__/
-venv/
 .env
 ```
 

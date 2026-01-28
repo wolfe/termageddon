@@ -5,7 +5,6 @@ Run the complete test suite for both backend and frontend.
 ## Backend Tests
 ```bash
 cd backend
-source venv/bin/activate
 pytest -v
 ```
 
@@ -18,7 +17,7 @@ npm test
 ## All Tests
 ```bash
 # Backend
-cd backend && source venv/bin/activate && pytest -v
+cd backend && pytest -v
 
 # Frontend (in new terminal)
 cd frontend && npm test
@@ -28,6 +27,5 @@ cd frontend && npm test
 ```bash
 # Backend with coverage
 cd backend
-source venv/bin/activate
 pytest --cov=glossary --cov-report=html
 ```

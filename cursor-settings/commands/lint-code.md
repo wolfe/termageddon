@@ -5,7 +5,6 @@ Run comprehensive linting and type checking on the codebase.
 ## Backend Linting (Python)
 ```bash
 cd backend
-source venv/bin/activate
 
 # Type checking with mypy
 mypy glossary/ Termageddon/
@@ -37,7 +36,7 @@ npm run format:check
 ## All Linting (Complete Check)
 ```bash
 # Backend
-cd backend && source venv/bin/activate && \
+cd backend && \
 mypy glossary/ Termageddon/ && \
 flake8 glossary/ Termageddon/ && \
 isort --check-only glossary/ Termageddon/ && \
@@ -51,7 +50,6 @@ cd frontend && npm run lint && npx tsc --noEmit && npm run format:check
 ```bash
 # Backend - Auto-fix what's possible
 cd backend
-source venv/bin/activate
 black glossary/ Termageddon/
 isort glossary/ Termageddon/
 

@@ -14,7 +14,6 @@ Start both backend and frontend development servers.
 
 ```bash
 cd backend
-source venv/bin/activate
 python manage.py runserver
 ```
 

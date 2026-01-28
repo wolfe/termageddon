@@ -6,7 +6,6 @@ Format code using the project's formatting tools.
 ```bash
 # Backend (Python)
 cd backend
-source venv/bin/activate
 black glossary/ Termageddon/
 isort glossary/ Termageddon/
 
@@ -19,7 +18,6 @@ npx prettier --write "src/**/*.{ts,html,scss,css,json}" "../**/*.md" --parser ma
 ```bash
 # Backend
 cd backend
-source venv/bin/activate
 black --check glossary/ Termageddon/
 isort --check-only glossary/ Termageddon/
 
