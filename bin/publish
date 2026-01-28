@@ -25,6 +25,7 @@ aws ecr get-login-password --region ${AWS_REGION} | \
 
 cd "${BACKEND_DIR}"
 docker build \
+  --platform linux/amd64 \
   --build-arg BUILD_VERSION=${TAG} \
   --build-arg BUILD_TIME=${BUILD_TIME} \
   -t termageddon-backend .

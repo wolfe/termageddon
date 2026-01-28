@@ -204,11 +204,12 @@ resource "aws_ecs_task_definition" "backend" {
 
 # ECS Service
 resource "aws_ecs_service" "main" {
-  name            = "termageddon-${var.environment}-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.backend.arn
-  desired_count   = var.desired_task_count
-  launch_type     = "FARGATE"
+  name                   = "termageddon-${var.environment}-service"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.backend.arn
+  desired_count          = var.desired_task_count
+  launch_type            = "FARGATE"
+  force_new_deployment   = true
 
   network_configuration {
     subnets          = aws_subnet.private[*].id

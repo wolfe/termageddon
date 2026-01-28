@@ -36,8 +36,8 @@ terraform apply ${AUTO_APPROVE} -var-file="${TFVARS_FILE}" -var="image_tag=${TAG
 echo "✓ Deployed: ${TAG}"
 
 # Wait for health endpoint to return expected version
-HEALTH_URL="https://termageddon-${ENVIRONMENT}.analyzere.net/health/"
-[ "${ENVIRONMENT}" = "prod" ] && HEALTH_URL="https://termageddon.analyzere.net/health/"
+HEALTH_URL="https://termageddon-${ENVIRONMENT}.analyzere.net/api/health/"
+[ "${ENVIRONMENT}" = "prod" ] && HEALTH_URL="https://termageddon.analyzere.net/api/health/"
 
 set +x
 echo "Waiting for new version to be deployed"
