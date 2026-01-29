@@ -1,0 +1,54 @@
+<div class="create-entry-term-input">
+  <input
+    type="text"
+    [(ngModel)]="displayText"
+    (focus)="onInputFocus()"
+    (input)="onInputChange()"
+    placeholder="Type the term to add or choose a match"
+    class="term-input"
+    [disabled]="disabled"
+    autocomplete="off"
+  />
+
+  @if (isDropdownOpen) {
+    <div
+      class="dropdown"
+      #dropdownList
+      (scroll)="onDropdownScroll()"
+    >
+      @if (isLoading && terms.length === 0) {
+        <div class="dropdown-loading">Loading…</div>
+      } @else {
+        @for (term of terms; track trackByTermId($index, term)) {
+          <button
+            type="button"
+            class="dropdown-item"
+            (click)="selectTerm(term)"
+          >
+            <span class="dropdown-item-text">{{ term.text }}</span>
+            @if (term.is_official) {
+              <span class="dropdown-item-badge">Official</span>
+            }
+          </button>
+        }
+        @if (showAddNewOption) {
+          <button
+            type="button"
+            class="dropdown-item dropdown-item-add-new"
+            (click)="selectAddNew()"
+          >
+            Add new term: "{{ displayText.trim() }}"
+          </button>
+        }
+        @if (!isLoading && terms.length === 0 && !showAddNewOption) {
+          <div class="dropdown-empty">
+            Type to search existing terms or add a new one.
+          </div>
+        }
+        @if (isLoadingMore) {
+          <div class="dropdown-loading-more">Loading more…</div>
+        }
+      }
+    </div>
+  }
+</div>

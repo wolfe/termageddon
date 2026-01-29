@@ -13,11 +13,11 @@ import {
   EntryLookupResponse,
   User,
 } from '../../models';
-import { TermAutocompleteComponent } from '../shared/term-autocomplete/term-autocomplete.component';
+import { CreateEntryTermInputComponent } from '../shared/create-entry-term-input/create-entry-term-input.component';
 
 @Component({
     selector: 'app-create-entry-dialog',
-    imports: [FormsModule, TermAutocompleteComponent],
+    imports: [FormsModule, CreateEntryTermInputComponent],
     templateUrl: './create-entry-dialog.component.html',
     styleUrls: ['./create-entry-dialog.component.scss'],
     standalone: true
@@ -92,10 +92,21 @@ export class CreateEntryDialogComponent implements OnInit {
     }
   }
 
+  isTermChosen(): boolean {
+    return (
+      this.selectedTermId != null ||
+      (this.selectedTermText != null && 0 < this.selectedTermText.trim().length)
+    );
+  }
+
   onTermSelected(event: { termId: number | null; termText: string }) {
     this.selectedTermId = event.termId;
     this.selectedTermText = event.termText;
     this.updatePerspectiveStatuses();
+  }
+
+  onTermCancel(): void {
+    this.onClose();
   }
 
   onPerspectiveSelected() {

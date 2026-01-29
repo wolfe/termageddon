@@ -10,22 +10,27 @@
       <div class="modal-body">
         <form (ngSubmit)="onSave()" #entryForm="ngForm">
           <div class="form-group">
-            <label for="termText">Term *</label>
-            <app-term-autocomplete
+            <label for="termText">Step 1: Term *</label>
+            <app-create-entry-term-input
               [selectedTermId]="selectedTermId"
-              [isOpen]="isOpen"
+              [selectedTermText]="selectedTermText"
+              [disabled]="isLoading || isLookingUp"
               (termSelected)="onTermSelected($event)"
-            ></app-term-autocomplete>
+              (cancel)="onTermCancel()"
+            ></app-create-entry-term-input>
           </div>
           <div class="form-group">
-            <label for="perspective">Perspective *</label>
+            <label for="perspective">Step 2: Perspective *</label>
+            @if (!isTermChosen()) {
+              <p class="step-hint">Choose a term above first.</p>
+            }
             <select
               id="perspective"
               [(ngModel)]="selectedPerspectiveId"
               name="selectedPerspectiveId"
               class="form-control"
               required
-              [disabled]="isLoading || isLookingUp"
+              [disabled]="!isTermChosen() || isLoading || isLookingUp"
               (change)="onPerspectiveSelected()"
             >
               <option value="">Select a perspective</option>
@@ -73,7 +78,7 @@
             <button
               type="submit"
               class="btn btn-primary"
-              [disabled]="!entryForm.form.valid || isLoading || isLookingUp"
+              [disabled]="!isTermChosen() || !entryForm.form.valid || isLoading || isLookingUp"
             >
               @if (isLoading) {
                 <span class="spinner"></span>

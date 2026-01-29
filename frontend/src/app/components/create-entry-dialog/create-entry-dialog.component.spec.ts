@@ -538,4 +538,42 @@ describe('CreateEntryDialogComponent', () => {
     expect(component.error).toBeNull();
     expect(component.close.emit).toHaveBeenCalled();
   });
+
+  describe('isTermChosen', () => {
+    it('should return false when no term is selected', () => {
+      component.selectedTermId = null;
+      component.selectedTermText = '';
+
+      expect(component.isTermChosen()).toBe(false);
+    });
+
+    it('should return false when selectedTermText is only whitespace', () => {
+      component.selectedTermId = null;
+      component.selectedTermText = '   ';
+
+      expect(component.isTermChosen()).toBe(false);
+    });
+
+    it('should return true when selectedTermId is set', () => {
+      component.selectedTermId = 1;
+      component.selectedTermText = '';
+
+      expect(component.isTermChosen()).toBe(true);
+    });
+
+    it('should return true when selectedTermText is non-empty after trim', () => {
+      component.selectedTermId = null;
+      component.selectedTermText = 'Some Term';
+
+      expect(component.isTermChosen()).toBe(true);
+    });
+  });
+
+  it('should emit close when onTermCancel is called', () => {
+    vi.spyOn(component.close, 'emit');
+
+    component.onTermCancel();
+
+    expect(component.close.emit).toHaveBeenCalled();
+  });
 });

@@ -35,11 +35,12 @@ alwaysApply: false
 4. **Validate**: Test related features to ensure no regressions were introduced
 
 ### Browser Testing Tools
-- Use Cursor's built-in browser automation tools (Playwright) for manual testing
-- Navigate to `http://localhost:4200` for frontend testing
-- Ensure backend is running on `http://localhost:8000`
-- Use test user credentials from `test-plan.md` for authentication
-- Test with different user roles when relevant (admin, perspective curator, regular user)
+- **Use @Browser** (Cursor's Browser MCP: cursor-ide-browser or cursor-browser-extension) for manual testing when verifying UI changes, bug fixes, or new flows.
+- Workflow: start dev/demo (e.g. `bin/run-demo` or `bin/start-dev`), then use browser tools to navigate, snapshot, click, and type as needed.
+- Navigate to `http://localhost:4200` for frontend testing.
+- Ensure backend is running on `http://localhost:8000`.
+- Use test user credentials from `test-plan.md` for authentication.
+- Test with different user roles when relevant (admin, perspective curator, regular user).
 
 ## Django Backend Testing
 - Use pytest with pytest-django
