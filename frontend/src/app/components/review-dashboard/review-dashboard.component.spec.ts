@@ -188,7 +188,11 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       // Simulate edit saved event
       component.onEditSaved();
 
-      expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
+      expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(
+        1,
+        undefined,
+        mockDraft.id
+      );
       expect(component.state.comments).toEqual(expect.arrayContaining(mockComments));
     });
 
@@ -332,7 +336,11 @@ describe('ReviewDashboardComponent Integration Tests', () => {
       component.selectDraft(mockDraft);
 
       expect(component.state.selectedDraft).toBe(mockDraft);
-      expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
+      expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(
+        1,
+        undefined,
+        mockDraft.id
+      );
       expect(component.state.comments).toEqual(expect.arrayContaining(mockComments));
     });
   });

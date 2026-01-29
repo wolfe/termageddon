@@ -204,7 +204,11 @@ describe('MyDraftsComponent', () => {
         // Simulate the actual behavior - refresh comments first, then drafts
         if (state.selectedDraft?.entry?.id) {
           entryDetailService
-            .loadCommentsWithPositions(state.selectedDraft.entry.id)
+            .loadCommentsWithPositions(
+              state.selectedDraft.entry.id,
+              undefined,
+              state.selectedDraft.id
+            )
             .subscribe(response => {
               state.comments = response.results;
             });
@@ -1114,7 +1118,11 @@ describe('MyDraftsComponent', () => {
       vi.runAllTimers();
 
       expect(panelCommonService.loadDrafts).toHaveBeenCalled();
-      expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(1);
+      expect(entryDetailService.loadCommentsWithPositions).toHaveBeenCalledWith(
+        1,
+        undefined,
+        mockDraft.id
+      );
       expect(component.state.comments).toEqual(mockComments);
 
       vi.useRealTimers();

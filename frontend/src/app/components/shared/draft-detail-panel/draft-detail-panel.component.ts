@@ -99,7 +99,10 @@ export class DraftDetailPanelComponent
     // In version history view, show resolved comments by default
     const showResolved = this.showVersionHistorySidebar ? true : this.showResolvedComments;
     // If viewing a specific historical draft, pass its ID
-    const draftId = this.selectedHistoricalDraft ? this.selectedHistoricalDraft.id : undefined;
+    // Otherwise, if viewing a specific draft, pass its ID to show comments on that draft
+    const draftId = this.selectedHistoricalDraft
+      ? this.selectedHistoricalDraft.id
+      : this.draft?.id;
     super.loadComments(entryId, page, append, draftId, showResolved);
   }
 

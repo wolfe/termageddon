@@ -92,12 +92,12 @@ export class PanelCommonService implements OnDestroy {
   /**
    * Load comments for a selected draft
    */
-  loadComments(entryId: number, state: PanelState): Observable<Comment[]> {
+  loadComments(entryId: number, state: PanelState, draftId?: number): Observable<Comment[]> {
     if (!entryId) return of([]);
 
     state.isLoadingComments = true;
     return this.entryDetailService
-      .loadCommentsWithPositions(entryId)
+      .loadCommentsWithPositions(entryId, undefined, draftId)
       .pipe(
         map(response => response.results),
         takeUntil(this.destroy$)
@@ -126,7 +126,8 @@ export class PanelCommonService implements OnDestroy {
   selectDraft(draft: ReviewDraft, state: PanelState): void {
     state.selectedDraft = draft;
     if (draft.entry?.id) {
-      this.loadComments(draft.entry.id, state).subscribe({
+      // Pass the draft ID so comments on this specific draft are shown
+      this.loadComments(draft.entry.id, state, draft.id).subscribe({
         next: comments => this.onCommentsLoaded(comments, state),
         error: error => this.onCommentsError(error, state),
       });
@@ -139,7 +140,8 @@ export class PanelCommonService implements OnDestroy {
   onEditSaved(state: PanelState, loadDraftsCallback: () => void): void {
     // Refresh comments
     if (state.selectedDraft?.entry?.id) {
-      this.loadComments(state.selectedDraft.entry.id, state).subscribe({
+      // Pass the draft ID so comments on this specific draft are shown
+      this.loadComments(state.selectedDraft.entry.id, state, state.selectedDraft.id).subscribe({
         next: comments => this.onCommentsLoaded(comments, state),
         error: error => this.onCommentsError(error, state),
       });
@@ -500,7 +502,8 @@ export class PanelCommonService implements OnDestroy {
   refreshAfterEdit(state: PanelState, loadDraftsCallback: () => void): void {
     // Refresh comments
     if (state.selectedDraft?.entry?.id) {
-      this.loadComments(state.selectedDraft.entry.id, state).subscribe({
+      // Pass the draft ID so comments on this specific draft are shown
+      this.loadComments(state.selectedDraft.entry.id, state, state.selectedDraft.id).subscribe({
         next: comments => this.onCommentsLoaded(comments, state),
         error: error => this.onCommentsError(error, state),
       });
