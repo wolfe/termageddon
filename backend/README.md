@@ -38,22 +38,19 @@ A production-ready glossary management REST API built with Django and Django RES
    cd backend
    ```
 
-2. **Create and activate virtual environment:**
+2. **Configure Python with pyenv and install dependencies:**
+
+   Ensure you're using the correct Python version via `pyenv` (from the repo root or `backend`):
 
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-
-   ```bash
+   # Example (adjust version to one you have installed)
+   pyenv local 3.13.0
    pip install -r requirements.txt
    ```
 
-   **Note**: If you're using the demo script (`../demo.sh`), it will automatically create the virtual environment and install dependencies for you.
+   The `bin/run-demo` and `bin/run-tests` helpers assume your Python is already configured via `pyenv` and will only install dependencies with `pip`.
 
-4. **Environment configuration:**
+3. **Environment configuration:**
 
    The `.env` file is already created with a SECRET_KEY. In production, generate a new one:
 
@@ -61,19 +58,19 @@ A production-ready glossary management REST API built with Django and Django RES
    python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
    ```
 
-5. **Run migrations:**
+4. **Run migrations:**
 
    ```bash
    python manage.py migrate
    ```
 
-6. **Collect static files:**
+5. **Collect static files:**
 
    ```bash
    python manage.py collectstatic
    ```
 
-7. **Load test data:**
+6. **Load test data:**
 
    ```bash
    python manage.py load_test_data
@@ -85,7 +82,7 @@ A production-ready glossary management REST API built with Django and Django RES
    - 9 perspectives (Physics, Chemistry, Biology, etc.)
    - 360 entries with approved versions
 
-8. **Run the development server:**
+7. **Run the development server:**
 
    ```bash
    python manage.py runserver

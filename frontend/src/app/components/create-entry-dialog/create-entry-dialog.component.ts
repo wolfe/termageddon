@@ -231,6 +231,9 @@ export class CreateEntryDialogComponent implements OnInit {
         error: error => {
           this.isLoading = false;
           this.error = 'Failed to create entry: ' + (error.error?.detail || error.message);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/2e163e88-2099-498f-a920-ee06c943f73f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'create-entry-dialog.component.ts:onSave:error',message:'Create entry failed',data:{selectedTermText:this.selectedTermText,selectedPerspectiveId:this.selectedPerspectiveId,errorMessage:this.error},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log
         },
       });
     } else {

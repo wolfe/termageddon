@@ -6,22 +6,25 @@ alwaysApply: false
 
 # Django rules
 
-## Virtual Environment
+## Python Environment (pyenv)
 
-**IMPORTANT**: This project uses a virtual environment located at `backend/venv`. Always activate it before running Django commands:
+**IMPORTANT**: This project uses `pyenv` to manage the Python version. Ensure you are using the correct Python before running Django commands:
 
 ```bash
+# From the repo root or backend directory
+pyenv local <your-python-3.13.x-version>
 cd backend
-source venv/bin/activate  # On macOS/Linux
-# OR
-venv\Scripts\activate  # On Windows
+python manage.py <command>
 ```
 
-When running Django management commands, either:
-1. Activate the venv first: `source venv/bin/activate && python manage.py <command>`
-2. Use the venv's Python directly: `venv/bin/python manage.py <command>`
+When running Django management commands, prefer using the `python` from your active `pyenv` environment:
 
-**Never run `python manage.py` commands without activating the venv or using the venv's Python interpreter.**
+```bash
+python manage.py migrate
+python manage.py test
+```
+
+**Never run `python manage.py` commands against a mismatched Python version. Use `pyenv` to keep versions consistent across the project.**
 
 ## Development Practices
 

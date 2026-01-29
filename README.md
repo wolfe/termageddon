@@ -29,9 +29,8 @@ This will:
 # Navigate to backend directory
 cd backend
 
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate
+# Ensure you're using the correct Python via pyenv
+# (from repo root you can run: pyenv local <your-python-3.13.x-version>)
 pip install -r requirements.txt
 
 # Database and test data are already loaded!
@@ -179,8 +178,6 @@ The application includes:
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
 pytest -v
 ```

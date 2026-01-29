@@ -5,35 +5,30 @@ Manage the database and test data.
 ## Reset Database
 ```bash
 cd backend
-source venv/bin/activate
 python manage.py reset_test_db
 ```
 
 ## Load Test Data
 ```bash
 cd backend
-source venv/bin/activate
 python manage.py load_test_data
 ```
 
 ## Run Migrations
 ```bash
 cd backend
-source venv/bin/activate
 python manage.py migrate
 ```
 
 ## Create Superuser
 ```bash
 cd backend
-source venv/bin/activate
 python manage.py createsuperuser
 ```
 
 ## Database Shell
 ```bash
 cd backend
-source venv/bin/activate
 python manage.py shell
 ```
 
