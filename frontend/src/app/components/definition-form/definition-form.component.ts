@@ -68,9 +68,6 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
     editor.on('text-change', () => {
       const content = editor.root.innerHTML;
       this.contentChange.emit(content);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/2e163e88-2099-498f-a920-ee06c943f73f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'definition-form.component.ts:onEditorCreated:text-change',message:'Definition content changed',data:{contentLength:content.length},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion agent log
     });
   }
 
