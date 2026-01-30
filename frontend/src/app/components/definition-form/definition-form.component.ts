@@ -63,12 +63,6 @@ export class DefinitionFormComponent implements OnInit, OnDestroy {
   onEditorCreated(editor: any) {
     this.editor = editor;
     this.editorReady.emit(editor);
-
-    // Handle content changes
-    editor.on('text-change', () => {
-      const content = editor.root.innerHTML;
-      this.contentChange.emit(content);
-    });
   }
 
   onContentChanged(content: string) {
