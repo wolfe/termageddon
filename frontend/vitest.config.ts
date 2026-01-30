@@ -1,12 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
-import swc from 'unplugin-swc';
-import { swcAngularUnpluginOptions } from '@jscutlery/swc-angular';
+import angular from '@analogjs/vite-plugin-angular';
 
 export default defineConfig({
   plugins: [
-    // Use SWC with Angular preset to preserve decorator metadata
-    swc.vite(swcAngularUnpluginOptions()),
+    // Use Angular Vite plugin for proper Angular support
+    angular(),
   ],
   test: {
     globals: true,
