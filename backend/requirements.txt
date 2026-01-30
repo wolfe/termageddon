@@ -17,10 +17,7 @@ requests==2.32.5
 psycopg2-binary==2.9.11
 gunicorn==23.0.0
 
-# Linting and type checking
-mypy==1.19.1
-flake8==7.3.0
-isort==7.0.0
+# Type checking stubs (still needed for django-stubs types in IDE)
 django-stubs==5.2.8
 
 # Transitive dependencies (updated for security/patches)

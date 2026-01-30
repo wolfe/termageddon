@@ -6,14 +6,12 @@ Run comprehensive linting and type checking on the codebase.
 ```bash
 cd backend
 
-# Type checking with mypy
+# Run pre-commit on all files (runs black, isort, flake8, mypy)
+pre-commit run --all-files
+
+# Or run individual manual checks:
+# Type checking with mypy (if not using pre-commit)
 mypy glossary/ Termageddon/
-
-# Code style and quality with flake8
-flake8 glossary/ Termageddon/
-
-# Import sorting check
-isort --check-only glossary/ Termageddon/
 
 # Code formatting check
 black --check glossary/ Termageddon/
@@ -35,23 +33,24 @@ npm run format:check
 
 ## All Linting (Complete Check)
 ```bash
-# Backend
-cd backend && \
-mypy glossary/ Termageddon/ && \
-flake8 glossary/ Termageddon/ && \
-isort --check-only glossary/ Termageddon/ && \
-black --check glossary/ Termageddon/
+# Backend (pre-commit checks - recommended)
+cd backend && pre-commit run --all-files
 
-# Frontend (in new terminal)
+# Backend (manual mypy only, if needed)
+cd backend && mypy glossary/ Termageddon/
+
+# Frontend
 cd frontend && npm run lint && npx tsc --noEmit && npm run format:check
 ```
 
 ## Fix Linting Issues
 ```bash
-# Backend - Auto-fix what's possible
+# Backend - Auto-fix with pre-commit (recommended)
 cd backend
+pre-commit run --all-files
+
+# Or manually fix formatting:
 black glossary/ Termageddon/
-isort glossary/ Termageddon/
 
 # Frontend - Auto-fix what's possible
 cd frontend
