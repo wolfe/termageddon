@@ -26,7 +26,6 @@ export class DemoAutoLoginService {
     this.isEnabled = this.checkDemoModeEnabled();
 
     if (this.isEnabled) {
-      console.log('Demo auto-login service enabled');
       this.checkForAutoLogin();
     }
   }
@@ -75,15 +74,12 @@ export class DemoAutoLoginService {
     const username = urlParams.get('username');
 
     if (token && username) {
-      console.log('Demo auto-login detected:', { username, token: token.substring(0, 10) + '...' });
-
       // Set the token in localStorage
       this.authService.setToken(token);
 
       // Get user info and set current user
       this.authService.getCurrentUser().subscribe({
         next: user => {
-          console.log('Demo auto-login successful for:', user.username);
           this.permissionService.setCurrentUser(user);
 
           // Clean up URL by removing token parameters

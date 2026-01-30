@@ -81,9 +81,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private checkTestUsersExist(): void {
     this.http.get<{ test_users_exist: boolean }>('/api/test-users-exist/').subscribe({
       next: (response) => {
-        console.log('Test users check response:', response);
         this.hasTestUsers = response.test_users_exist;
-        console.log('hasTestUsers set to:', this.hasTestUsers);
         this.cdr.detectChanges();
       },
       error: (error) => {

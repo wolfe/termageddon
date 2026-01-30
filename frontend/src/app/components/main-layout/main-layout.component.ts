@@ -63,13 +63,6 @@ export class MainLayoutComponent implements OnInit {
   private handleOktaCallback(): void {
     this.authService.handleOktaCallback().subscribe({
       next: response => {
-        console.log('MainLayoutComponent: Okta callback successful', {
-          hasResponse: !!response,
-          hasToken: !!response.token,
-          hasUser: !!response.user,
-          userId: response.user?.id
-        });
-
         // Set user first
         this.permissionService.setCurrentUser(response.user);
 
