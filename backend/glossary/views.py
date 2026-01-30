@@ -94,10 +94,7 @@ class IsPerspectiveCuratorOrStaff(IsAuthenticated):
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
-        return (
-            request.user.is_staff
-            or PerspectiveCurator.objects.filter(user=request.user).exists()
-        )
+        return request.user.is_staff or PerspectiveCurator.objects.filter(user=request.user).exists()
 
 
 class PerspectiveViewSet(viewsets.ModelViewSet):
@@ -144,10 +141,7 @@ class TermViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         # Only staff can update is_official
-        if (
-            "is_official" in serializer.validated_data
-            and not self.request.user.is_staff
-        ):
+        if "is_official" in serializer.validated_data and not self.request.user.is_staff:
             raise ValidationError("Only staff can update the is_official flag.")
         serializer.save(updated_by=self.request.user)
 
@@ -221,9 +215,7 @@ class EntryViewSet(viewsets.ModelViewSet):
                 .order_by("-created_at"),
                 to_attr="all_drafts_list",
             )
-            queryset = queryset.prefetch_related(
-                latest_published_draft, all_drafts_prefetch
-            )
+            queryset = queryset.prefetch_related(latest_published_draft, all_drafts_prefetch)
         elif self.action == "endorse":
             # Prefetch published draft for endorse action
             latest_published_draft = Prefetch(
@@ -284,21 +276,15 @@ class EntryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @action(
-        detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff]
-    )
+    @action(detail=True, methods=["post"], permission_classes=[IsPerspectiveCuratorOrStaff])
     def endorse(self, request, pk=None):
         """Endorse the active draft of an entry (requires perspective curator or staff)"""
         entry = self.get_object()
 
         # Check if user is perspective curator for this entry's perspective or is staff
-        if not request.user.is_staff and not request.user.is_perspective_curator_for(
-            entry.perspective.id
-        ):
+        if not request.user.is_staff and not request.user.is_perspective_curator_for(entry.perspective.id):
             return Response(
-                {
-                    "detail": "You must be a perspective curator or staff to endorse definitions."
-                },
+                {"detail": "You must be a perspective curator or staff to endorse definitions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -331,9 +317,9 @@ class EntryViewSet(viewsets.ModelViewSet):
         """Build base queryset for entries with published drafts"""
         from django.db.models import Prefetch
 
-        queryset = Entry.objects.filter(
-            drafts__is_published=True, is_deleted=False
-        ).select_related("term", "perspective")
+        queryset = Entry.objects.filter(drafts__is_published=True, is_deleted=False).select_related(
+            "term", "perspective"
+        )
 
         # Filter by author if provided (must be before filter_queryset to avoid duplicates)
         author_id = request.query_params.get("author")
@@ -365,9 +351,7 @@ class EntryViewSet(viewsets.ModelViewSet):
             .order_by("-published_at")
             .values("published_at")[:1]
         )
-        queryset = queryset.annotate(
-            term_latest_published_at=Subquery(latest_published_subquery)
-        )
+        queryset = queryset.annotate(term_latest_published_at=Subquery(latest_published_subquery))
 
         if ordering.startswith("-"):
             return queryset.order_by(
@@ -405,9 +389,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
         terms_dict = {
             term.id: term
-            for term in Term.objects.filter(id__in=term_ids).only(
-                "id", "text", "text_normalized", "is_official"
-            )
+            for term in Term.objects.filter(id__in=term_ids).only("id", "text", "text_normalized", "is_official")
         }
 
         entries_by_term = {}
@@ -446,16 +428,12 @@ class EntryViewSet(viewsets.ModelViewSet):
         from rest_framework.pagination import PageNumberPagination
 
         ordering = request.query_params.get("ordering", "term__text_normalized")
-        order_by_published_at = (
-            "published_at" in ordering or "-published_at" in ordering
-        )
+        order_by_published_at = "published_at" in ordering or "-published_at" in ordering
 
         entries_queryset = self._build_base_entries_queryset(request)
 
         if order_by_published_at:
-            entries_queryset = self._apply_published_at_ordering(
-                entries_queryset, ordering
-            )
+            entries_queryset = self._apply_published_at_ordering(entries_queryset, ordering)
         else:
             entries_queryset = self._apply_text_ordering(entries_queryset, ordering)
 
@@ -466,9 +444,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         if not paginated_entries:
             return paginator.get_paginated_response([])
 
-        term_ids, terms_dict, entries_by_term = self._group_entries_by_term(
-            paginated_entries
-        )
+        term_ids, terms_dict, entries_by_term = self._group_entries_by_term(paginated_entries)
         result = self._build_grouped_result(term_ids, terms_dict, entries_by_term)
 
         return paginator.get_paginated_response(result)
@@ -498,9 +474,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         try:
             with transaction.atomic():
                 # Create the term
-                term = Term.objects.create(
-                    text=term_text, is_official=is_official, created_by=request.user
-                )
+                term = Term.objects.create(text=term_text, is_official=is_official, created_by=request.user)
 
                 # Create the entry
                 entry = Entry.objects.create(
@@ -592,15 +566,11 @@ class EntryViewSet(viewsets.ModelViewSet):
 
             # Check if entry exists
             try:
-                entry = Entry.objects.select_related("term", "perspective").get(
-                    term=term, perspective=perspective
-                )
+                entry = Entry.objects.select_related("term", "perspective").get(term=term, perspective=perspective)
                 is_new = False
             except Entry.DoesNotExist:
                 # Create new entry
-                entry = Entry.objects.create(
-                    term=term, perspective=perspective, created_by=request.user
-                )
+                entry = Entry.objects.create(term=term, perspective=perspective, created_by=request.user)
                 is_new = True
 
             # Check draft status
@@ -642,9 +612,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 class EntryDraftViewSet(viewsets.ModelViewSet):
     """ViewSet for EntryDraft model"""
 
-    queryset = EntryDraft.objects.select_related("entry", "author").prefetch_related(
-        "approvers"
-    )
+    queryset = EntryDraft.objects.select_related("entry", "author").prefetch_related("approvers")
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["entry", "author"]
@@ -679,16 +647,16 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 # Filter for approved drafts (approval_count >= MIN_APPROVALS)
                 from django.db.models import Count
 
-                queryset = queryset.annotate(
-                    approval_count_annotated=Count("approvers")
-                ).filter(approval_count_annotated__gte=settings.MIN_APPROVALS)
+                queryset = queryset.annotate(approval_count_annotated=Count("approvers")).filter(
+                    approval_count_annotated__gte=settings.MIN_APPROVALS
+                )
             elif is_approved.lower() == "false":
                 # Filter for unapproved drafts (approval_count < MIN_APPROVALS)
                 from django.db.models import Count
 
-                queryset = queryset.annotate(
-                    approval_count_annotated=Count("approvers")
-                ).filter(approval_count_annotated__lt=settings.MIN_APPROVALS)
+                queryset = queryset.annotate(approval_count_annotated=Count("approvers")).filter(
+                    approval_count_annotated__lt=settings.MIN_APPROVALS
+                )
 
         # Handle search parameter - only search terms
         search = self.request.query_params.get("search")
@@ -696,8 +664,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             from django.db.models import Q
 
             queryset = queryset.filter(
-                Q(entry__term__text__icontains=search)
-                | Q(entry__term__text_normalized__icontains=search)
+                Q(entry__term__text__icontains=search) | Q(entry__term__text_normalized__icontains=search)
             )
 
         # Handle perspective filtering
@@ -720,9 +687,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 
             if eligibility == "can_approve":
                 # Drafts the user can approve (not own, not already approved by them, not fully approved)
-                queryset = queryset.annotate(
-                    approval_count_annotated=Count("approvers")
-                ).filter(
+                queryset = queryset.annotate(approval_count_annotated=Count("approvers")).filter(
                     ~Q(author=self.request.user),  # Not own drafts
                     ~Q(approvers=self.request.user),  # Not already approved by user
                     approval_count_annotated__lt=settings.MIN_APPROVALS,  # Not approved yet
@@ -730,8 +695,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
             elif eligibility == "requested_or_approved":
                 # Drafts the user was requested to review OR has already approved
                 queryset = queryset.filter(
-                    Q(requested_reviewers=self.request.user)
-                    | Q(approvers=self.request.user)
+                    Q(requested_reviewers=self.request.user) | Q(approvers=self.request.user)
                 ).distinct()
             elif eligibility == "own":
                 # User's own drafts - only show latest draft per entry
@@ -832,9 +796,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
                 "entry__perspective",
                 "replaces_draft",
                 "replaces_draft__author",
-            ).prefetch_related(
-                "replaces_draft__approvers", "replaces_draft__requested_reviewers"
-            )
+            ).prefetch_related("replaces_draft__approvers", "replaces_draft__requested_reviewers")
 
         # Handle custom ordering for published_at with nulls last
         ordering = self.request.query_params.get("ordering")
@@ -872,11 +834,7 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Set replaces_draft to the latest draft for this entry
         entry = serializer.validated_data["entry"]
-        latest_draft = (
-            EntryDraft.objects.filter(entry=entry, is_deleted=False)
-            .order_by("-created_at")
-            .first()
-        )
+        latest_draft = EntryDraft.objects.filter(entry=entry, is_deleted=False).order_by("-created_at").first()
 
         if latest_draft:
             serializer.save(
@@ -1032,9 +990,9 @@ class EntryDraftViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet for Comment model"""
 
-    queryset = Comment.objects.select_related(
-        "author", "parent", "draft"
-    ).prefetch_related("reactions", "mentioned_users")
+    queryset = Comment.objects.select_related("author", "parent", "draft").prefetch_related(
+        "reactions", "mentioned_users"
+    )
     # Note: "replies" is prefetched in get_queryset() override to avoid conflicts
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
@@ -1056,9 +1014,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             # Annotate reaction count to avoid N+1 queries
             # Use distinct() to ensure annotations don't cause duplicate rows
-            queryset = queryset.annotate(
-                reaction_count_annotated=Count("reactions", distinct=True)
-            )
+            queryset = queryset.annotate(reaction_count_annotated=Count("reactions", distinct=True))
 
         # Prefetch replies recursively to avoid N+1 queries
         # This prefetches nested replies with their author and reactions
@@ -1086,18 +1042,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
 
         # Fetch the created comment with related author
-        instance = Comment.objects.select_related("author").get(
-            pk=serializer.instance.pk
-        )
+        instance = Comment.objects.select_related("author").get(pk=serializer.instance.pk)
 
         # Return using CommentListSerializer to include nested author
-        output_serializer = CommentListSerializer(
-            instance, context={"request": request}
-        )
+        output_serializer = CommentListSerializer(instance, context={"request": request})
         headers = self.get_success_headers(output_serializer.data)
-        return Response(
-            output_serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, created_by=self.request.user)
@@ -1238,9 +1188,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         reaction_type = request.data.get("reaction_type", "thumbs_up")
 
         # Find and delete reaction
-        reaction = Reaction.objects.filter(
-            comment=comment, user=request.user, reaction_type=reaction_type
-        ).first()
+        reaction = Reaction.objects.filter(comment=comment, user=request.user, reaction_type=reaction_type).first()
 
         if not reaction:
             # User hasn't reacted - return current state instead of error
@@ -1273,9 +1221,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def _get_relevant_drafts(self, entry_id):
         """Get drafts relevant for comment loading (after last published or all if none published)"""
-        drafts = EntryDraft.objects.filter(
-            entry_id=entry_id, is_deleted=False
-        ).order_by("-created_at")
+        drafts = EntryDraft.objects.filter(entry_id=entry_id, is_deleted=False).order_by("-created_at")
 
         last_published_draft = drafts.filter(is_published=True).first()
         if last_published_draft:
@@ -1303,9 +1249,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         entry_id = request.query_params.get("entry")
         draft_id = request.query_params.get("draft_id")  # For version history view
-        show_resolved = (
-            request.query_params.get("show_resolved", "false").lower() == "true"
-        )
+        show_resolved = request.query_params.get("show_resolved", "false").lower() == "true"
 
         if not entry_id:
             return Response(
@@ -1364,9 +1308,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             comments_with_positions = []
             serializer = self.get_serializer(comments, many=True)
             for i, comment in enumerate(comments):
-                draft_position = self._calculate_draft_comment_position(
-                    comment.draft, drafts, latest_draft
-                )
+                draft_position = self._calculate_draft_comment_position(comment.draft, drafts, latest_draft)
                 comment_data = serializer.data[i]
                 comment_data["draft_position"] = draft_position
                 comment_data["draft_id"] = comment.draft.id
@@ -1376,9 +1318,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             # Apply pagination to the processed comments
             paginator = PageNumberPagination()
             paginator.page_size = 50
-            paginated_comments = paginator.paginate_queryset(
-                comments_with_positions, request
-            )
+            paginated_comments = paginator.paginate_queryset(comments_with_positions, request)
             return paginator.get_paginated_response(paginated_comments)
         except Exception as e:
             return Response(
@@ -1390,9 +1330,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class PerspectiveCuratorViewSet(viewsets.ModelViewSet):
     """ViewSet for PerspectiveCurator model (staff only)"""
 
-    queryset = PerspectiveCurator.objects.select_related(
-        "user", "perspective", "assigned_by"
-    )
+    queryset = PerspectiveCurator.objects.select_related("user", "perspective", "assigned_by")
     serializer_class = PerspectiveCuratorSerializer
     permission_classes = [IsStaffOrReadOnly]
     filter_backends = [DjangoFilterBackend]
@@ -1411,19 +1349,13 @@ class CustomAuthToken(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         logger = logging.getLogger(__name__)
-        data_keys = (
-            list(request.data.keys()) if hasattr(request.data, "keys") else "N/A"
-        )
+        data_keys = list(request.data.keys()) if hasattr(request.data, "keys") else "N/A"
         logger.info(f"CustomAuthToken: Received login request. Data keys: {data_keys}")
 
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.serializer_class(data=request.data, context={"request": request})
 
         if not serializer.is_valid():
-            logger.warning(
-                f"CustomAuthToken: Validation failed. Errors: {serializer.errors}"
-            )
+            logger.warning(f"CustomAuthToken: Validation failed. Errors: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.validated_data["user"]
@@ -1463,9 +1395,7 @@ def okta_login_view(request):
     try:
         # Verify and decode Okta token
         token_data = verify_okta_token(okta_token)
-        logger.info(
-            f"okta_login_view: Token verified for user: {token_data.get('sub')}"
-        )
+        logger.info(f"okta_login_view: Token verified for user: {token_data.get('sub')}")
 
         # Get or create Django user
         user = get_or_create_user_from_okta_token(token_data)
@@ -1473,9 +1403,7 @@ def okta_login_view(request):
 
         # Create or get Django token for API access
         token, created = Token.objects.get_or_create(user=user)
-        logger.info(
-            f"okta_login_view: Django token {'created' if created else 'retrieved'}"
-        )
+        logger.info(f"okta_login_view: Django token {'created' if created else 'retrieved'}")
 
         # Log user into Django session for admin access
         # Set backend attribute required by login()
@@ -1512,9 +1440,7 @@ def logout_view(request):
     """Logout endpoint - deletes user's token"""
     try:
         request.user.auth_token.delete()
-        return Response(
-            {"detail": "Successfully logged out."}, status=status.HTTP_200_OK
-        )
+        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1538,9 +1464,7 @@ def current_user_view(request):
     global _last_archiving_check
     now = timezone.now()
 
-    if _last_archiving_check is None or (now - _last_archiving_check) >= timedelta(
-        days=1
-    ):
+    if _last_archiving_check is None or (now - _last_archiving_check) >= timedelta(days=1):
         try:
             call_command("archive_old_drafts", verbosity=0)
             _last_archiving_check = now
@@ -1623,9 +1547,7 @@ def switch_test_user_view(request):  # noqa: C901
         .first()
     )
     # Return new token and user data (same format as login)
-    return Response(
-        {"token": token.key, "user": UserDetailSerializer(target_user).data}
-    )
+    return Response({"token": token.key, "user": UserDetailSerializer(target_user).data})
 
 
 @api_view(["GET"])
@@ -1696,9 +1618,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return notifications for the current user"""
-        return Notification.objects.filter(user=self.request.user).select_related(
-            "related_draft", "related_comment"
-        )
+        return Notification.objects.filter(user=self.request.user).select_related("related_draft", "related_comment")
 
     @action(detail=True, methods=["patch"])
     def mark_read(self, request, pk=None):
@@ -1713,9 +1633,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def mark_all_read(self, request):
         """Mark all notifications as read for the current user"""
-        Notification.objects.filter(user=request.user, is_read=False).update(
-            is_read=True
-        )
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({"detail": "All notifications marked as read."})
 
 

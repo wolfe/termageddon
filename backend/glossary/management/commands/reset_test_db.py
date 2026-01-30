@@ -78,6 +78,4 @@ class Command(BaseCommand):
             if User.objects.filter(username=username).exists():
                 self.stdout.write(f"✅ Test user {username} exists")
             else:
-                self.stdout.write(
-                    self.style.WARNING(f"⚠️  Test user {username} not found")
-                )
+                self.stdout.write(self.style.WARNING(f"⚠️  Test user {username} not found"))

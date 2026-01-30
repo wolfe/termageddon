@@ -30,9 +30,7 @@ router.register(r"terms", TermViewSet, basename="term")
 router.register(r"entries", EntryViewSet, basename="entry")
 router.register(r"entry-drafts", EntryDraftViewSet, basename="entrydraft")
 router.register(r"comments", CommentViewSet, basename="comment")
-router.register(
-    r"perspective-curators", PerspectiveCuratorViewSet, basename="perspectivecurator"
-)
+router.register(r"perspective-curators", PerspectiveCuratorViewSet, basename="perspectivecurator")
 router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [

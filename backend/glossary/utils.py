@@ -51,11 +51,7 @@ def resolve_author(author_name, admin_user):
 
 def get_latest_published_draft(entry):
     """Get the latest published draft for an entry."""
-    return (
-        entry.drafts.filter(is_published=True, is_deleted=False)
-        .order_by("-published_at", "-created_at")
-        .first()
-    )
+    return entry.drafts.filter(is_published=True, is_deleted=False).order_by("-published_at", "-created_at").first()
 
 
 def content_matches(existing_content, new_content):
@@ -68,9 +64,7 @@ def _get_or_create_perspective(perspective_name, admin_user, perspectives_cache=
     if perspectives_cache and perspective_name in perspectives_cache:
         return perspectives_cache[perspective_name]
 
-    perspective, _ = Perspective.objects.get_or_create(
-        name=perspective_name, defaults={"created_by": admin_user}
-    )
+    perspective, _ = Perspective.objects.get_or_create(name=perspective_name, defaults={"created_by": admin_user})
     if perspectives_cache:
         perspectives_cache[perspective_name] = perspective
     return perspective
@@ -107,9 +101,7 @@ def _add_approvers_for_admin_upload(draft, admin_user, author):
 
 def _create_and_publish_draft(entry, content, author, admin_user, published_draft):
     """Create a new draft, approve it, and publish it."""
-    draft = EntryDraft.objects.create(
-        entry=entry, content=content, author=author, created_by=admin_user
-    )
+    draft = EntryDraft.objects.create(entry=entry, content=content, author=author, created_by=admin_user)
 
     _add_approvers_for_admin_upload(draft, admin_user, author)
 
@@ -143,23 +135,17 @@ def process_csv_row(row, admin_user, perspectives_cache=None):
     }
 
     try:
-        perspective = _get_or_create_perspective(
-            row["perspective"].strip(), admin_user, perspectives_cache
-        )
+        perspective = _get_or_create_perspective(row["perspective"].strip(), admin_user, perspectives_cache)
 
         term_text = row["term"].strip()
-        term, _ = Term.objects.get_or_create(
-            text=term_text, defaults={"created_by": admin_user}
-        )
+        term, _ = Term.objects.get_or_create(text=term_text, defaults={"created_by": admin_user})
 
         entry, entry_created = Entry.objects.get_or_create(
             term=term, perspective=perspective, defaults={"created_by": admin_user}
         )
         result["entry_created"] = entry_created
 
-        author = resolve_author(
-            row.get("author", "").strip() if "author" in row else "", admin_user
-        )
+        author = resolve_author(row.get("author", "").strip() if "author" in row else "", admin_user)
         content = _prepare_content(row["definition"])
 
         published_draft = get_latest_published_draft(entry)
@@ -185,9 +171,7 @@ def _open_csv_file(csv_file):
             csv_file.seek(0)
         return TextIOWrapper(csv_file, encoding="utf-8"), False
     else:
-        raise ValueError(
-            "csv_file must be a file path, file object, or Django uploaded file"
-        )
+        raise ValueError("csv_file must be a file path, file object, or Django uploaded file")
 
 
 def _validate_csv_columns(reader):
@@ -267,9 +251,7 @@ def resolve_cross_references():
 
     # Build lookup of all entries by (term_text, perspective_name)
     all_entries = {}
-    for entry in Entry.objects.filter(is_deleted=False).select_related(
-        "term", "perspective"
-    ):
+    for entry in Entry.objects.filter(is_deleted=False).select_related("term", "perspective"):
         entry_key = (entry.term.text.strip(), entry.perspective.name.strip())
         all_entries[entry_key] = entry
 

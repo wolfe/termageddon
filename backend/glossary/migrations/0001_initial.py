@@ -280,9 +280,7 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=100)),
                 (
                     "name_normalized",
-                    models.CharField(
-                        db_index=True, default="", editable=False, max_length=100
-                    ),
+                    models.CharField(db_index=True, default="", editable=False, max_length=100),
                 ),
                 ("description", models.TextField(blank=True)),
                 (

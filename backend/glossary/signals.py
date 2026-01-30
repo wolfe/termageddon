@@ -68,12 +68,7 @@ def notify_draft_approved(*args, instance, action, pk_set, **kwargs):
             ).exists():
                 # Draft just became approved
                 approvers = User.objects.filter(id__in=approver_ids)
-                approver_names = ", ".join(
-                    [
-                        approver.get_full_name() or approver.username
-                        for approver in approvers
-                    ]
-                )
+                approver_names = ", ".join([approver.get_full_name() or approver.username for approver in approvers])
                 Notification.objects.create(
                     user=instance.author,
                     type="draft_approved",

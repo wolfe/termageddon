@@ -143,9 +143,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="comment",
-            index=models.Index(
-                fields=["is_resolved", "created_at"], name="gl_co_resolved_created_idx"
-            ),
+            index=models.Index(fields=["is_resolved", "created_at"], name="gl_co_resolved_created_idx"),
         ),
         migrations.AddIndex(
             model_name="entry",
@@ -156,27 +154,19 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="entry",
-            index=models.Index(
-                fields=["term", "is_deleted"], name="glossary_en_term_del_idx"
-            ),
+            index=models.Index(fields=["term", "is_deleted"], name="glossary_en_term_del_idx"),
         ),
         migrations.AddIndex(
             model_name="entry",
-            index=models.Index(
-                fields=["perspective", "is_deleted"], name="glossary_en_persp_del_idx"
-            ),
+            index=models.Index(fields=["perspective", "is_deleted"], name="glossary_en_persp_del_idx"),
         ),
         migrations.AddIndex(
             model_name="perspectivecurator",
-            index=models.Index(
-                fields=["user", "is_deleted"], name="glossary_pc_user_del_idx"
-            ),
+            index=models.Index(fields=["user", "is_deleted"], name="glossary_pc_user_del_idx"),
         ),
         migrations.AddIndex(
             model_name="perspectivecurator",
-            index=models.Index(
-                fields=["perspective", "is_deleted"], name="glossary_pc_persp_del_idx"
-            ),
+            index=models.Index(fields=["perspective", "is_deleted"], name="glossary_pc_persp_del_idx"),
         ),
         # Cannot alter ManyToManyField to add through parameter - use SeparateDatabaseAndState
         # Database: tables already exist and are correct, no changes needed
@@ -225,9 +215,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="entrydraft",
-            index=models.Index(
-                fields=["entry", "is_deleted"], name="gl_en_entry_del_idx"
-            ),
+            index=models.Index(fields=["entry", "is_deleted"], name="gl_en_entry_del_idx"),
         ),
         migrations.AddIndex(
             model_name="entrydraft",
@@ -239,14 +227,10 @@ class Migration(migrations.Migration):
         # Indexes already created in SeparateDatabaseAndState above
         migrations.AddIndex(
             model_name="entrydraftapprover",
-            index=models.Index(
-                fields=["entrydraft", "user"], name="gl_ed_approvers_draft_user_idx"
-            ),
+            index=models.Index(fields=["entrydraft", "user"], name="gl_ed_approvers_draft_user_idx"),
         ),
         migrations.AddIndex(
             model_name="entrydraftrequestedreviewer",
-            index=models.Index(
-                fields=["entrydraft", "user"], name="gl_ed_reviewers_draft_user_idx"
-            ),
+            index=models.Index(fields=["entrydraft", "user"], name="gl_ed_reviewers_draft_user_idx"),
         ),
     ]

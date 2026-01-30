@@ -32,13 +32,8 @@ class EntryDraftApprovalMixin:
 
         # Cannot approve if already approved this draft
         # Use prefetched approvers if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "approvers" in obj._prefetched_objects_cache
-        ):
-            user_has_approved = any(
-                approver.id == request.user.id for approver in obj.approvers.all()
-            )
+        if hasattr(obj, "_prefetched_objects_cache") and "approvers" in obj._prefetched_objects_cache:
+            user_has_approved = any(approver.id == request.user.id for approver in obj.approvers.all())
         else:
             user_has_approved = obj.approvers.filter(pk=request.user.pk).exists()
         if user_has_approved:
@@ -57,13 +52,8 @@ class EntryDraftApprovalMixin:
             return "own_draft"
 
         # Use prefetched approvers if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "approvers" in obj._prefetched_objects_cache
-        ):
-            user_has_approved = any(
-                approver.id == request.user.id for approver in obj.approvers.all()
-            )
+        if hasattr(obj, "_prefetched_objects_cache") and "approvers" in obj._prefetched_objects_cache:
+            user_has_approved = any(approver.id == request.user.id for approver in obj.approvers.all())
         else:
             user_has_approved = obj.approvers.filter(pk=request.user.pk).exists()
 
@@ -85,13 +75,8 @@ class EntryDraftApprovalMixin:
         if not request or not request.user.is_authenticated:
             return False
         # Use prefetched approvers if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "approvers" in obj._prefetched_objects_cache
-        ):
-            return any(
-                approver.id == request.user.id for approver in obj.approvers.all()
-            )
+        if hasattr(obj, "_prefetched_objects_cache") and "approvers" in obj._prefetched_objects_cache:
+            return any(approver.id == request.user.id for approver in obj.approvers.all())
         return obj.approvers.filter(pk=request.user.pk).exists()
 
     def get_remaining_approvals(self, obj):
@@ -155,16 +140,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_perspective_curator_for(self, obj):
         """Return list of perspective IDs the user is a curator for"""
         # Use prefetched curatorship if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "curatorship" in obj._prefetched_objects_cache
-        ):
+        if hasattr(obj, "_prefetched_objects_cache") and "curatorship" in obj._prefetched_objects_cache:
             return [curator.perspective_id for curator in obj.curatorship.all()]
-        return list(
-            PerspectiveCurator.objects.filter(user=obj).values_list(
-                "perspective_id", flat=True
-            )
-        )
+        return list(PerspectiveCurator.objects.filter(user=obj).values_list("perspective_id", flat=True))
 
     def get_is_test_user(self, obj):
         """Get is_test_user from profile"""
@@ -280,10 +258,7 @@ class EntryDraftListSerializer(EntryDraftApprovalMixin, serializers.ModelSeriali
     def get_comment_count(self, obj):
         """Get the count of comments on this draft"""
         # Use prefetched comments if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "comments" in obj._prefetched_objects_cache
-        ):
+        if hasattr(obj, "_prefetched_objects_cache") and "comments" in obj._prefetched_objects_cache:
             return len(obj.comments.all())
         return obj.comments.count()
 
@@ -481,10 +456,7 @@ class EntryDraftReviewSerializer(EntryDraftApprovalMixin, serializers.ModelSeria
     def get_comment_count(self, obj):
         """Get the count of comments on this draft"""
         # Use prefetched comments if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "comments" in obj._prefetched_objects_cache
-        ):
+        if hasattr(obj, "_prefetched_objects_cache") and "comments" in obj._prefetched_objects_cache:
             return len(obj.comments.all())
         return obj.comments.count()
 
@@ -628,10 +600,7 @@ class CommentListSerializer(serializers.ModelSerializer):
         if hasattr(obj, "reaction_count_annotated"):
             return obj.reaction_count_annotated
         # Fall back to prefetched reactions if available
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "reactions" in obj._prefetched_objects_cache
-        ):
+        if hasattr(obj, "_prefetched_objects_cache") and "reactions" in obj._prefetched_objects_cache:
             return len(obj.reactions.all())
         # Last resort: query the database
         return obj.reactions.count()
@@ -642,23 +611,15 @@ class CommentListSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return False
         # Use prefetched reactions if available (filter in Python to avoid query)
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "reactions" in obj._prefetched_objects_cache
-        ):
-            return any(
-                reaction.user_id == request.user.id for reaction in obj.reactions.all()
-            )
+        if hasattr(obj, "_prefetched_objects_cache") and "reactions" in obj._prefetched_objects_cache:
+            return any(reaction.user_id == request.user.id for reaction in obj.reactions.all())
         # Fall back to database query if not prefetched
         return obj.reactions.filter(user=request.user).exists()
 
     def get_replies(self, obj):
         """Recursively serialize replies"""
         # Use prefetched replies if available to avoid query
-        if (
-            hasattr(obj, "_prefetched_objects_cache")
-            and "replies" in obj._prefetched_objects_cache
-        ):
+        if hasattr(obj, "_prefetched_objects_cache") and "replies" in obj._prefetched_objects_cache:
             replies = obj.replies.all()
         else:
             replies = obj.replies.all()
@@ -749,8 +710,9 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         seen = set()
         unique_users = []
         for user in mentioned_users:
-            if user.id not in seen:
-                seen.add(user.id)
+            user_id = getattr(user, "id", None)
+            if user_id is not None and user_id not in seen:
+                seen.add(user_id)
                 unique_users.append(user)
 
         return unique_users
@@ -761,9 +723,7 @@ class PerspectiveCuratorSerializer(serializers.ModelSerializer):
     """PerspectiveCurator serializer"""
 
     user = UserSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), source="user", write_only=True
-    )
+    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="user", write_only=True)
     perspective = PerspectiveSerializer(read_only=True)
     perspective_id = serializers.PrimaryKeyRelatedField(
         queryset=Perspective.objects.all(), source="perspective", write_only=True

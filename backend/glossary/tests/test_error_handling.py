@@ -40,9 +40,7 @@ class TestErrorHandling:
         url = reverse("entry-lookup-or-create-entry")
 
         # Send malformed JSON
-        response = authenticated_client.post(
-            url, data="invalid json", content_type="application/json"
-        )
+        response = authenticated_client.post(url, data="invalid json", content_type="application/json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -170,9 +168,7 @@ class TestErrorHandling:
         }
 
         response = authenticated_client.post(url, data)
-        assert (
-            response.status_code == status.HTTP_400_BAD_REQUEST
-        )  # Comment creation fails with non-existent draft
+        assert response.status_code == status.HTTP_400_BAD_REQUEST  # Comment creation fails with non-existent draft
 
     def test_pagination_edge_cases(self, authenticated_client):
         """Test edge cases in pagination"""
@@ -181,9 +177,7 @@ class TestErrorHandling:
 
         # Test negative page
         response = authenticated_client.get(url, {"page": "-1"})
-        assert (
-            response.status_code == status.HTTP_404_NOT_FOUND
-        )  # Django returns 404 for invalid pages
+        assert response.status_code == status.HTTP_404_NOT_FOUND  # Django returns 404 for invalid pages
 
         # Test very large page
         response = authenticated_client.get(url, {"page": "999999"})

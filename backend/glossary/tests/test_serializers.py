@@ -99,12 +99,7 @@ class TestEntrySerializers:
             .order_by("-published_at"),
             to_attr="published_drafts",
         )
-        entry = (
-            type(entry)
-            .objects.filter(pk=entry.pk)
-            .prefetch_related(latest_published_draft)
-            .first()
-        )
+        entry = type(entry).objects.filter(pk=entry.pk).prefetch_related(latest_published_draft).first()
 
         serializer = EntryListSerializer(entry)
         data = serializer.data
@@ -237,9 +232,7 @@ class TestEntryDraftSerializers:
         request2.user = approver1
         serializer2 = EntryDraftListSerializer(draft, context={"request": request2})
         data2 = serializer2.data
-        assert (
-            data2["approval_status_for_user"] == "can_approve"
-        )  # Still needs more approvals
+        assert data2["approval_status_for_user"] == "can_approve"  # Still needs more approvals
 
         # Test 3: Draft gets fully approved
         draft.approvers.add(approver2)
@@ -247,18 +240,14 @@ class TestEntryDraftSerializers:
         request3.user = approver1
         serializer3 = EntryDraftListSerializer(draft, context={"request": request3})
         data3 = serializer3.data
-        assert (
-            data3["approval_status_for_user"] == "already_approved_by_others"
-        )  # Now fully approved
+        assert data3["approval_status_for_user"] == "already_approved_by_others"  # Now fully approved
 
         # Test 4: Different user who hasn't approved
         request4 = factory.get("/")
         request4.user = UserFactory()
         serializer4 = EntryDraftListSerializer(draft, context={"request": request4})
         data4 = serializer4.data
-        assert (
-            data4["approval_status_for_user"] == "already_approved_by_others"
-        )  # Draft is fully approved
+        assert data4["approval_status_for_user"] == "already_approved_by_others"  # Draft is fully approved
 
     def test_replaces_draft_field_in_serializer(self):
         """Test that replaces_draft field is included in serializers"""
@@ -337,8 +326,6 @@ class TestEntryDraftSerializers:
         from glossary.serializers import EntryDraftUpdateSerializer
 
         version = EntryDraftFactory()
-        serializer = EntryDraftUpdateSerializer(
-            instance=version, data={"content": "<p><br></p>"}, partial=True
-        )
+        serializer = EntryDraftUpdateSerializer(instance=version, data={"content": "<p><br></p>"}, partial=True)
         assert not serializer.is_valid()
         assert "content" in serializer.errors

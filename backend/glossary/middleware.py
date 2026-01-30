@@ -57,13 +57,9 @@ class TokenToSessionMiddleware:
                             f"TokenToSessionMiddleware: Auto-authenticated user {user.username} for admin access"
                         )
                 except Token.DoesNotExist:
-                    logger.debug(
-                        "TokenToSessionMiddleware: Invalid token attempted for admin access"
-                    )
+                    logger.debug("TokenToSessionMiddleware: Invalid token attempted for admin access")
                 except Exception as e:
-                    logger.warning(
-                        f"TokenToSessionMiddleware: Error during token authentication: {e}"
-                    )
+                    logger.warning(f"TokenToSessionMiddleware: Error during token authentication: {e}")
 
         response = self.get_response(request)
         return response

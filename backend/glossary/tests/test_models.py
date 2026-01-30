@@ -202,9 +202,7 @@ class TestEntryDraftModel:
         version1 = EntryDraftFactory(entry=entry, author=author)
 
         # Should be able to create second unapproved version (linear draft history)
-        version2 = EntryDraftFactory(
-            entry=entry, author=author, replaces_draft=version1
-        )
+        version2 = EntryDraftFactory(entry=entry, author=author, replaces_draft=version1)
 
         # Both versions should exist
         assert EntryDraft.objects.filter(entry=entry, author=author).count() == 2
@@ -388,22 +386,14 @@ class TestEntryModelEdgeCases:
         user = UserFactory()
 
         # Create published drafts
-        published_draft1 = EntryDraftFactory(
-            entry=entry, author=user, is_published=True, content="First published"
-        )
-        published_draft2 = EntryDraftFactory(
-            entry=entry, author=user, is_published=True, content="Second published"
-        )
+        published_draft1 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="First published")
+        published_draft2 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="Second published")
 
         # Soft delete the latest published draft
         published_draft2.delete()
 
         # Should return the first published draft as latest (using direct query since no prefetch in tests)
-        latest_published = (
-            entry.drafts.filter(is_published=True)
-            .order_by("-published_at", "-created_at")
-            .first()
-        )
+        latest_published = entry.drafts.filter(is_published=True).order_by("-published_at", "-created_at").first()
         assert latest_published == published_draft1
         assert latest_published.content == "First published"
 
@@ -413,19 +403,11 @@ class TestEntryModelEdgeCases:
         user = UserFactory()
 
         # Create multiple published drafts (shouldn't normally happen but test edge case)
-        EntryDraftFactory(
-            entry=entry, author=user, is_published=True, content="First published"
-        )
-        published_draft2 = EntryDraftFactory(
-            entry=entry, author=user, is_published=True, content="Second published"
-        )
+        EntryDraftFactory(entry=entry, author=user, is_published=True, content="First published")
+        published_draft2 = EntryDraftFactory(entry=entry, author=user, is_published=True, content="Second published")
 
         # Should return the most recent published draft (using direct query since no prefetch in tests)
-        latest_published = (
-            entry.drafts.filter(is_published=True)
-            .order_by("-published_at", "-created_at")
-            .first()
-        )
+        latest_published = entry.drafts.filter(is_published=True).order_by("-published_at", "-created_at").first()
         assert latest_published == published_draft2
         assert latest_published.content == "Second published"
 
@@ -435,12 +417,7 @@ class TestEntryModelEdgeCases:
 
         # Should return None when no drafts exist (using direct query since no prefetch in tests)
         assert entry.get_latest_draft() is None
-        assert (
-            entry.drafts.filter(is_published=True)
-            .order_by("-published_at", "-created_at")
-            .first()
-            is None
-        )
+        assert entry.drafts.filter(is_published=True).order_by("-published_at", "-created_at").first() is None
 
     def test_entry_with_only_deleted_drafts(self):
         """Test entry with only soft-deleted drafts"""
@@ -453,9 +430,4 @@ class TestEntryModelEdgeCases:
 
         # Should return None since all drafts are deleted (using direct query since no prefetch in tests)
         assert entry.get_latest_draft() is None
-        assert (
-            entry.drafts.filter(is_published=True)
-            .order_by("-published_at", "-created_at")
-            .first()
-            is None
-        )
+        assert entry.drafts.filter(is_published=True).order_by("-published_at", "-created_at").first() is None

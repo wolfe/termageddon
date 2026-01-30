@@ -35,9 +35,7 @@ class Command(BaseCommand):
     def select_approvers(self, perspective, author, all_users, num_approvers):
         """Select approvers with preference for curators and domain-aligned users"""
         # Get curators for this perspective
-        curators = PerspectiveCurator.objects.filter(
-            perspective=perspective
-        ).values_list("user", flat=True)
+        curators = PerspectiveCurator.objects.filter(perspective=perspective).values_list("user", flat=True)
         curator_users = [u for u in all_users if u.id in curators and u != author]
 
         # Get non-curator users (excluding author)
@@ -58,22 +56,16 @@ class Command(BaseCommand):
 
                 # Fill remaining slots from other users
                 if remaining_slots > 0 and other_users:
-                    additional_approvers = random.sample(
-                        other_users, min(remaining_slots, len(other_users))
-                    )
+                    additional_approvers = random.sample(other_users, min(remaining_slots, len(other_users)))
                     selected_approvers.extend(additional_approvers)
         else:
             # Select randomly from all available users
             available_users = [u for u in all_users if u != author]
-            selected_approvers = random.sample(
-                available_users, min(num_approvers, len(available_users))
-            )
+            selected_approvers = random.sample(available_users, min(num_approvers, len(available_users)))
 
         return selected_approvers
 
-    def create_draft_revision_chain(  # noqa: C901
-        self, entry, author, admin, base_timestamp, users, perspective
-    ):
+    def create_draft_revision_chain(self, entry, author, admin, base_timestamp, users, perspective):  # noqa: C901
         """Create a chain of 2-3 draft revisions for an entry"""
         num_revisions = random.randint(2, 3)
         drafts = []
@@ -97,11 +89,7 @@ class Command(BaseCommand):
 
             draft = EntryDraft.objects.create(
                 entry=entry,
-                content=(
-                    content_variations[i]
-                    if i < len(content_variations)
-                    else content_variations[-1]
-                ),
+                content=(content_variations[i] if i < len(content_variations) else content_variations[-1]),
                 author=author,
                 created_by=admin,
             )
@@ -125,32 +113,22 @@ class Command(BaseCommand):
         if random.random() < 0.6:  # 60% chance of having a published draft in the chain
             # Published draft should be in the first half of the chain
             # This ensures there are unpublished drafts after it
-            max_published_index = max(
-                0, len(drafts) - 2
-            )  # At least one draft after published
+            max_published_index = max(0, len(drafts) - 2)  # At least one draft after published
             published_draft_index = random.randint(0, max_published_index)
 
         # If we have a published draft, update timestamps so published is older
         # and unpublished drafts after it are newer
         if published_draft_index is not None:
             # Published draft gets older timestamp (1-5 months ago)
-            published_timestamp = base_timestamp - timedelta(
-                days=random.randint(30, 150)
-            )
+            published_timestamp = base_timestamp - timedelta(days=random.randint(30, 150))
             # Update published draft timestamp
-            EntryDraft.objects.filter(pk=drafts[published_draft_index].pk).update(
-                created_at=published_timestamp
-            )
+            EntryDraft.objects.filter(pk=drafts[published_draft_index].pk).update(created_at=published_timestamp)
             drafts[published_draft_index].refresh_from_db()
 
             # Update all drafts before published to be older than published
             for i in range(published_draft_index):
-                older_timestamp = published_timestamp - timedelta(
-                    days=random.randint(1, 30)
-                )
-                EntryDraft.objects.filter(pk=drafts[i].pk).update(
-                    created_at=older_timestamp
-                )
+                older_timestamp = published_timestamp - timedelta(days=random.randint(1, 30))
+                EntryDraft.objects.filter(pk=drafts[i].pk).update(created_at=older_timestamp)
                 drafts[i].refresh_from_db()
 
             # Ensure all drafts after published are newer (they already are, but verify)
@@ -158,17 +136,10 @@ class Command(BaseCommand):
             # However, we need to ensure that any draft that replaces another has a newer timestamp
             # This is especially important after timestamp adjustments
             for i, draft in enumerate(drafts):
-                if (
-                    draft.replaces_draft
-                    and draft.created_at <= draft.replaces_draft.created_at
-                ):
+                if draft.replaces_draft and draft.created_at <= draft.replaces_draft.created_at:
                     # Ensure replacing draft is at least 1 second newer
-                    new_timestamp = draft.replaces_draft.created_at + timedelta(
-                        seconds=1
-                    )
-                    EntryDraft.objects.filter(pk=draft.pk).update(
-                        created_at=new_timestamp
-                    )
+                    new_timestamp = draft.replaces_draft.created_at + timedelta(seconds=1)
+                    EntryDraft.objects.filter(pk=draft.pk).update(created_at=new_timestamp)
                     draft.refresh_from_db()
 
         for i, draft in enumerate(drafts):
@@ -190,9 +161,7 @@ class Command(BaseCommand):
             all_users = list(users.values())
             if approval_state in ["one_approval", "two_approvals", "published"]:
                 num_approvers = 1 if approval_state == "one_approval" else 2
-                approvers = self.select_approvers(
-                    perspective, author, all_users, num_approvers
-                )
+                approvers = self.select_approvers(perspective, author, all_users, num_approvers)
                 draft.approvers.add(*approvers)
 
             # Mark as published if needed
@@ -203,9 +172,7 @@ class Command(BaseCommand):
 
                 # Add endorsement chance
                 if random.random() < 0.3:
-                    curators = PerspectiveCurator.objects.filter(
-                        perspective=perspective
-                    )
+                    curators = PerspectiveCurator.objects.filter(perspective=perspective)
                     if curators.exists():
                         endorser = random.choice(curators).user
                         if endorser != author:
@@ -220,9 +187,7 @@ class Command(BaseCommand):
         validation_errors = []
 
         # Check published drafts have published_at timestamp
-        published_without_timestamp = EntryDraft.objects.filter(
-            is_published=True, published_at__isnull=True
-        ).count()
+        published_without_timestamp = EntryDraft.objects.filter(is_published=True, published_at__isnull=True).count()
         if published_without_timestamp > 0:
             validation_errors.append(
                 f"Found {published_without_timestamp} published drafts without published_at timestamp"
@@ -236,30 +201,22 @@ class Command(BaseCommand):
             .count()
         )
         if published_without_approvals > 0:
-            validation_errors.append(
-                f"Found {published_without_approvals} published drafts with less than 2 approvals"
-            )
+            validation_errors.append(f"Found {published_without_approvals} published drafts with less than 2 approvals")
 
         # Check authors don't approve their own drafts
         self_approved = EntryDraft.objects.filter(approvers=models.F("author")).count()
         if self_approved > 0:
-            validation_errors.append(
-                f"Found {self_approved} drafts where authors approved themselves"
-            )
+            validation_errors.append(f"Found {self_approved} drafts where authors approved themselves")
 
         # Check endorsed drafts have valid curator for that perspective
         # This is a complex check - for now, we'll skip it to avoid ORM complexity
         invalid_endorsements = 0
         if invalid_endorsements > 0:
-            validation_errors.append(
-                f"Found {invalid_endorsements} drafts endorsed by non-curators"
-            )
+            validation_errors.append(f"Found {invalid_endorsements} drafts endorsed by non-curators")
 
         # Check created_at consistency in revision chains
         inconsistent_chains = 0
-        for draft in EntryDraft.objects.filter(
-            replaces_draft__isnull=False
-        ).select_related("replaces_draft"):
+        for draft in EntryDraft.objects.filter(replaces_draft__isnull=False).select_related("replaces_draft"):
             if draft.created_at <= draft.replaces_draft.created_at:
                 inconsistent_chains += 1
                 # Fix the inconsistency by ensuring the replacing draft is newer
@@ -279,23 +236,15 @@ class Command(BaseCommand):
 
         # Basic counts
         metrics["total_drafts"] = EntryDraft.objects.count()
-        metrics["published_drafts"] = EntryDraft.objects.filter(
-            is_published=True
-        ).count()
-        metrics["endorsed_drafts"] = EntryDraft.objects.filter(
-            endorsed_by__isnull=False
-        ).count()
-        metrics["revision_chains"] = EntryDraft.objects.filter(
-            replaces_draft__isnull=False
-        ).count()
+        metrics["published_drafts"] = EntryDraft.objects.filter(is_published=True).count()
+        metrics["endorsed_drafts"] = EntryDraft.objects.filter(endorsed_by__isnull=False).count()
+        metrics["revision_chains"] = EntryDraft.objects.filter(replaces_draft__isnull=False).count()
 
         # Approval distribution
         approval_counts = {}
         for i in range(4):  # 0-3 approvals
             count = (
-                EntryDraft.objects.annotate(approval_count=models.Count("approvers"))
-                .filter(approval_count=i)
-                .count()
+                EntryDraft.objects.annotate(approval_count=models.Count("approvers")).filter(approval_count=i).count()
             )
             approval_counts[f"{i}_approvals"] = count
         metrics["approval_distribution"] = approval_counts
@@ -303,13 +252,9 @@ class Command(BaseCommand):
         # Curator involvement - simplified check
         # Count drafts where approvers are also perspective curators
         curator_approvals = 0
-        for draft in EntryDraft.objects.prefetch_related(
-            "approvers", "entry__perspective"
-        ):
+        for draft in EntryDraft.objects.prefetch_related("approvers", "entry__perspective"):
             for approver in draft.approvers.all():
-                if PerspectiveCurator.objects.filter(
-                    user=approver, perspective=draft.entry.perspective
-                ).exists():
+                if PerspectiveCurator.objects.filter(user=approver, perspective=draft.entry.perspective).exists():
                     curator_approvals += 1
                     break  # Count each draft only once
         metrics["curator_involvement"] = curator_approvals
@@ -318,9 +263,7 @@ class Command(BaseCommand):
         oldest_draft = EntryDraft.objects.order_by("created_at").first()
         newest_draft = EntryDraft.objects.order_by("-created_at").first()
         if oldest_draft and newest_draft:
-            metrics["timestamp_span_days"] = (
-                newest_draft.created_at - oldest_draft.created_at
-            ).days
+            metrics["timestamp_span_days"] = (newest_draft.created_at - oldest_draft.created_at).days
 
         # Entry-level validation metrics
         entries_with_only_unpublished = 0
@@ -382,13 +325,9 @@ class Command(BaseCommand):
             admin.is_superuser = True
             admin.save()
             if created:
-                self.stdout.write(
-                    self.style.SUCCESS("Created superuser: admin / admin")
-                )
+                self.stdout.write(self.style.SUCCESS("Created superuser: admin / admin"))
             else:
-                self.stdout.write(
-                    self.style.SUCCESS("Reset password for superuser: admin / admin")
-                )
+                self.stdout.write(self.style.SUCCESS("Reset password for superuser: admin / admin"))
 
             # Read CSV to extract unique authors
             with open(csv_file, "r", encoding="utf-8") as f:
@@ -451,30 +390,14 @@ class Command(BaseCommand):
 
                 if created:
                     if is_test_user:
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Created test user: {username} / ImABird"
-                            )
-                        )
+                        self.stdout.write(self.style.SUCCESS(f"Created test user: {username} / ImABird"))
                     else:
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Created regular user: {username} / ImABird"
-                            )
-                        )
+                        self.stdout.write(self.style.SUCCESS(f"Created regular user: {username} / ImABird"))
                 else:
                     if is_test_user:
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Reset password for test user: {username} / ImABird"
-                            )
-                        )
+                        self.stdout.write(self.style.SUCCESS(f"Reset password for test user: {username} / ImABird"))
                     else:
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Reset password for regular user: {username} / ImABird"
-                            )
-                        )
+                        self.stdout.write(self.style.SUCCESS(f"Reset password for regular user: {username} / ImABird"))
                 users[author_name] = user
 
             # Create perspectives from CSV
@@ -488,9 +411,7 @@ class Command(BaseCommand):
             }
 
             for perspective_name in unique_perspectives:
-                description = perspective_descriptions.get(
-                    perspective_name, f"Terms related to {perspective_name}"
-                )
+                description = perspective_descriptions.get(perspective_name, f"Terms related to {perspective_name}")
                 perspective, created = Perspective.objects.get_or_create(
                     name=perspective_name,
                     defaults={
@@ -499,9 +420,7 @@ class Command(BaseCommand):
                     },
                 )
                 if created:
-                    self.stdout.write(
-                        self.style.SUCCESS(f"Created perspective: {perspective_name}")
-                    )
+                    self.stdout.write(self.style.SUCCESS(f"Created perspective: {perspective_name}"))
                 perspectives[perspective_name] = perspective
 
             # Assign specific users as perspective curators for realistic demo
@@ -536,9 +455,7 @@ class Command(BaseCommand):
                                 },
                             )
                             self.stdout.write(
-                                self.style.SUCCESS(
-                                    f"Assigned {author_name} as curator for {perspective_name}"
-                                )
+                                self.style.SUCCESS(f"Assigned {author_name} as curator for {perspective_name}")
                             )
 
             # Load entries from CSV
@@ -547,9 +464,7 @@ class Command(BaseCommand):
             revision_chains_created = 0
 
             # Track drafts by entry for linking multiple drafts
-            entry_drafts = (
-                {}
-            )  # (term_text, perspective_name) -> list of drafts in order
+            entry_drafts = {}  # (term_text, perspective_name) -> list of drafts in order
 
             # Track all entries for cross-reference resolution
             all_entries = {}  # (term_text, perspective_name) -> Entry
@@ -559,9 +474,7 @@ class Command(BaseCommand):
                 author = users[row["author"]]
 
                 # Get or create term
-                term, _ = Term.objects.get_or_create(
-                    text=row["term"], defaults={"created_by": admin}
-                )
+                term, _ = Term.objects.get_or_create(text=row["term"], defaults={"created_by": admin})
 
                 # Get or create entry
                 entry, entry_created = Entry.objects.get_or_create(
@@ -593,23 +506,16 @@ class Command(BaseCommand):
 
                 # For real data mode: detect if this is a second draft (EES terms have 2 rows)
                 # If we already have a draft for this entry from this author, this is the second draft
-                is_second_draft = (
-                    len(previous_drafts) > 0 and previous_drafts[-1].author == author
-                )
+                is_second_draft = len(previous_drafts) > 0 and previous_drafts[-1].author == author
 
                 # Decide whether to create revision chain (~15% chance for test data, not for real data)
                 create_revision_chain = (
-                    not is_real_data_mode
-                    and random.random() < 0.15
-                    and not existing_draft
-                    and not is_second_draft
+                    not is_real_data_mode and random.random() < 0.15 and not existing_draft and not is_second_draft
                 )
 
                 if create_revision_chain:
                     # Create revision chain (test data mode only)
-                    drafts = self.create_draft_revision_chain(
-                        entry, author, admin, base_timestamp, users, perspective
-                    )
+                    drafts = self.create_draft_revision_chain(entry, author, admin, base_timestamp, users, perspective)
                     drafts_created += len(drafts)
                     revision_chains_created += 1
                     entry_drafts[entry_key] = entry_drafts.get(entry_key, []) + drafts
@@ -679,32 +585,22 @@ class Command(BaseCommand):
                     first_draft_timestamp = first_draft.created_at
                     # Generate timestamp 1-4 weeks after the first draft
                     days_after_first = random.randint(7, 28)
-                    realistic_timestamp = first_draft_timestamp + timedelta(
-                        days=days_after_first
-                    )
+                    realistic_timestamp = first_draft_timestamp + timedelta(days=days_after_first)
                     # Cap to ensure it's not in the future
                     if realistic_timestamp > max_timestamp:
                         realistic_timestamp = max_timestamp
-                elif (
-                    is_real_data_mode
-                    and not is_second_draft
-                    and row["perspective"] == "EES"
-                ):
+                elif is_real_data_mode and not is_second_draft and row["perspective"] == "EES":
                     # First draft for EES terms: make it older (3-4 months ago)
                     days_offset = random.randint(90, 120)
                     realistic_timestamp = now - timedelta(days=days_offset)
                 else:
-                    realistic_timestamp = self.generate_realistic_timestamp(
-                        base_timestamp, will_be_published
-                    )
+                    realistic_timestamp = self.generate_realistic_timestamp(base_timestamp, will_be_published)
                     # Cap to ensure it's not in the future
                     if realistic_timestamp > max_timestamp:
                         realistic_timestamp = max_timestamp
 
                 # Update draft with created_at (bypass auto_now_add by using update)
-                EntryDraft.objects.filter(pk=draft.pk).update(
-                    created_at=realistic_timestamp
-                )
+                EntryDraft.objects.filter(pk=draft.pk).update(created_at=realistic_timestamp)
                 draft.refresh_from_db()
 
                 if is_real_data_mode:
@@ -715,20 +611,13 @@ class Command(BaseCommand):
                         draft.save()
                 else:
                     # Test data mode: use approval workflow
-                    if (
-                        approval_state == "one_approval"
-                        and len(potential_approvers) >= 1
-                    ):
-                        approvers = self.select_approvers(
-                            perspective, author, all_users, 1
-                        )
+                    if approval_state == "one_approval" and len(potential_approvers) >= 1:
+                        approvers = self.select_approvers(perspective, author, all_users, 1)
                         draft.approvers.add(*approvers)
                     elif approval_state in ["two_approvals", "published"]:
                         # Need at least 2 approvers for published drafts
                         if len(potential_approvers) >= 2:
-                            approvers = self.select_approvers(
-                                perspective, author, all_users, 2
-                            )
+                            approvers = self.select_approvers(perspective, author, all_users, 2)
                             draft.approvers.add(*approvers)
 
                         # If published, mark as published and set published_at
@@ -739,9 +628,7 @@ class Command(BaseCommand):
 
                         # Add endorsements: ~30% of published drafts get endorsed by a curator
                         if random.random() < 0.3:
-                            curators = PerspectiveCurator.objects.filter(
-                                perspective=perspective
-                            )
+                            curators = PerspectiveCurator.objects.filter(perspective=perspective)
                             if curators.exists():
                                 endorser = random.choice(curators).user
                                 if endorser != author:  # Don't self-endorse
@@ -791,9 +678,7 @@ class Command(BaseCommand):
                         draft.save()
 
             if cross_ref_count > 0:
-                self.stdout.write(
-                    self.style.SUCCESS(f"  Resolved {cross_ref_count} cross-references")
-                )
+                self.stdout.write(self.style.SUCCESS(f"  Resolved {cross_ref_count} cross-references"))
 
             # Validate data consistency
             validation_errors = self.validate_data_consistency()
@@ -802,86 +687,44 @@ class Command(BaseCommand):
                 for error in validation_errors:
                     self.stdout.write(self.style.ERROR(f"  - {error}"))
             else:
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        "\nData validation passed - all checks successful!"
-                    )
-                )
+                self.stdout.write(self.style.SUCCESS("\nData validation passed - all checks successful!"))
 
             # Generate and display data quality metrics
             metrics = self.generate_data_quality_metrics()
 
             self.stdout.write(self.style.SUCCESS("\nData loading complete!"))
             self.stdout.write(self.style.SUCCESS(f"Created {len(users)} users"))
-            self.stdout.write(
-                self.style.SUCCESS(f"Created {len(perspectives)} perspectives")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Created {len(perspectives)} perspectives"))
             self.stdout.write(self.style.SUCCESS(f"Created {entries_created} entries"))
-            self.stdout.write(
-                self.style.SUCCESS(f"Created {drafts_created} entry drafts")
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f"Created {revision_chains_created} revision chains")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Created {drafts_created} entry drafts"))
+            self.stdout.write(self.style.SUCCESS(f"Created {revision_chains_created} revision chains"))
 
             # Display data quality metrics
             self.stdout.write(self.style.SUCCESS("\nData Quality Metrics:"))
-            self.stdout.write(
-                self.style.SUCCESS(f"  Total drafts: {metrics['total_drafts']}")
-            )
+            self.stdout.write(self.style.SUCCESS(f"  Total drafts: {metrics['total_drafts']}"))
             published_pct = (
-                metrics["published_drafts"] / metrics["total_drafts"] * 100
-                if metrics["total_drafts"] > 0
-                else 0
+                metrics["published_drafts"] / metrics["total_drafts"] * 100 if metrics["total_drafts"] > 0 else 0
             )
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"  Published drafts: {metrics['published_drafts']} "
-                    f"({published_pct:.1f}%)"
-                )
+                self.style.SUCCESS(f"  Published drafts: {metrics['published_drafts']} " f"({published_pct:.1f}%)")
             )
             endorsed_pct = (
-                metrics["endorsed_drafts"] / metrics["total_drafts"] * 100
-                if metrics["total_drafts"] > 0
-                else 0
+                metrics["endorsed_drafts"] / metrics["total_drafts"] * 100 if metrics["total_drafts"] > 0 else 0
             )
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"  Endorsed drafts: {metrics['endorsed_drafts']} "
-                    f"({endorsed_pct:.1f}%)"
-                )
+                self.style.SUCCESS(f"  Endorsed drafts: {metrics['endorsed_drafts']} " f"({endorsed_pct:.1f}%)")
             )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"  Drafts in revision chains: {metrics['revision_chains']}"
-                )
-            )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"  Curator involvement: {metrics['curator_involvement']} drafts"
-                )
-            )
+            self.stdout.write(self.style.SUCCESS(f"  Drafts in revision chains: {metrics['revision_chains']}"))
+            self.stdout.write(self.style.SUCCESS(f"  Curator involvement: {metrics['curator_involvement']} drafts"))
 
             if "timestamp_span_days" in metrics:
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"  Timestamp span: {metrics['timestamp_span_days']} days"
-                    )
-                )
+                self.stdout.write(self.style.SUCCESS(f"  Timestamp span: {metrics['timestamp_span_days']} days"))
 
             # Approval distribution
             self.stdout.write(self.style.SUCCESS("\nApproval Distribution:"))
             for key, count in metrics["approval_distribution"].items():
-                percentage = (
-                    count / metrics["total_drafts"] * 100
-                    if metrics["total_drafts"] > 0
-                    else 0
-                )
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"  {key.replace('_', ' ').title()}: {count} ({percentage:.1f}%)"
-                    )
-                )
+                percentage = count / metrics["total_drafts"] * 100 if metrics["total_drafts"] > 0 else 0
+                self.stdout.write(self.style.SUCCESS(f"  {key.replace('_', ' ').title()}: {count} ({percentage:.1f}%)"))
 
             # Entry-level validation metrics
             self.stdout.write(self.style.SUCCESS("\nEntry State Distribution:"))
@@ -908,8 +751,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("\nLogin credentials:"))
             self.stdout.write(self.style.SUCCESS("  Superuser: admin / admin"))
             self.stdout.write(
-                self.style.SUCCESS(
-                    "  Test users: <username> / ImABird "
-                    "(most users, all but the last one)"
-                )
+                self.style.SUCCESS("  Test users: <username> / ImABird " "(most users, all but the last one)")
             )

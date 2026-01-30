@@ -33,9 +33,7 @@ class AllObjectsManager(models.Manager):
 class AuditedModel(models.Model):
     """Abstract base model with audit fields and soft delete functionality"""
 
-    created_at: models.DateTimeField = models.DateTimeField(
-        auto_now_add=True, db_index=True
-    )
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
     created_by: models.ForeignKey[User, User] = models.ForeignKey(
         User,
@@ -73,9 +71,7 @@ class Perspective(AuditedModel):
     """Perspective or category for terms (e.g., 'Finance', 'Technology')"""
 
     name: models.CharField = models.CharField(max_length=100)
-    name_normalized: models.CharField = models.CharField(
-        max_length=100, editable=False, db_index=True, default=""
-    )
+    name_normalized: models.CharField = models.CharField(max_length=100, editable=False, db_index=True, default="")
     description: models.TextField = models.TextField(blank=True)
 
     class Meta:
@@ -87,15 +83,9 @@ class Perspective(AuditedModel):
     def clean(self):
         """Validate uniqueness among non-deleted records"""
         super().clean()
-        existing = (
-            Perspective.all_objects.filter(name=self.name, is_deleted=False)
-            .exclude(pk=self.pk)
-            .exists()
-        )
+        existing = Perspective.all_objects.filter(name=self.name, is_deleted=False).exclude(pk=self.pk).exists()
         if existing:
-            raise ValidationError(
-                {"name": "A perspective with this name already exists."}
-            )
+            raise ValidationError({"name": "A perspective with this name already exists."})
 
     def save(self, *args, **kwargs):
         # Auto-populate name_normalized
@@ -108,9 +98,7 @@ class Term(AuditedModel):
     """A term in the glossary - globally unique"""
 
     text: models.CharField = models.CharField(max_length=255)
-    text_normalized: models.CharField = models.CharField(
-        max_length=255, editable=False, db_index=True
-    )
+    text_normalized: models.CharField = models.CharField(max_length=255, editable=False, db_index=True)
     is_official: models.BooleanField = models.BooleanField(
         default=False,
         help_text="Indicates term has official status",
@@ -126,11 +114,7 @@ class Term(AuditedModel):
     def clean(self):
         """Validate uniqueness among non-deleted records"""
         super().clean()
-        existing = (
-            Term.all_objects.filter(text=self.text, is_deleted=False)
-            .exclude(pk=self.pk)
-            .exists()
-        )
+        existing = Term.all_objects.filter(text=self.text, is_deleted=False).exclude(pk=self.pk).exists()
         if existing:
             raise ValidationError({"text": "A term with this text already exists."})
 
@@ -144,9 +128,7 @@ class Term(AuditedModel):
 class Entry(AuditedModel):
     """An entry represents a (term, perspective) pair"""
 
-    term: models.ForeignKey[Term, Term] = models.ForeignKey(
-        Term, on_delete=models.CASCADE, related_name="entries"
-    )
+    term: models.ForeignKey[Term, Term] = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="entries")
     perspective: models.ForeignKey[Perspective, Perspective] = models.ForeignKey(
         Perspective, on_delete=models.CASCADE, related_name="entries"
     )
@@ -179,16 +161,12 @@ class Entry(AuditedModel):
         """Validate term+perspective uniqueness among non-deleted records"""
         super().clean()
         existing = (
-            Entry.all_objects.filter(
-                term=self.term, perspective=self.perspective, is_deleted=False
-            )
+            Entry.all_objects.filter(term=self.term, perspective=self.perspective, is_deleted=False)
             .exclude(pk=self.pk)
             .exists()
         )
         if existing:
-            raise ValidationError(
-                "An entry for this term and perspective combination already exists."
-            )
+            raise ValidationError("An entry for this term and perspective combination already exists.")
 
     def get_latest_draft(self):
         """Get the most recent draft by created_at (any state)"""
@@ -223,10 +201,8 @@ class Entry(AuditedModel):
 class EntryDraftApprover(models.Model):
     """Through model for EntryDraft.approvers ManyToMany relationship"""
 
-    entrydraft = models.ForeignKey(
-        "EntryDraft", on_delete=models.CASCADE, db_column="entrydraft_id"
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    entrydraft: models.ForeignKey = models.ForeignKey("EntryDraft", on_delete=models.CASCADE, db_column="entrydraft_id")
+    user: models.ForeignKey = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
 
     class Meta:
         db_table = "glossary_entry_draft_approvers"
@@ -241,10 +217,8 @@ class EntryDraftApprover(models.Model):
 class EntryDraftRequestedReviewer(models.Model):
     """Through model for EntryDraft.requested_reviewers ManyToMany relationship"""
 
-    entrydraft = models.ForeignKey(
-        "EntryDraft", on_delete=models.CASCADE, db_column="entrydraft_id"
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    entrydraft: models.ForeignKey = models.ForeignKey("EntryDraft", on_delete=models.CASCADE, db_column="entrydraft_id")
+    user: models.ForeignKey = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
 
     class Meta:
         db_table = "glossary_entry_draft_requested_reviewers"
@@ -259,12 +233,8 @@ class EntryDraftRequestedReviewer(models.Model):
 class EntryDraft(AuditedModel):
     """A draft of an entry's definition - requires approval to become active"""
 
-    entry: models.ForeignKey[Entry, Entry] = models.ForeignKey(
-        Entry, on_delete=models.CASCADE, related_name="drafts"
-    )
-    content: models.TextField = models.TextField(
-        help_text="Rich HTML content (sanitized on save)"
-    )
+    entry: models.ForeignKey[Entry, Entry] = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="drafts")
+    content: models.TextField = models.TextField(help_text="Rich HTML content (sanitized on save)")
     author: models.ForeignKey[User, User] = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="authored_drafts"
     )
@@ -292,9 +262,7 @@ class EntryDraft(AuditedModel):
         help_text="Perspective curator who endorsed this draft",
     )
     endorsed_at: models.DateTimeField = models.DateTimeField(null=True, blank=True)
-    published_at: models.DateTimeField = models.DateTimeField(
-        null=True, blank=True, db_index=True
-    )
+    published_at: models.DateTimeField = models.DateTimeField(null=True, blank=True, db_index=True)
     replaces_draft: models.ForeignKey[EntryDraft, EntryDraft] = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -385,9 +353,7 @@ class EntryDraft(AuditedModel):
             raise ValidationError("Cannot request reviews for published drafts.")
 
         # Filter out the draft author from reviewers (silently exclude)
-        available_reviewers = [
-            reviewer for reviewer in reviewers if reviewer.id != self.author.id
-        ]
+        available_reviewers = [reviewer for reviewer in reviewers if reviewer.id != self.author.id]
 
         self.requested_reviewers.set(available_reviewers)
 
@@ -440,9 +406,7 @@ class Comment(AuditedModel):
         related_name="replies",
     )
     text: models.TextField = models.TextField()
-    author: models.ForeignKey[User, User] = models.ForeignKey(
-        User, on_delete=models.PROTECT, related_name="comments"
-    )
+    author: models.ForeignKey[User, User] = models.ForeignKey(User, on_delete=models.PROTECT, related_name="comments")
     mentioned_users: models.ManyToManyField[User, User] = models.ManyToManyField(
         User,
         related_name="mentioned_in_comments",
@@ -595,9 +559,7 @@ class Notification(AuditedModel):
 class PerspectiveCurator(AuditedModel):
     """Tracks which users are curators for which perspectives"""
 
-    user: models.ForeignKey[User, User] = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="curatorship"
-    )
+    user: models.ForeignKey[User, User] = models.ForeignKey(User, on_delete=models.CASCADE, related_name="curatorship")
     perspective: models.ForeignKey[Perspective, Perspective] = models.ForeignKey(
         Perspective, on_delete=models.CASCADE, related_name="curators"
     )
@@ -629,16 +591,12 @@ class PerspectiveCurator(AuditedModel):
         """Validate user+perspective uniqueness among non-deleted records"""
         super().clean()
         existing = (
-            PerspectiveCurator.all_objects.filter(
-                user=self.user, perspective=self.perspective, is_deleted=False
-            )
+            PerspectiveCurator.all_objects.filter(user=self.user, perspective=self.perspective, is_deleted=False)
             .exclude(pk=self.pk)
             .exists()
         )
         if existing:
-            raise ValidationError(
-                "This user is already a perspective curator for this perspective."
-            )
+            raise ValidationError("This user is already a perspective curator for this perspective.")
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -648,9 +606,7 @@ class PerspectiveCurator(AuditedModel):
 # Helper method to check if a user is a perspective curator
 def is_perspective_curator_for(user, perspective_id):
     """Check if a user is a perspective curator for a specific perspective"""
-    return PerspectiveCurator.objects.filter(
-        user=user, perspective_id=perspective_id
-    ).exists()
+    return PerspectiveCurator.objects.filter(user=user, perspective_id=perspective_id).exists()
 
 
 class UserProfile(AuditedModel):

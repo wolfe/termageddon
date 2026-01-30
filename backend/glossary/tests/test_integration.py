@@ -163,14 +163,10 @@ class TestEntryCreationIntegration:
         reviewer1 = UserFactory()
         reviewer2 = UserFactory()
 
-        request_review_url = reverse(
-            "entrydraft-request-review", kwargs={"pk": draft_id}
-        )
+        request_review_url = reverse("entrydraft-request-review", kwargs={"pk": draft_id})
         review_data = {"reviewer_ids": [reviewer1.id, reviewer2.id]}
 
-        review_response = authenticated_client.post(
-            request_review_url, review_data, format="json"
-        )
+        review_response = authenticated_client.post(request_review_url, review_data, format="json")
         assert review_response.status_code == status.HTTP_200_OK
 
         # Verify reviewers were added
@@ -219,16 +215,12 @@ class TestEntryCreationIntegration:
         assert comment.text == "This is a test comment"
         assert comment.draft.id == draft_id
 
-    def test_entry_creation_workflow_with_perspective_curator(
-        self, authenticated_client
-    ):
+    def test_entry_creation_workflow_with_perspective_curator(self, authenticated_client):
         """Test entry creation and endorsement by perspective curator"""
         perspective = PerspectiveFactory()
 
         # Make user a perspective curator
-        PerspectiveCuratorFactory(
-            user=authenticated_client.user, perspective=perspective
-        )
+        PerspectiveCuratorFactory(user=authenticated_client.user, perspective=perspective)
 
         # Create entry
         url = reverse("entry-lookup-or-create-entry")

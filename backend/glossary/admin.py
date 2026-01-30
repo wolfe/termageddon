@@ -29,7 +29,7 @@ def soft_delete_selected(modeladmin, request, queryset):
     modeladmin.message_user(request, f"Soft deleted {queryset.count()} items.")
 
 
-soft_delete_selected.short_description = "Soft delete selected items"
+setattr(soft_delete_selected, "short_description", "Soft delete selected items")
 
 
 def undelete_selected(modeladmin, request, queryset):
@@ -38,7 +38,7 @@ def undelete_selected(modeladmin, request, queryset):
     modeladmin.message_user(request, f"Restored {count} items.")
 
 
-undelete_selected.short_description = "Undelete selected items"
+setattr(undelete_selected, "short_description", "Undelete selected items")
 
 
 def mark_official_selected(modeladmin, request, queryset):
@@ -47,7 +47,7 @@ def mark_official_selected(modeladmin, request, queryset):
     modeladmin.message_user(request, f"Marked {count} items as official.")
 
 
-mark_official_selected.short_description = "Mark as official"
+setattr(mark_official_selected, "short_description", "Mark as official")
 
 
 def bulk_approve_drafts(modeladmin, request, queryset):
@@ -58,13 +58,11 @@ def bulk_approve_drafts(modeladmin, request, queryset):
             draft.approve(request.user)
             count += 1
         except Exception as e:
-            modeladmin.message_user(
-                request, f"Could not approve draft {draft.id}: {e}", level="ERROR"
-            )
+            modeladmin.message_user(request, f"Could not approve draft {draft.id}: {e}", level="ERROR")
     modeladmin.message_user(request, f"Approved {count} drafts.")
 
 
-bulk_approve_drafts.short_description = "Approve selected drafts"
+setattr(bulk_approve_drafts, "short_description", "Approve selected drafts")
 
 
 def upload_csv_action(modeladmin, request, queryset):
@@ -74,7 +72,7 @@ def upload_csv_action(modeladmin, request, queryset):
     return HttpResponseRedirect(reverse("glossary_upload_csv"))
 
 
-upload_csv_action.short_description = "Upload CSV file"
+setattr(upload_csv_action, "short_description", "Upload CSV file")
 
 
 # Inline for EntryDraft under Entry
@@ -96,14 +94,14 @@ class EntryDraftInline(admin.TabularInline):
             return f"{obj.approval_count} approvals"
         return "N/A"
 
-    approval_count_display.short_description = "Approvals"
+    setattr(approval_count_display, "short_description", "Approvals")
 
     def is_approved(self, obj):
         if obj.id:
             return obj.is_approved
         return False
 
-    is_approved.boolean = True
+    setattr(is_approved, "boolean", True)
 
 
 # Inline for Comments on EntryDraft
@@ -134,7 +132,7 @@ class PerspectiveAdmin(admin.ModelAdmin):
             return obj.description[:50] + "..."
         return obj.description
 
-    description_short.short_description = "Description"
+    setattr(description_short, "short_description", "Description")
 
 
 @admin.register(Term)
@@ -190,7 +188,7 @@ class EntryAdmin(admin.ModelAdmin):
             return format_html('<span style="color: green;">draft{}</span>', draft.id)
         return format_html('<span style="color: gray;">No drafts</span>')
 
-    active_draft_display.short_description = "Active Draft"
+    setattr(active_draft_display, "short_description", "Active Draft")
 
 
 @admin.register(EntryDraft)
@@ -219,19 +217,19 @@ class EntryDraftAdmin(admin.ModelAdmin):
     actions = [soft_delete_selected, undelete_selected, bulk_approve_drafts]
 
     formfield_overrides = {
-        models.TextField: {"widget": admin.widgets.AdminTextareaWidget()},
+        models.TextField: {"widget": admin.widgets.AdminTextareaWidget()},  # type: ignore[attr-defined]
     }
 
     def approval_count_display(self, obj):
         return obj.approval_count
 
-    approval_count_display.short_description = "Approval Count"
+    setattr(approval_count_display, "short_description", "Approval Count")
 
     def is_approved_display(self, obj):
         return obj.is_approved
 
-    is_approved_display.boolean = True
-    is_approved_display.short_description = "Is Approved"
+    setattr(is_approved_display, "boolean", True)
+    setattr(is_approved_display, "short_description", "Is Approved")
 
 
 @admin.register(Comment)
@@ -267,7 +265,7 @@ class CommentAdmin(admin.ModelAdmin):
             return obj.text[:50] + "..."
         return obj.text
 
-    text_short.short_description = "Text"
+    setattr(text_short, "short_description", "Text")
 
 
 @admin.register(PerspectiveCurator)
@@ -320,7 +318,7 @@ class NotificationAdmin(admin.ModelAdmin):
             return obj.message[:50] + "..."
         return obj.message
 
-    message_short.short_description = "Message"
+    setattr(message_short, "short_description", "Message")
 
 
 # CSV Upload Admin View - Helper functions
@@ -370,9 +368,7 @@ def _handle_upload_success(summary, request):
         f"Skipped: {summary['skipped']}"
     )
     if summary.get("cross_references_resolved", 0) > 0:
-        success_msg += (
-            f", Cross-references resolved: {summary['cross_references_resolved']}"
-        )
+        success_msg += f", Cross-references resolved: {summary['cross_references_resolved']}"
     success_msg += "."
     messages.success(request, success_msg)
 
@@ -380,9 +376,7 @@ def _handle_upload_success(summary, request):
         for error in summary["errors"][:10]:
             messages.warning(request, error)
         if len(summary["errors"]) > 10:
-            messages.warning(
-                request, f"... and {len(summary['errors']) - 10} more errors."
-            )
+            messages.warning(request, f"... and {len(summary['errors']) - 10} more errors.")
 
 
 @staff_member_required
@@ -405,22 +399,16 @@ def csv_upload_view(request):
             from django.contrib import messages
 
             messages.error(request, error_msg)
-            return render(
-                request, "admin/glossary/csv_upload.html", _get_upload_context()
-            )
+            return render(request, "admin/glossary/csv_upload.html", _get_upload_context())
 
         try:
-            summary = load_entries_from_csv(
-                csv_file, request.user, skip_duplicates=skip_duplicates
-            )
+            summary = load_entries_from_csv(csv_file, request.user, skip_duplicates=skip_duplicates)
             _handle_upload_success(summary, request)
             return HttpResponseRedirect(reverse("admin:glossary_entry_changelist"))
         except Exception as e:
             from django.contrib import messages
 
             messages.error(request, f"Error processing CSV: {str(e)}")
-            return render(
-                request, "admin/glossary/csv_upload.html", _get_upload_context()
-            )
+            return render(request, "admin/glossary/csv_upload.html", _get_upload_context())
 
     return render(request, "admin/glossary/csv_upload.html", _get_upload_context())

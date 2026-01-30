@@ -99,16 +99,11 @@ class TestNotificationSignals:
         draft.save()
 
         # Check notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="draft_edited", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=author, type="draft_edited", related_draft=draft)
         assert notifications.count() == 1
         notification = notifications.first()
         assert "edited your draft" in notification.message.lower()
-        assert (
-            editor.username in notification.message
-            or editor.get_full_name() in notification.message
-        )
+        assert editor.username in notification.message or editor.get_full_name() in notification.message
 
     def test_notify_draft_edited_same_user_no_notification(self):
         """Test that editing own draft doesn't create notification"""
@@ -122,9 +117,7 @@ class TestNotificationSignals:
         draft.save()
 
         # Check no notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="draft_edited", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=author, type="draft_edited", related_draft=draft)
         assert notifications.count() == 0
 
     def test_notify_draft_edited_no_content_change_no_notification(self):
@@ -139,9 +132,7 @@ class TestNotificationSignals:
         draft.save()
 
         # Check no notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="draft_edited", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=author, type="draft_edited", related_draft=draft)
         assert notifications.count() == 0
 
     def test_notify_draft_approved_signal_exactly_min_approvals(self):
@@ -160,9 +151,7 @@ class TestNotificationSignals:
             draft.approvers.add(approver)
 
         # Check notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="draft_approved", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=author, type="draft_approved", related_draft=draft)
         assert notifications.count() == 1
         notification = notifications.first()
         assert "approved" in notification.message.lower()
@@ -187,9 +176,7 @@ class TestNotificationSignals:
         draft.approvers.add(extra_approver)
 
         # Should only have one notification (from when it first reached MIN_APPROVALS)
-        notifications = Notification.objects.filter(
-            user=author, type="draft_approved", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=author, type="draft_approved", related_draft=draft)
         assert notifications.count() == 1
 
     def test_notify_comment_reply_signal(self):
@@ -203,9 +190,7 @@ class TestNotificationSignals:
         reply = CommentFactory(draft=draft, author=reply_author, parent=parent_comment)
 
         # Check notification was created
-        notifications = Notification.objects.filter(
-            user=comment_author, type="comment_reply", related_comment=reply
-        )
+        notifications = Notification.objects.filter(user=comment_author, type="comment_reply", related_comment=reply)
         assert notifications.count() == 1
         notification = notifications.first()
         assert "replied to your comment" in notification.message.lower()
@@ -220,9 +205,7 @@ class TestNotificationSignals:
         reply = CommentFactory(draft=draft, author=author, parent=parent_comment)
 
         # Check no notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="comment_reply", related_comment=reply
-        )
+        notifications = Notification.objects.filter(user=author, type="comment_reply", related_comment=reply)
         assert notifications.count() == 0
 
     def test_notify_comment_mention_signal(self):
@@ -268,9 +251,7 @@ class TestNotificationSignals:
         comment2.mentioned_users.add(mentioned_user)
 
         # Check notification was created (signal fires on creation)
-        notifications = Notification.objects.filter(
-            user=mentioned_user, type="mentioned_in_comment"
-        )
+        notifications = Notification.objects.filter(user=mentioned_user, type="mentioned_in_comment")
         # Should have notifications for both comments if signal fires correctly
         # But signal only fires on creation, and mentions are added after
         # So we need to check if the signal actually works with M2M
@@ -287,9 +268,7 @@ class TestNotificationSignals:
         comment.mentioned_users.add(author)
 
         # Check no notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="mentioned_in_comment", related_comment=comment
-        )
+        notifications = Notification.objects.filter(user=author, type="mentioned_in_comment", related_comment=comment)
         assert notifications.count() == 0
 
     def test_notify_review_requested_signal(self):
@@ -303,9 +282,7 @@ class TestNotificationSignals:
         draft.requested_reviewers.add(reviewer)
 
         # Check notification was created
-        notifications = Notification.objects.filter(
-            user=reviewer, type="review_requested", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=reviewer, type="review_requested", related_draft=draft)
         assert notifications.count() == 1
         notification = notifications.first()
         assert "requested to review" in notification.message.lower()
@@ -320,9 +297,7 @@ class TestNotificationSignals:
         draft.requested_reviewers.add(author)
 
         # Check no notification was created
-        notifications = Notification.objects.filter(
-            user=author, type="review_requested", related_draft=draft
-        )
+        notifications = Notification.objects.filter(user=author, type="review_requested", related_draft=draft)
         assert notifications.count() == 0
 
 
@@ -346,9 +321,7 @@ class TestNotificationViewSet:
 
         # Create notification for different user (should not appear)
         other_user = UserFactory()
-        Notification.objects.create(
-            user=other_user, type="draft_approved", message="Other user notification"
-        )
+        Notification.objects.create(user=other_user, type="draft_approved", message="Other user notification")
 
         url = reverse("notification-list")
         response = authenticated_client.get(url)
@@ -450,9 +423,7 @@ class TestNotificationViewSet:
         assert response.status_code == status.HTTP_200_OK
 
         # Check all notifications are now read
-        unread_count = Notification.objects.filter(
-            user=authenticated_client.user, is_read=False
-        ).count()
+        unread_count = Notification.objects.filter(user=authenticated_client.user, is_read=False).count()
         assert unread_count == 0
 
     def test_list_notifications_ordered_by_created_at_desc(self, authenticated_client):
